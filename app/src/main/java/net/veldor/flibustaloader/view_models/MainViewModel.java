@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.updater.Updater;
 
 public class MainViewModel extends AndroidViewModel {
 
@@ -25,5 +26,9 @@ public class MainViewModel extends AndroidViewModel {
     // загрузка ядра TOR
     public LiveData<AndroidOnionProxyManager> getTor(){
         return App.getInstance().mTorManager;
+    }
+
+    public void startCheckUpdate() {
+        Updater.checkUpdate();
     }
 }

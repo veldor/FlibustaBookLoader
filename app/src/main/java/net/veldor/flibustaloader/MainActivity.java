@@ -63,12 +63,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         mPageLoadReceiver = new BookLoadingReceiver();
         registerReceiver(mPageLoadReceiver, filter);
 
-
         if (!permissionGranted()) {
-            // загружаю страницу
             // показываю диалог с требованием предоставить разрешения
             showPermissionDialog();
         }
+
+        // проверю обновления
+        mMyViewModel.startCheckUpdate();
     }
 
 
