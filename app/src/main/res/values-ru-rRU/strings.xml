@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Флибуста.книги</string>
+    <string name="books_loaded_channel">Загруженные книги</string>
+    <string name="loading_tor_message">Инициализирую TOR, подождите</string>
+    <string name="use_light_style">Упрощённый вид</string>
+    <string name="restart_for_changes_message">Перезапустите приложение для применения изменений</string>
+    <string name="book_loading_dialog_title">Загрузка книги</string>
+    <string name="book_loading_dialog_message">Загружаю книгу, подождите.</string>
+    <string name="tor_loading_dialog_title">Загрузка TOR</string>
+</resources>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Flibusta book loading</string>
+    <string name="books_loaded_channel">Loaded books</string>
+    <string name="shifts_reminder" translatable="false">Loaded books notifications</string>
+    <string name="loading_tor_message">Loading TOR, please, wait</string>
+    <string name="use_light_style">Use light style</string>
+    <string name="restart_for_changes_message">Need restart application for changes</string>
+    <string name="book_loading_dialog_title">Book loading</string>
+    <string name="book_loading_dialog_message">Loading book, please, wait</string>
+    <string name="tor_loading_dialog_title">Tor load</string>
+</resources>

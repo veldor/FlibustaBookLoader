@@ -1,0 +1,245 @@
+:root{
+    --accent:#881515;
+    --primary:#3e5f75;
+    --dark:#081b86;
+    --light:#FFFFFF;
+}
+
+h1{
+    font-size: 15px;
+}
+
+html body{
+    font-size: 12px;
+}
+
+#main > ul > li:nth-child(3){
+    overflow-x:auto;
+}
+
+
+a:link{
+    color: var(--primary);
+}
+
+#main > div:nth-child(4) > table, #main > div:nth-child(4), #main > div.item-list > ul{
+    display: none;
+}
+
+div#header, div#mission, div.sidebar{
+    display: none;
+}
+div.node{
+    display: none;
+}
+div#container div#main-wrapper div#main{
+    margin: 5px;
+}
+div#content-top td[align=right]{
+    display: none;
+}
+
+#main div ul.pager li{
+    font-size: 20px;
+    display: inline-block;
+    margin: 10px 5px;
+    padding: 0;
+    overflow: hidden;
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    background-color: var(--dark);
+    color: var(--light);
+    transition: background-color .3s;
+}
+
+#main div ul.pager li.pager-current{
+    padding: 0 10px;
+    background-color: var(--light);
+    color: var(--dark);
+}
+
+#main div ul.pager li:hover, #main div ul.pager li:focus{
+    background-color: var(--accent);
+}
+
+#main ul.pager li a{
+    padding: 0 10px !important;
+    display: block;
+    color: var(--light);
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    border: none;
+}
+ul.pager li a:visited{
+    color: var(--light);
+}
+
+div#main>a, div#books>table>tbody>tr>td>a, #main > ul > li > a, div#page div#main form ol a{
+    font-size: 12px;
+    text-transform: uppercase;
+    position: relative;
+    display: inline-block;
+    margin: 0px -2px;
+    padding: 0 5px;
+    overflow: hidden;
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    background-color: var(--light);
+    color: var(--dark);
+    transition: background-color .3s;
+}
+
+#main > ul > li > a{
+    top:5px;
+    margin-right: 10px;
+}
+
+
+div#books>table>tbody>tr>td>a{
+    position: relative;
+    top:5px;
+    margin-right: 10px;
+}
+
+
+div#content-top a{
+    font-size: 12px;
+    position: relative;
+    display: inline-block;
+    margin: 0px 0px;
+    padding: 0 10px;
+    overflow: hidden;
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    background-color: var(--dark);
+    color: var(--light);
+    transition: background-color .3s;
+}
+
+div#main a:hover, div#main a:active, div#main a:focus{
+    background-color: var(--accent);
+    color: var(--light);
+}
+
+div#content-top a:hover, div#content-top a:focus{
+    background-color: var(--accent);
+}
+
+html body table tr td{
+    font-size: 12px;
+}
+
+div#main form a{
+    font-size: 12px;
+    padding: 2px;
+}
+
+
+html body#second a.book-name{
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight:bold;
+    color: var(--accent);
+    margin: 15px auto;
+    transition: background-color .3s;
+    box-shadow: none;
+    border: none;
+}
+
+html body#second div form a.book-name:active{
+    background-color: var(--dark);
+    color: var(--light);
+}
+
+div#searchContainer{
+    position: fixed;
+    bottom: 5px;
+    left: 0;
+    width: 100%;
+}
+button#searchButton{
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    position: relative;
+    float: right;
+    display: inline-block;
+    margin: 5px 5px 0px 0px;
+    padding: 10px;
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    background-color: var(--light);
+    color: #000000;
+    font-weight: bold;
+    transition: background-color .3s;
+}
+button#searchButton:hover, button#searchButton:focus{
+    background-color: var(--accent);
+    color: var(--light);
+}
+
+button#searchButton:active{
+    background-color: var(--dark);
+    color: var(--light);
+}
+
+input#booksSearcher{
+    width: 100%;
+    position: absolute;
+    height: 100%;
+    vertical-align: middle;
+    font-size: 12px;
+    background-color:  var(--dark);
+    color: var(--light);
+}
+
+input#booksSearcher:placeholder{
+	color: var(--light);
+}
+
+a.book-name.searched{
+    text-decoration: underline;
+    color: var(--primary);
+}
+
+a.download-link,
+div#main a.download-link{
+    font-size: 12px;
+    position: relative;
+    display: inline-block;
+    margin: 10px 0;
+    padding: 0 10px;
+    overflow: hidden;
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    background-color: var(--accent);
+    color: var(--light);
+    transition: background-color .3s;
+    text-transform: uppercase;
+}
+
+html body#second div form a.download-link:hover,
+html body#second div form a.download-link:focus{
+    color: var(--dark);
+    background-color: var(--light);
+}
+
+html body#second div form a.download-link:active{
+    background-color: var(--dark);
+    color: var(--light);
+}
+::-webkit-input-placeholder {color:var(--light)}
+
