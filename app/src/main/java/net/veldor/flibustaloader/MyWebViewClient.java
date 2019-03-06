@@ -16,6 +16,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -119,7 +120,6 @@ public class MyWebViewClient extends WebViewClient {
                 String type = types[types.length - 1];
                 if (type.equals(FB2_TYPE) || type.equals(MOBI_TYPE) || type.equals(EPUB_TYPE) || type.equals(PDF_TYPE) || type.equals(DJVU_TYPE)) {
                     try {
-                        Log.d("surprise", "MyWebViewClient shouldInterceptRequest: start broadcast sended");
                         // начинаю загружать книку, пошлю оповещение о начале загрузки
                         Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
                         startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
@@ -146,7 +146,9 @@ public class MyWebViewClient extends WebViewClient {
                         activityContext.sendBroadcast(intent);
                         /*// вернусь на ранее загруженную страницу
                         activityContext.sendBroadcast(new Intent(BOOK_LOAD_ACTION));*/
-                        return super.shouldInterceptRequest(view, request);
+                        String message = "<H1 style='text-align:center;'>Книга закачана. Возвращаюсь на предыдущую страницу</H1>";
+                        ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(encoding));
+                        return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
                     } catch (IOException e) {
                         Log.d("surprise", "some output error");
                     } finally {
@@ -154,7 +156,6 @@ public class MyWebViewClient extends WebViewClient {
                         Intent finishLoadingIntent = new Intent(BOOK_LOAD_ACTION);
                         finishLoadingIntent.putExtra(BOOK_LOAD_EVENT, FINISH_BOOK_LOADING);
                         activityContext.sendBroadcast(finishLoadingIntent);
-                        Log.d("surprise", "MyWebViewClient shouldInterceptRequest: finish broadcast sended");
                     }
                 }
             }
@@ -213,7 +214,6 @@ public class MyWebViewClient extends WebViewClient {
             e.printStackTrace();
         }
     }
-
 
     static class FakeDnsResolver implements DnsResolver {
         @Override

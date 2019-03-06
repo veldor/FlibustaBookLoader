@@ -226,12 +226,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         @Override
         public void onReceive(Context context, Intent intent) {
             int action = intent.getIntExtra(MyWebViewClient.BOOK_LOAD_EVENT, 0);
-            Log.d("surprise", "BookLoadingReceiver onReceive: receive with status " + action);
             switch (action) {
                 case MyWebViewClient.START_BOOK_LOADING:
                     showBookLoadingDialog();
                     break;
                 case MyWebViewClient.FINISH_BOOK_LOADING:
+                    Log.d("surprise", "BookLoadingReceiver onReceive: book loaded, returned to last saved: " + App.getInstance().currentLoadedUrl);
+                    mWebView.loadUrl(App.getInstance().currentLoadedUrl);
                 default:
                     hideBookLoadingDialog();
             }
