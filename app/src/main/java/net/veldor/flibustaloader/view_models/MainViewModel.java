@@ -28,7 +28,11 @@ public class MainViewModel extends AndroidViewModel {
         return App.getInstance().mTorManager;
     }
 
-    public void startCheckUpdate() {
-        Updater.checkUpdate();
+    public LiveData<Boolean> startCheckUpdate() {
+        return Updater.checkUpdate();
+    }
+
+    public void initializeUpdate() {
+        Updater.update();
     }
 }

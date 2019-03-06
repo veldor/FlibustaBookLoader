@@ -10,10 +10,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -24,13 +28,16 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebView;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
-public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
+import java.io.File;
+
+public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener{
 
     private static final int REQUEST_WRITE_READ = 22;
     public static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
@@ -41,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private BookLoadingReceiver mPageLoadReceiver;
     private AlertDialog mBookLoadingDialog;
     private AlertDialog mTorLoadingDialog;
+    private View mRootView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // инициализирую переменные
         mWebView = findViewById(R.id.myWebView);
+        mRootView = findViewById(R.id.rootView);
 
         // добавлю viewModel
         mMyViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
@@ -69,8 +78,30 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         }
 
         // проверю обновления
-        mMyViewModel.startCheckUpdate();
+        final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
+        version.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                if(aBoolean != null && aBoolean){
+                    // показываю Snackbar с уведомлением
+                    makeUpdateSnackbar();
+                }
+                version.removeObservers(MainActivity.this);
+            }
+        });
     }
+
+    private void makeUpdateSnackbar() {
+        Snackbar updateSnackbar = Snackbar.make(mRootView, getString(R.string.snackbar_found_update_message), Snackbar.LENGTH_INDEFINITE);
+        updateSnackbar.setAction(getString(R.string.snackbar_update_action_message), new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mMyViewModel.initializeUpdate();
+            }
+        });
+        updateSnackbar.show();
+    }
+
 
 
     @Override

@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 
     <application
         android:name="net.veldor.flibustaloader.App"
@@ -27,14 +28,15 @@
         <receiver android:name=".receivers.BookShareReceiver"/>
 
         <provider
-            android:authorities="${applicationId}"
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="net.veldor.flibustaloader.fileProvider"
             android:grantUriPermissions="true"
-            android:exported="false"
-            android:name="android.support.v4.content.FileProvider">
+            android:exported="false">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths"/>
         </provider>
+        <service android:name=".services.UpdateWaitService"/>
     </application>
 
 </manifest>

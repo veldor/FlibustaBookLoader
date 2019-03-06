@@ -3,11 +3,14 @@ package net.veldor.flibustaloader;
 import android.app.Application;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.workers.StartTorWorker;
+
+import java.io.File;
 
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -21,10 +24,14 @@ public class App extends Application {
     public static final String TOR_FILES_LOCATION = "torfiles";
     public String currentLoadedUrl = "http://flibustahezeous3.onion/";
 
+    public boolean updateDownloadInProgress = false;
+
     // место для хранения TOR клиента
     public MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
 
     private static App instance;
+    public File downloadedApkFile;
+    public Uri updateDownloadUri;
     private SharedPreferences mSharedPreferences;
 
     @Override

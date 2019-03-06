@@ -7,7 +7,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
-        versionName "1.0"
+        versionName "1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -30,6 +30,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.7'
     implementation 'org.slf4j:slf4j-android:1.7.7'
     implementation 'com.android.support:cardview-v7:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
 
 
     implementation "android.arch.lifecycle:viewmodel:1.1.1"
@@ -39,6 +40,7 @@ dependencies {
 
 
     implementation "android.arch.work:work-runtime:1.0.0-rc02"
+    implementation 'org.jetbrains:annotations-java5:15.0'
 }
 
 allprojects {

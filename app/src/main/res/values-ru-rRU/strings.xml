@@ -8,4 +8,7 @@
     <string name="book_loading_dialog_title">Загрузка книги</string>
     <string name="book_loading_dialog_message">Загружаю книгу, подождите.</string>
     <string name="tor_loading_dialog_title">Загрузка TOR</string>
+    <string name="snackbar_found_update_message">Доступно обновление!</string>
+    <string name="snackbar_update_action_message">Обновить</string>
+    <string name="update_file_name">Флибуста.книги</string>
 </resources>

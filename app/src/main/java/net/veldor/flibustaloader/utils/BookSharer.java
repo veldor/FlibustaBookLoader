@@ -8,7 +8,6 @@ import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.BuildConfig;
 import net.veldor.flibustaloader.MyWebViewClient;
 
 import java.io.File;
@@ -42,10 +41,10 @@ public class BookSharer {
                 fileType = "application/djvu";
                 break;
         }
-        Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+        Uri uri = FileProvider.getUriForFile(context, "net.veldor.flibustaloader.fileProvider", file);
         intent.setDataAndType(uri, fileType);
         Intent chooserIntent = Intent.createChooser(intent, "Open file");
-        chooserIntent.addFlags(FLAG_ACTIVITY_NEW_TASK);
+        chooserIntent.addFlags(FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION);
         context.startActivity(chooserIntent);
     }
 }
