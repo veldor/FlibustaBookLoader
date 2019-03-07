@@ -10,14 +10,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -34,10 +31,6 @@ import android.webkit.WebView;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.view_models.MainViewModel;
-
-import java.io.File;
-
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener{
 
@@ -247,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private void startBrowsing() {
         hideTorLoadingDialog();
         mWebView.setWebViewClient(new MyWebViewClient(mWebView));
-        mWebView.loadUrl("http://flibustahezeous3.onion/b/144566");
+        mWebView.loadUrl(App.getInstance().currentLoadedUrl);
     }
 
     @Override

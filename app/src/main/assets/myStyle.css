@@ -3,243 +3,360 @@
     --primary:#3e5f75;
     --dark:#081b86;
     --light:#FFFFFF;
+    --green:#0c6126;
+    --purple:#5403ad;
 }
+
+
+html body{
+    font-size: 12px;
+}
+
+/*скрою ненужные элементы*/
+#main > div:nth-child(4) > table,
+#main > div:nth-child(4),
+#main > .item-list > ul,
+#header,
+#footer,
+#mission,
+.sidebar,
+.node,
+#content-top td[align=right],
+input[type=checkbox],
+input[name="readedall"],
+input[name="bookscomp"],
+svg,
+img,
+.hidden
+{
+    display: none;
+}
+
 
 h1{
     font-size: 15px;
 }
 
-html body{
-    font-size: 12px;
-}
 
 #main > ul > li:nth-child(3){
     overflow-x:auto;
 }
 
 
-a:link{
-    color: var(--primary);
-}
-
-#main > div:nth-child(4) > table, #main > div:nth-child(4), #main > div.item-list > ul{
-    display: none;
-}
-
-div#header, div#mission, div.sidebar{
-    display: none;
-}
-div.node{
-    display: none;
-}
 div#container div#main-wrapper div#main{
     margin: 5px;
 }
-div#content-top td[align=right]{
-    display: none;
-}
 
-#main div ul.pager li{
-    font-size: 20px;
+
+a{
+    font-size: 12px;
+    text-transform: uppercase;
+    position: relative;
     display: inline-block;
-    margin: 10px 5px;
-    padding: 0;
     overflow: hidden;
     border-width: 0;
     outline: none;
     border-radius: 2px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
-    background-color: var(--dark);
-    color: var(--light);
     transition: background-color .3s;
 }
-
-#main div ul.pager li.pager-current{
-    padding: 0 10px;
-    background-color: var(--light);
-    color: var(--dark);
-}
-
-#main div ul.pager li:hover, #main div ul.pager li:focus{
-    background-color: var(--accent);
-}
-
-#main ul.pager li a{
-    padding: 0 10px !important;
-    display: block;
-    color: var(--light);
-    padding: 0;
-    margin: 0;
-    background-color: transparent;
+a:hover{
     border: none;
 }
-ul.pager li a:visited{
-    color: var(--light);
-}
 
-div#main>a, div#books>table>tbody>tr>td>a, #main > ul > li > a, div#page div#main form ol a{
-    font-size: 12px;
-    text-transform: uppercase;
-    position: relative;
-    display: inline-block;
-    margin: 0px -2px;
-    padding: 0 5px;
-    overflow: hidden;
-    border-width: 0;
-    outline: none;
-    border-radius: 2px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+/* Изменяю цвет primary ссылок при выделении и нажатии */
+
+/* Изменяю цвет accent ссылок при выделении и нажатии */
+
+/* Изменяю цвет primary-dark ссылок при выделении и нажатии */
+a.alphabet-link:hover,
+a.alphabet-link:focus,
+li.pager-item>a:hover,
+li.pager-item>a:focus
+{
     background-color: var(--light);
     color: var(--dark);
-    transition: background-color .3s;
 }
 
-#main > ul > li > a{
-    top:5px;
-    margin-right: 10px;
-}
-
-
-div#books>table>tbody>tr>td>a{
-    position: relative;
-    top:5px;
-    margin-right: 10px;
-}
-
-
-div#content-top a{
-    font-size: 12px;
-    position: relative;
-    display: inline-block;
-    margin: 0px 0px;
-    padding: 0 10px;
-    overflow: hidden;
-    border-width: 0;
-    outline: none;
-    border-radius: 2px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
-    background-color: var(--dark);
-    color: var(--light);
-    transition: background-color .3s;
-}
-
-div#main a:hover, div#main a:active, div#main a:focus{
-    background-color: var(--accent);
-    color: var(--light);
-}
-
-div#content-top a:hover, div#content-top a:focus{
+a.alphabet-link:active,
+li.pager-item>a:active
+{
     background-color: var(--accent);
 }
 
-html body table tr td{
-    font-size: 12px;
+
+/*Ссылки breadcrumb */
+
+div.breadcrumb{
+    margin-bottom: 10px;
 }
 
-div#main form a{
-    font-size: 12px;
-    padding: 2px;
+div.breadcrumb>a{
+    top: 10px;
+    font-size: 15px;
+    background-color: var(--accent);
+    color: var(--light);
+    padding: 5px;
 }
 
 
-html body#second a.book-name{
-    display: block;
-    width: 100%;
-    text-align: center;
-    text-transform: uppercase;
-    font-weight:bold;
+div.breadcrumb>a:hover,
+div.breadcrumb>a:focus
+{
+    color: var(--light);
+    background-color: var(--primary);
+}
+
+div.breadcrumb>a:active
+{
+    background-color: var(--light);
     color: var(--accent);
-    margin: 15px auto;
-    transition: background-color .3s;
-    box-shadow: none;
+}
+/* Алфавитные ссылки */
+/*Ссылки нумераторы */
+
+a.alphabet-link,
+li.pager-item>a,
+li.pager-next>a,
+li.pager-prev>a,
+li.pager-first>a,
+li.pager-last>a
+{
+    font-size: 10px;
+    background-color: var(--dark);
+    color: var(--light);
+    padding: 0 5px;
     border: none;
 }
 
-html body#second div form a.book-name:active{
-    background-color: var(--dark);
-    color: var(--light);
-}
-
-div#searchContainer{
-    position: fixed;
-    bottom: 5px;
-    left: 0;
-    width: 100%;
-}
-button#searchButton{
-    cursor: pointer;
-    font-size: 12px;
-    text-transform: uppercase;
-    position: relative;
-    float: right;
-    display: inline-block;
-    margin: 5px 5px 0px 0px;
-    padding: 10px;
-    border-width: 0;
-    outline: none;
-    border-radius: 2px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+/* Ссылки на автора */
+a.author-link{
     background-color: var(--light);
-    color: #000000;
+    color: var(--dark);
+    font-size: 10px;
     font-weight: bold;
-    transition: background-color .3s;
-}
-button#searchButton:hover, button#searchButton:focus{
-    background-color: var(--accent);
-    color: var(--light);
+    margin: 0;
+    padding: 0 5px;
+    top: 5px;
 }
 
-button#searchButton:active{
-    background-color: var(--dark);
-    color: var(--light);
-}
-
-input#booksSearcher{
-    width: 100%;
-    position: absolute;
-    height: 100%;
-    vertical-align: middle;
-    font-size: 12px;
-    background-color:  var(--dark);
-    color: var(--light);
-}
-
-input#booksSearcher:placeholder{
-	color: var(--light);
-}
-
-a.book-name.searched{
-    text-decoration: underline;
+a.author-link:hover,
+a.author-link:focus
+{
     color: var(--primary);
 }
 
-a.download-link,
-div#main a.download-link{
-    font-size: 12px;
-    position: relative;
-    display: inline-block;
-    margin: 10px 0;
+a.author-link:active
+{
+    color: var(--light);
+    background-color: var(--dark);
+}
+
+/* Ссылки на книгу */
+a.book-link,
+h1.title
+{
+    padding: 5px;
+    display: block;
+    width: fit-content;
+    background-color: var(--light);
+    color: var(--accent);
+    font-weight: bold;
+    box-shadow: none;
+    text-align: center;
+    margin: 10px auto;
+}
+
+a.book-link:hover,
+a.book-link:focus
+{
+    color: var(--primary);
+}
+a.book-link:active
+{
+    color: var(--dark);
+}
+/* Ссылки на действие с книгой */
+
+a.book-action-link{
+    padding: 0 3px;
+    background-color: var(--accent);
+    color: var(--light);
+    top: 5px;
+}
+
+
+a.book-action-link:hover,
+a.book-action-link:focus
+{
+    background-color: var(--primary);
+}
+
+a.book-action-link:active
+{
+    background-color: var(--light);
+    color: var(--primary);
+
+}
+
+/* Ссылки на жанр */
+
+a.book-genre-link{
+    text-transform: lowercase;
+    padding: 0 3px;
+    color: var(--purple);
+    top: 5px;
+}
+
+a.book-genre-link:active
+{
+    color: var(--light);
+    background-color: var(--purple);
+}
+
+
+/* Ссылки на серию */
+
+a.book-series-link{
+    padding: 0 3px;
+    color: var(--green);
+    top: 5px;
+}
+
+a.book-series-link:active{
+    background-color: var(--green);
+}
+
+
+a.book-series-link>span{
+    color: var(--green);
+}
+a.book-series-link:active>span{
+    color: var(--light);
+}
+
+a.forum-name-link
+{
+    text-transform: lowercase;
+    top: 5px;
+}
+
+ul.pager{
+    margin-top: 10px;
+}
+
+div.item-list>ul.pager>li{
+    display: inline-flex;
+    padding: 0;
+    margin: 0;
+}
+
+div.item-list>ul.pager>li.pager-current{
+    font-size: 10px;
+    color: var(--dark);
+    border: none;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    padding: 0 3px;
+    margin-left: 5px;
+}
+
+span[style="size"]{
+    display: block;
+    padding: 5px;
+    color: var(--dark);
+    font-weight: bold;
+}
+
+/* Целевые ссылки */
+
+#main > ul > li:nth-child(1) > a[href="/g"],
+#tt > tbody > tr:nth-child(1) > th:nth-child(4) > a[href="/g"]
+{
+    color: var(--purple);
+    background-color: var(--light);
+    top: 5px;
+}
+
+#tt > tbody > tr:nth-child(1) > th:nth-child(4) > a[href="/g"]{
+    top: 2px;
+    padding: 3px;
+}
+
+#main > ul > li:nth-child(1) > a[href="/g"]:active,
+#tt > tbody > tr:nth-child(1) > th:nth-child(4) > a[href="/g"]:active
+{
+    color: var(--light);
+    background-color: var(--purple);
+}
+
+div#divabio a{
+    color: var(--primary);
+    text-transform: lowercase;
+    padding: 0 3px;
+}
+
+div#searchContainer
+{
+    position: fixed;
+    bottom: 5px;
+    width: -webkit-fill-available;
     padding: 0 10px;
+    display: table;
+}
+input#booksSearcher{
+    width: -webkit-fill-available;
+    display: table-cell;
+    padding-left: 10px;
+    margin-right: 5px;
+    outline: 0;
+    border-radius: 2px;
+    border: 2px solid var(--accent);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+}
+
+input#booksSearcher:after{
+    content: "0 из 0";
+    position: relative;
+}
+
+div#searchButton{
+
+    cursor: pointer;
+    text-align: center;
+    display: table-cell;
+    width: 150px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--light);
+    background-color: var(--accent);
     overflow: hidden;
     border-width: 0;
     outline: none;
     border-radius: 2px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
-    background-color: var(--accent);
-    color: var(--light);
     transition: background-color .3s;
-    text-transform: uppercase;
 }
 
-html body#second div form a.download-link:hover,
-html body#second div form a.download-link:focus{
-    color: var(--dark);
+div#searchButton:active
+{
+    color: var(--accent);
     background-color: var(--light);
 }
 
-html body#second div form a.download-link:active{
-    background-color: var(--dark);
+a.book-link.searched{
+    border:2px solid;
+}
+
+
+a.book-link.searched.selected{
+    background-color: var(--accent);
     color: var(--light);
 }
-::-webkit-input-placeholder {color:var(--light)}
+a.book-link.searched.selected:active{
+    background-color: var(--light);
+    color: var(--accent);
+}
+
 
