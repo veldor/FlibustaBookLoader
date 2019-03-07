@@ -97,6 +97,7 @@ div.breadcrumb>a{
     background-color: var(--accent);
     color: var(--light);
     padding: 5px;
+    margin-bottom: 0;
 }
 
 
@@ -122,6 +123,7 @@ li.pager-prev>a,
 li.pager-first>a,
 li.pager-last>a
 {
+    margin-bottom: 5px;
     font-size: 10px;
     background-color: var(--dark);
     color: var(--light);
@@ -276,11 +278,11 @@ span[style="size"]{
 {
     color: var(--purple);
     background-color: var(--light);
-    top: 5px;
+    top: 10px;
 }
 
 #tt > tbody > tr:nth-child(1) > th:nth-child(4) > a[href="/g"]{
-    top: 2px;
+    top: 5px;
     padding: 3px;
 }
 
