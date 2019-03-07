@@ -25,7 +25,7 @@
             </intent-filter>
         </activity>
         <receiver android:name="net.veldor.flibustaloader.receivers.BookLoadedReceiver"/>
-        <receiver android:name=".receivers.BookShareReceiver"/>
+        <receiver android:name=".receivers.BookActionReceiver"/>
 
         <provider
             android:name="android.support.v4.content.FileProvider"

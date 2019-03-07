@@ -40,12 +40,15 @@ import cz.msebera.android.httpclient.ssl.SSLContexts;
 
 public class MyWebViewClient extends WebViewClient {
 
+    public static final File DOWNLOAD_FOLDER_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+
     static final String BOOK_LOAD_ACTION = "net.veldor.flibustaloader.action.BOOK_LOAD_EVENT";
     static final int START_BOOK_LOADING = 1;
     static final int FINISH_BOOK_LOADING = 2;
     private static final String ENCODING_UTF_8 = "UTF-8";
     private static final String BOOK_FORMAT = "application/octet-stream";
     private static final String FB2_FORMAT = "application/zip";
+    private static final String PDF_FORMAT = "application/pdf";
 
 
     // content types
@@ -113,23 +116,29 @@ public class MyWebViewClient extends WebViewClient {
                 encoding = arr[1];
             }
 
-            if (mime.equals(BOOK_FORMAT) || mime.equals(FB2_FORMAT)) {
+            if (mime.equals(BOOK_FORMAT) || mime.equals(FB2_FORMAT) || mime.equals(PDF_FORMAT)) {
                 Context activityContext = view.getContext();
-                // получу расширение файла
+                Header header = httpResponse.getFirstHeader(HEADER_CONTENT_DISPOSITION);
+                String name = header.getValue().split(FILENAME_DELIMITER)[1];
+                name = name.replace("\"", "");
+                String[] extensionSource = name.split("\\.");
+                String extension = extensionSource[extensionSource.length - 1];
                 String[] types = requestString.split("/");
                 String type = types[types.length - 1];
+                if(mime.equals(PDF_FORMAT)){
+                    type = PDF_TYPE;
+                }
+                if(extension.equals(DJVU_TYPE)){
+                    type = DJVU_TYPE;
+                }
                 if (type.equals(FB2_TYPE) || type.equals(MOBI_TYPE) || type.equals(EPUB_TYPE) || type.equals(PDF_TYPE) || type.equals(DJVU_TYPE)) {
                     try {
                         // начинаю загружать книку, пошлю оповещение о начале загрузки
                         Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
                         startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
                         activityContext.sendBroadcast(startLoadingIntent);
-
-                        Header header = httpResponse.getFirstHeader(HEADER_CONTENT_DISPOSITION);
-                        String name = header.getValue().split(FILENAME_DELIMITER)[1];
                         // сохраняю книгу в памяти устройства
-                        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                        File file = new File(dir, name);
+                        File file = new File(DOWNLOAD_FOLDER_LOCATION, name);
                         InputStream is = httpResponse.getEntity().getContent();
                         FileOutputStream outputStream = new FileOutputStream(file);
                         int read;
@@ -189,7 +198,6 @@ public class MyWebViewClient extends WebViewClient {
     public void onPageFinished(WebView view, String url) {
         super.onPageFinished(view, url);
         if(url.startsWith(App.BASE_URL)){
-            Log.d("surprise", "MyWebView loadUrl: save current url " + url);
             App.getInstance().currentLoadedUrl = url;
         }
         if (mViewMode) {

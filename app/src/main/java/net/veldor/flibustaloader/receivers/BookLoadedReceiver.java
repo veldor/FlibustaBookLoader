@@ -10,7 +10,12 @@ import net.veldor.flibustaloader.notificatons.Notificator;
 public class BookLoadedReceiver extends BroadcastReceiver {
 
     public static final String EXTRA_BOOK_NAME = "book name";
+    public static final String EXTRA_ACTION_TYPE = "action type";
     public static final String EXTRA_BOOK_TYPE = "book mime";
+
+    public static final String ACTION_TYPE_OPEN = "open";
+    public static final String ACTION_TYPE_SHARE = "share";
+
 
     @Override
     public void onReceive(Context context, Intent intent) {

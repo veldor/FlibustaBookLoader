@@ -37,6 +37,8 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 
 import java.io.File;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener{
 
     private static final int REQUEST_WRITE_READ = 22;
@@ -245,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private void startBrowsing() {
         hideTorLoadingDialog();
         mWebView.setWebViewClient(new MyWebViewClient(mWebView));
-        mWebView.loadUrl(App.getInstance().currentLoadedUrl);
+        mWebView.loadUrl("http://flibustahezeous3.onion/b/144566");
     }
 
     @Override

@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Флибуста.книги</string>
     <string name="books_loaded_channel">Загруженные книги</string>
-    <string name="loading_tor_message">Инициализирую TOR, подождите</string>
+    <string name="loading_tor_message">Инициализирую TOR</string>
     <string name="use_light_style">Упрощённый вид</string>
     <string name="restart_for_changes_message">Перезапустите приложение для применения изменений</string>
     <string name="book_loading_dialog_title">Загрузка книги</string>
@@ -11,4 +11,7 @@
     <string name="snackbar_found_update_message">Доступно обновление!</string>
     <string name="snackbar_update_action_message">Обновить</string>
     <string name="update_file_name">Флибуста.книги</string>
+    <string name="open_with_message">Открыть с помошью</string>
+    <string name="file_not_found_message">Файл не найден</string>
+    <string name="share_with_message">Отправить в</string>
 </resources>

@@ -11,4 +11,7 @@
     <string name="snackbar_found_update_message">New update available!</string>
     <string name="snackbar_update_action_message">Update now</string>
     <string name="update_file_name">Flibusta books</string>
+    <string name="open_with_message">Open with…</string>
+    <string name="file_not_found_message">File not found!</string>
+    <string name="share_with_message">Share with</string>
 </resources>
