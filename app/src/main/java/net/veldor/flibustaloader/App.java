@@ -22,7 +22,7 @@ public class App extends Application {
     public static final String BASE_URL = "http://flibustahezeous3.onion";
 
     public static final String TOR_FILES_LOCATION = "torfiles";
-    public String currentLoadedUrl = "http://flibustahezeous3.onion/";
+    public String currentLoadedUrl;
 
     public boolean updateDownloadInProgress = false;
 

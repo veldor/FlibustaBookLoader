@@ -26,7 +26,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.WebView;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
@@ -36,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
 
     private static final int REQUEST_WRITE_READ = 22;
     public static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
-    private WebView mWebView;
+    private MyWebView mWebView;
     private MainViewModel mMyViewModel;
     private LiveData<AndroidOnionProxyManager> mTorClient;
     private SwipeRefreshLayout mRefresher;
@@ -71,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             // показываю диалог с требованием предоставить разрешения
             showPermissionDialog();
         }
+        else{
+            handleLoading();
+        }
 
         // проверю обновления
         final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
@@ -97,16 +99,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         updateSnackbar.show();
     }
 
-
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (permissionGranted()) {
-            // загружаю страницу
-            handleLoading();
-        }
-    }
 
     @Override
     protected void onDestroy() {
@@ -238,9 +230,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void startBrowsing() {
+        Log.d("surprise", "MainActivity startBrowsing: start");
         hideTorLoadingDialog();
-        mWebView.setWebViewClient(new MyWebViewClient(mWebView));
-        mWebView.loadUrl(App.getInstance().currentLoadedUrl);
+        mWebView.setup();
+        if(App.getInstance().currentLoadedUrl == null){
+            Log.d("surprise", "MainActivity startBrowsing: start load");
+            mWebView.loadUrl(App.BASE_URL);
+        }
     }
 
     @Override
@@ -299,4 +295,18 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         if(mTorLoadingDialog != null){
             mTorLoadingDialog.hide();
         }}
+
+        @Override
+        protected void onSaveInstanceState(Bundle outState) {
+            super.onSaveInstanceState(outState);
+            mWebView.saveState(outState);
+            Log.d("surprise", "MainActivity onSaveInstanceState: state saved");
+        }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mWebView.restoreState(savedInstanceState);
+        Log.d("surprise", "MainActivity onRestoreInstanceState: state restored");
+    }
 }

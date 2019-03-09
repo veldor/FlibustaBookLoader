@@ -14,19 +14,26 @@ public class MyWebView extends WebView {
 
     private boolean init = false;
 
-    @SuppressLint("SetJavaScriptEnabled")
     public MyWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        WebSettings webSettings = this.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setBuiltInZoomControls(true);
-        webSettings.setDisplayZoomControls(false);
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    public void setup(){
+        if (!this.isInEditMode()) {
+            this.setWebViewClient(new MyWebViewClient(this));
+            WebSettings webSettings = this.getSettings();
+            webSettings.setJavaScriptEnabled(true);
+            webSettings.setAllowFileAccess(true);
+            webSettings.setBuiltInZoomControls(true);
+            webSettings.setDisplayZoomControls(false);
+        }
     }
 
     @Override
     public void loadUrl(String url) {
         super.loadUrl(url);
+        Log.d("surprise", "MyWebView loadUrl: loading " + url);
         initProgressBar();
     }
 

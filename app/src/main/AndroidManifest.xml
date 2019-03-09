@@ -17,7 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name="net.veldor.flibustaloader.MainActivity">
+        <activity android:name="net.veldor.flibustaloader.MainActivity"
+            android:configChanges="keyboardHidden|orientation"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

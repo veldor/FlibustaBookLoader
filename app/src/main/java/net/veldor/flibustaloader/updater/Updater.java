@@ -17,7 +17,6 @@ public class Updater {
     public static final String GITHUB_DOWNLOAD_LINK = "browser_download_url";
     public static final String GITHUB_APP_NAME = "name";
 
-    // место для хранения TOR клиента
     public static MutableLiveData<Boolean> newVersion = new MutableLiveData<>();
     // место для хранения идентификатора загрузки обновления
     public static MutableLiveData<Long> updateDownloadIdentificator = new MutableLiveData<>();
