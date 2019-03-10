@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.PermissionChecker;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -34,7 +35,7 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener{
 
     private static final int REQUEST_WRITE_READ = 22;
-    public static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
+    private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
     private MyWebView mWebView;
     private MainViewModel mMyViewModel;
     private LiveData<AndroidOnionProxyManager> mTorClient;
@@ -125,6 +126,15 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.menuUseLightStyle:mMyViewModel.switchLightMode();
+                invalidateOptionsMenu();
+                mWebView.reload();
+                return true;
+            case R.id.goHome:
+                mWebView.loadUrl(App.BASE_URL);
+                return true;
+        }
         if (item.getItemId() == R.id.menuUseLightStyle) {
             mMyViewModel.switchLightMode();
             invalidateOptionsMenu();
@@ -166,8 +176,16 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private boolean permissionGranted() {
-        int writeResult = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int readResult = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+        int writeResult;
+        int readResult;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            writeResult = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            readResult = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+        else{
+            writeResult = PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            readResult = PermissionChecker.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
         return writeResult == PackageManager.PERMISSION_GRANTED && readResult == PackageManager.PERMISSION_GRANTED;
     }
 

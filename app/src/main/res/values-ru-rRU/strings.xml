@@ -4,7 +4,6 @@
     <string name="books_loaded_channel">Загруженные книги</string>
     <string name="loading_tor_message">Инициализирую TOR</string>
     <string name="use_light_style">Упрощённый вид</string>
-    <string name="restart_for_changes_message">Перезапустите приложение для применения изменений</string>
     <string name="book_loading_dialog_title">Загрузка книги</string>
     <string name="book_loading_dialog_message">Загружаю книгу, подождите.</string>
     <string name="tor_loading_dialog_title">Загрузка TOR</string>
@@ -14,4 +13,5 @@
     <string name="open_with_message">Открыть с помошью</string>
     <string name="file_not_found_message">Файл не найден</string>
     <string name="share_with_message">Отправить в</string>
+    <string name="go_home">Главная</string>
 </resources>

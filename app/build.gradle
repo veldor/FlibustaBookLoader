@@ -4,10 +4,10 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "net.veldor.flibustaloader"
-        minSdkVersion 23
+        minSdkVersion 21
         targetSdkVersion 28
-        versionCode 3
-        versionName "1.2"
+        versionCode 6
+        versionName "1.2.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

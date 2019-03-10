@@ -20,7 +20,7 @@ public class MainViewModel extends AndroidViewModel {
         return App.getInstance().getViewMode();
     }
     public void switchLightMode(){
-        App.getInstance().swtichViewMode();
+        App.getInstance().switchViewMode();
     }
 
     // загрузка ядра TOR

@@ -24,10 +24,8 @@ public class App extends Application {
     public static final String TOR_FILES_LOCATION = "torfiles";
     public String currentLoadedUrl;
 
-    public boolean updateDownloadInProgress = false;
-
     // место для хранения TOR клиента
-    public MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
+    public final MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
 
     private static App instance;
     public File downloadedApkFile;
@@ -56,7 +54,7 @@ public class App extends Application {
         return (mSharedPreferences.getBoolean(PREFERENCE_LIGHT_MODE_ENABLED, false));
     }
 
-    public void swtichViewMode(){
+    public void switchViewMode(){
         boolean currentValue = mSharedPreferences.getBoolean(PREFERENCE_LIGHT_MODE_ENABLED, false);
         if(currentValue){
             mSharedPreferences.edit().putBoolean(PREFERENCE_LIGHT_MODE_ENABLED, false).apply();

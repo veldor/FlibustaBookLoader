@@ -17,7 +17,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.BuildConfig;
 import net.veldor.flibustaloader.updater.Updater;
 
 import java.io.File;
@@ -30,16 +29,10 @@ public class UpdateWaitService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         // получу идентификатор загрузки
         MutableLiveData<Long> identificator = Updater.updateDownloadIdentificator;
-        if(identificator == null){
-            Log.d("surprise", "UpdateWaitService onStartCommand: not found download identificator");
-            stopSelf();
-        }
-        else{
             mDownloadId = identificator.getValue();
             // Регистрирую сервис для приёма статуса загрузки обновления
             DownloadReceiver downloadObserver = new DownloadReceiver();
             this.registerReceiver(downloadObserver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-        }
         return Service.START_STICKY;
     }
 
@@ -86,7 +79,6 @@ public class UpdateWaitService extends Service {
                 }
                 App.getInstance().downloadedApkFile = null;
                 App.getInstance().updateDownloadUri = null;
-                App.getInstance().updateDownloadInProgress = false;
                 context.unregisterReceiver(this);
                 stopSelf();
             }

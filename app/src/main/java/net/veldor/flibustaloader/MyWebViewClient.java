@@ -2,7 +2,7 @@ package net.veldor.flibustaloader;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.Base64;
@@ -68,6 +68,7 @@ public class MyWebViewClient extends WebViewClient {
     private static final String FILENAME_DELIMITER = "filename=";
     private static final String MY_CSS_STYLE = "myStyle.css";
     static final String BOOK_LOAD_EVENT = "book load event";
+    private static final String MY_COMPAT_CSS_STYLE = "myCompatStyle.css";
 
     private final AndroidOnionProxyManager onionProxyManager;
     private final WebView mWebView;
@@ -104,7 +105,7 @@ public class MyWebViewClient extends WebViewClient {
             HttpGet httpGet = new HttpGet(requestString);
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
             httpGet.setHeader("X-Compress", "null");
-            HttpResponse httpResponse = httpClient.execute(httpGet, context);
+                HttpResponse httpResponse = httpClient.execute(httpGet, context);
 
             InputStream input = httpResponse.getEntity().getContent();
             String encoding = ENCODING_UTF_8;
@@ -189,10 +190,6 @@ public class MyWebViewClient extends WebViewClient {
                 .build();
     }
 
-    @Override
-    public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        super.onPageStarted(view, url, favicon);
-    }
 
     @Override
     public void onPageFinished(WebView view, String url) {
@@ -207,10 +204,17 @@ public class MyWebViewClient extends WebViewClient {
 
     private void injectMyCss() {
         Log.d("surprise", "MyWebViewClient injectMyCss: injecting CSS!");
+        // старые версии Android не понимают переменные цветов и новые объявления JS, подключусь в режиме совместимости
         App context = App.getInstance();
         try {
+            InputStream inputStream;
             // попробую добавить отдельно css и отдельно js
-            InputStream inputStream = context.getAssets().open(MY_CSS_STYLE);
+            if (Build.VERSION.SDK_INT >= 24) {
+                inputStream = context.getAssets().open(MY_CSS_STYLE);
+            }
+            else {
+                inputStream = context.getAssets().open(MY_COMPAT_CSS_STYLE);
+            }
             byte[] buffer = new byte[inputStream.available()];
             int result = inputStream.read(buffer);
             if(result == 0){
@@ -218,7 +222,7 @@ public class MyWebViewClient extends WebViewClient {
             }
             inputStream.close();
             String encoded = Base64.encodeToString(buffer, Base64.NO_WRAP);
-            mWebView.loadUrl("javascript:(function () {" +
+            mWebView.loadUrl("javascript:(function () {'use strict';" +
                     " /*подключу свой файл CSS*/" +
                     " let parent = document.getElementsByTagName('head').item(0);" +
                     " let style = document.createElement('style');" +
@@ -228,7 +232,7 @@ public class MyWebViewClient extends WebViewClient {
                     " parent.appendChild(style);" +
                     " })();");
 
-            mWebView.loadUrl("javascript:(function () { let alphabetClassName = 'alphabet-link'; let authorClassName = 'author-link'; let bookClassName = 'book-link'; let foundedBookClassName = 'book-link searched'; let selectedBookClassName = 'book-link searched selected'; let bookActionClassName = 'book-action-link'; let bookSeriesClassName = 'book-series-link'; let bookGenreClassName = 'book-genre-link'; let classHidden = 'hidden'; let forumNamesClassName = 'forum-name-link'; function handleLinks(element) {let links = element.getElementsByTagName('A'); if (links && links.length > 0) {let alphabetListRegex = /^\\/\\w{1,2}$/; let authorRegex = /^\\/a\\/\\d+$/; let bookRegex = /^\\/b\\/\\d+$/; let bookSeriesRegex = /^\\/s|sequence\\/\\d+$/; let bookGenreRegex = /^\\/g\\/[\\d_\\w]+$/; let bookActonRegex = /^\\/b\\/\\d+\\/\\w+$/; let forumNamesRegex = /^\\/polka\\/show\\/[\\d]+$/; let counter = 0; let href; while (links[counter]) { if(links[counter].offsetHeight){ href = links[counter].getAttribute('href'); if (bookRegex.test(href)) { links[counter].className = bookClassName; } else if (bookActonRegex.test(href)) {links[counter].className = bookActionClassName; links[counter].innerText = links[counter].innerText.replace(/[()]/g, ''); }else if (authorRegex.test(href)) { links[counter].className = authorClassName; } else if (bookSeriesRegex.test(href)) { links[counter].className = bookSeriesClassName; } else if (bookGenreRegex.test(href)) { links[counter].className = bookGenreClassName; } else if (links[counter].innerText === '(СЛЕДИТЬ)') { links[counter].className = classHidden; }else if (alphabetListRegex.test(href) || href === '/a/all' || href === '/Other') { links[counter].className = alphabetClassName; links[counter].innerText = links[counter].innerText.replace(/[\\[\\]]/g, ''); } else if (forumNamesRegex.test(href)) { links[counter].className = forumNamesClassName; } } counter++; } } } handleLinks(document);let target = document.getElementById('books'); if (target) {let observer = new MutationObserver(function () { handleLinks(target); });let config = {attributes: true, childList: true, characterData: true};observer.observe(target, config);} let books = document.getElementsByClassName(bookClassName); if(books && books.length > 0)if (books && books.length > 0) { let searchDiv, searchButton, searchField; searchDiv = document.createElement('div'); searchDiv.id = 'searchContainer'; searchField = document.createElement('input'); searchField.type = 'text'; searchField.id = 'booksSearcher'; searchField.setAttribute('placeholder', 'Искать книгу на странице'); searchButton = document.createElement('div'); searchButton.id = 'searchButton'; let innerText = 'Нет условия'; searchButton.innerText = innerText; searchDiv.appendChild(searchField); searchDiv.appendChild(searchButton); document.body.appendChild(searchDiv); let founded; let searchShift = 0; let previouslySelected; let previousSearch; function makeBookSearched(foundedElement) {if (previousSearch && previousSearch.length > 0) { previousSearch.forEach(function (elem) { elem.className = bookClassName; }); } if (foundedElement && foundedElement.length > 0) { foundedElement.forEach(function (elem) { elem.className = foundedBookClassName; }); previousSearch = foundedElement; } } function makeSearchedBookSelected(elem) { if (previouslySelected) { previouslySelected.className = foundedBookClassName; } elem.className = selectedBookClassName; previouslySelected = elem; } function clearSelectedItem() { if(previouslySelected){ previouslySelected.className = bookClassName; previouslySelected = null; } } function clearSearchedItems() { if (previousSearch && previousSearch.length > 0) { previousSearch.forEach(function (elem) { elem.className = bookClassName; }); previousSearch = null; } } searchField.onkeypress = function (event) { if (event.code === 'Enter') { switchToNext(); } }; searchField.oninput = function () { let inputVal = searchField.value.toLowerCase(); if (inputVal) { founded = []; searchShift = 0; let i = 0; while (books[i]) { if (books[i].innerText.toLowerCase().indexOf(inputVal) + 1 && books[i].offsetHeight) { founded.push(books[i]); } i++; } if (founded && founded.length > 0) {scrollTo(founded[0]); searchButton.innerText = '1 из ' + founded.length; makeBookSearched(founded); makeSearchedBookSelected(founded[0]); } else { clearSelectedItem(); clearSearchedItems(); searchButton.innerText = 'Не найдено'; } } else { clearSelectedItem(); clearSearchedItems(); searchButton.innerText = innerText; founded = []; } }; searchButton.onclick = function () { switchToNext(); }; function switchToNext() { if (founded && founded.length > 0) { ++searchShift; if (founded[searchShift]) { scrollTo(founded[searchShift]); searchButton.innerText = (searchShift + 1) + ' из ' + founded.length; makeSearchedBookSelected(founded[searchShift]); } else { searchShift = 0; scrollTo(founded[0]); searchButton.innerText = '1 из ' + founded.length; makeSearchedBookSelected(founded[0]); } } } function scrollTo(element) { let offset = element.offsetTop - 10; window.scroll(0, offset - 10); } } }())");
+            mWebView.loadUrl("javascript:(function () {'use strict'; let alphabetClassName = 'alphabet-link'; let authorClassName = 'author-link'; let bookClassName = 'book-link'; let foundedBookClassName = 'book-link searched'; let selectedBookClassName = 'book-link searched selected'; let bookActionClassName = 'book-action-link'; let bookSeriesClassName = 'book-series-link'; let bookGenreClassName = 'book-genre-link'; let classHidden = 'hidden'; let forumNamesClassName = 'forum-name-link'; function handleLinks(element) {let links = element.getElementsByTagName('A'); if (links && links.length > 0) {let alphabetListRegex = /^\\/\\w{1,2}$/; let authorRegex = /^\\/a\\/\\d+$/; let bookRegex = /^\\/b\\/\\d+$/; let bookSeriesRegex = /^\\/s|sequence\\/\\d+$/; let bookGenreRegex = /^\\/g\\/[\\d_\\w]+$/; let bookActonRegex = /^\\/b\\/\\d+\\/\\w+$/; let forumNamesRegex = /^\\/polka\\/show\\/[\\d]+$/; let counter = 0; let href; while (links[counter]) { if(links[counter].offsetHeight){ href = links[counter].getAttribute('href'); if (bookRegex.test(href)) { links[counter].className = bookClassName; } else if (bookActonRegex.test(href)) {links[counter].className = bookActionClassName; links[counter].innerText = links[counter].innerText.replace(/[()]/g, ''); }else if (authorRegex.test(href)) { links[counter].className = authorClassName; } else if (bookSeriesRegex.test(href)) { links[counter].className = bookSeriesClassName; } else if (bookGenreRegex.test(href)) { links[counter].className = bookGenreClassName; } else if (links[counter].innerText === '(СЛЕДИТЬ)') { links[counter].className = classHidden; }else if (alphabetListRegex.test(href) || href === '/a/all' || href === '/Other') { links[counter].className = alphabetClassName; links[counter].innerText = links[counter].innerText.replace(/[\\[\\]]/g, ''); } else if (forumNamesRegex.test(href)) { links[counter].className = forumNamesClassName; } } counter++; } } } handleLinks(document);let target = document.getElementById('books'); if (target) {let observer = new MutationObserver(function () { handleLinks(target); });let config = {attributes: true, childList: true, characterData: true};observer.observe(target, config);} let books = document.getElementsByClassName(bookClassName); if(books && books.length > 0)if (books && books.length > 0) { let searchDiv, searchButton, searchField; searchDiv = document.createElement('div'); searchDiv.id = 'searchContainer'; searchField = document.createElement('input'); searchField.type = 'text'; searchField.id = 'booksSearcher'; searchField.setAttribute('placeholder', 'Искать книгу на странице'); searchButton = document.createElement('div'); searchButton.id = 'searchButton'; let innerText = 'Нет условия'; searchButton.innerText = innerText; searchDiv.appendChild(searchField); searchDiv.appendChild(searchButton); document.body.appendChild(searchDiv); let founded; let searchShift = 0; let previouslySelected; let previousSearch; function makeBookSearched(foundedElement) {if (previousSearch && previousSearch.length > 0) { previousSearch.forEach(function (elem) { elem.className = bookClassName; }); } if (foundedElement && foundedElement.length > 0) { foundedElement.forEach(function (elem) { elem.className = foundedBookClassName; }); previousSearch = foundedElement; } } function makeSearchedBookSelected(elem) { if (previouslySelected) { previouslySelected.className = foundedBookClassName; } elem.className = selectedBookClassName; previouslySelected = elem; } function clearSelectedItem() { if(previouslySelected){ previouslySelected.className = bookClassName; previouslySelected = null; } } function clearSearchedItems() { if (previousSearch && previousSearch.length > 0) { previousSearch.forEach(function (elem) { elem.className = bookClassName; }); previousSearch = null; } } searchField.onkeypress = function (event) { if (event.code === 'Enter') { switchToNext(); } }; searchField.oninput = function () { let inputVal = searchField.value.toLowerCase(); if (inputVal) { founded = []; searchShift = 0; let i = 0; while (books[i]) { if (books[i].innerText.toLowerCase().indexOf(inputVal) + 1 && books[i].offsetHeight) { founded.push(books[i]); } i++; } if (founded && founded.length > 0) {scrollTo(founded[0]); searchButton.innerText = '1 из ' + founded.length; makeBookSearched(founded); makeSearchedBookSelected(founded[0]); } else { clearSelectedItem(); clearSearchedItems(); searchButton.innerText = 'Не найдено'; } } else { clearSelectedItem(); clearSearchedItems(); searchButton.innerText = innerText; founded = []; } }; searchButton.onclick = function () { switchToNext(); }; function switchToNext() { if (founded && founded.length > 0) { ++searchShift; if (founded[searchShift]) { scrollTo(founded[searchShift]); searchButton.innerText = (searchShift + 1) + ' из ' + founded.length; makeSearchedBookSelected(founded[searchShift]); } else { searchShift = 0; scrollTo(founded[0]); searchButton.innerText = '1 из ' + founded.length; makeSearchedBookSelected(founded[0]); } } } function scrollTo(element) { let offset = element.offsetTop - 10; window.scroll(0, offset - 10); } } }())");
         } catch (IOException e) {
             Log.d("surprise", "MyWebViewClient injectMyCss: error when injecting my Js or CSS");
             e.printStackTrace();

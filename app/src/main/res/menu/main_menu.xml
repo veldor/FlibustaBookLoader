@@ -8,6 +8,11 @@
         yourapp:actionViewClass="android.support.v7.widget.SearchView"
         yourapp:showAsAction="ifRoom" />
     <item
+        android:id="@+id/goHome"
+        android:icon="@drawable/ic_home_white_24dp"
+        android:title="@string/go_home"
+        yourapp:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/menuUseLightStyle"
         android:title="@string/use_light_style"
         android:checkable="true"

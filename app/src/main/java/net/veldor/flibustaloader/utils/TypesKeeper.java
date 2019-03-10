@@ -11,15 +11,12 @@ public class TypesKeeper {
     private static TypesKeeper instance;
 
 
-    // content mimes
-    private final String PDF_MIME = "application/pdf";
-    private final String FB2_MIME = "application/fb2+zip";
-    private final String EPUP_MIME = "application/epub+zip";
-    private final String MOBI_MIME = "application/x-mobipocket-ebook";
-    private final String DJVU_MIME = "image/vnd.djvu";
+    private final String DJVU_MIME;
 
 
-    private TypesKeeper(){}
+    private TypesKeeper(){
+        DJVU_MIME = "image/vnd.djvu";
+    }
 
     public static TypesKeeper getInstance(){
         if(instance == null){
@@ -29,6 +26,11 @@ public class TypesKeeper {
     }
 
     String getMime(String type) {
+        // content mimes
+        String PDF_MIME = "application/pdf";
+        String FB2_MIME = "application/fb2+zip";
+        String EPUP_MIME = "application/epub+zip";
+        String MOBI_MIME = "application/x-mobipocket-ebook";
         switch (type) {
             case PDF_TYPE:
                 return PDF_MIME;
