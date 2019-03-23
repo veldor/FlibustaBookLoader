@@ -127,7 +127,8 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case R.id.menuUseLightStyle:mMyViewModel.switchLightMode();
+            case R.id.menuUseLightStyle:
+                mMyViewModel.switchLightMode();
                 invalidateOptionsMenu();
                 mWebView.reload();
                 return true;
@@ -169,6 +170,14 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         if (requestCode == REQUEST_WRITE_READ) {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 showPermissionDialog();
+            }
+            else{
+                Log.d("surprise", "MainActivity onRequestPermissionsResult: permission granted");
+                // полностью перезапущу приложение
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                this.startActivity(intent);
+                Runtime.getRuntime().exit(0);
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);

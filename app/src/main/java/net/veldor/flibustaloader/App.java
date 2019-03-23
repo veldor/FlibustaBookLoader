@@ -51,11 +51,11 @@ public class App extends Application {
     }
 
     public boolean getViewMode(){
-        return (mSharedPreferences.getBoolean(PREFERENCE_LIGHT_MODE_ENABLED, false));
+        return (mSharedPreferences.getBoolean(PREFERENCE_LIGHT_MODE_ENABLED, true));
     }
 
     public void switchViewMode(){
-        boolean currentValue = mSharedPreferences.getBoolean(PREFERENCE_LIGHT_MODE_ENABLED, false);
+        boolean currentValue = mSharedPreferences.getBoolean(PREFERENCE_LIGHT_MODE_ENABLED, true);
         if(currentValue){
             mSharedPreferences.edit().putBoolean(PREFERENCE_LIGHT_MODE_ENABLED, false).apply();
         }
