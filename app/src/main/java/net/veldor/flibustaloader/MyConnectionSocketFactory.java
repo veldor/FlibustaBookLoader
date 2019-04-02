@@ -8,7 +8,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import cz.msebera.android.httpclient.HttpHost;
-import cz.msebera.android.httpclient.conn.ConnectTimeoutException;
 import cz.msebera.android.httpclient.conn.socket.ConnectionSocketFactory;
 import cz.msebera.android.httpclient.protocol.HttpContext;
 
@@ -17,10 +16,10 @@ import cz.msebera.android.httpclient.protocol.HttpContext;
  */
 
 
-public class MyConnectionSocketFactory implements ConnectionSocketFactory {
+class MyConnectionSocketFactory implements ConnectionSocketFactory {
 
     @Override
-    public Socket createSocket(final HttpContext context) throws IOException {
+    public Socket createSocket(final HttpContext context) {
         //InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
         //Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
         return new Socket();//(proxy);
@@ -33,7 +32,7 @@ public class MyConnectionSocketFactory implements ConnectionSocketFactory {
             final HttpHost host,
             final InetSocketAddress remoteAddress,
             final InetSocketAddress localAddress,
-            final HttpContext context) throws IOException, ConnectTimeoutException {
+            final HttpContext context) throws IOException {
 
         InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
         socket = new Socket();

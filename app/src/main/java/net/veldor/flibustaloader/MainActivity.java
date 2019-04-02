@@ -32,7 +32,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
-public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener{
+public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int REQUEST_WRITE_READ = 22;
     private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
@@ -70,8 +70,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         if (!permissionGranted()) {
             // показываю диалог с требованием предоставить разрешения
             showPermissionDialog();
-        }
-        else{
+        } else {
             handleLoading();
         }
 
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         version.observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(@Nullable Boolean aBoolean) {
-                if(aBoolean != null && aBoolean){
+                if (aBoolean != null && aBoolean) {
                     // показываю Snackbar с уведомлением
                     makeUpdateSnackbar();
                 }
@@ -89,6 +88,28 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setWebViewBackground();
+    }
+
+    private void setWebViewBackground() {
+        if(mMyViewModel.getNightModeEnabled()){
+            mWebView.setBackgroundColor(getResources().getColor(android.R.color.black));
+            Log.d("surprise", "MainActivity setWebViewBackground: night mode");
+        }
+        else{
+            mWebView.setBackgroundColor(getResources().getColor(android.R.color.white));
+            Log.d("surprise", "MainActivity setWebViewBackground: day mode");
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mPageLoadReceiver);
+    }
     private void makeUpdateSnackbar() {
         Snackbar updateSnackbar = Snackbar.make(mRootView, getString(R.string.snackbar_found_update_message), Snackbar.LENGTH_INDEFINITE);
         updateSnackbar.setAction(getString(R.string.snackbar_update_action_message), new View.OnClickListener() {
@@ -101,11 +122,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mPageLoadReceiver);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -121,12 +137,14 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         // добавлю обработку вида страницы
         MenuItem lightModeSwitcher = menu.findItem(R.id.menuUseLightStyle);
         lightModeSwitcher.setChecked(mMyViewModel.getLightModeEnabled());
+        MenuItem nightModeSwitcher = menu.findItem(R.id.menuUseDarkMode);
+        nightModeSwitcher.setChecked(mMyViewModel.getNightModeEnabled());
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.menuUseLightStyle:
                 mMyViewModel.switchLightMode();
                 invalidateOptionsMenu();
@@ -140,6 +158,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             mMyViewModel.switchLightMode();
             invalidateOptionsMenu();
             mWebView.reload();
+            return true;
+        }
+        if (item.getItemId() == R.id.menuUseDarkMode) {
+            mMyViewModel.switchNightMode();
+            invalidateOptionsMenu();
+            mWebView.reload();
+            setWebViewBackground();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -170,8 +195,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         if (requestCode == REQUEST_WRITE_READ) {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 showPermissionDialog();
-            }
-            else{
+            } else {
                 Log.d("surprise", "MainActivity onRequestPermissionsResult: permission granted");
                 // полностью перезапущу приложение
                 Intent intent = new Intent(this, MainActivity.class);
@@ -190,8 +214,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             writeResult = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             readResult = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-        }
-        else{
+        } else {
             writeResult = PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
             readResult = PermissionChecker.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         }
@@ -260,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         Log.d("surprise", "MainActivity startBrowsing: start");
         hideTorLoadingDialog();
         mWebView.setup();
-        if(App.getInstance().currentLoadedUrl == null){
+        if (App.getInstance().currentLoadedUrl == null) {
             Log.d("surprise", "MainActivity startBrowsing: start load");
             mWebView.loadUrl(App.BASE_URL);
         }
@@ -290,25 +313,25 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void showBookLoadingDialog() {
-        if(mBookLoadingDialog == null){
+        if (mBookLoadingDialog == null) {
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.book_loading_dialog_title)
-                            .setView(R.layout.book_loading_dialog_layout)
-                            .setCancelable(false);
+                    .setView(R.layout.book_loading_dialog_layout)
+                    .setCancelable(false);
             mBookLoadingDialog = dialogBuilder.create();
         }
         mBookLoadingDialog.show();
     }
 
     private void hideBookLoadingDialog() {
-        if(mBookLoadingDialog != null){
+        if (mBookLoadingDialog != null) {
             mBookLoadingDialog.hide();
         }
     }
 
-    private void showTorLoadingDialog(){
-        if(mTorLoadingDialog == null){
+    private void showTorLoadingDialog() {
+        if (mTorLoadingDialog == null) {
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.tor_loading_dialog_title)
@@ -318,17 +341,25 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         }
         mTorLoadingDialog.show();
     }
-    private void hideTorLoadingDialog(){
-        if(mTorLoadingDialog != null){
-            mTorLoadingDialog.hide();
-        }}
 
-        @Override
-        protected void onSaveInstanceState(Bundle outState) {
-            super.onSaveInstanceState(outState);
-            mWebView.saveState(outState);
-            Log.d("surprise", "MainActivity onSaveInstanceState: state saved");
+    private void hideTorLoadingDialog() {
+        if (mTorLoadingDialog != null) {
+            mTorLoadingDialog.hide();
         }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        Log.d("surprise", "MainActivity onLowMemory: oops, low memory... Save me...");
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mWebView.saveState(outState);
+        Log.d("surprise", "MainActivity onSaveInstanceState: state saved");
+    }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {

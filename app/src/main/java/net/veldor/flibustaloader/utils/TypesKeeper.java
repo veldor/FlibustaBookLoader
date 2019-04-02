@@ -29,7 +29,7 @@ public class TypesKeeper {
         // content mimes
         String PDF_MIME = "application/pdf";
         String FB2_MIME = "application/fb2+zip";
-        String EPUP_MIME = "application/epub+zip";
+        String EPUB_MIME = "application/epub+zip";
         String MOBI_MIME = "application/x-mobipocket-ebook";
         switch (type) {
             case PDF_TYPE:
@@ -37,7 +37,7 @@ public class TypesKeeper {
             case FB2_TYPE:
                 return FB2_MIME;
             case EPUB_TYPE:
-                return EPUP_MIME;
+                return EPUB_MIME;
             case MOBI_TYPE:
                 return MOBI_MIME;
             case DJVU_TYPE:

@@ -18,7 +18,7 @@ public class Updater {
 
     public static final MutableLiveData<Boolean> newVersion = new MutableLiveData<>();
     // место для хранения идентификатора загрузки обновления
-    public static final MutableLiveData<Long> updateDownloadIdentificator = new MutableLiveData<>();
+    public static final MutableLiveData<Long> updateDownloadIdentification = new MutableLiveData<>();
 
     public static LiveData<Boolean> checkUpdate(){
         // даю задание worker-у

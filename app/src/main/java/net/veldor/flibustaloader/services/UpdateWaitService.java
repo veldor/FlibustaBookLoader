@@ -28,8 +28,8 @@ public class UpdateWaitService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // получу идентификатор загрузки
-        MutableLiveData<Long> identificator = Updater.updateDownloadIdentificator;
-            mDownloadId = identificator.getValue();
+        MutableLiveData<Long> identification = Updater.updateDownloadIdentification;
+            mDownloadId = identification.getValue();
             // Регистрирую сервис для приёма статуса загрузки обновления
             DownloadReceiver downloadObserver = new DownloadReceiver();
             this.registerReceiver(downloadObserver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
@@ -69,20 +70,121 @@ public class MyWebViewClient extends WebViewClient {
     private static final String MY_CSS_STYLE = "myStyle.css";
     static final String BOOK_LOAD_EVENT = "book load event";
     private static final String MY_COMPAT_CSS_STYLE = "myCompatStyle.css";
+    private static final String MY_CSS_NIGHT_STYLE = "myNightMode.css";
 
     private final AndroidOnionProxyManager onionProxyManager;
     private final WebView mWebView;
     private boolean mViewMode;
+    private boolean mNightMode;
 
     MyWebViewClient(WebView webView) {
         this.onionProxyManager = App.getInstance().mTorManager.getValue();
         this.mWebView = webView;
     }
 
+    @Override
+    public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+
+        mViewMode = App.getInstance().getViewMode();
+        mNightMode = App.getInstance().getNightMode();
+        try {
+            // обрубаю загрузку картинок в упрощённом виде
+            if(mViewMode){
+                String[] extensionArr = url.split("\\.");
+                if(extensionArr.length > 0){
+                    String extension = extensionArr[extensionArr.length - 1];
+                    if (extension.equals(JPG_TYPE) || extension.equals(JPEG_TYPE) || extension.equals(PNG_TYPE) || extension.equals(GIF_TYPE)) {
+                        return super.shouldInterceptRequest(view, url);
+                    }
+                }
+            }
+
+            HttpClient httpClient = getNewHttpClient();
+            int port = onionProxyManager.getIPv4LocalHostSocksPort();
+            InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
+            HttpClientContext context = HttpClientContext.create();
+            context.setAttribute("socks.address", socksaddr);
+            HttpGet httpGet = new HttpGet(url);
+            httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
+            httpGet.setHeader("X-Compress", "null");
+            HttpResponse httpResponse = httpClient.execute(httpGet, context);
+
+            InputStream input = httpResponse.getEntity().getContent();
+            String encoding = ENCODING_UTF_8;
+            String mime = httpResponse.getEntity().getContentType().getValue();
+            if (mime.contains(";")) {
+                String[] arr = mime.split(";");
+                mime = arr[0];
+                arr = arr[1].split("=");
+                encoding = arr[1];
+            }
+
+            if (mime.equals(BOOK_FORMAT) || mime.equals(FB2_FORMAT) || mime.equals(PDF_FORMAT)) {
+                Context activityContext = view.getContext();
+                Header header = httpResponse.getFirstHeader(HEADER_CONTENT_DISPOSITION);
+                String name = header.getValue().split(FILENAME_DELIMITER)[1];
+                name = name.replace("\"", "");
+                String[] extensionSource = name.split("\\.");
+                String extension = extensionSource[extensionSource.length - 1];
+                String[] types = url.split("/");
+                String type = types[types.length - 1];
+                if(mime.equals(PDF_FORMAT)){
+                    type = PDF_TYPE;
+                }
+                if(extension.equals(DJVU_TYPE)){
+                    type = DJVU_TYPE;
+                }
+                if (type.equals(FB2_TYPE) || type.equals(MOBI_TYPE) || type.equals(EPUB_TYPE) || type.equals(PDF_TYPE) || type.equals(DJVU_TYPE)) {
+                    try {
+                        // начинаю загружать книку, пошлю оповещение о начале загрузки
+                        Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
+                        startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
+                        activityContext.sendBroadcast(startLoadingIntent);
+                        // сохраняю книгу в памяти устройства
+                        File file = new File(DOWNLOAD_FOLDER_LOCATION, name);
+                        InputStream is = httpResponse.getEntity().getContent();
+                        FileOutputStream outputStream = new FileOutputStream(file);
+                        int read;
+                        byte[] buffer = new byte[1024];
+                        while ((read = is.read(buffer)) > 0) {
+                            outputStream.write(buffer, 0, read);
+                        }
+                        outputStream.close();
+                        is.close();
+                        // отправлю сообщение о скачанном файле через broadcastReceiver
+                        Intent intent = new Intent(activityContext, BookLoadedReceiver.class);
+                        intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);
+                        intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, type);
+                        activityContext.sendBroadcast(intent);
+                        /*// вернусь на ранее загруженную страницу
+                        activityContext.sendBroadcast(new Intent(BOOK_LOAD_ACTION));*/
+                        String message = "<H1 style='text-align:center;'>Книга закачана. Возвращаюсь на предыдущую страницу</H1>";
+                        ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(encoding));
+                        return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+                    } catch (IOException e) {
+                        Log.d("surprise", "some output error");
+                    } finally {
+                        // отправлю оповещение об окончании загрузки страницы
+                        Intent finishLoadingIntent = new Intent(BOOK_LOAD_ACTION);
+                        finishLoadingIntent.putExtra(BOOK_LOAD_EVENT, FINISH_BOOK_LOADING);
+                        activityContext.sendBroadcast(finishLoadingIntent);
+                    }
+                }
+            }
+
+            return new WebResourceResponse(mime, encoding, input);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return super.shouldInterceptRequest(view, url);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Nullable
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
         mViewMode = App.getInstance().getViewMode();
+        mNightMode = App.getInstance().getNightMode();
         try {
             String requestString = request.getUrl().toString();
 
@@ -197,8 +299,40 @@ public class MyWebViewClient extends WebViewClient {
         if(url.startsWith(App.BASE_URL)){
             App.getInstance().currentLoadedUrl = url;
         }
+        if(mNightMode){
+            injectNightMode();
+        }
         if (mViewMode) {
             injectMyCss();
+        }
+    }
+
+    private void injectNightMode() {
+
+        Log.d("surprise", "MyWebViewClient injectNightMode: inject night mode");
+        // старые версии Android не понимают переменные цветов и новые объявления JS, подключусь в режиме совместимости
+        App context = App.getInstance();
+        try {
+            InputStream inputStream = context.getAssets().open(MY_CSS_NIGHT_STYLE);
+            byte[] buffer = new byte[inputStream.available()];
+            int result = inputStream.read(buffer);
+            if(result == 0){
+                Log.d("surprise", "MyWebViewClient injectMyCss: read 0 bytes");
+            }
+            inputStream.close();
+            String encoded = Base64.encodeToString(buffer, Base64.NO_WRAP);
+            mWebView.loadUrl("javascript:(function () {'use strict';" +
+                    " /*подключу свой файл CSS*/" +
+                    " let parent = document.getElementsByTagName('head').item(0);" +
+                    " let style = document.createElement('style');" +
+                    " style.type = 'text/css';" +
+                    // Tell the browser to BASE64-decode the string into your script !!!
+                    " style.innerHTML = window.atob('" + encoded + "');" +
+                    " parent.appendChild(style);" +
+                    " })();");
+        } catch (IOException e) {
+            Log.d("surprise", "MyWebViewClient injectMyCss: error when injecting my Js or CSS");
+            e.printStackTrace();
         }
     }
 
@@ -218,7 +352,7 @@ public class MyWebViewClient extends WebViewClient {
             byte[] buffer = new byte[inputStream.available()];
             int result = inputStream.read(buffer);
             if(result == 0){
-                Log.d("surprise", "MyWebViewClient injectMyCss: readed 0 bytes");
+                Log.d("surprise", "MyWebViewClient injectMyCss: read 0 bytes");
             }
             inputStream.close();
             String encoded = Base64.encodeToString(buffer, Base64.NO_WRAP);

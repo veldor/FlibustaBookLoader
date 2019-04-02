@@ -33,18 +33,21 @@ public class MyWebView extends WebView {
     @Override
     public void loadUrl(String url) {
         super.loadUrl(url);
-        Log.d("surprise", "MyWebView loadUrl: loading " + url);
         initProgressBar();
     }
 
     private void initProgressBar() {
+        Log.d("surprise", "MyWebView initProgressBar: i init progress bar");
         if (init) {
             return;
         }
         init = true;
         final ProgressBar progressBar = ((MainActivity) getContext()).findViewById(R.id.pageLoadedProgressBar);
+        // попробую скрыть бар для начала
+        progressBar.setVisibility(View.GONE);
         this.setWebChromeClient(new WebChromeClient() {
             public void onProgressChanged(WebView view, int progress) {
+                Log.d("surprise", "MyWebView onProgressChanged: progress changed on " + progress);
                 if (progress > 90) {
                     if (progressBar.getVisibility() == View.VISIBLE) {
                         progressBar.setVisibility(View.GONE);

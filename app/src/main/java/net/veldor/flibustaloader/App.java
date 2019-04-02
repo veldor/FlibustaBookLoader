@@ -22,6 +22,7 @@ public class App extends Application {
     public static final String BASE_URL = "http://flibustahezeous3.onion";
 
     public static final String TOR_FILES_LOCATION = "torfiles";
+    private static final String PREFERENCE_NIGHT_MODE_ENABLED = "night mode";
     public String currentLoadedUrl;
 
     // место для хранения TOR клиента
@@ -62,5 +63,19 @@ public class App extends Application {
         else {
             mSharedPreferences.edit().putBoolean(PREFERENCE_LIGHT_MODE_ENABLED, true).apply();
         }
+    }
+
+    public void switchNightMode() {
+        boolean currentValue = mSharedPreferences.getBoolean(PREFERENCE_NIGHT_MODE_ENABLED, false);
+        if(currentValue){
+            mSharedPreferences.edit().putBoolean(PREFERENCE_NIGHT_MODE_ENABLED, false).apply();
+        }
+        else {
+            mSharedPreferences.edit().putBoolean(PREFERENCE_NIGHT_MODE_ENABLED, true).apply();
+        }
+    }
+
+    public boolean getNightMode() {
+        return (mSharedPreferences.getBoolean(PREFERENCE_NIGHT_MODE_ENABLED, false));
     }
 }

@@ -35,4 +35,12 @@ public class MainViewModel extends AndroidViewModel {
     public void initializeUpdate() {
         Updater.update();
     }
+
+    public void switchNightMode() {
+        App.getInstance().switchNightMode();
+    }
+
+    public boolean getNightModeEnabled() {
+        return App.getInstance().getNightMode();
+    }
 }

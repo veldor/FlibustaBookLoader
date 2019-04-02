@@ -17,4 +17,9 @@
         android:title="@string/use_light_style"
         android:checkable="true"
         yourapp:showAsAction="never"/>
+    <item
+        android:id="@+id/menuUseDarkMode"
+        android:title="@string/use_dark_mode"
+        android:checkable="true"
+        yourapp:showAsAction="never"/>
 </menu>

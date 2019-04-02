@@ -1,0 +1,9 @@
+html{
+    height: 100%;
+    background-color:#FFFFFF;
+    filter: invert(100%);
+}
+
+html body{
+    height:100%;
+}

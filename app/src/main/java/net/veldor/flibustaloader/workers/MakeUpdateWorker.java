@@ -80,7 +80,7 @@ public class MakeUpdateWorker extends Worker {
                                         Context.DOWNLOAD_SERVICE);
                                 long startedDownloadId = manager.enqueue(request);
                                 // загрузка начата, отправлю идентификатор загрузки менеджеру
-                                Updater.updateDownloadIdentificator.postValue(startedDownloadId);
+                                Updater.updateDownloadIdentification.postValue(startedDownloadId);
                                 App.getInstance().downloadedApkFile = downloadedApkFile;
                                 // запущу сервис отслеживания окончания загрузки
                                 mContext.startService(new Intent(mContext, UpdateWaitService.class));

@@ -1,5 +1,11 @@
+html{
+    height: 100%;
+    background-color:#FFFFFF;
+}
+
 html body{
     font-size: 12px;
+    height:100%;
 }
 
 /*скрою ненужные элементы*/
