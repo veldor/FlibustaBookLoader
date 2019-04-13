@@ -46,7 +46,6 @@ public class StartTorWorker extends Worker {
                 HttpClientContext context = HttpClientContext.create();
                 context.setAttribute("socks.address", socksaddr);
                 App.getInstance().mTorManager.postValue(tor);
-                Toast.makeText(App.getInstance(), "Tor запустился", Toast.LENGTH_LONG).show();
             }
             else
                 Log.d("surprise", "looks like, we need wait here for tor start works");

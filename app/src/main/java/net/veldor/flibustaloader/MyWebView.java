@@ -37,7 +37,6 @@ public class MyWebView extends WebView {
     }
 
     private void initProgressBar() {
-        Log.d("surprise", "MyWebView initProgressBar: i init progress bar");
         if (init) {
             return;
         }
@@ -47,7 +46,6 @@ public class MyWebView extends WebView {
         progressBar.setVisibility(View.GONE);
         this.setWebChromeClient(new WebChromeClient() {
             public void onProgressChanged(WebView view, int progress) {
-                Log.d("surprise", "MyWebView onProgressChanged: progress changed on " + progress);
                 if (progress > 90) {
                     if (progressBar.getVisibility() == View.VISIBLE) {
                         progressBar.setVisibility(View.GONE);

@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -10,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,10 +29,15 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
+
+import java.net.URI;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -44,6 +51,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private AlertDialog mBookLoadingDialog;
     private AlertDialog mTorLoadingDialog;
     private View mRootView;
+    private SearchView.SearchAutoComplete mSearchAutoComplete;
+    private ArrayList<String> autocompleteStrings;
+    private SearchView mSearchView;
+    private ArrayAdapter<String> mSearchAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +97,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 version.removeObservers(MainActivity.this);
             }
         });
+
+        // создам тестовый массив строк для автозаполнения
+        autocompleteStrings = mMyViewModel.getSearchAutocomplete();
+
     }
 
     @Override
@@ -123,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
 
 
 
+    @SuppressLint("RestrictedApi")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
@@ -130,9 +146,34 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // добавлю обработку поиска
         MenuItem searchMenuItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) searchMenuItem.getActionView();
-        searchView.setInputType(InputType.TYPE_CLASS_TEXT);
-        searchView.setOnQueryTextListener(this);
+        mSearchView = (SearchView) searchMenuItem.getActionView();
+        mSearchView.setInputType(InputType.TYPE_CLASS_TEXT);
+        mSearchView.setOnQueryTextListener(this);
+
+        mSearchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
+            @Override
+            public boolean onSuggestionSelect(int i) {
+                return true;
+            }
+
+            @Override
+            public boolean onSuggestionClick(int i) {
+                String value = autocompleteStrings.get(i);
+                mSearchView.setQuery(value, true);
+                return true;
+            }
+        });
+
+        mSearchAutoComplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+
+        mSearchAutoComplete.setDropDownBackgroundResource(android.R.color.white);
+        mSearchAutoComplete.setDropDownAnchor(R.id.action_search);
+        mSearchAutoComplete.setThreshold(0);
+
+        mSearchAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, autocompleteStrings);
+
+        mSearchAutoComplete.setAdapter(mSearchAdapter);
+
 
         // добавлю обработку вида страницы
         MenuItem lightModeSwitcher = menu.findItem(R.id.menuUseLightStyle);
@@ -152,6 +193,17 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 return true;
             case R.id.goHome:
                 mWebView.loadUrl(App.BASE_URL);
+                return true;
+            case R.id.showNew:
+                mWebView.loadUrl(App.NEW_BOOKS);
+                return true;
+            case R.id.randomBook:
+                mWebView.loadUrl(mMyViewModel.getRandomBookUrl());
+                return true;
+            case R.id.buyCoffee:
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
+                startActivity(intent);
                 return true;
         }
         if (item.getItemId() == R.id.menuUseLightStyle) {
@@ -196,7 +248,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 showPermissionDialog();
             } else {
-                Log.d("surprise", "MainActivity onRequestPermissionsResult: permission granted");
                 // полностью перезапущу приложение
                 Intent intent = new Intent(this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -225,10 +276,22 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onQueryTextSubmit(String s) {
         if (!TextUtils.isEmpty(s.trim())) {
             // ищу введённое значение
-            String searchString = FLIBUSTA_SEARCH_REQUEST + s.trim();
-            mWebView.loadUrl(searchString);
+            makeSearch(s);
         }
         return true;
+    }
+
+    private void makeSearch(String s) {
+        String searchString = FLIBUSTA_SEARCH_REQUEST + s.trim();
+        mWebView.loadUrl(searchString);
+        // занесу значение в список автозаполнения
+        if(XMLHandler.putSearchValue(s)){
+            // обновлю список поиска
+            autocompleteStrings = mMyViewModel.getSearchAutocomplete();
+            mSearchAdapter.clear();
+            mSearchAdapter.addAll(autocompleteStrings);
+            mSearchAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -280,11 +343,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void startBrowsing() {
-        Log.d("surprise", "MainActivity startBrowsing: start");
         hideTorLoadingDialog();
         mWebView.setup();
         if (App.getInstance().currentLoadedUrl == null) {
-            Log.d("surprise", "MainActivity startBrowsing: start load");
             mWebView.loadUrl(App.BASE_URL);
         }
     }
@@ -304,7 +365,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                     showBookLoadingDialog();
                     break;
                 case MyWebViewClient.FINISH_BOOK_LOADING:
-                    Log.d("surprise", "BookLoadingReceiver onReceive: book loaded, returned to last saved: " + App.getInstance().currentLoadedUrl);
                     mWebView.loadUrl(App.getInstance().currentLoadedUrl);
                 default:
                     hideBookLoadingDialog();

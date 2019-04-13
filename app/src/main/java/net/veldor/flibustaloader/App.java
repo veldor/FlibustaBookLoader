@@ -17,9 +17,12 @@ import androidx.work.WorkManager;
 
 public class App extends Application {
 
+    public static final int MAX_BOOK_NUMBER = 548398;
 
+    public static final String NEW_BOOKS = "http://flibustahezeous3.onion/new";
     private static final String PREFERENCE_LIGHT_MODE_ENABLED = "light mode";
     public static final String BASE_URL = "http://flibustahezeous3.onion";
+    public static final String BASE_BOOK_URL = "http://flibustahezeous3.onion/b/";
 
     public static final String TOR_FILES_LOCATION = "torfiles";
     private static final String PREFERENCE_NIGHT_MODE_ENABLED = "night mode";

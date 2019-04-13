@@ -53,8 +53,7 @@ class MyConnectionSocketFactory implements ConnectionSocketFactory {
         DataInputStream inputStream = new DataInputStream(socket.getInputStream());
         if (inputStream.readByte() != (byte) 0x00 || inputStream.readByte() != (byte) 0x5a) {
             throw new IOException("SOCKS4a connect failed");
-        } else
-            Log.v("surprise", "SOCKS4a connect ok!");
+        }
         inputStream.readShort();
         inputStream.readInt();
         return socket;

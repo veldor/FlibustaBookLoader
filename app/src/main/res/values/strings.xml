@@ -15,4 +15,10 @@
     <string name="share_with_message">Share with</string>
     <string name="go_home">go home</string>
     <string name="use_dark_mode">Use dark mode</string>
+    <string name="show_last">Last loaded books</string>
+    <string name="look">View</string>
+    <string name="show_random">Random book</string>
+    <string name="navigation">Navigation</string>
+    <string name="buy_me_coffee">Buy me coffee</string>
+    <string name="enter_text">Enter text</string>
 </resources>

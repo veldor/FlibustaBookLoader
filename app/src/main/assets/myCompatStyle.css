@@ -117,6 +117,7 @@ a.alphabet-link,
 li.pager-item>a,
 li.pager-next>a,
 li.pager-prev>a,
+li.pager-previous>a,
 li.pager-first>a,
 li.pager-last>a
 {
@@ -358,4 +359,8 @@ a.book-link.searched.selected{
 a.book-link.searched.selected:active{
 	background-color: #FFFFFF;
 	color: #881515;
+}
+
+#main > div.item-list>ul.pager{
+	display: block;
 }

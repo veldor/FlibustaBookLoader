@@ -15,4 +15,10 @@
     <string name="share_with_message">Отправить в</string>
     <string name="go_home">Главная</string>
     <string name="use_dark_mode">Ночной режим</string>
+    <string name="show_last">Новинки</string>
+    <string name="look">Внешний вид</string>
+    <string name="show_random">Случайная книга</string>
+    <string name="navigation">Навигация</string>
+    <string name="buy_me_coffee">Купите мне кофе :)</string>
+    <string name="enter_text">Введите текст</string>
 </resources>
