@@ -3,7 +3,6 @@ package net.veldor.flibustaloader;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -19,7 +18,7 @@ public class MyWebView extends WebView {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    public void setup(){
+    public void setup() {
         if (!this.isInEditMode()) {
             this.setWebViewClient(new MyWebViewClient(this));
             WebSettings webSettings = this.getSettings();

@@ -20,5 +20,11 @@
     <string name="show_random">Random book</string>
     <string name="navigation">Navigation</string>
     <string name="buy_me_coffee">Buy me coffee</string>
-    <string name="enter_text">Enter text</string>
+    <string name="use_light_fat_style">Lite fat style</string>
+    <string name="use_normal_style">Use normal</string>
+    <string name="use_light_fast_style">Fast light style</string>
+    <string name="use_fat_fast_style">Fat fast style</string>
+    <string name="tor_is_stopped">Tor is stopped…</string>
+    <string name="tor_restart_dialog_message">Tor, stopped unfortunately, maybe, no internet connection. Need to restart it.</string>
+    <string name="restart_tor_message">Restart TOR</string>
 </resources>

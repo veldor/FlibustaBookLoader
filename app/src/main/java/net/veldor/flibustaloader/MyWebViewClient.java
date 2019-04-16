@@ -2,6 +2,7 @@ package net.veldor.flibustaloader;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -22,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -43,7 +45,9 @@ public class MyWebViewClient extends WebViewClient {
 
     public static final File DOWNLOAD_FOLDER_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
+    private static final String TOR_NOT_RUNNING_ERROR = "Tor is not running!";
     static final String BOOK_LOAD_ACTION = "net.veldor.flibustaloader.action.BOOK_LOAD_EVENT";
+    static final String TOR_CONNECT_ERROR_ACTION = "net.veldor.flibustaloader.action.TOR_CONNECT_ERROR";
     static final int START_BOOK_LOADING = 1;
     static final int FINISH_BOOK_LOADING = 2;
     private static final String ENCODING_UTF_8 = "UTF-8";
@@ -67,15 +71,17 @@ public class MyWebViewClient extends WebViewClient {
 
     private static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     private static final String FILENAME_DELIMITER = "filename=";
-    private static final String MY_CSS_STYLE = "myStyle.css";
     static final String BOOK_LOAD_EVENT = "book load event";
     private static final String MY_COMPAT_CSS_STYLE = "myCompatStyle.css";
     private static final String MY_CSS_NIGHT_STYLE = "myNightMode.css";
+    private static final String MY_COMPAT_FAT_CSS_STYLE = "myCompatFatStyle.css";
 
     private final AndroidOnionProxyManager onionProxyManager;
     private final WebView mWebView;
-    private boolean mViewMode;
+    private int mViewMode;
     private boolean mNightMode;
+    private boolean mIsBook;
+    private int mScroll;
 
     MyWebViewClient(WebView webView) {
         this.onionProxyManager = App.getInstance().mTorManager.getValue();
@@ -84,12 +90,11 @@ public class MyWebViewClient extends WebViewClient {
 
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-
-        mViewMode = App.getInstance().getViewMode();
-        mNightMode = App.getInstance().getNightMode();
         try {
+            mViewMode = App.getInstance().getViewMode();
+            mNightMode = App.getInstance().getNightMode();
             // обрубаю загрузку картинок в упрощённом виде
-            if (mViewMode) {
+            if (mViewMode > 1) {
                 String[] extensionArr = url.split("\\.");
                 if (extensionArr.length > 0) {
                     String extension = extensionArr[extensionArr.length - 1];
@@ -160,6 +165,7 @@ public class MyWebViewClient extends WebViewClient {
                         activityContext.sendBroadcast(new Intent(BOOK_LOAD_ACTION));*/
                         String message = "<H1 style='text-align:center;'>Книга закачана. Возвращаюсь на предыдущую страницу</H1>";
                         ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(encoding));
+                        mIsBook = true;
                         return new WebResourceResponse(mime, ENCODING_UTF_8, inputStream);
                     } catch (IOException e) {
                         Log.d("surprise", "some output error");
@@ -170,11 +176,25 @@ public class MyWebViewClient extends WebViewClient {
                         activityContext.sendBroadcast(finishLoadingIntent);
                     }
                 }
+            } else {
+                mIsBook = false;
             }
-
             return new WebResourceResponse(mime, encoding, input);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
+                try {
+                    // отправлю оповещение об ошибке загрузки TOR
+                    Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+                    App.getInstance().sendBroadcast(finishLoadingIntent);
+                    // отображу сообщение о невозможности загрузки
+                    String message = "<H1 style='text-align:center;'>Ошибка подключения к сети</H1>";
+                    ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(ENCODING_UTF_8));
+                    return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+                } catch (UnsupportedEncodingException e1) {
+                    e1.printStackTrace();
+                }
+            }
         }
         return super.shouldInterceptRequest(view, url);
     }
@@ -183,13 +203,13 @@ public class MyWebViewClient extends WebViewClient {
     @Nullable
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-        mViewMode = App.getInstance().getViewMode();
-        mNightMode = App.getInstance().getNightMode();
         try {
+            mViewMode = App.getInstance().getViewMode();
+            mNightMode = App.getInstance().getNightMode();
             String requestString = request.getUrl().toString();
 
             // обрубаю загрузку картинок в упрощённом виде
-            if (mViewMode) {
+            if (mViewMode > 1) {
                 String[] extensionArr = requestString.split("\\.");
                 if (extensionArr.length > 0) {
                     String extension = extensionArr[extensionArr.length - 1];
@@ -198,7 +218,6 @@ public class MyWebViewClient extends WebViewClient {
                     }
                 }
             }
-
             HttpClient httpClient = getNewHttpClient();
             int port = onionProxyManager.getIPv4LocalHostSocksPort();
             InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
@@ -256,10 +275,7 @@ public class MyWebViewClient extends WebViewClient {
                         intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);
                         intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, type);
                         activityContext.sendBroadcast(intent);
-                        /*// вернусь на ранее загруженную страницу
-                        activityContext.sendBroadcast(new Intent(BOOK_LOAD_ACTION));*/
-                        String message = "<H1 style='text-align:center;'>Книга закачана. Возвращаюсь на предыдущую страницу</H1>";
-                        ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(encoding));
+                        mIsBook = true;
                         return super.shouldInterceptRequest(view, request);
                     } catch (IOException e) {
                         Log.d("surprise", "some output error");
@@ -270,11 +286,26 @@ public class MyWebViewClient extends WebViewClient {
                         activityContext.sendBroadcast(finishLoadingIntent);
                     }
                 }
+            } else {
+                mIsBook = false;
             }
 
             return new WebResourceResponse(mime, encoding, input);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
+                try {
+                    // отправлю оповещение об ошибке загрузки TOR
+                    Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+                    App.getInstance().sendBroadcast(finishLoadingIntent);
+                    // отображу сообщение о невозможности загрузки
+                    String message = "<H1 style='text-align:center;'>Ошибка подключения к сети</H1>";
+                    ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(ENCODING_UTF_8));
+                    return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+                } catch (UnsupportedEncodingException e1) {
+                    e1.printStackTrace();
+                }
+            }
         }
         return super.shouldInterceptRequest(view, request);
     }
@@ -292,24 +323,29 @@ public class MyWebViewClient extends WebViewClient {
                 .build();
     }
 
+    @Override
+    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        super.onPageStarted(view, url, favicon);
+        mScroll = view.getScrollY();
+    }
 
     @Override
     public void onPageFinished(WebView view, String url) {
         super.onPageFinished(view, url);
-        if (url.startsWith(App.BASE_URL)) {
-            App.getInstance().currentLoadedUrl = url;
-        }
-        if (mNightMode) {
-            injectNightMode();
-        }
-        if (mViewMode) {
-            injectMyCss();
+        if (!mIsBook) {
+            App.getInstance().setLastLoadedUrl(url);
+            //view.scrollTo(0, App.getInstance().getLastScroll());
+            App.getInstance().setLastScroll(mScroll);
+            if (mNightMode) {
+                injectNightMode();
+            }
+            if (mViewMode > 1) {
+                injectMyCss();
+            }
         }
     }
 
     private void injectNightMode() {
-
-        Log.d("surprise", "MyWebViewClient injectNightMode: inject night mode");
         // старые версии Android не понимают переменные цветов и новые объявления JS, подключусь в режиме совместимости
         App context = App.getInstance();
         try {
@@ -321,10 +357,10 @@ public class MyWebViewClient extends WebViewClient {
             }
             inputStream.close();
             String encoded = Base64.encodeToString(buffer, Base64.NO_WRAP);
-            mWebView.loadUrl("javascript:(function () {'use strict';" +
+            mWebView.loadUrl("javascript:(function () {" +
                     " /*подключу свой файл CSS*/" +
-                    " let parent = document.getElementsByTagName('head').item(0);" +
-                    " let style = document.createElement('style');" +
+                    " var parent = document.getElementsByTagName('head').item(0);" +
+                    " var style = document.createElement('style');" +
                     " style.type = 'text/css';" +
                     // Tell the browser to BASE64-decode the string into your script !!!
                     " style.innerHTML = window.atob('" + encoded + "');" +
@@ -338,8 +374,20 @@ public class MyWebViewClient extends WebViewClient {
     private void injectMyCss() {
         // старые версии Android не понимают переменные цветов и новые объявления JS, подключусь в режиме совместимости
         App context = App.getInstance();
+        InputStream inputStream;
         try {
-            InputStream inputStream = context.getAssets().open(MY_COMPAT_CSS_STYLE);
+            switch (mViewMode) {
+                case App.VIEW_MODE_FAT:
+                case App.VIEW_MODE_FAST_FAT:
+                    inputStream = context.getAssets().open(MY_COMPAT_FAT_CSS_STYLE);
+                    break;
+                case App.VIEW_MODE_LIGHT:
+                case App.VIEW_MODE_FAST:
+                    inputStream = context.getAssets().open(MY_COMPAT_CSS_STYLE);
+                    break;
+                default:
+                    inputStream = context.getAssets().open(MY_COMPAT_CSS_STYLE);
+            }
             byte[] buffer = new byte[inputStream.available()];
             int result = inputStream.read(buffer);
             if (result == 0) {
@@ -347,17 +395,17 @@ public class MyWebViewClient extends WebViewClient {
             }
             inputStream.close();
             String encoded = Base64.encodeToString(buffer, Base64.NO_WRAP);
-            mWebView.loadUrl("javascript:(function () {'use strict';" +
-                    " /*подключу свой файл CSS*/" +
-                    " let parent = document.getElementsByTagName('head').item(0);" +
-                    " let style = document.createElement('style');" +
+            mWebView.loadUrl("javascript:(function () {" +
+                    " var parent = document.getElementsByTagName('head').item(0);" +
+                    " var style = document.createElement('style');" +
                     " style.type = 'text/css';" +
                     // Tell the browser to BASE64-decode the string into your script !!!
                     " style.innerHTML = window.atob('" + encoded + "');" +
                     " parent.appendChild(style);" +
                     " })();");
-
-            mWebView.loadUrl("javascript:(function () { 'use strict'; var href = location.href; if (href === 'http://flibustahezeous3.onion/') { var menu = document.getElementsByClassName('pager'); menu[0].style.display = 'none'; } var alphabetClassName = 'alphabet-link'; var authorClassName = 'author-link'; var bookClassName = 'book-link'; var foundedBookClassName = 'book-link searched'; var selectedBookClassName = 'book-link searched selected'; var bookActionClassName = 'book-action-link'; var bookSeriesClassName = 'book-series-link'; var bookGenreClassName = 'book-genre-link'; var classHidden = 'hidden'; var forumNamesClassName = 'forum-name-link'; handleLinks(document); var target = document.getElementById('books'); if (target) { var observer = new MutationObserver(function () { handleLinks(target); }); var config = {attributes: true, childList: true, characterData: true}; observer.observe(target, config); } var books = document.getElementsByClassName(bookClassName); if (books && books.length > 0) if (books && books.length > 0) { var searchDiv, searchButton, searchField; searchDiv = document.createElement('div'); searchDiv.id = 'searchContainer'; searchField = document.createElement('input'); searchField.type = 'text'; searchField.id = 'booksSearcher'; searchField.setAttribute('placeholder', 'Искать книгу на странице'); searchButton = document.createElement('div'); searchButton.id = 'searchButton'; var innerText = 'Нет условия'; searchButton.innerText = innerText; searchDiv.appendChild(searchField); searchDiv.appendChild(searchButton); document.body.appendChild(searchDiv); var founded; var searchShift = 0; var previouslySelected; var previousSearch; searchField.onkeypress = function (event) { if (event.code === 'Enter') { switchToNext(); } }; searchField.oninput = function () { var inputVal = searchField.value.toLowerCase(); if (inputVal) { founded = []; searchShift = 0; var i = 0; while (books[i]) { if (books[i].innerText.toLowerCase().indexOf(inputVal) + 1 && books[i].offsetHeight) { founded.push(books[i]); } i++; } if (founded && founded.length > 0) { scrollTo(founded[0]); searchButton.innerText = '1 из ' + founded.length; makeBookSearched(founded); makeSearchedBookSelected(founded[0]); } else { clearSelectedItem(); clearSearchedItems(); searchButton.innerText = 'Не найдено'; } } else { clearSelectedItem(); clearSearchedItems(); searchButton.innerText = innerText; founded = []; } }; searchButton.onclick = function () { switchToNext(); }; } function makeBookSearched(foundedElement) { if (previousSearch && previousSearch.length > 0) { previousSearch.forEach(function (elem) { elem.className = bookClassName; }); } if (foundedElement && foundedElement.length > 0) { foundedElement.forEach(function (elem) { elem.className = foundedBookClassName; }); previousSearch = foundedElement; } } function makeSearchedBookSelected(elem) { if (previouslySelected) { previouslySelected.className = foundedBookClassName; } elem.className = selectedBookClassName; previouslySelected = elem; } function clearSelectedItem() { if (previouslySelected) { previouslySelected.className = bookClassName; previouslySelected = null; } } function clearSearchedItems() { if (previousSearch && previousSearch.length > 0) { previousSearch.forEach(function (elem) { elem.className = bookClassName; }); previousSearch = null; } } function switchToNext() { if (founded && founded.length > 0) { ++searchShift; if (founded[searchShift]) { scrollTo(founded[searchShift]); searchButton.innerText = (searchShift + 1) + ' из ' + founded.length; makeSearchedBookSelected(founded[searchShift]); } else { searchShift = 0; scrollTo(founded[0]); searchButton.innerText = '1 из ' + founded.length; makeSearchedBookSelected(founded[0]); } } } function scrollTo(element) { var offset = element.offsetTop - 10; window.scroll(0, offset - 10); } function handleLinks(element) { var links = element.getElementsByTagName('A'); if (links && links.length > 0) { var alphabetListRegex = /^\\/\\w{1,2}$/; var authorStarts = '/a/'; var bookStarts = '/b/'; var seriesStarts = '/s/'; var genreStarts = '/g/'; var forumNamesRegex = /^\\/polka\\/show\\/[\\d]+$/; var counter = 0; var href; var startsWith; var prelast; var current; while (links[counter]) { current = links[counter]; if (current.offsetHeight) { href = current.getAttribute('href'); startsWith = href.substr(0, 3); if (startsWith === bookStarts) { prelast = parseInt(href.substr(href.length - 2, 1) + 1); if (prelast) { current.className = bookClassName; } else { current.className = bookActionClassName; current.innerText = links[counter].innerText.replace(/[()]/g, ''); } } else if (startsWith === authorStarts) { if(href === '/a/all'){ current.className = alphabetClassName; } else{ current.className = authorClassName; } } else if (startsWith === genreStarts) { current.className = bookGenreClassName; } else if (startsWith === seriesStarts) { current.className = bookSeriesClassName; } else if (current.innerText === '(СЛЕДИТЬ)') { current.className = classHidden; } else if (alphabetListRegex.test(href) || href === '/a/all' || href === '/Other') { current.className = alphabetClassName; current.innerText = current.innerText.replace(/[\\[\\]]/g, ''); } else if (forumNamesRegex.test(href)) { current.className = forumNamesClassName; } } counter++; } } } }())");
+            if (mViewMode != App.VIEW_MODE_FAST && mViewMode != App.VIEW_MODE_FAST_FAT) {
+                mWebView.loadUrl("javascript:(function () {var href = location.href; if (href === 'http://flibustahezeous3.onion/') { var menu = document.getElementsByClassName('pager'); menu[0].style.display = 'none'; } var alphabetClassName = 'alphabet-link'; var authorClassName = 'author-link'; var bookClassName = 'book-link'; var foundedBookClassName = 'book-link searched'; var selectedBookClassName = 'book-link searched selected'; var bookActionClassName = 'book-action-link'; var bookSeriesClassName = 'book-series-link'; var bookGenreClassName = 'book-genre-link'; var classHidden = 'hidden'; var forumNamesClassName = 'forum-name-link'; handleLinks(document); var target = document.getElementById('books'); if (target) { var observer = new MutationObserver(function () { handleLinks(target); }); var config = {attributes: true, childList: true, characterData: true}; observer.observe(target, config); } var books = document.getElementsByClassName(bookClassName); if (books && books.length > 0) if (books && books.length > 0) { var searchDiv, searchButton, searchField; searchDiv = document.createElement('div'); searchDiv.id = 'searchContainer'; searchField = document.createElement('input'); searchField.type = 'text'; searchField.id = 'booksSearcher'; searchField.setAttribute('placeholder', 'Искать книгу на странице'); searchButton = document.createElement('div'); searchButton.id = 'searchButton'; var innerText = 'Нет условия'; searchButton.innerText = innerText; searchDiv.appendChild(searchField); searchDiv.appendChild(searchButton); document.body.appendChild(searchDiv); var founded; var searchShift = 0; var previouslySelected; var previousSearch; searchField.onkeypress = function (event) { if (event.code === 'Enter') { switchToNext(); } }; searchField.oninput = function () { var inputVal = searchField.value.toLowerCase(); if (inputVal) { founded = []; searchShift = 0; var i = 0; while (books[i]) { if (books[i].innerText.toLowerCase().indexOf(inputVal) + 1 && books[i].offsetHeight) { founded.push(books[i]); } i++; } if (founded && founded.length > 0) { scrollTo(founded[0]); searchButton.innerText = '1 из ' + founded.length; makeBookSearched(founded); makeSearchedBookSelected(founded[0]); } else { clearSelectedItem(); clearSearchedItems(); searchButton.innerText = 'Не найдено'; } } else { clearSelectedItem(); clearSearchedItems(); searchButton.innerText = innerText; founded = []; } }; searchButton.onclick = function () { switchToNext(); }; } function makeBookSearched(foundedElement) { if (previousSearch && previousSearch.length > 0) { previousSearch.forEach(function (elem) { elem.className = bookClassName; }); } if (foundedElement && foundedElement.length > 0) { foundedElement.forEach(function (elem) { elem.className = foundedBookClassName; }); previousSearch = foundedElement; } } function makeSearchedBookSelected(elem) { if (previouslySelected) { previouslySelected.className = foundedBookClassName; } elem.className = selectedBookClassName; previouslySelected = elem; } function clearSelectedItem() { if (previouslySelected) { previouslySelected.className = bookClassName; previouslySelected = null; } } function clearSearchedItems() { if (previousSearch && previousSearch.length > 0) { previousSearch.forEach(function (elem) { elem.className = bookClassName; }); previousSearch = null; } } function switchToNext() { if (founded && founded.length > 0) { ++searchShift; if (founded[searchShift]) { scrollTo(founded[searchShift]); searchButton.innerText = (searchShift + 1) + ' из ' + founded.length; makeSearchedBookSelected(founded[searchShift]); } else { searchShift = 0; scrollTo(founded[0]); searchButton.innerText = '1 из ' + founded.length; makeSearchedBookSelected(founded[0]); } } } function scrollTo(element) { var offset = element.offsetTop - 10; window.scroll(0, offset - 10); } function handleLinks(element) { var links = element.getElementsByTagName('A'); if (links && links.length > 0) { var alphabetListRegex = /^\\/\\w{1,2}$/; var authorStarts = '/a/'; var bookStarts = '/b/'; var seriesStarts = '/s/'; var genreStarts = '/g/'; var forumNamesRegex = /^\\/polka\\/show\\/[\\d]+$/; var counter = 0; var href; var startsWith; var prelast; var current; while (links[counter]) { current = links[counter]; if (current.offsetHeight) { href = current.getAttribute('href'); startsWith = href.substr(0, 3); if (startsWith === bookStarts) { prelast = parseInt(href.substr(href.length - 2, 1) + 1); if (prelast) { current.className = bookClassName; } else { current.className = bookActionClassName; current.innerText = links[counter].innerText.replace(/[()]/g, ''); } } else if (startsWith === authorStarts) { if(href === '/a/all'){ current.className = alphabetClassName; } else{ current.className = authorClassName; } } else if (startsWith === genreStarts) { current.className = bookGenreClassName; } else if (startsWith === seriesStarts) { current.className = bookSeriesClassName; } else if (current.innerText === '(СЛЕДИТЬ)') { current.className = classHidden; } else if (alphabetListRegex.test(href) || href === '/a/all' || href === '/Other') { current.className = alphabetClassName; current.innerText = current.innerText.replace(/[\\[\\]]/g, ''); } else if (forumNamesRegex.test(href)) { current.className = forumNamesClassName; } } counter++; } } } }())");
+            }
         } catch (IOException e) {
             Log.d("surprise", "MyWebViewClient injectMyCss: error when injecting my Js or CSS");
             e.printStackTrace();

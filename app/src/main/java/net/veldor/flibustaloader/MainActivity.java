@@ -36,7 +36,6 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
-import java.net.URI;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
@@ -51,10 +50,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private AlertDialog mBookLoadingDialog;
     private AlertDialog mTorLoadingDialog;
     private View mRootView;
-    private SearchView.SearchAutoComplete mSearchAutoComplete;
     private ArrayList<String> autocompleteStrings;
     private SearchView mSearchView;
     private ArrayAdapter<String> mSearchAdapter;
+    private AlertDialog mTorRestartDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +76,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         filter.addAction(MyWebViewClient.BOOK_LOAD_ACTION);
         mPageLoadReceiver = new BookLoadingReceiver();
         registerReceiver(mPageLoadReceiver, filter);
+
+        // зарегистрирую получатель ошибки подключения к TOR
+        filter = new IntentFilter();
+        filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
+        TorConnectErrorReceiver torConnectErrorReceiver = new TorConnectErrorReceiver();
+        registerReceiver(torConnectErrorReceiver, filter);
+
 
         if (!permissionGranted()) {
             // показываю диалог с требованием предоставить разрешения
@@ -110,11 +116,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void setWebViewBackground() {
-        if(mMyViewModel.getNightModeEnabled()){
+        if (mMyViewModel.getNightModeEnabled()) {
             mWebView.setBackgroundColor(getResources().getColor(android.R.color.black));
             Log.d("surprise", "MainActivity setWebViewBackground: night mode");
-        }
-        else{
+        } else {
             mWebView.setBackgroundColor(getResources().getColor(android.R.color.white));
             Log.d("surprise", "MainActivity setWebViewBackground: day mode");
         }
@@ -125,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         super.onDestroy();
         unregisterReceiver(mPageLoadReceiver);
     }
+
     private void makeUpdateSnackbar() {
         Snackbar updateSnackbar = Snackbar.make(mRootView, getString(R.string.snackbar_found_update_message), Snackbar.LENGTH_INDEFINITE);
         updateSnackbar.setAction(getString(R.string.snackbar_update_action_message), new View.OnClickListener() {
@@ -135,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         });
         updateSnackbar.show();
     }
-
 
 
     @SuppressLint("RestrictedApi")
@@ -164,20 +169,35 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         });
 
-        mSearchAutoComplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        SearchView.SearchAutoComplete searchAutoComplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
 
-        mSearchAutoComplete.setDropDownBackgroundResource(android.R.color.white);
-        mSearchAutoComplete.setDropDownAnchor(R.id.action_search);
-        mSearchAutoComplete.setThreshold(0);
+        searchAutoComplete.setDropDownBackgroundResource(android.R.color.white);
+        searchAutoComplete.setDropDownAnchor(R.id.action_search);
+        searchAutoComplete.setThreshold(0);
 
         mSearchAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, autocompleteStrings);
 
-        mSearchAutoComplete.setAdapter(mSearchAdapter);
-
+        searchAutoComplete.setAdapter(mSearchAdapter);
 
         // добавлю обработку вида страницы
-        MenuItem lightModeSwitcher = menu.findItem(R.id.menuUseLightStyle);
-        lightModeSwitcher.setChecked(mMyViewModel.getLightModeEnabled());
+        // определю, какой пункт вида выбран
+        switch (mMyViewModel.getViewMode()) {
+            case App.VIEW_MODE_NORMAL:
+                menu.findItem(R.id.menuUseNormalStyle).setChecked(true);
+                break;
+            case App.VIEW_MODE_LIGHT:
+                menu.findItem(R.id.menuUseLightStyle).setChecked(true);
+                break;
+            case App.VIEW_MODE_FAST:
+                menu.findItem(R.id.menuUseLightFastStyle).setChecked(true);
+                break;
+            case App.VIEW_MODE_FAT:
+                menu.findItem(R.id.menuUseLightFatStyle).setChecked(true);
+                break;
+            case App.VIEW_MODE_FAST_FAT:
+                menu.findItem(R.id.menuUseFatFastStyle).setChecked(true);
+                break;
+        }
         MenuItem nightModeSwitcher = menu.findItem(R.id.menuUseDarkMode);
         nightModeSwitcher.setChecked(mMyViewModel.getNightModeEnabled());
         return true;
@@ -187,7 +207,11 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuUseLightStyle:
-                mMyViewModel.switchLightMode();
+            case R.id.menuUseLightFastStyle:
+            case R.id.menuUseLightFatStyle:
+            case R.id.menuUseNormalStyle:
+            case R.id.menuUseFatFastStyle:
+                mMyViewModel.switchViewMode(item.getItemId());
                 invalidateOptionsMenu();
                 mWebView.reload();
                 return true;
@@ -205,12 +229,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
                 startActivity(intent);
                 return true;
-        }
-        if (item.getItemId() == R.id.menuUseLightStyle) {
-            mMyViewModel.switchLightMode();
-            invalidateOptionsMenu();
-            mWebView.reload();
-            return true;
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
             mMyViewModel.switchNightMode();
@@ -285,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         String searchString = FLIBUSTA_SEARCH_REQUEST + s.trim();
         mWebView.loadUrl(searchString);
         // занесу значение в список автозаполнения
-        if(XMLHandler.putSearchValue(s)){
+        if (XMLHandler.putSearchValue(s)) {
             // обновлю список поиска
             autocompleteStrings = mMyViewModel.getSearchAutocomplete();
             mSearchAdapter.clear();
@@ -319,7 +337,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void handleLoading() {
+        Log.d("surprise", "MainActivity handleLoading: handle loading");
         if (mTorClient == null) {
+            Log.d("surprise", "MainActivity handleLoading: start tor");
             showTorLoadingDialog();
             // если клиент не загружен- загружаю
             mTorClient = mMyViewModel.getTor();
@@ -332,7 +352,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 public void onChanged(@Nullable AndroidOnionProxyManager androidOnionProxyManager) {
                     if (androidOnionProxyManager != null) {
                         startBrowsing();
-                        mTorClient.removeObservers(MainActivity.this);
                     }
                 }
             });
@@ -345,9 +364,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private void startBrowsing() {
         hideTorLoadingDialog();
         mWebView.setup();
-        if (App.getInstance().currentLoadedUrl == null) {
-            mWebView.loadUrl(App.BASE_URL);
-        }
+        mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
     }
 
     @Override
@@ -365,10 +382,44 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                     showBookLoadingDialog();
                     break;
                 case MyWebViewClient.FINISH_BOOK_LOADING:
-                    mWebView.loadUrl(App.getInstance().currentLoadedUrl);
+                    mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
                 default:
                     hideBookLoadingDialog();
             }
+        }
+    }
+
+    public class TorConnectErrorReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // покажу диалоговое окно с оповещением, что TOR остановлен и кнопкой повторного запуска
+            showTorRestartDialog();
+        }
+    }
+
+    private void showTorRestartDialog() {
+        if (mTorRestartDialog == null) {
+            // создам диалоговое окно
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setTitle(R.string.tor_is_stopped)
+                    .setMessage(R.string.tor_restart_dialog_message)
+                    .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            hideTorRestartDialog();
+                            App.getInstance().restartTor();
+                            showTorLoadingDialog();
+                        }
+                    })
+                    .setCancelable(false);
+            mTorRestartDialog = dialogBuilder.create();
+        }
+        mTorRestartDialog.show();
+    }
+
+    private void hideTorRestartDialog() {
+        if (mTorRestartDialog != null) {
+            mTorRestartDialog.hide();
         }
     }
 

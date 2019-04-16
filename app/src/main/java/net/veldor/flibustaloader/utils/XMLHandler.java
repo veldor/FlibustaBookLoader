@@ -1,7 +1,5 @@
 package net.veldor.flibustaloader.utils;
 
-import android.util.Log;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -27,33 +25,34 @@ import javax.xml.transform.stream.StreamResult;
 public class XMLHandler {
     private static final String SEARCH_VALUE_NAME = "string";
 
-    public static ArrayList<String> getSearchAutocomplete(String autocompleteText){
+    public static ArrayList<String> getSearchAutocomplete(String autocompleteText) {
 
         ArrayList<String> searchValues = new ArrayList<>();
-            Document searchList = getDocument(autocompleteText);
-            // найду значения строк
-        if(searchList != null){
+        Document searchList = getDocument(autocompleteText);
+        // найду значения строк
+        if (searchList != null) {
             NodeList values = searchList.getElementsByTagName(SEARCH_VALUE_NAME);
             int counter = 0;
 
-            while (values.item(counter) != null){
+            while (values.item(counter) != null) {
                 searchValues.add(values.item(counter).getFirstChild().getNodeValue());
                 ++counter;
             }
         }
         return searchValues;
     }
-    private static ArrayList<String> getSearchAutocomplete(Document searchList){
+
+    private static ArrayList<String> getSearchAutocomplete(Document searchList) {
 
         ArrayList<String> searchValues = new ArrayList<>();
-            // найду значения строк
-            NodeList values = searchList.getElementsByTagName(SEARCH_VALUE_NAME);
-            int counter = 0;
+        // найду значения строк
+        NodeList values = searchList.getElementsByTagName(SEARCH_VALUE_NAME);
+        int counter = 0;
 
-            while (values.item(counter) != null){
-                searchValues.add(values.item(counter).getFirstChild().getNodeValue());
-                ++counter;
-            }
+        while (values.item(counter) != null) {
+            searchValues.add(values.item(counter).getFirstChild().getNodeValue());
+            ++counter;
+        }
         return searchValues;
     }
 
@@ -63,7 +62,7 @@ public class XMLHandler {
         Document dom = getDocument(rawXml);
         assert dom != null;
         ArrayList<String> values = getSearchAutocomplete(dom);
-        if(!values.contains(s)){
+        if (!values.contains(s)) {
             Element elem = dom.createElement(SEARCH_VALUE_NAME);
             Text text = dom.createTextNode(s);
             elem.appendChild(text);
@@ -74,7 +73,7 @@ public class XMLHandler {
         return false;
     }
 
-    private static Document getDocument(String rawText){
+    private static Document getDocument(String rawText) {
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder;
         try {
@@ -87,11 +86,12 @@ public class XMLHandler {
             e.printStackTrace();
         } catch (SAXException e) {
             e.printStackTrace();
+
         }
         return null;
     }
 
-    private static String getStringFromDocument(Document doc){
+    private static String getStringFromDocument(Document doc) {
         DOMSource domSource = new DOMSource(doc);
         StringWriter writer = new StringWriter();
         StreamResult result = new StreamResult(writer);

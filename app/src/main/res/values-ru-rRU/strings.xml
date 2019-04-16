@@ -20,5 +20,11 @@
     <string name="show_random">Случайная книга</string>
     <string name="navigation">Навигация</string>
     <string name="buy_me_coffee">Купите мне кофе :)</string>
-    <string name="enter_text">Введите текст</string>
+    <string name="use_light_fat_style">Крупный упрощённый</string>
+    <string name="use_normal_style">Обычный вид</string>
+    <string name="use_light_fast_style">Быстрый упрощённый</string>
+    <string name="use_fat_fast_style">Быстрый крупный</string>
+    <string name="tor_is_stopped">Ошибка подключения к TOR…</string>
+    <string name="tor_restart_dialog_message">TOR неожиданно остановился. Возможно, нет подключения к интернету. Необходим перезапуск TOR.</string>
+    <string name="restart_tor_message">Перезапустить TOR</string>
 </resources>

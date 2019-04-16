@@ -21,11 +21,11 @@ public class MainViewModel extends AndroidViewModel {
         super(application);
     }
 
-    public boolean getLightModeEnabled(){
+    public int getViewMode(){
         return App.getInstance().getViewMode();
     }
-    public void switchLightMode(){
-        App.getInstance().switchViewMode();
+    public void switchViewMode(int type){
+        App.getInstance().switchViewMode(type);
     }
 
     // загрузка ядра TOR
