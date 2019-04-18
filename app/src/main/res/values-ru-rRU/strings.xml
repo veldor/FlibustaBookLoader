@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Флибуста.книги</string>
+    <string name="books_loaded_channel">Загруженные книги</string>
+    <string name="loading_tor_message">Инициализирую TOR</string>
+    <string name="use_light_style">Упрощённый вид</string>
+    <string name="book_loading_dialog_title">Загрузка книги</string>
+    <string name="book_loading_dialog_message">Загружаю книгу, подождите.</string>
+    <string name="tor_loading_dialog_title">Загрузка TOR</string>
+    <string name="snackbar_found_update_message">Доступно обновление!</string>
+    <string name="snackbar_update_action_message">Обновить</string>
+    <string name="update_file_name">Флибуста.книги</string>
+    <string name="open_with_message">Открыть с помошью</string>
+    <string name="file_not_found_message">Файл не найден</string>
+    <string name="share_with_message">Отправить в</string>
+    <string name="go_home">Главная</string>
+    <string name="use_dark_mode">Ночной режим</string>
+    <string name="show_last">Новинки</string>
+    <string name="look">Внешний вид</string>
+    <string name="show_random">Случайная книга</string>
+    <string name="navigation">Навигация</string>
+    <string name="buy_me_coffee">Купите мне кофе :)</string>
+    <string name="use_light_fat_style">Крупный упрощённый</string>
+    <string name="use_normal_style">Обычный вид</string>
+    <string name="use_light_fast_style">Быстрый упрощённый</string>
+    <string name="use_fat_fast_style">Быстрый крупный</string>
+    <string name="tor_is_stopped">Ошибка подключения к TOR…</string>
+    <string name="tor_restart_dialog_message">TOR неожиданно остановился. Возможно, нет подключения к интернету. Необходим перезапуск TOR.</string>
+    <string name="restart_tor_message">Перезапустить TOR</string>
+    <string name="share_link_message">Поделиться</string>
+    <string name="share_url_message">Ссылка на страницу</string>
+    <string name="share_url_title">Отправить в</string>
+    <string name="miscellaneous">Разное</string>
+    <string name="set_downloads_folder">Установить папку загрузок</string>
+    <string name="download_folder_changed_message">"Папка загрузок изменена на "</string>
+    <string name="enter_text_message">Введите текст</string>
+</resources>

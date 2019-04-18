@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Flibusta book loading</string>
+    <string name="books_loaded_channel">Loaded books</string>
+    <string name="shifts_reminder" translatable="false">Loaded books notifications</string>
+    <string name="loading_tor_message">Loading TOR, please, wait</string>
+    <string name="use_light_style">Use light style</string>
+    <string name="book_loading_dialog_title">Book loading</string>
+    <string name="book_loading_dialog_message">Loading book, please, wait</string>
+    <string name="tor_loading_dialog_title">Tor load</string>
+    <string name="snackbar_found_update_message">New update available!</string>
+    <string name="snackbar_update_action_message">Update now</string>
+    <string name="update_file_name">Flibusta books</string>
+    <string name="open_with_message">Open with…</string>
+    <string name="file_not_found_message">File not found!</string>
+    <string name="share_with_message">Share with</string>
+    <string name="go_home">go home</string>
+    <string name="use_dark_mode">Use dark mode</string>
+    <string name="show_last">Last loaded books</string>
+    <string name="look">View</string>
+    <string name="show_random">Random book</string>
+    <string name="navigation">Navigation</string>
+    <string name="buy_me_coffee">Buy me coffee</string>
+    <string name="use_light_fat_style">Lite fat style</string>
+    <string name="use_normal_style">Use normal</string>
+    <string name="use_light_fast_style">Fast light style</string>
+    <string name="use_fat_fast_style">Fat fast style</string>
+    <string name="tor_is_stopped">Tor is stopped…</string>
+    <string name="tor_restart_dialog_message">Tor, stopped unfortunately, maybe, no internet connection. Need to restart it.</string>
+    <string name="restart_tor_message">Restart TOR</string>
+    <string name="share_link_message">Share link</string>
+    <string name="share_url_message">Sharing page link</string>
+    <string name="share_url_title">Share link with</string>
+    <string name="miscellaneous">Miscellaneous</string>
+    <string name="set_downloads_folder">Set downloads folder</string>
+    <string name="download_folder_changed_message">Download folder changed on</string>
+    <string name="enter_text_message">Enter text</string>
+</resources>

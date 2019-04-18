@@ -1,0 +1,49 @@
+html body,
+html body div#page
+{
+    height:100%;
+}
+
+html body#second,
+html body div#page,
+html body div#main,
+html body div#container,
+html body table td
+{
+	background-color: #000;
+	color: #ada3a3;
+
+}
+
+html body a.author-link {
+	color: #ada3a3;
+    background-color: #09196f;
+}
+
+html body a.book-link{
+	color: #f59214;
+}
+
+html body div#divabio{
+	background-color: #000!important;
+}
+
+
+html body .withright div#main{
+	border-right:none;
+}
+input,
+select
+{
+    background-color:gray;
+    border: none;
+}
+#main > ul > li:nth-child(1) > a[href="/g"],
+#tt > tbody > tr:nth-child(1) > th:nth-child(4) > a[href="/g"]
+{
+	background-color: #ada3a3;
+}
+
+html body a.alphabet-link{
+	color: #ada3a3;
+}
