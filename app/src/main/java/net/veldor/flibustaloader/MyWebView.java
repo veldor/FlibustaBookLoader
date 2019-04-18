@@ -20,7 +20,7 @@ public class MyWebView extends WebView {
     @SuppressLint("SetJavaScriptEnabled")
     public void setup() {
         if (!this.isInEditMode()) {
-            this.setWebViewClient(new MyWebViewClient(this));
+            this.setWebViewClient(new MyWebViewClient());
             WebSettings webSettings = this.getSettings();
             webSettings.setJavaScriptEnabled(true);
             webSettings.setAllowFileAccess(true);

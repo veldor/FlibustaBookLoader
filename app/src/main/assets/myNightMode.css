@@ -1,3 +1,8 @@
+html body,
+html body div#page
+{
+    height:100%;
+}
 
 html body#second,
 html body div#page,

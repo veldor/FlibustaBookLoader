@@ -60,6 +60,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // проверю, не запущено ли приложение с помощью интента
+        if(getIntent().getData()!=null){//check if intent is not null
+            Uri data = getIntent().getData();//set a variable for the Intent
+            String fullPath = data.getEncodedPath();
+            Log.d("surprise", "MainActivity onCreate: " + fullPath);
+        }
+
         // инициализирую переменные
         mWebView = findViewById(R.id.myWebView);
         mRootView = findViewById(R.id.rootView);
@@ -82,8 +89,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
         TorConnectErrorReceiver torConnectErrorReceiver = new TorConnectErrorReceiver();
         registerReceiver(torConnectErrorReceiver, filter);
-
-
         if (!permissionGranted()) {
             // показываю диалог с требованием предоставить разрешения
             showPermissionDialog();
@@ -118,10 +123,8 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private void setWebViewBackground() {
         if (mMyViewModel.getNightModeEnabled()) {
             mWebView.setBackgroundColor(getResources().getColor(android.R.color.black));
-            Log.d("surprise", "MainActivity setWebViewBackground: night mode");
         } else {
             mWebView.setBackgroundColor(getResources().getColor(android.R.color.white));
-            Log.d("surprise", "MainActivity setWebViewBackground: day mode");
         }
     }
 
@@ -223,6 +226,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 return true;
             case R.id.randomBook:
                 mWebView.loadUrl(mMyViewModel.getRandomBookUrl());
+                return true;
+            case R.id.shareLink:
+                mMyViewModel.shareLink(mWebView);
                 return true;
             case R.id.buyCoffee:
                 Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -337,9 +343,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void handleLoading() {
-        Log.d("surprise", "MainActivity handleLoading: handle loading");
         if (mTorClient == null) {
-            Log.d("surprise", "MainActivity handleLoading: start tor");
             showTorLoadingDialog();
             // если клиент не загружен- загружаю
             mTorClient = mMyViewModel.getTor();
@@ -469,13 +473,11 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mWebView.saveState(outState);
-        Log.d("surprise", "MainActivity onSaveInstanceState: state saved");
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         mWebView.restoreState(savedInstanceState);
-        Log.d("surprise", "MainActivity onRestoreInstanceState: state restored");
     }
 }

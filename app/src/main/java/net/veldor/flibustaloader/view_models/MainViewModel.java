@@ -4,11 +4,14 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.MyWebView;
 import net.veldor.flibustaloader.updater.Updater;
+import net.veldor.flibustaloader.utils.BookSharer;
 import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
 
@@ -57,5 +60,9 @@ public class MainViewModel extends AndroidViewModel {
     public String getRandomBookUrl() {
         Random random = new Random();
         return App.BASE_BOOK_URL + random.nextInt(App.MAX_BOOK_NUMBER);
+    }
+
+    public void shareLink(MyWebView mWebView) {
+        BookSharer.shareLink(mWebView.getUrl());
     }
 }

@@ -3,43 +3,51 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="net.veldor.flibustaloader">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name="net.veldor.flibustaloader.App"
-        android:usesCleartextTraffic="true"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="m">
-        <activity android:name="net.veldor.flibustaloader.MainActivity"
-            android:configChanges="keyboardHidden|orientation"
-            >
+        <activity
+            android:name="net.veldor.flibustaloader.MainActivity"
+            android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:host="flibusta.is" />
+                <data android:host="http://flibustahezeous3.onion/" />
+            </intent-filter>
         </activity>
-        <receiver android:name="net.veldor.flibustaloader.receivers.BookLoadedReceiver"/>
-        <receiver android:name=".receivers.BookActionReceiver"/>
+        <receiver android:name="net.veldor.flibustaloader.receivers.BookLoadedReceiver" />
+        <receiver android:name=".receivers.BookActionReceiver" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="net.veldor.flibustaloader.fileProvider"
-            android:grantUriPermissions="true"
-            android:exported="false">
+            android:exported="false"
+            android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_provider_paths"/>
+                android:resource="@xml/file_provider_paths" />
         </provider>
-        <service android:name=".services.UpdateWaitService"/>
+        <service android:name=".services.UpdateWaitService" />
     </application>
 
 </manifest>

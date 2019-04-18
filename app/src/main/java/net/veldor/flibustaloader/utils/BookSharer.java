@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.StrictMode;
+import android.support.v4.app.ShareCompat;
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
@@ -36,5 +37,13 @@ public class BookSharer {
         else{
             Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
         }
+    }
+    public static void shareLink(String link){
+        Context context = App.getInstance();
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.setType("text/plain");
+        i.putExtra(Intent.EXTRA_SUBJECT, R.string.share_url_message);
+        i.putExtra(Intent.EXTRA_TEXT, link);
+        context.startActivity(Intent.createChooser(i, context.getString(R.string.share_url_title)));
     }
 }

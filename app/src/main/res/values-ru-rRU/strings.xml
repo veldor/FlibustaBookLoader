@@ -27,4 +27,7 @@
     <string name="tor_is_stopped">Ошибка подключения к TOR…</string>
     <string name="tor_restart_dialog_message">TOR неожиданно остановился. Возможно, нет подключения к интернету. Необходим перезапуск TOR.</string>
     <string name="restart_tor_message">Перезапустить TOR</string>
+    <string name="share_link_message">Поделиться</string>
+    <string name="share_url_message">Ссылка на страницу</string>
+    <string name="share_url_title">Отправить в</string>
 </resources>
