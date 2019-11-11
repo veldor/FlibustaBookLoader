@@ -30,4 +30,8 @@
     <string name="share_link_message">Share link</string>
     <string name="share_url_message">Sharing page link</string>
     <string name="share_url_title">Share link with</string>
+    <string name="miscellaneous">Miscellaneous</string>
+    <string name="set_downloads_folder">Set downloads folder</string>
+    <string name="download_folder_changed_message">Download folder changed on</string>
+    <string name="enter_text_message">Enter text</string>
 </resources>

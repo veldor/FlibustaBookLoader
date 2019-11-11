@@ -1,0 +1,370 @@
+:root{
+    --accent:#881515;
+    --primary:#3e5f75;
+    --dark:#081b86;
+    --light:#FFFFFF;
+    --green:#0c6126;
+    --purple:#5403ad;
+}
+
+html{
+    height: 100%;
+    background-color:#FFFFFF;
+}
+
+html body{
+    font-size: 12px;
+    height:100%;
+}
+
+/*скрою ненужные элементы*/
+#main > div:nth-child(4) > table,
+#main > div:nth-child(4),
+#main > .item-list > ul,
+#header,
+#footer,
+#mission,
+.sidebar,
+.node,
+#content-top td[align=right],
+input[type=checkbox],
+input[name="readedall"],
+input[name="bookscomp"],
+svg,
+img,
+#main > form > a[href='http://fbsearch.ru'],
+.hidden
+{
+    display: none;
+}
+
+
+h1{
+    font-size: 15px;
+}
+
+
+#main > ul > li:nth-child(3){
+    overflow-x:auto;
+}
+
+
+div#container div#main-wrapper div#main{
+    margin: 5px;
+}
+
+
+a{
+    font-size: 12px;
+    text-transform: uppercase;
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    transition: background-color .3s;
+}
+a:hover{
+	border: none;
+}
+
+/* Изменяю цвет primary ссылок при выделении и нажатии */
+
+/* Изменяю цвет accent ссылок при выделении и нажатии */
+
+/* Изменяю цвет primary-dark ссылок при выделении и нажатии */
+a.alphabet-link:hover,
+a.alphabet-link:focus,
+li.pager-item>a:hover,
+li.pager-item>a:focus
+{
+	background-color: var(--light);
+	color: var(--dark);
+}
+
+a.alphabet-link:active,
+li.pager-item>a:active
+{
+	background-color: var(--accent);
+}
+
+
+/*Ссылки breadcrumb */
+
+div.breadcrumb{
+	margin-bottom: 10px;
+}
+
+div.breadcrumb>a{
+	top: 10px;
+	font-size: 15px;
+	background-color: var(--accent);
+	color: var(--light);
+	padding: 5px;
+    margin-bottom: 0;
+}
+
+
+div.breadcrumb>a:hover,
+div.breadcrumb>a:focus
+{
+	color: var(--light);
+	background-color: var(--primary);
+}
+
+div.breadcrumb>a:active
+{
+	background-color: var(--light);
+	color: var(--accent);
+}
+/* Алфавитные ссылки */
+/*Ссылки нумераторы */
+
+a.alphabet-link,
+li.pager-item>a,
+li.pager-next>a,
+li.pager-prev>a,
+li.pager-first>a,
+li.pager-last>a
+{
+	margin-bottom: 5px;
+	font-size: 10px;
+	background-color: var(--dark);
+    color: var(--light);
+    padding: 0 5px;
+    border: none;
+}
+
+/* Ссылки на автора */
+a.author-link{
+	background-color: var(--light);
+	color: var(--dark);
+    font-size: 10px;
+    font-weight: bold;
+    margin: 0;
+    padding: 0 5px;
+    top: 5px;
+}
+
+a.author-link:hover,
+a.author-link:focus
+{
+	color: var(--primary);
+}
+
+a.author-link:active
+{
+	color: var(--light);
+	background-color: var(--dark);
+}
+
+/* Ссылки на книгу */
+a.book-link,
+h1.title
+{
+	padding: 5px;
+    display: block;
+    width: fit-content;
+    background-color: var(--light);
+    color: var(--accent);
+    font-weight: bold;
+    background: none;
+    box-shadow: none;
+    text-align: center;
+    margin: 10px auto;
+}
+
+a.book-link:hover,
+a.book-link:focus
+{
+	color: var(--primary);
+}
+a.book-link:active
+{
+	color: var(--dark);
+}
+/* Ссылки на действие с книгой */
+
+a.book-action-link{
+	padding: 0 3px;
+	background-color: var(--accent);
+	color: var(--light);
+	top: 5px;
+}
+
+
+a.book-action-link:hover,
+a.book-action-link:focus
+{
+	background-color: var(--primary);
+}
+
+a.book-action-link:active
+{
+	background-color: var(--light);
+	color: var(--primary);
+	
+}
+
+/* Ссылки на жанр */
+
+a.book-genre-link{
+    text-transform: lowercase;
+	padding: 0 3px;
+	color: var(--purple);
+	top: 5px;
+}
+
+a.book-genre-link:active
+{
+	color: var(--light);
+	background-color: var(--purple);
+}
+
+
+/* Ссылки на серию */
+
+a.book-series-link{
+	padding: 0 3px;
+	color: var(--green);
+	top: 5px;
+}
+
+a.book-series-link:active{
+	background-color: var(--green);
+}
+	
+	
+a.book-series-link>span{
+	color: var(--green);
+}
+a.book-series-link:active>span{
+	color: var(--light);
+}
+
+a.forum-name-link
+{
+	text-transform: lowercase;
+    top: 5px;
+}
+
+ul.pager{
+	margin-top: 10px;
+}
+
+div.item-list>ul.pager>li{
+	display: inline-flex;
+	padding: 0;
+	margin: 0;
+}
+
+div.item-list>ul.pager>li.pager-current{
+	font-size: 10px;
+	color: var(--dark);
+	border: none;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    padding: 0 3px;
+    margin-left: 5px;
+}
+
+span[style="size"]{
+	display: block;
+	padding: 5px;
+	color: var(--dark);
+	font-weight: bold;
+}
+
+/* Целевые ссылки */
+
+#main > ul > li:nth-child(1) > a[href="/g"],
+#tt > tbody > tr:nth-child(1) > th:nth-child(4) > a[href="/g"]
+{
+	color: var(--purple);
+	background-color: var(--light);
+	top: 10px;
+}
+
+#tt > tbody > tr:nth-child(1) > th:nth-child(4) > a[href="/g"]{
+	top: 5px;
+    padding: 3px;
+}
+
+#main > ul > li:nth-child(1) > a[href="/g"]:active,
+#tt > tbody > tr:nth-child(1) > th:nth-child(4) > a[href="/g"]:active
+{
+	color: var(--light);
+	background-color: var(--purple);
+}
+
+div#divabio a{
+	color: var(--primary);
+    text-transform: lowercase;
+    padding: 0 3px;
+}
+
+div#searchContainer
+{
+    position: fixed;
+    bottom: 5px;
+    width: -webkit-fill-available;
+    padding: 0 10px;
+    display: table;
+}
+input#booksSearcher{
+	width: -webkit-fill-available;
+    display: table-cell;
+	padding-left: 10px;
+    margin-right: 5px;
+    outline: 0;
+    border: none;
+    border-radius: 2px;
+    border: 2px solid var(--accent);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+}
+
+input#booksSearcher:after{
+	content: "0 из 0";
+	position: relative;
+}
+
+div#searchButton{
+
+    cursor: pointer;
+    text-align: center;
+	display: table-cell;
+	width: 150px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--light);
+    background-color: var(--accent);
+    overflow: hidden;
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+    transition: background-color .3s;
+}
+
+div#searchButton:active
+{
+	color: var(--accent);
+	background-color: var(--light);
+}
+
+a.book-link.searched{
+	border:2px solid;
+}
+
+
+a.book-link.searched.selected{
+	background-color: var(--accent);
+	color: var(--light);
+}
+a.book-link.searched.selected:active{
+	background-color: var(--light);
+	color: var(--accent);
+}

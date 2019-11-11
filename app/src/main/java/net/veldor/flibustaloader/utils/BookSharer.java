@@ -24,7 +24,7 @@ public class BookSharer {
         // ========================================================================================
         Context context = App.getInstance();
         // получу путь к файлу
-        File file = new File(MyWebViewClient.DOWNLOAD_FOLDER_LOCATION, name);
+        File file = new File(App.getInstance().getDownloadFolder(), name);
         if(file.exists()){
             // отправлю запрос на открытие файла
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -44,6 +44,8 @@ public class BookSharer {
         i.setType("text/plain");
         i.putExtra(Intent.EXTRA_SUBJECT, R.string.share_url_message);
         i.putExtra(Intent.EXTRA_TEXT, link);
-        context.startActivity(Intent.createChooser(i, context.getString(R.string.share_url_title)));
+        Intent starter = Intent.createChooser(i, context.getString(R.string.share_url_title));
+        starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(starter);
     }
 }

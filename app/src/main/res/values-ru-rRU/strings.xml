@@ -30,4 +30,8 @@
     <string name="share_link_message">Поделиться</string>
     <string name="share_url_message">Ссылка на страницу</string>
     <string name="share_url_title">Отправить в</string>
+    <string name="miscellaneous">Разное</string>
+    <string name="set_downloads_folder">Установить папку загрузок</string>
+    <string name="download_folder_changed_message">"Папка загрузок изменена на "</string>
+    <string name="enter_text_message">Введите текст</string>
 </resources>

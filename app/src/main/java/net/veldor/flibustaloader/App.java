@@ -4,6 +4,7 @@ import android.app.Application;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -20,6 +21,8 @@ public class App extends Application {
 
     public static final int MAX_BOOK_NUMBER = 548398;
 
+    public static final File DOWNLOAD_FOLDER_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+
     public static final String NEW_BOOKS = "http://flibustahezeous3.onion/new";
     private static final String PREFERENCE_VIEW_MODE = "view mode";
     public static final int VIEW_MODE_NORMAL = 1;
@@ -34,6 +37,7 @@ public class App extends Application {
     private static final String PREFERENCE_NIGHT_MODE_ENABLED = "night mode";
     private static final String PREFERENCE_LAST_LOADED_URL = "last_loaded_url";
     private static final String PREFERENCE_LAST_SCROLL = "last_scroll";
+    private static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";
 
     // место для хранения TOR клиента
     public final MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
@@ -117,5 +121,31 @@ public class App extends Application {
     }
     public void setLastScroll(int mScroll) {
         mSharedPreferences.edit().putInt(PREFERENCE_LAST_SCROLL, mScroll).apply();
+    }
+
+    public File getDownloadFolder(){
+        // возвращу папку для закачек
+        String download_location =  mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, DOWNLOAD_FOLDER_LOCATION.toString());
+        File dl = new File(download_location);
+        if(dl.isDirectory()){
+            Log.d("surprise", "App getDownloadFolder: found changed dir " + dl.toString());
+            return dl;
+        }
+        else{
+            Log.d("surprise", "App getDownloadFolder: not found changed dir " + dl);
+            return DOWNLOAD_FOLDER_LOCATION;
+        }
+    }
+
+    public void setDownloadFolder(Uri uri) {
+        File dl = new File(uri.getPath());
+        Log.d("surprise", "App setDownloadFolder: uri is " + uri.getPath());
+        if(dl.exists()){
+            Log.d("surprise", "App setDownloadFolder: destination exists");
+        }
+        else{
+            Log.d("surprise", "App setDownloadFolder: destination not found");
+        }
+        mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.getPath()).apply();
     }
 }

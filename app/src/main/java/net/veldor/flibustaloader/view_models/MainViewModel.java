@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.view_models;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -65,4 +66,5 @@ public class MainViewModel extends AndroidViewModel {
     public void shareLink(MyWebView mWebView) {
         BookSharer.shareLink(mWebView.getUrl());
     }
+
 }

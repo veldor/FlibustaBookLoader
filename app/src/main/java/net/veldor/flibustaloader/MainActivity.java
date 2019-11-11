@@ -2,6 +2,7 @@ package net.veldor.flibustaloader;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -12,9 +13,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
@@ -30,18 +33,24 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Objects;
+
+import lib.folderpicker.FolderPicker;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int REQUEST_WRITE_READ = 22;
     private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
+    private static final int READ_REQUEST_CODE = 5;
     private MyWebView mWebView;
     private MainViewModel mMyViewModel;
     private LiveData<AndroidOnionProxyManager> mTorClient;
@@ -58,6 +67,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(App.getInstance().getNightMode()){
+            Log.d("surprise", "MainActivity onResume: load night theme");
+            setTheme(R.style.NightTheme);
+        }
         setContentView(R.layout.activity_main);
 
         // проверю, не запущено ли приложение с помощью интента
@@ -65,8 +78,8 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             Uri data = getIntent().getData();//set a variable for the Intent
             String fullPath = data.getEncodedPath();
             Log.d("surprise", "MainActivity onCreate: " + fullPath);
+            App.getInstance().setLastLoadedUrl(App.BASE_URL + fullPath);
         }
-
         // инициализирую переменные
         mWebView = findViewById(R.id.myWebView);
         mRootView = findViewById(R.id.rootView);
@@ -142,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 mMyViewModel.initializeUpdate();
             }
         });
+        updateSnackbar.setActionTextColor(getResources().getColor(android.R.color.white));
         updateSnackbar.show();
     }
 
@@ -235,15 +249,44 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
                 startActivity(intent);
                 return true;
+            case R.id.setDownloadsFolder:
+                changeDownloadsFolder();
+                return true;
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
             mMyViewModel.switchNightMode();
-            invalidateOptionsMenu();
+            this.recreate();
+           /* invalidateOptionsMenu();
             mWebView.reload();
-            setWebViewBackground();
+            setWebViewBackground();*/
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void changeDownloadsFolder() {
+        Intent intent = new Intent(this, FolderPicker.class);
+        startActivityForResult(intent, READ_REQUEST_CODE);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if(requestCode == READ_REQUEST_CODE){
+            if(resultCode ==  Activity.RESULT_OK){
+               if(data != null){
+                   String folderLocation = Objects.requireNonNull(data.getExtras()).getString("data");
+                   File destination = new File(folderLocation);
+                   if(destination.exists()){
+                        App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
+                       Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
+                   }
+               }
+            }
+        }
+        else{
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void showPermissionDialog() {
@@ -326,16 +369,14 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            switch (keyCode) {
-                case KeyEvent.KEYCODE_BACK:
-                    // возвращаюсь на страницу назад в браузере
-                    assert mWebView != null;
-                    if (mWebView.canGoBack()) {
-                        mWebView.goBack();
-                    } else {
-                        finish();
-                    }
-                    return true;
+            if (keyCode == KeyEvent.KEYCODE_BACK) {// возвращаюсь на страницу назад в браузере
+                assert mWebView != null;
+                if (mWebView.canGoBack()) {
+                    mWebView.goBack();
+                } else {
+                    finish();
+                }
+                return true;
             }
 
         }

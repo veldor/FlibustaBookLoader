@@ -68,4 +68,12 @@
         android:id="@+id/buyCoffee"
         android:title="@string/buy_me_coffee"
         yourapp:showAsAction="never"/>
+    <item
+        android:title="@string/miscellaneous">
+        <menu>
+            <item
+                android:id="@+id/setDownloadsFolder"
+                android:title="@string/set_downloads_folder"/>
+        </menu>
+    </item>
 </menu>

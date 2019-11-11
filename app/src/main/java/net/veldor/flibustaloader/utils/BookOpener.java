@@ -23,7 +23,7 @@ public class BookOpener {
         // ========================================================================================
         Context context = App.getInstance();
         // получу путь к файлу
-        File file = new File(MyWebViewClient.DOWNLOAD_FOLDER_LOCATION, name);
+        File file = new File(App.getInstance().getDownloadFolder(), name);
         if(file.exists()){
             // отправлю запрос на открытие файла
             Intent openIntent = new Intent(Intent.ACTION_VIEW);

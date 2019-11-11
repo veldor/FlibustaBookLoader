@@ -6,8 +6,8 @@ android {
         applicationId "net.veldor.flibustaloader"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 12
-        versionName "1.6.2"
+        versionCode 13
+        versionName "1.6.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -41,6 +41,9 @@ dependencies {
 
     implementation "android.arch.work:work-runtime:1.0.1"
     implementation 'org.jetbrains:annotations-java5:15.0'
+
+    implementation 'lib.kashif:folderpicker:2.4'
+
 }
 
 allprojects {
