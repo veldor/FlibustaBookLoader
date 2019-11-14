@@ -27,7 +27,7 @@ public class BookOpener {
         if(file.exists()){
             // отправлю запрос на открытие файла
             Intent openIntent = new Intent(Intent.ACTION_VIEW);
-            openIntent.setDataAndType(Uri.fromFile(file), TypesKeeper.getInstance().getMime(type));
+            openIntent.setDataAndType(Uri.fromFile(file), MimeTypes.getFullMime(type));
             Intent starter = Intent.createChooser(openIntent, context.getString(R.string.open_with_message));
             starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(starter);

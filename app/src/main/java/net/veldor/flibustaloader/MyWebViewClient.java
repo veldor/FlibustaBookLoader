@@ -43,12 +43,12 @@ import cz.msebera.android.httpclient.ssl.SSLContexts;
 
 public class MyWebViewClient extends WebViewClient {
 
-    private static final String TOR_NOT_RUNNING_ERROR = "Tor is not running!";
+    public static final String TOR_NOT_RUNNING_ERROR = "Tor is not running!";
     static final String BOOK_LOAD_ACTION = "net.veldor.flibustaloader.action.BOOK_LOAD_EVENT";
-    static final String TOR_CONNECT_ERROR_ACTION = "net.veldor.flibustaloader.action.TOR_CONNECT_ERROR";
+    public static final String TOR_CONNECT_ERROR_ACTION = "net.veldor.flibustaloader.action.TOR_CONNECT_ERROR";
     static final int START_BOOK_LOADING = 1;
     static final int FINISH_BOOK_LOADING = 2;
-    private static final String ENCODING_UTF_8 = "UTF-8";
+    public static final String ENCODING_UTF_8 = "UTF-8";
     private static final String BOOK_FORMAT = "application/octet-stream";
     private static final String FB2_FORMAT = "application/zip";
     private static final String PDF_FORMAT = "application/pdf";
@@ -177,7 +177,7 @@ public class MyWebViewClient extends WebViewClient {
         return null;
     }
 
-    static class FakeDnsResolver implements DnsResolver {
+    public static class FakeDnsResolver implements DnsResolver {
         @Override
         public InetAddress[] resolve(String host) throws UnknownHostException {
             return new InetAddress[]{InetAddress.getByAddress(new byte[]{1, 1, 1, 1})};

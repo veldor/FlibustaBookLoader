@@ -10,9 +10,11 @@ import android.util.Log;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -39,12 +41,21 @@ public class App extends Application {
     private static final String PREFERENCE_LAST_SCROLL = "last_scroll";
     private static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";
 
+
+    private static final String PREFERENCE_CONTENT_TYPE_MODE = "content mode";
+    public static final int CONTENT_MODE_WEB_VIEW = 1;
+    private static final int CONTENT_MODE_ODPS = 0;
+
     // место для хранения TOR клиента
     public final MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
+
+    // место для хранения текста ответа поиска
+    public final MutableLiveData<String> mSearchResult = new MutableLiveData<>();
 
     private static App instance;
     public File downloadedApkFile;
     public Uri updateDownloadUri;
+    public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
 
     @Override
@@ -147,5 +158,27 @@ public class App extends Application {
             Log.d("surprise", "App setDownloadFolder: destination not found");
         }
         mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.getPath()).apply();
+    }
+
+    public boolean isODPS() {
+        return mSharedPreferences.getInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW) != CONTENT_MODE_WEB_VIEW;
+    }
+
+
+    public int getContentTypeMode(){
+        return mSharedPreferences.getInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW);
+    }
+
+
+    public void switchODPSMode() {
+        int contentTypeMode = getContentTypeMode();
+        if(contentTypeMode == CONTENT_MODE_WEB_VIEW){
+            Log.d("surprise", "App switchODPSMode: switch to ODPS");
+            mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_ODPS).apply();
+        }
+        else{
+            Log.d("surprise", "App switchODPSMode: switch to webView");
+            mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW).apply();
+        }
     }
 }

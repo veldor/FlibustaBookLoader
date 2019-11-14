@@ -63,68 +63,77 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private SearchView mSearchView;
     private ArrayAdapter<String> mSearchAdapter;
     private AlertDialog mTorRestartDialog;
+    private boolean mIsKilled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(App.getInstance().getNightMode()){
-            Log.d("surprise", "MainActivity onResume: load night theme");
-            setTheme(R.style.NightTheme);
+        // проверю, если используем ODPS- перенаправлю в другую активность
+        if (App.getInstance().isODPS()) {
+            Intent resetIntent = new Intent(this, ODPSActivity.class);
+            resetIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(resetIntent);
+            mIsKilled = true;
+            killActivity();
         }
-        setContentView(R.layout.activity_main);
-
-        // проверю, не запущено ли приложение с помощью интента
-        if(getIntent().getData()!=null){//check if intent is not null
-            Uri data = getIntent().getData();//set a variable for the Intent
-            String fullPath = data.getEncodedPath();
-            Log.d("surprise", "MainActivity onCreate: " + fullPath);
-            App.getInstance().setLastLoadedUrl(App.BASE_URL + fullPath);
-        }
-        // инициализирую переменные
-        mWebView = findViewById(R.id.myWebView);
-        mRootView = findViewById(R.id.rootView);
-
-        // добавлю viewModel
-        mMyViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-
-        // добавлю модный перезагрузчик страницы
-        mRefresher = findViewById(R.id.refreshView);
-        mRefresher.setOnRefreshListener(this);
-
-        // зарегистрирую получатель команды возвращения на предыдущую страницу
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(MyWebViewClient.BOOK_LOAD_ACTION);
-        mPageLoadReceiver = new BookLoadingReceiver();
-        registerReceiver(mPageLoadReceiver, filter);
-
-        // зарегистрирую получатель ошибки подключения к TOR
-        filter = new IntentFilter();
-        filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
-        TorConnectErrorReceiver torConnectErrorReceiver = new TorConnectErrorReceiver();
-        registerReceiver(torConnectErrorReceiver, filter);
-        if (!permissionGranted()) {
-            // показываю диалог с требованием предоставить разрешения
-            showPermissionDialog();
-        } else {
-            handleLoading();
-        }
-
-        // проверю обновления
-        final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
-        version.observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(@Nullable Boolean aBoolean) {
-                if (aBoolean != null && aBoolean) {
-                    // показываю Snackbar с уведомлением
-                    makeUpdateSnackbar();
-                }
-                version.removeObservers(MainActivity.this);
+        if (!mIsKilled) {
+            if (App.getInstance().getNightMode()) {
+                setTheme(R.style.NightTheme);
             }
-        });
+            setContentView(R.layout.activity_main);
 
-        // создам тестовый массив строк для автозаполнения
-        autocompleteStrings = mMyViewModel.getSearchAutocomplete();
+            // проверю, не запущено ли приложение с помощью интента
+            if (getIntent().getData() != null) {//check if intent is not null
+                Uri data = getIntent().getData();//set a variable for the Intent
+                String fullPath = data.getEncodedPath();
+                Log.d("surprise", "MainActivity onCreate: " + fullPath);
+                App.getInstance().setLastLoadedUrl(App.BASE_URL + fullPath);
+            }
+            // инициализирую переменные
+            mWebView = findViewById(R.id.myWebView);
+            mRootView = findViewById(R.id.rootView);
 
+            // добавлю viewModel
+            mMyViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+
+            // добавлю модный перезагрузчик страницы
+            mRefresher = findViewById(R.id.refreshView);
+            mRefresher.setOnRefreshListener(this);
+
+            // зарегистрирую получатель команды возвращения на предыдущую страницу
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(MyWebViewClient.BOOK_LOAD_ACTION);
+            mPageLoadReceiver = new BookLoadingReceiver();
+            registerReceiver(mPageLoadReceiver, filter);
+
+            // зарегистрирую получатель ошибки подключения к TOR
+            filter = new IntentFilter();
+            filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
+            TorConnectErrorReceiver torConnectErrorReceiver = new TorConnectErrorReceiver();
+            registerReceiver(torConnectErrorReceiver, filter);
+            if (!permissionGranted()) {
+                // показываю диалог с требованием предоставить разрешения
+                showPermissionDialog();
+            } else {
+                handleLoading();
+            }
+
+            // проверю обновления
+            final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
+            version.observe(this, new Observer<Boolean>() {
+                @Override
+                public void onChanged(@Nullable Boolean aBoolean) {
+                    if (aBoolean != null && aBoolean) {
+                        // показываю Snackbar с уведомлением
+                        makeUpdateSnackbar();
+                    }
+                    version.removeObservers(MainActivity.this);
+                }
+            });
+
+            // создам тестовый массив строк для автозаполнения
+            autocompleteStrings = mMyViewModel.getSearchAutocomplete();
+        }
     }
 
     @Override
@@ -144,7 +153,8 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(mPageLoadReceiver);
+        if (mPageLoadReceiver != null)
+            unregisterReceiver(mPageLoadReceiver);
     }
 
     private void makeUpdateSnackbar() {
@@ -217,6 +227,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         }
         MenuItem nightModeSwitcher = menu.findItem(R.id.menuUseDarkMode);
         nightModeSwitcher.setChecked(mMyViewModel.getNightModeEnabled());
+
+        // обработаю переключатель ODPS
+        MenuItem useODPSSwitcher = menu.findItem(R.id.menuUseODPS);
+        useODPSSwitcher.setChecked(App.getInstance().isODPS());
         return true;
     }
 
@@ -252,6 +266,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.setDownloadsFolder:
                 changeDownloadsFolder();
                 return true;
+
+            case R.id.menuUseODPS:
+                mMyViewModel.switchODPSMode();
+                Intent resetIntent = new Intent(this, MainActivity.class);
+                resetIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(resetIntent);
+                finish();
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
             mMyViewModel.switchNightMode();
@@ -272,19 +293,18 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(requestCode == READ_REQUEST_CODE){
-            if(resultCode ==  Activity.RESULT_OK){
-               if(data != null){
-                   String folderLocation = Objects.requireNonNull(data.getExtras()).getString("data");
-                   File destination = new File(folderLocation);
-                   if(destination.exists()){
+        if (requestCode == READ_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (data != null) {
+                    String folderLocation = Objects.requireNonNull(data.getExtras()).getString("data");
+                    File destination = new File(folderLocation);
+                    if (destination.exists()) {
                         App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
-                       Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
-                   }
-               }
+                        Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
+                    }
+                }
             }
-        }
-        else{
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
@@ -520,5 +540,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         mWebView.restoreState(savedInstanceState);
+    }
+
+    private void killActivity() {
+        finish();
     }
 }

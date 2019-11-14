@@ -31,7 +31,6 @@ public class StartTorWorker extends Worker {
         } else {
             tor = new AndroidOnionProxyManager(getApplicationContext(), App.TOR_FILES_LOCATION);
         }
-        Log.d("surprise", "StartTorWorker doWork: start opening TOR");
         // просто создание объекта, не запуск
         // тут- время, которое отводится на попытку запуска
         int totalSecondsPerTorStartup = (int) TimeUnit.MINUTES.toSeconds(4);

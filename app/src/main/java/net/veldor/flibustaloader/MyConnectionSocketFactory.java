@@ -15,7 +15,7 @@ import cz.msebera.android.httpclient.protocol.HttpContext;
  */
 
 
-class MyConnectionSocketFactory implements ConnectionSocketFactory {
+public class MyConnectionSocketFactory implements ConnectionSocketFactory {
 
     @Override
     public Socket createSocket(final HttpContext context) {

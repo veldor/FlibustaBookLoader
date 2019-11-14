@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="author"
+            type="net.veldor.flibustaloader.selections.FoundedAuthor" />
+    </data>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="3dp"
+        android:padding="3dp">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+            <TextView
+                android:id="@+id/book_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@{author.name}"
+                android:textColor="#0000CC"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toStartOf="@+id/toAuthorWithoutSeriesBtn"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/authorBooxQuantity"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@{author.booksQuantity}"
+                app:layout_constraintEnd_toStartOf="@+id/toAuthorWithoutSeriesBtn"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/book_name" />
+
+            <Button
+                android:id="@+id/toAuthorPageBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/to_author_page_message"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/toAuthorSeriesBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/to_author_series"
+                app:layout_constraintEnd_toEndOf="@+id/toAuthorPageBtn"
+                app:layout_constraintTop_toBottomOf="@+id/toAuthorPageBtn" />
+
+            <Button
+                android:id="@+id/toAuthorWithoutSeriesBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/to_author_without_series"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/toAuthorSeriesBtn" />
+
+        </android.support.constraint.ConstraintLayout>
+    </android.support.v7.widget.CardView>
+
+</layout>

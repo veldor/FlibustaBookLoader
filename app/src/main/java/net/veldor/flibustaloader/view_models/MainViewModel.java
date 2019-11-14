@@ -67,4 +67,7 @@ public class MainViewModel extends AndroidViewModel {
         BookSharer.shareLink(mWebView.getUrl());
     }
 
+    public void switchODPSMode() {
+        App.getInstance().switchODPSMode();
+    }
 }

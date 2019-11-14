@@ -29,7 +29,7 @@ public class BookSharer {
             // отправлю запрос на открытие файла
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-            shareIntent.setType(TypesKeeper.getInstance().getMime(type));
+            shareIntent.setType(MimeTypes.getFullMime(type));
             Intent starter = Intent.createChooser(shareIntent, context.getString(R.string.share_with_message));
             starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(starter);

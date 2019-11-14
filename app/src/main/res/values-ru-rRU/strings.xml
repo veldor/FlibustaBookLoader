@@ -34,4 +34,21 @@
     <string name="set_downloads_folder">Установить папку загрузок</string>
     <string name="download_folder_changed_message">"Папка загрузок изменена на "</string>
     <string name="enter_text_message">Введите текст</string>
+    <string name="use_ODPS">Использовать ODPS(бета)</string>
+    <string name="title_activity_odps">ODPS</string>
+    <string name="ready_for_odps_message">Готов</string>
+    <string name="whoSearchMessage">Кого ищем?</string>
+    <string name="search_book_message">Книгу</string>
+    <string name="search_author_message">Автора</string>
+    <string name="to_author_page_message">На страницу автора</string>
+    <string name="to_author_series">Книги автора по сериям</string>
+    <string name="to_author_without_series">Книги автора вне серий</string>
+    <string name="load_message">Загрузка</string>
+    <string name="waitForLoad">Нужно немного подождать</string>
+    <string name="back_button">Назад</string>
+    <string name="forward_button">Далее</string>
+    <string name="no_results_more">Больше результатов нет</string>
+    <string name="downloads_dialog_header">Выберите тип загрузки</string>
+    <string name="download_message">Загрузить</string>
+    <string name="book_details">Подробности</string>
 </resources>

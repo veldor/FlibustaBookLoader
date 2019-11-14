@@ -14,9 +14,9 @@ import cz.msebera.android.httpclient.conn.ssl.SSLConnectionSocketFactory;
 import cz.msebera.android.httpclient.protocol.HttpContext;
 
 
-class MySSLConnectionSocketFactory extends SSLConnectionSocketFactory {
+public class MySSLConnectionSocketFactory extends SSLConnectionSocketFactory {
 
-    MySSLConnectionSocketFactory(final SSLContext sslContext) {
+    public MySSLConnectionSocketFactory(final SSLContext sslContext) {
         super(sslContext);
     }
 
