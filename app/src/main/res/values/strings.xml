@@ -51,4 +51,5 @@
     <string name="downloads_dialog_header">Select download type</string>
     <string name="download_message">Download</string>
     <string name="book_details">Details</string>
+    <string name="select_author_view_message">Select author view</string>
 </resources>

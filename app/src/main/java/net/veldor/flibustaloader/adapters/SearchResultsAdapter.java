@@ -4,11 +4,11 @@ import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
@@ -106,6 +106,20 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                         Toast.makeText(App.getInstance(), "Начинаю скачивание", Toast.LENGTH_LONG).show();
                     }
                     App.getInstance().mDownloadLinksList.postValue(foundedBook.downloadLinks);
+                }
+            });
+            // добавлю действие на нажатие на автора
+            TextView authorsView = container.findViewById(R.id.author_name);
+            authorsView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // если автор один- вывожу диалог выбора отображения, если несколько- вывожу диалог выбора автора
+                    if(foundedBook.authors.size() > 1){
+                        App.getInstance().mSelectedAuthors.postValue(foundedBook.authors);
+                    }
+                    else{
+                        App.getInstance().mSelectedAuthor.postValue(foundedBook.authors.get(0));
+                    }
                 }
             });
         }

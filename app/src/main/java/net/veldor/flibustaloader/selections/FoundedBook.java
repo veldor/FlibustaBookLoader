@@ -10,4 +10,8 @@ public class FoundedBook {
     public ArrayList<DownloadLink> downloadLinks = new ArrayList<>();
     public String size;
     public String format;
+    public String genreComplex;
+    public ArrayList<Genre> genres;
+    public String sequenceComplex;
+    public ArrayList<Author> authors = new ArrayList<>();
 }

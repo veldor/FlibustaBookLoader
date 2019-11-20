@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
@@ -51,6 +52,10 @@ public class App extends Application {
 
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchResult = new MutableLiveData<>();
+    // место для хранения выбранного писателя
+    public final MutableLiveData<Author> mSelectedAuthor = new MutableLiveData<>();
+    // место для хранения выбора писателей
+    public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
     private static App instance;
     public File downloadedApkFile;

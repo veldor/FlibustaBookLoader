@@ -31,6 +31,7 @@ import android.widget.Toast;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.adapters.SearchResultsAdapter;
+import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.XMLHandler;
@@ -61,6 +62,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private AlertDialog.Builder mDownloadsDialog;
     private AlertDialog mBookLoadingDialog;
     private TorConnectErrorReceiver mTtorConnectErrorReceiver;
+    private String[] mAuthorViewTypes = new String[]{"Книги по сериям", "Книги вне серий", "Книги по алфавиту", "Книги по алфавиту"};
+    private AlertDialog mSelectAuthorViewDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -152,23 +155,34 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         downloadLinks.observe(this, new Observer<ArrayList<DownloadLink>>() {
             @Override
             public void onChanged(@Nullable ArrayList<DownloadLink> downloadLinks) {
-                if(downloadLinks != null && downloadLinks.size() > 0){
-                    if(downloadLinks.size() == 1){
+                if (downloadLinks != null && downloadLinks.size() > 0) {
+                    if (downloadLinks.size() == 1) {
                         mWebClient.download(downloadLinks.get(0));
-                    }
-                    else{
+                    } else {
                         // покажу диалог для выбора ссылки для скачивания
                         showDownloadsDialog(downloadLinks);
                     }
                 }
             }
         });
+
+        // добавлю отслеживание выбора типа отображения автора
+        LiveData<Author> selectedAuthor = App.getInstance().mSelectedAuthor;
+        selectedAuthor.observe(this, new Observer<Author>() {
+            @Override
+            public void onChanged(@Nullable Author author) {
+                if (author != null) {
+                    showAuthorViewSelect(author);
+                }
+            }
+        });
     }
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(mTtorConnectErrorReceiver != null){
+        if (mTtorConnectErrorReceiver != null) {
             unregisterReceiver(mTtorConnectErrorReceiver);
         }
     }
@@ -313,6 +327,29 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         mShowLoadDialog.show();
     }
 
+
+    private void showAuthorViewSelect(final Author author) {
+        // получу идентификатор автора
+        final String authorId = TextUtils.substring(author.uri, 3, author.uri.length());
+        if (mSelectAuthorViewDialog == null) {
+            // создам диалоговое окно
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setTitle(R.string.select_author_view_message)
+                    .setItems(mAuthorViewTypes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            loadAuthor(which, authorId);
+                        }
+                    })
+            ;
+            mSelectAuthorViewDialog = dialogBuilder.create();
+        }
+        mSelectAuthorViewDialog.show();
+    }
+    private void loadAuthor(int which, String authorId) {
+        Log.d("surprise", "ODPSActivity loadAuthor load there");
+    }
+
     @Override
     public boolean onQueryTextChange(String s) {
         return false;
@@ -404,7 +441,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             // если доступен возврат назад- возвращаюсь, если нет- закрываю приложение
-            if(mBackButton.isEnabled()){
+            if (mBackButton.isEnabled()) {
                 mBackButton.performClick();
                 return true;
             }
@@ -414,7 +451,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
 
 
     private void showDownloadsDialog(final ArrayList<DownloadLink> downloadLinks) {
-        if(mDownloadsDialog == null){
+        if (mDownloadsDialog == null) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.downloads_dialog_header);
             mDownloadsDialog = dialogBuilder;
@@ -424,7 +461,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         final String[] linksArray = new String[linksLength];
         int counter = 0;
         String mime;
-        while (counter < linksLength){
+        while (counter < linksLength) {
             mime = downloadLinks.get(counter).mime;
             linksArray[counter] = MimeTypes.getMime(mime);
             counter++;
@@ -439,9 +476,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 int counter = 0;
                 int linksLength = downloadLinks.size();
                 DownloadLink item;
-                while (counter < linksLength){
-                     item = downloadLinks.get(counter);
-                    if(item.mime.equals(longMime)){
+                while (counter < linksLength) {
+                    item = downloadLinks.get(counter);
+                    if (item.mime.equals(longMime)) {
                         mWebClient.download(item);
                         Toast.makeText(ODPSActivity.this, "Загрузка началась", Toast.LENGTH_LONG).show();
                         break;
