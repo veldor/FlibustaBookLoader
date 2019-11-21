@@ -1,8 +1,13 @@
 package net.veldor.flibustaloader.utils;
 
+import android.util.Log;
+
+import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedAuthor;
 import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.selections.FoundedSequence;
+import net.veldor.flibustaloader.selections.Genre;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -55,6 +60,14 @@ public class XMLParser {
         // попробую xpath
         XPathFactory factory = XPathFactory.newInstance();
         mXPath = factory.newXPath();
+
+        // объявлю переменные
+        int innerCounter = 0;
+        Node someNode;
+        StringBuilder stringBuilder = new StringBuilder();
+        Genre genre;
+        Author author;
+        String someString;
         try {
             NodeList entries = (NodeList) mXPath.evaluate("//entry", mDoc, XPathConstants.NODESET);
             int entriesLength = entries.getLength();
@@ -65,56 +78,23 @@ public class XMLParser {
                 if (searchType != null) {
                     int counter = 0;
                     if (searchType.equals("authors")) {
-                        ArrayList<FoundedAuthor> result = new ArrayList<>();
-                        FoundedAuthor thisAuthor;
+                        ArrayList<Author> result = new ArrayList<>();
+                        Author thisAuthor;
                         // создам массив писателей
                         while (counter < entriesLength) {
-                            thisAuthor = new FoundedAuthor();
+                            thisAuthor = new Author();
                             // добавлю автора в список
                             Node entry = entries.item(counter);
-                            NodeList entryChildren = entry.getChildNodes();
-                            int entryChildrenLength = entryChildren.getLength();
-                            int childrenCounter = 0;
-                            while (childrenCounter < entryChildrenLength) {
-                                // заполню данные об авторе
-                                Node childNode = entryChildren.item(childrenCounter);
-                                String childNodeName = childNode.getNodeName();
-                                switch (childNodeName) {
-                                    case "title":
-                                        thisAuthor.name = childNode.getTextContent();
-                                        break;
-                                    case "link":
-                                        NamedNodeMap attributes = childNode.getAttributes();
-                                        Node title = attributes.getNamedItem("title");
-                                        if (title != null) {
-                                            String titleValue = title.getNodeValue();
-                                            if (titleValue.equals("Книги автора по сериям")) {
-                                                thisAuthor.booksBySeries = attributes.getNamedItem("href").getNodeValue();
-                                            } else if (titleValue.equals("Книги автора вне серий")) {
-                                                thisAuthor.booksOutSeries = attributes.getNamedItem("href").getNodeValue();
-                                            }
-                                        } else {
-                                            // проверю начало ссылки, найду ссылку на страницу автора
-                                            String href = attributes.getNamedItem("href").getNodeValue();
-                                            String linkBegin = href.substring(0, 13);
-                                            if (linkBegin.equals("/opds/author/")) {
-                                                thisAuthor.link = href;
-                                            }
-                                        }
-                                        break;
-                                    case "content":
-                                        thisAuthor.booksQuantity = childNode.getTextContent();
-                                        break;
-                                }
-                                ++childrenCounter;
-                            }
+                            thisAuthor.name = ((Node) mXPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
+                            thisAuthor.uri = explodeByDelimiter(((Node) mXPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent(), ":" , 3);
+                            thisAuthor.content = ((Node) mXPath.evaluate("./content", entry, XPathConstants.NODE)).getTextContent();
                             result.add(thisAuthor);
                             ++counter;
                         }
                         HashMap<String, ArrayList> answer = new HashMap<>();
                         answer.put(searchType, result);
                         return answer;
-                    } else if(searchType.equals("books")) {
+                    } else if (searchType.equals("books")) {
                         ArrayList<FoundedBook> result = new ArrayList<>();
                         FoundedBook thisBook;
                         while (counter < entriesLength) {
@@ -124,26 +104,61 @@ public class XMLParser {
                             NodeList xpathResult = (NodeList) mXPath.evaluate("./title", entry, XPathConstants.NODESET);
                             thisBook.name = xpathResult.item(0).getTextContent();
 
-                            xpathResult = (NodeList) mXPath.evaluate("./author/name", entry, XPathConstants.NODESET);
-                            if(xpathResult.getLength() == 1){
-                                thisBook.author = xpathResult.item(0).getTextContent();
+                            xpathResult = (NodeList) mXPath.evaluate("./author", entry, XPathConstants.NODESET);
+                            if (xpathResult.getLength() > 0) {
+                                stringBuilder.setLength(0);
+                                innerCounter = 0;
+                                while ((someNode = xpathResult.item(innerCounter)) != null) {
+                                    author = new Author();
+                                    // найду имя
+                                    Node authorName = (Node) mXPath.evaluate("./name", someNode, XPathConstants.NODE);
+                                    someString = authorName.getTextContent();
+                                    author.name = someString;
+                                    stringBuilder.append(someString);
+                                    stringBuilder.append("\n");
+                                    Node authorUri = (Node) mXPath.evaluate("./uri", someNode, XPathConstants.NODE);
+                                    author.uri = explodeByDelimiter(authorUri.getTextContent(), "/", 3);
+                                    thisBook.authors.add(author);
+                                    ++innerCounter;
+
+                                }
+                                thisBook.author = stringBuilder.toString();
                             }
-                            else{
-                                thisBook.author = "Автор неизвестен";
+
+                            // добавлю категории
+                            xpathResult = (NodeList) mXPath.evaluate("./category", entry, XPathConstants.NODESET);
+
+
+                            if (xpathResult.getLength() > 0) {
+                                stringBuilder.setLength(0);
+                                innerCounter = 0;
+                                while ((someNode = xpathResult.item(innerCounter)) != null) {
+                                    someString = someNode.getAttributes().getNamedItem("label").getTextContent();
+                                    stringBuilder.append(someString);
+                                    stringBuilder.append("\n");
+                                    // добавлю жанр
+                                    genre = new Genre();
+                                    genre.label = someString;
+                                    genre.term = someNode.getAttributes().getNamedItem("term").getTextContent();
+                                    ++innerCounter;
+                                }
+                                thisBook.genreComplex = stringBuilder.toString();
                             }
 
                             xpathResult = (NodeList) mXPath.evaluate("./content", entry, XPathConstants.NODESET);
-                            thisBook.downloadsCount = getInfoFromContent(xpathResult.item(0).getTextContent(), "Скачиваний:");
-                            thisBook.size = getInfoFromContent(xpathResult.item(0).getTextContent(), "Размер:");
-                            thisBook.format = getInfoFromContent(xpathResult.item(0).getTextContent(), "Формат:");
-                            thisBook.translate = getInfoFromContent(xpathResult.item(0).getTextContent(), "Перевод:");
+                            someString = xpathResult.item(0).getTextContent();
+                            thisBook.downloadsCount = getInfoFromContent(someString, "Скачиваний:");
+                            thisBook.size = getInfoFromContent(someString, "Размер:");
+                            thisBook.format = getInfoFromContent(someString, "Формат:");
+                            thisBook.translate = getInfoFromContent(someString, "Перевод:");
+                            thisBook.sequenceComplex = getInfoFromContent(someString, "Серия:");
 
                             // найду ссылки на скачивание книги
                             xpathResult = (NodeList) mXPath.evaluate("./link[@rel='http://opds-spec.org/acquisition/open-access']", entry, XPathConstants.NODESET);
                             int linksLength = xpathResult.getLength();
-                            if(linksLength > 0){
+                            if (linksLength > 0) {
                                 int linksCounter = 0;
-                                while (linksCounter < linksLength){
+                                while (linksCounter < linksLength) {
                                     Node link = xpathResult.item(linksCounter);
                                     NamedNodeMap attributes = link.getAttributes();
                                     DownloadLink downloadLink = new DownloadLink();
@@ -162,6 +177,117 @@ public class XMLParser {
                         answer.put(searchType, result);
                         return answer;
                     }
+
+                    // возможно, идёт загрузка книг по автору
+                    searchType = explodeByDelimiter(id.item(0).getTextContent(), ":", 2);
+                    if(searchType != null){
+                        if(searchType.equals("author")){
+                            // смотрим, нашли ли мы книги или серии
+                            searchType = explodeByDelimiter(id.item(0).getTextContent(), ":", 4);
+                            if(searchType != null && (searchType.equals("books") || searchType.equals("sequenceless"))){
+                                searchType = "books";
+                                counter = 0;
+                                ArrayList<FoundedBook> result = new ArrayList<>();
+                                FoundedBook thisBook;
+                                while (counter < entriesLength) {
+                                    thisBook = new FoundedBook();
+                                    // добавлю книгу в список
+                                    Node entry = entries.item(counter);
+                                    NodeList xpathResult = (NodeList) mXPath.evaluate("./title", entry, XPathConstants.NODESET);
+                                    thisBook.name = xpathResult.item(0).getTextContent();
+
+                                    xpathResult = (NodeList) mXPath.evaluate("./author", entry, XPathConstants.NODESET);
+                                    if (xpathResult.getLength() > 0) {
+                                        stringBuilder.setLength(0);
+                                        innerCounter = 0;
+                                        while ((someNode = xpathResult.item(innerCounter)) != null) {
+                                            author = new Author();
+                                            // найду имя
+                                            Node authorName = (Node) mXPath.evaluate("./name", someNode, XPathConstants.NODE);
+                                            someString = authorName.getTextContent();
+                                            author.name = someString;
+                                            stringBuilder.append(someString);
+                                            stringBuilder.append("\n");
+                                            Node authorUri = (Node) mXPath.evaluate("./uri", someNode, XPathConstants.NODE);
+                                            author.uri = authorUri.getTextContent();
+                                            thisBook.authors.add(author);
+                                            ++innerCounter;
+
+                                        }
+                                        thisBook.author = stringBuilder.toString();
+                                    }
+
+                                    // добавлю категории
+                                    xpathResult = (NodeList) mXPath.evaluate("./category", entry, XPathConstants.NODESET);
+
+
+                                    if (xpathResult.getLength() > 0) {
+                                        stringBuilder.setLength(0);
+                                        innerCounter = 0;
+                                        while ((someNode = xpathResult.item(innerCounter)) != null) {
+                                            someString = someNode.getAttributes().getNamedItem("label").getTextContent();
+                                            stringBuilder.append(someString);
+                                            stringBuilder.append("\n");
+                                            // добавлю жанр
+                                            genre = new Genre();
+                                            genre.label = someString;
+                                            genre.term = someNode.getAttributes().getNamedItem("term").getTextContent();
+                                            ++innerCounter;
+                                        }
+                                        thisBook.genreComplex = stringBuilder.toString();
+                                    }
+
+                                    xpathResult = (NodeList) mXPath.evaluate("./content", entry, XPathConstants.NODESET);
+                                    someString = xpathResult.item(0).getTextContent();
+                                    thisBook.downloadsCount = getInfoFromContent(someString, "Скачиваний:");
+                                    thisBook.size = getInfoFromContent(someString, "Размер:");
+                                    thisBook.format = getInfoFromContent(someString, "Формат:");
+                                    thisBook.translate = getInfoFromContent(someString, "Перевод:");
+                                    thisBook.sequenceComplex = getInfoFromContent(someString, "Серия:");
+
+                                    // найду ссылки на скачивание книги
+                                    xpathResult = (NodeList) mXPath.evaluate("./link[@rel='http://opds-spec.org/acquisition/open-access']", entry, XPathConstants.NODESET);
+                                    int linksLength = xpathResult.getLength();
+                                    if (linksLength > 0) {
+                                        int linksCounter = 0;
+                                        while (linksCounter < linksLength) {
+                                            Node link = xpathResult.item(linksCounter);
+                                            NamedNodeMap attributes = link.getAttributes();
+                                            DownloadLink downloadLink = new DownloadLink();
+                                            downloadLink.url = attributes.getNamedItem("href").getTextContent();
+                                            downloadLink.mime = attributes.getNamedItem("type").getTextContent();
+                                            downloadLink.name = thisBook.name;
+                                            thisBook.downloadLinks.add(downloadLink);
+                                            linksCounter++;
+                                        }
+                                    }
+
+                                    result.add(thisBook);
+                                    ++counter;
+                                }
+                                HashMap<String, ArrayList> answer = new HashMap<>();
+                                answer.put(searchType, result);
+                                return answer;
+                            }
+                            else if(searchType != null && searchType.equals("sequences")){
+                                ArrayList<FoundedSequence> result = new ArrayList<>();
+                                FoundedSequence foundedSequence;
+                                counter = 0;
+                                while (counter < entriesLength) {
+                                    Node entry = entries.item(counter);
+                                    foundedSequence = new FoundedSequence();
+                                    foundedSequence.title = ((Node) mXPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
+                                    foundedSequence.content = ((Node) mXPath.evaluate("./content", entry, XPathConstants.NODE)).getTextContent();
+                                    foundedSequence.link = ((Node) mXPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
+                                    result.add(foundedSequence);
+                                    counter++;
+                                }
+                                HashMap<String, ArrayList> answer = new HashMap<>();
+                                answer.put(searchType, result);
+                                return answer;
+                            }
+                        }
+                    }
                 }
             }
         } catch (XPathExpressionException e) {
@@ -173,7 +299,7 @@ public class XMLParser {
     private String getInfoFromContent(String item, String s) {
         int start = item.indexOf(s);
         int end = item.indexOf("<br/>", start);
-        if(start > 0 && end > 0)
+        if (start > 0 && end > 0)
             return item.substring(start, end);
         return "";
     }
@@ -190,7 +316,7 @@ public class XMLParser {
         // проверю, есть ли ссылка на следующую страницу
         try {
             Node entry = (Node) mXPath.evaluate("//link[@rel='next']", mDoc, XPathConstants.NODE);
-            if(entry != null){
+            if (entry != null) {
                 return entry.getAttributes().getNamedItem("href").getNodeValue();
             }
         } catch (XPathExpressionException e) {

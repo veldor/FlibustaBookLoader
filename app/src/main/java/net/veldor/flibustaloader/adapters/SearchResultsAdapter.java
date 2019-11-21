@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
@@ -16,15 +17,18 @@ import net.veldor.flibustaloader.BR;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedAuthorItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedBookItemBinding;
-import net.veldor.flibustaloader.selections.FoundedAuthor;
+import net.veldor.flibustaloader.databinding.SearchedSequenceItemBinding;
+import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.selections.FoundedSequence;
 
 import java.util.ArrayList;
 
 public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdapter.ViewHolder> {
-    private ArrayList<FoundedAuthor> mAuthors;
+    private ArrayList<Author> mAuthors;
     private ArrayList<FoundedBook> mBooks;
     private LayoutInflater mLayoutInflater;
+    private ArrayList<FoundedSequence> mSequences;
 
     @NonNull
     @Override
@@ -35,19 +39,24 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
         if (mAuthors != null) {
             SearchedAuthorItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_author_item, viewGroup, false);
             return new ViewHolder(binding);
-        } else {
+        } else if(mBooks != null) {
             SearchedBookItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_book_item, viewGroup, false);
             return new ViewHolder(binding);
+        } else{
+            SearchedSequenceItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_sequence_item, viewGroup, false);
+            return new ViewHolder(binding);
         }
-
     }
 
     @Override
     public void onBindViewHolder(@NonNull SearchResultsAdapter.ViewHolder viewHolder, int i) {
         if (mAuthors != null) {
             viewHolder.bind(mAuthors.get(i));
-        } else {
+        } else if(mBooks != null) {
             viewHolder.bind(mBooks.get(i));
+        }
+        else{
+            viewHolder.bind(mSequences.get(i));
         }
     }
 
@@ -57,23 +66,28 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             return mAuthors.size();
         } else if (mBooks != null) {
             return mBooks.size();
+        } else if (mSequences != null) {
+            return mSequences.size();
         }
         return 0;
     }
 
     public void setAuthorsList(ArrayList authors) {
         mAuthors = authors;
-        mBooks = null;
+    }
+
+    public void setBooksList(ArrayList books) {
+        mBooks = books;
+    }
+
+    public void setSequencesList(ArrayList sequences) {
+        mSequences = sequences;
     }
 
     public void nothingFound() {
         mAuthors = null;
         mBooks = null;
-    }
-
-    public void setBooksList(ArrayList books) {
-        mAuthors = null;
-        mBooks = books;
+        mSequences = null;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -85,16 +99,26 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             mBinding = binding;
         }
 
-        void bind(FoundedAuthor foundedAuthor) {
+        void bind(final Author foundedAuthor) {
             mBinding.setVariable(BR.author, foundedAuthor);
             mBinding.executePendingBindings();
-
+            View container = mBinding.getRoot();
+            container.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    App.getInstance().mSelectedAuthor.postValue(foundedAuthor);
+                }
+            });
+        }
+        void bind(final FoundedSequence sequence) {
+            mBinding.setVariable(BR.sequence, sequence);
+            mBinding.executePendingBindings();
+            View container = mBinding.getRoot();
         }
 
         void bind(final FoundedBook foundedBook) {
             mBinding.setVariable(BR.book, foundedBook);
             mBinding.executePendingBindings();
-
             // добавлю действие при клике на кнопку скачивания
             View container = mBinding.getRoot();
             Button downloadButton = container.findViewById(R.id.downloadBookBtn);
@@ -108,22 +132,20 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                     App.getInstance().mDownloadLinksList.postValue(foundedBook.downloadLinks);
                 }
             });
-        }
-    }
-
-    public void clear() {
-        if (mBooks != null) {
-            int size = mBooks.size();
-            if (size > 0) {
-                mBooks.subList(0, size).clear();
-                notifyItemRangeRemoved(0, size);
-            }
-        } else if (mAuthors != null) {
-            int size = mAuthors.size();
-            if (size > 0) {
-                mAuthors.subList(0, size).clear();
-                notifyItemRangeRemoved(0, size);
-            }
+            // добавлю действие на нажатие на автора
+            TextView authorsView = container.findViewById(R.id.author_name);
+            authorsView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // если автор один- вывожу диалог выбора отображения, если несколько- вывожу диалог выбора автора
+                    if(foundedBook.authors.size() > 1){
+                        App.getInstance().mSelectedAuthors.postValue(foundedBook.authors);
+                    }
+                    else{
+                        App.getInstance().mSelectedAuthor.postValue(foundedBook.authors.get(0));
+                    }
+                }
+            });
         }
     }
 }

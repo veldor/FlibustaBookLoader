@@ -51,4 +51,6 @@
     <string name="downloads_dialog_header">Выберите тип загрузки</string>
     <string name="download_message">Загрузить</string>
     <string name="book_details">Подробности</string>
+    <string name="select_author_view_message">Отобразить книги автора</string>
+    <string name="select_authors_choose_message">Выберите автора</string>
 </resources>

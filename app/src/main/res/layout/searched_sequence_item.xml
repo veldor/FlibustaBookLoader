@@ -4,8 +4,8 @@
     <data>
         <import type="android.view.View" />
         <variable
-            name="author"
-            type="net.veldor.flibustaloader.selections.Author" />
+            name="sequence"
+            type="net.veldor.flibustaloader.selections.FoundedSequence" />
     </data>
 
     <android.support.v7.widget.CardView
@@ -22,9 +22,9 @@
                 android:id="@+id/sequence_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@{author.name}"
+                android:text="@{sequence.title}"
                 android:textAlignment="center"
-                android:textColor="#081b86"
+                android:textColor="#5403ad"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
@@ -34,7 +34,7 @@
                 android:id="@+id/sequence_length"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{author.content}"
+                android:text="@{sequence.content}"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
