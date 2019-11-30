@@ -2,16 +2,21 @@ package net.veldor.flibustaloader;
 
 import android.app.Application;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.persistence.room.Room;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatDelegate;
 import android.util.Log;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
+import net.veldor.flibustaloader.selections.FoundedSequence;
+import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
@@ -19,6 +24,9 @@ import java.util.ArrayList;
 
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
+
+import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
+import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_YES;
 
 public class App extends Application {
 
@@ -52,8 +60,14 @@ public class App extends Application {
 
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchResult = new MutableLiveData<>();
+    // место для хранения текста ответа поиска
+    public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();
     // место для хранения выбранного писателя
     public final MutableLiveData<Author> mSelectedAuthor = new MutableLiveData<>();
+    // место для хранения выбранной серии
+    public final MutableLiveData<FoundedSequence> mSelectedSequence = new MutableLiveData<>();
+    // место для хранения выбранного жанра
+    public final MutableLiveData<Genre> mSelectedGenre = new MutableLiveData<>();
     // место для хранения выбора писателей
     public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
@@ -61,11 +75,15 @@ public class App extends Application {
     public File downloadedApkFile;
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
+    public ArrayList<String> mSearchHistory = new ArrayList<>();
+    public MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
+    private AppDatabase mDb;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
         instance = this;
 
         // запускаю tor
@@ -75,6 +93,18 @@ public class App extends Application {
         // читаю настройки sharedPreferences
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        if (getNightMode()) {
+            AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES);
+            Log.d("surprise", "ODPSActivity onCreate night");
+        }
+        else{
+            AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
+            Log.d("surprise", "ODPSActivity onCreate day");
+        }
+
+        mDb =  Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "database").build();
     }
 
     public static App getInstance() {
@@ -83,6 +113,10 @@ public class App extends Application {
 
     public int getViewMode() {
         return (mSharedPreferences.getInt(PREFERENCE_VIEW_MODE, VIEW_MODE_LIGHT));
+    }
+
+    public AppDatabase getmDb(){
+        return mDb;
     }
 
     public void switchViewMode(int type) {

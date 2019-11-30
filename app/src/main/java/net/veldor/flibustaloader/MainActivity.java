@@ -15,6 +15,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -24,6 +25,7 @@ import android.support.v4.content.PermissionChecker;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.SearchView;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -45,6 +47,9 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
+
+import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
+import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_YES;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -266,20 +271,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.setDownloadsFolder:
                 changeDownloadsFolder();
                 return true;
-
             case R.id.menuUseODPS:
                 mMyViewModel.switchODPSMode();
-                Intent resetIntent = new Intent(this, MainActivity.class);
-                resetIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(resetIntent);
-                finish();
+                new Handler().postDelayed(new ResetApp(), 100);
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
             mMyViewModel.switchNightMode();
-            this.recreate();
-           /* invalidateOptionsMenu();
-            mWebView.reload();
-            setWebViewBackground();*/
+            new Handler().postDelayed(new ResetApp(), 100);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -544,5 +542,15 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
 
     private void killActivity() {
         finish();
+    }
+
+    private class ResetApp implements Runnable {
+        @Override
+        public void run() {
+            Intent intent = new Intent(MainActivity.this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            MainActivity.this.startActivity(intent);
+            Runtime.getRuntime().exit(0);
+        }
     }
 }

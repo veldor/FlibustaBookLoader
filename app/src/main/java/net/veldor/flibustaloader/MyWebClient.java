@@ -17,6 +17,9 @@ public class MyWebClient {
     public static final String DOWNLOAD_ATTRIBUTES = "download attributes";
 
     void search(String s) {
+        // добавлю элемент в историю
+        App.getInstance().mSearchHistory.add(s);
+        Log.d("surprise", "MyWebClient search " +  App.getInstance().mSearchHistory.size());
         Data inputData = new Data.Builder()
                 .putString(LOADED_URL, s)
                 .build();
@@ -32,7 +35,7 @@ public class MyWebClient {
         data[1] = item.url;
         data[2] = item.name;
         Data inputData = new Data.Builder()
-                .putStringArray(DOWNLOAD_ATTRIBUTES,data)
+                .putStringArray(DOWNLOAD_ATTRIBUTES, data)
                 .build();
         // запущу рабочего, загружающего файл
         OneTimeWorkRequest downloadBookWorker = new OneTimeWorkRequest.Builder(DownloadBookWorker.class).setInputData(inputData).build();

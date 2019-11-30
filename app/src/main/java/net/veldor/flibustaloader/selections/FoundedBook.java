@@ -11,7 +11,8 @@ public class FoundedBook {
     public String size;
     public String format;
     public String genreComplex;
-    public ArrayList<Genre> genres;
+    public ArrayList<Genre> genres = new ArrayList<>();
     public String sequenceComplex;
+    public ArrayList<FoundedSequence> sequences = new ArrayList<>();
     public ArrayList<Author> authors = new ArrayList<>();
 }

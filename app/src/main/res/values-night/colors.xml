@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#000000</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="textColor">#C0C0C0</color>
+    <color name="background_color">#000000</color>
+    <color name="sequences_background">#404040</color>
+    <color name="sequences_text">#FFA5FC</color>
+    <color name="genre_text_color">#93FF9B</color>
+    <color name="author_text_color">#B2BBFF</color>
+    <color name="book_name_color">#FFAAAA</color>
+    <color name="translator_text_color">#BFD3FF</color>
+</resources>

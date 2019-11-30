@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootView"
     android:layout_width="match_parent"
+    android:background="@color/background_color"
     android:layout_height="match_parent">
 
     <TextView
@@ -25,8 +25,8 @@
             android:id="@+id/searchBook"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="30dp"
-            android:layout_marginLeft="30dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
             android:layout_weight="1"
             android:checked="true"
             android:text="@string/search_book_message"
@@ -36,12 +36,39 @@
             android:id="@+id/searchAuthor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="30dp"
-            android:layout_marginLeft="30dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
             android:layout_weight="1"
             android:text="@string/search_author_message"
             android:textAlignment="center" />
+        <RadioButton
+            android:id="@+id/searchGenre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_weight="1"
+            android:text="@string/search_genre_message"
+            android:textAlignment="center" />
+        <RadioButton
+            android:id="@+id/searchSequence"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_weight="1"
+            android:text="@string/search_sequence_message"
+            android:textAlignment="center" />
     </RadioGroup>
+
+
+    <TextView
+        android:id="@+id/searchTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:textAlignment="center"
+        app:layout_constraintTop_toBottomOf="@+id/searchType" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/searched_items_list"
@@ -51,7 +78,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/searchType"
+        app:layout_constraintTop_toBottomOf="@+id/searchTitle"
         app:layout_constraintVertical_bias="0.0">
 
     </android.support.v7.widget.RecyclerView>
@@ -61,10 +88,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/forward_button"
-        android:enabled="false"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:background="@drawable/forward_button_layout"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
+        android:textColor="@drawable/button_text_color"
+        android:enabled="false"
         app:layout_constraintStart_toEndOf="@+id/goBackSearchButton" />
 
     <Button
@@ -73,6 +103,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/back_button"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:background="@drawable/back_button_layout"
+        android:textColor="@drawable/button_text_color"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

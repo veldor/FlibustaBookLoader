@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
     <data>
+
         <import type="android.view.View" />
+
         <variable
             name="book"
             type="net.veldor.flibustaloader.selections.FoundedBook" />
@@ -12,8 +15,8 @@
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="#f0f8ff"
         android:layout_margin="3dp"
+        android:background="@color/sequences_background"
         android:padding="3dp">
 
         <android.support.constraint.ConstraintLayout
@@ -26,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:text="@{book.name}"
                 android:textAlignment="center"
-                android:textColor="#881515"
+                android:textColor="@color/book_name_color"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -42,21 +45,23 @@
                 <TextView
                     android:id="@+id/author_name"
                     android:layout_width="0dp"
+                    android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@{book.author}"
                     android:textAlignment="center"
-                    android:textColor="#081b86"
+                    android:textColor="@drawable/author_text_color"
                     android:textSize="14sp" />
 
                 <TextView
                     android:id="@+id/translator_name"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:layout_weight="1"
                     android:text="@{book.translate}"
                     android:textAlignment="center"
-                    android:textColor="#3e5f75"
+                    android:textColor="@color/translator_text_color"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -73,7 +78,7 @@
                     android:layout_weight="1"
                     android:text="@{book.genreComplex}"
                     android:textAlignment="center"
-                    android:textColor="#0c6126"
+                    android:textColor="@drawable/genre_text_color"
                     android:textSize="14sp" />
 
                 <TextView
@@ -83,7 +88,7 @@
                     android:layout_weight="1"
                     android:text="@{book.sequenceComplex}"
                     android:textAlignment="center"
-                    android:textColor="#5403ad"
+                    android:textColor="@drawable/sequence_text_color"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -132,7 +137,10 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/barrier3" />
+                android:background="@color/book_name_color"
+                android:textColor="@drawable/button_text_color"
+                app:layout_constraintTop_toBottomOf="@+id/barrier3"
+                android:layout_margin="20dp"/>
 
         </android.support.constraint.ConstraintLayout>
     </android.support.v7.widget.CardView>
