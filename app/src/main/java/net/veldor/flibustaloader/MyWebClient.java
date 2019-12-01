@@ -19,7 +19,6 @@ public class MyWebClient {
     void search(String s) {
         // добавлю элемент в историю
         App.getInstance().mSearchHistory.add(s);
-        Log.d("surprise", "MyWebClient search " +  App.getInstance().mSearchHistory.size());
         Data inputData = new Data.Builder()
                 .putString(LOADED_URL, s)
                 .build();

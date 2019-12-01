@@ -40,6 +40,8 @@
         <activity
             android:name=".ODPSActivity"
             android:label="@string/title_activity_odps" />
+        <activity android:name=".WebViewActivity" />
+
         <receiver android:name="net.veldor.flibustaloader.receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />
 

@@ -55,4 +55,5 @@
     <string name="select_authors_choose_message">Choose a author</string>
     <string name="search_genre_message">Genre</string>
     <string name="search_sequence_message">Sequences</string>
+    <string name="load_more_button">Load more</string>
 </resources>

@@ -21,6 +21,7 @@ import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -54,12 +55,15 @@ public class App extends Application {
     private static final String PREFERENCE_CONTENT_TYPE_MODE = "content mode";
     public static final int CONTENT_MODE_WEB_VIEW = 1;
     private static final int CONTENT_MODE_ODPS = 0;
+    public static int sSearchType = ODPSActivity.SEARCH_BOOKS;
 
     // место для хранения TOR клиента
     public final MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
 
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchResult = new MutableLiveData<>();
+    // место для хранения результатов парсинга ответа
+    public final MutableLiveData<ArrayList> mParsedResult = new MutableLiveData<>();
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();
     // место для хранения выбранного писателя
@@ -77,6 +81,8 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
     public ArrayList<String> mSearchHistory = new ArrayList<>();
     public MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
+    public String mNextPageUrl;
+    public String mResponce;
     private SharedPreferences mSharedPreferences;
     private AppDatabase mDb;
 
@@ -96,11 +102,9 @@ public class App extends Application {
 
         if (getNightMode()) {
             AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES);
-            Log.d("surprise", "ODPSActivity onCreate night");
         }
         else{
             AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
-            Log.d("surprise", "ODPSActivity onCreate day");
         }
 
         mDb =  Room.databaseBuilder(getApplicationContext(),

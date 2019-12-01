@@ -40,7 +40,7 @@ public class MyWebView extends WebView {
             return;
         }
         init = true;
-        final ProgressBar progressBar = ((MainActivity) getContext()).findViewById(R.id.pageLoadedProgressBar);
+        final ProgressBar progressBar = ((WebViewActivity) getContext()).findViewById(R.id.pageLoadedProgressBar);
         // попробую скрыть бар для начала
         progressBar.setVisibility(View.GONE);
         this.setWebChromeClient(new WebChromeClient() {

@@ -2,12 +2,18 @@ package net.veldor.flibustaloader.utils;
 
 import android.util.Log;
 
+import androidx.work.Data;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.workers.DownloadBookWorker;
+import net.veldor.flibustaloader.workers.ParseSearchWorker;
 
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
@@ -32,14 +38,14 @@ import javax.xml.xpath.XPathFactory;
 
 public class XMLParser {
 
-    private final Document mDoc;
+    public static Document mDoc;
     private XPath mXPath;
 
     public XMLParser(String xml) {
         mDoc = getDocument(xml);
     }
 
-    private static Document getDocument(String rawText) {
+    public static Document getDocument(String rawText) {
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder;
         try {
@@ -58,6 +64,8 @@ public class XMLParser {
 
     public HashMap<String, ArrayList> getSearchResults() {
 
+        Log.d("surprise", "XMLParser getSearchResults start parsing");
+
         // попробую xpath
         XPathFactory factory = XPathFactory.newInstance();
         mXPath = factory.newXPath();
@@ -72,7 +80,6 @@ public class XMLParser {
                 App.getInstance().mSearchTitle.postValue(((Node) mXPath.evaluate("./title", mDoc.getDocumentElement(), XPathConstants.NODE)).getTextContent());
                 Node id = (Node) mXPath.evaluate("./id", mDoc.getDocumentElement(), XPathConstants.NODE);
                 String searchType = explodeByDelimiter(id.getTextContent(), ":", 3);
-                Log.d("surprise", "XMLParser getSearchResults " + searchType);
                 if (searchType != null) {
                     int counter = 0;
                     switch (searchType) {
@@ -196,19 +203,18 @@ public class XMLParser {
         NodeList xpathResult;
         ArrayList<FoundedBook> result = new ArrayList<>();
         FoundedBook thisBook;
-        Node authorName;
-        Node authorUri;
         Node link;
         NamedNodeMap attributes;
         DownloadLink downloadLink;
+
+        int linksLength;
+        int linksCounter;
 
         while (counter < entriesLength) {
             thisBook = new FoundedBook();
             // добавлю книгу в список
             entry = entries.item(counter);
-            xpathResult  = (NodeList) mXPath.evaluate("./title", entry, XPathConstants.NODESET);
-            thisBook.name = xpathResult.item(0).getTextContent();
-
+            thisBook.name= ((Node) mXPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             xpathResult = (NodeList) mXPath.evaluate("./author", entry, XPathConstants.NODESET);
             if (xpathResult.getLength() > 0) {
                 stringBuilder.setLength(0);
@@ -216,13 +222,11 @@ public class XMLParser {
                 while ((someNode = xpathResult.item(innerCounter)) != null) {
                     author = new Author();
                     // найду имя
-                    authorName = (Node) mXPath.evaluate("./name", someNode, XPathConstants.NODE);
-                    someString = authorName.getTextContent();
+                    someString = ((Node) mXPath.evaluate("./name", someNode, XPathConstants.NODE)).getTextContent();
                     author.name = someString;
                     stringBuilder.append(someString);
                     stringBuilder.append("\n");
-                    authorUri = (Node) mXPath.evaluate("./uri", someNode, XPathConstants.NODE);
-                    author.uri = authorUri.getTextContent();
+                    author.uri = ((Node) mXPath.evaluate("./uri", someNode, XPathConstants.NODE)).getTextContent();
                     thisBook.authors.add(author);
                     ++innerCounter;
 
@@ -259,8 +263,8 @@ public class XMLParser {
 
             // найду ссылки на скачивание книги
             xpathResult = (NodeList) mXPath.evaluate("./link[@rel='http://opds-spec.org/acquisition/open-access']", entry, XPathConstants.NODESET);
-            int linksLength = xpathResult.getLength();
-            int linksCounter = 0;
+            linksLength = xpathResult.getLength();
+            linksCounter = 0;
             if (linksLength > 0) {
                 while (linksCounter < linksLength) {
                     link = xpathResult.item(linksCounter);
@@ -298,6 +302,7 @@ public class XMLParser {
         }
         HashMap<String, ArrayList> answer = new HashMap<>();
         answer.put(searchType, result);
+        Log.d("surprise", "XMLParser getBooks finish parsing");
         return answer;
     }
 
@@ -328,5 +333,11 @@ public class XMLParser {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void handleResults() {
+        // запущу рабочего, который обработает результаты запроса
+        OneTimeWorkRequest downloadBookWorker = new OneTimeWorkRequest.Builder(ParseSearchWorker.class).build();
+        WorkManager.getInstance().enqueue(downloadBookWorker);
     }
 }

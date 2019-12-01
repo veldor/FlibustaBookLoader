@@ -16,7 +16,6 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -53,10 +52,6 @@ import java.util.Iterator;
 
 import lib.folderpicker.FolderPicker;
 
-import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
-import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
-import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_YES;
-
 public class ODPSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
@@ -72,10 +67,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private MyWebClient mWebClient;
     private SearchResultsAdapter mSearchResultsAdapter;
     private AlertDialog mShowLoadDialog;
-    private Button mBackButton, mForwardButton;
+    private Button mLoadMoreBtn;
     private ArrayList<String> mSearchHistory;
     private AlertDialog.Builder mDownloadsDialog;
-    private AlertDialog mBookLoadingDialog;
     private TorConnectErrorReceiver mTtorConnectErrorReceiver;
     private String[] mAuthorViewTypes = new String[]{"Книги по сериям", "Книги вне серий", "Книги по алфавиту", "Книги по дате поступления"};
     private AlertDialog mSelectAuthorViewDialog;
@@ -84,19 +78,25 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private TextView mSearchTitle;
     private AlertDialog.Builder mSelectSequencesDialog;
 
+    // ВИДЫ ПОИСКА
+    public static final int SEARCH_BOOKS = 1;
+    public static final int SEARCH_AUTHORS = 2;
+    public static final int SEARCH_GENRE = 3;
+    public static final int SEARCH_SEQUENCE = 4;
+    private boolean mResultsEscalate = false;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main_odps);
 
-        mSearchTitle = findViewById(R.id.searchTitle);
+        mSearchTitle = findViewById(R.id.search_title);
 
         // определю кнопки прыжков по результатам
-        mBackButton = findViewById(R.id.goBackSearchButton);
-        mForwardButton = findViewById(R.id.goForwardSearchButton);
+        mLoadMoreBtn = findViewById(R.id.load_more_button);
 
-        mRecycler = findViewById(R.id.searched_items_list);
+        mRecycler = findViewById(R.id.search_items_list);
 
         // добавлю viewModel
         mMyViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
@@ -113,15 +113,17 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         // создам массив для истории поиска
         mSearchHistory = App.getInstance().mSearchHistory;
         // при нажатии кнопки назад- убираем последний элемент истории и переходим на предпоследний
-        mBackButton.setOnClickListener(new View.OnClickListener() {
+        mLoadMoreBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mSearchHistory.remove(mSearchHistory.size() - 1);
-                String link = mSearchHistory.get(mSearchHistory.size() - 1);
-                if (mSearchHistory.size() > 0)
+                if(mSearchHistory.size() > 0){
                     mSearchHistory.remove(mSearchHistory.size() - 1);
-                showLoadWaitingDialog();
-                mWebClient.search(link);
+                    String link = mSearchHistory.get(mSearchHistory.size() - 1);
+                    if (mSearchHistory.size() > 1)
+                        mSearchHistory.remove(mSearchHistory.size() - 1);
+                    showLoadWaitingDialog();
+                    mWebClient.search(link);
+                }
             }
         });
 
@@ -135,15 +137,21 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 if (mSearchView != null) {
                     switch (checkedId) {
                         case R.id.searchBook:
+                            App.sSearchType = SEARCH_BOOKS;
+                            mSearchView.setVisibility(View.VISIBLE);
+                            break;
                         case R.id.searchAuthor:
+                            App.sSearchType = SEARCH_AUTHORS;
                             mSearchView.setVisibility(View.VISIBLE);
                             break;
                         case R.id.searchGenre:
+                            App.sSearchType = SEARCH_GENRE;
                             mSearchView.setVisibility(View.GONE);
                             showLoadWaitingDialog();
                             mWebClient.search("http://flibustahezeous3.onion/opds/genres");
                             break;
                         case R.id.searchSequence:
+                            App.sSearchType = SEARCH_SEQUENCE;
                             mSearchView.setVisibility(View.GONE);
                             showLoadWaitingDialog();
                             mWebClient.search("http://flibustahezeous3.onion/opds/sequencesindex");
@@ -174,17 +182,13 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onChanged(@Nullable String s) {
                 hideWaitingDialog();
                 if (s != null && !s.isEmpty()) {
+                    App.getInstance().mResponce = s;
                     // получен ответ сервера, разберу его и положу содержимое в список
-                    XMLParser xmlParser = new XMLParser(s);
-                    HashMap<String, ArrayList> searchResults = xmlParser.getSearchResults();
-                    if (searchResults != null) {
+                        XMLParser.handleResults();
                         // проверю, возможен ли переход к следующим результатам поиска
-                        String nextPage = xmlParser.getNextPage();
-                        handleBackward();
+                       /* String nextPage = xmlParser.getNextPage();
                         if (nextPage != null) {
                             handleForward(nextPage);
-                        } else {
-                            stopForward();
                         }
                         // добавлю найденное в список
                         // если найден список авторов
@@ -223,9 +227,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                         } else {
                             nothingFound();
                         }
-                    } else {
-                        nothingFound();
-                    }
+                        Log.d("surprise", "ODPSActivity onChanged page viewed");*/
                 }
             }
         });
@@ -291,13 +293,39 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         });
         // добавлю отслеживание выбора жанра
-        MutableLiveData<Genre> selectedGenre = App.getInstance().mSelectedGenre;
+        LiveData<Genre> selectedGenre = App.getInstance().mSelectedGenre;
         selectedGenre.observe(this, new Observer<Genre>() {
             @Override
             public void onChanged(@Nullable Genre foundedGenre) {
                 if (foundedGenre != null) {
                     showLoadWaitingDialog();
                     mWebClient.search(App.BASE_URL + foundedGenre.term);
+                }
+            }
+        });
+
+        // добавлю обсерверы
+        addObservers();
+    }
+
+    private void addObservers() {
+        LiveData<ArrayList> handledResults = App.getInstance().mParsedResult;
+        handledResults.observe(this, new Observer<ArrayList>() {
+            @Override
+            public void onChanged(@Nullable ArrayList arrayList) {
+                if(arrayList != null){
+                    // если была дополнительная загрузка данных и есть адаптер- догружаю в него данные. Иначе- добавляю адаптер
+                    if(mResultsEscalate){
+
+                    }
+                    else{
+                        mSearchResultsAdapter = new SearchResultsAdapter(arrayList);
+                        mRecycler.setAdapter(mSearchResultsAdapter);
+                        mRecycler.setLayoutManager(new LinearLayoutManager(ODPSActivity.this));
+                    }
+                }
+                else{
+                    nothingFound();
                 }
             }
         });
@@ -313,7 +341,6 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.select_authors_choose_message);
-            ;
             mSelectSequencesDialog = dialogBuilder;
         }
         // получу сисок имён авторов
@@ -343,28 +370,17 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
     }
 
-    private void handleBackward() {
-        // обработаю возвращение назад
-        if (mSearchHistory.size() > 1) {
-            mBackButton.setEnabled(true);
-        } else {
-            mBackButton.setEnabled(false);
-        }
-    }
 
-    private void stopForward() {
-        mForwardButton.setEnabled(false);
-        Toast.makeText(this, getString(R.string.no_results_more), Toast.LENGTH_LONG).show();
-    }
 
     private void handleForward(final String nextPage) {
         // переход на следующую страницу
-        mForwardButton.setEnabled(true);
-        mForwardButton.setOnClickListener(new View.OnClickListener() {
+        mLoadMoreBtn.setVisibility(View.VISIBLE);
+        mLoadMoreBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 showLoadWaitingDialog();
                 mWebClient.search(App.BASE_URL + nextPage);
+                mResultsEscalate = true;
             }
         });
     }
@@ -373,12 +389,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         if (mSearchResultsAdapter != null) {
             mSearchResultsAdapter.nothingFound();
             mSearchResultsAdapter.notifyDataSetChanged();
-            mBackButton.setEnabled(false);
-            mForwardButton.setEnabled(false);
             // очищу историю поиска
-            mSearchHistory.clear();
-            Toast.makeText(ODPSActivity.this, "По запросу ничего не найдено", Toast.LENGTH_LONG).show();
         }
+        Toast.makeText(ODPSActivity.this, "По запросу ничего не найдено", Toast.LENGTH_LONG).show();
     }
 
     private void hideWaitingDialog() {
@@ -452,8 +465,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void changeDownloadsFolder() {
-            Intent intent = new Intent(this, FolderPicker.class);
-            startActivityForResult(intent, READ_REQUEST_CODE);
+        Intent intent = new Intent(this, FolderPicker.class);
+        startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
     @Override
@@ -533,7 +546,6 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.select_authors_choose_message);
-            ;
             mSelectAuthorsDialog = dialogBuilder;
         }
         // получу сисок имён авторов
@@ -662,12 +674,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         hideTorLoadingDialog();
         mWebClient = new MyWebClient();
         // если нет истории поиска- гружу новинки за неделю, если есть- последнюю загруженную страницу
-        if (mSearchHistory != null) {
-            if (mSearchHistory.size() == 0) {
-                //mWebClient.search(App.BASE_URL + "/opds/new");
-            } else {
-                mWebClient.search(mSearchHistory.get(mSearchHistory.size() - 1));
-            }
+        if (mSearchHistory.size() > 0) {
+            mWebClient.search(mSearchHistory.get(mSearchHistory.size() - 1));
         }
     }
 
@@ -675,8 +683,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             // если доступен возврат назад- возвращаюсь, если нет- закрываю приложение
-            if (mBackButton.isEnabled()) {
-                mBackButton.performClick();
+            if (mLoadMoreBtn.isEnabled()) {
+                mLoadMoreBtn.performClick();
                 return true;
             }
         }

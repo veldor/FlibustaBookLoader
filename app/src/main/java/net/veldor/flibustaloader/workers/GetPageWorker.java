@@ -47,7 +47,6 @@ public class GetPageWorker extends Worker {
     public Result doWork() {
         Data data = getInputData();
         String text = data.getString(MyWebClient.LOADED_URL);
-        Log.d("surprise", "GetPageWorker doWork: " + text);
         HttpClient httpClient = getNewHttpClient();
         int port;
         try {
