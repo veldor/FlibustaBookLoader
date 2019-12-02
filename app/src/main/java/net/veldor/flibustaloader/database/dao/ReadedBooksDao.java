@@ -11,7 +11,7 @@ import net.veldor.flibustaloader.database.entity.ReadedBooks;
 @Dao
 public interface ReadedBooksDao {
     @Query("SELECT * FROM readedbooks WHERE id = :id")
-    ReadedBooks getBookById(long id);
+    ReadedBooks getBookById(String id);
 
     @Insert
     void insert(ReadedBooks book);

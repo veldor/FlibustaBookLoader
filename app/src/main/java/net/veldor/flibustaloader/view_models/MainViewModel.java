@@ -11,6 +11,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
+import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
 import net.veldor.flibustaloader.utils.MyFileReader;

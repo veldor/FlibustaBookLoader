@@ -56,4 +56,7 @@
     <string name="search_genre_message">Genre</string>
     <string name="search_sequence_message">Sequences</string>
     <string name="load_more_button">Load more</string>
+    <string name="select_sequences_choose_message">Select sequence</string>
+    <string name="set_update_check_message">Check update</string>
+    <string name="book_menu">book menu</string>
 </resources>

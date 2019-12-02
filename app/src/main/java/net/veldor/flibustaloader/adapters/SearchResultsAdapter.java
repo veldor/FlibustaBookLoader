@@ -6,10 +6,13 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,23 +26,36 @@ import net.veldor.flibustaloader.databinding.SearchedGenreItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedSequenceItemBinding;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 
 import java.util.ArrayList;
 
 public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdapter.ViewHolder> {
-    private ArrayList<Author> mAuthors;
-    private ArrayList<FoundedBook> mBooks;
-    private ArrayList<Genre> mGenres;
-    private ArrayList<FoundedSequence> mSequences;
+    private ArrayList mAuthors;
+    private ArrayList mBooks;
+    private ArrayList mGenres;
+    private ArrayList mSequences;
     private LayoutInflater mLayoutInflater;
 
-    public SearchResultsAdapter(ArrayList arrayList) {
+    public SearchResultsAdapter(ArrayList<FoundedItem> arrayList) {
         switch (App.sSearchType) {
             case ODPSActivity
                     .SEARCH_BOOKS:
                 mBooks = arrayList;
+                break;
+            case ODPSActivity
+                    .SEARCH_AUTHORS:
+                mAuthors = arrayList;
+                break;
+            case ODPSActivity
+                    .SEARCH_GENRE:
+                mGenres = arrayList;
+                break;
+            case ODPSActivity
+                    .SEARCH_SEQUENCE:
+                mSequences = arrayList;
                 break;
         }
     }
@@ -68,13 +84,13 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
     @Override
     public void onBindViewHolder(@NonNull SearchResultsAdapter.ViewHolder viewHolder, int i) {
         if (mAuthors != null) {
-            viewHolder.bind(mAuthors.get(i));
+            viewHolder.bind((Author) mAuthors.get(i));
         } else if (mBooks != null) {
-            viewHolder.bind(mBooks.get(i));
+            viewHolder.bind((FoundedBook) mBooks.get(i));
         } else if (mGenres != null) {
-            viewHolder.bind(mGenres.get(i));
+            viewHolder.bind((Genre) mGenres.get(i));
         } else {
-            viewHolder.bind(mSequences.get(i));
+            viewHolder.bind((FoundedSequence) mSequences.get(i));
         }
     }
 
@@ -92,33 +108,29 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
         return 0;
     }
 
-    public void setAuthorsList(ArrayList authors) {
-        mAuthors = authors;
-    }
-
-    public void setBooksList(ArrayList books) {
-        mBooks = books;
-    }
-
-    public void setSequencesList(ArrayList sequences) {
-        mSequences = sequences;
-    }
 
     public void nothingFound() {
         mAuthors = null;
         mBooks = null;
         mSequences = null;
+        mGenres = null;
     }
 
-    public void setGenresList(ArrayList genres) {
-        mGenres = genres;
+
+    public void setContent(ArrayList<FoundedItem> arrayList) {
+        switch (App.sSearchType) {
+            case ODPSActivity
+                    .SEARCH_BOOKS:
+                mBooks = arrayList;
+                break;
+            case ODPSActivity
+                    .SEARCH_AUTHORS:
+                mAuthors = arrayList;
+                break;
+        }
     }
 
-    public void setContent(ArrayList arrayList) {
-
-    }
-
-    class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder{
 
         private final ViewDataBinding mBinding;
 
@@ -168,8 +180,19 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             mBinding.executePendingBindings();
             // добавлю действие при клике на кнопку скачивания
             View container = mBinding.getRoot();
+
+            // обработаю нажатие на кнопку меню
+            ImageButton menuButton = container.findViewById(R.id.menuButton);
+            menuButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // отправлю событие контекстного меню для книги
+                    App.getInstance().mContextBook.postValue(foundedBook);
+                }
+            });
+
             Button downloadButton = container.findViewById(R.id.downloadBookBtn);
-            downloadButton.setOnClickListener(new View.OnClickListener() {
+            downloadButton.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
@@ -181,7 +204,7 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             });
             // добавлю действие на нажатие на автора
             TextView authorsView = container.findViewById(R.id.author_name);
-            authorsView.setOnClickListener(new View.OnClickListener() {
+            authorsView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     // если автор один- вывожу диалог выбора отображения, если несколько- вывожу диалог выбора автора
@@ -192,25 +215,10 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                     }
                 }
             });
-/*            // добавлю действие поиска по жанру
-            if(foundedBook.genres != null){
-                TextView genreView = container.findViewById(R.id.genre);
-                genreView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(foundedBook.genres.size() > 1){
-
-                        }
-                        else{
-                            App.getInstance().mSelectedGenre.postValue(foundedBook.genres.get(0));
-                        }
-                    }
-                });
-            }*/
             // добавлю действие поиска по серии
-            if (foundedBook.sequences != null) {
+            if (foundedBook.sequences != null && foundedBook.sequences.size() > 0) {
                 TextView sequenceView = container.findViewById(R.id.sequence);
-                sequenceView.setOnClickListener(new View.OnClickListener() {
+                sequenceView.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         if (foundedBook.sequences.size() > 1) {
@@ -221,6 +229,14 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                     }
                 });
             }
+            // добавлю отображение информации о книге при клике на название книги
+            TextView bookNameView = container.findViewById(R.id.book_name);
+            bookNameView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    App.getInstance().mSelectedBook.postValue(foundedBook);
+                }
+            });
         }
     }
 }

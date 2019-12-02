@@ -8,5 +8,5 @@ public class ReadedBooks {
     @PrimaryKey
     public long id;
 
-    public long bookId;
+    public String bookId;
 }

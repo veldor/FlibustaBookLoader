@@ -6,6 +6,7 @@ import android.arch.persistence.room.Room;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatDelegate;
 import android.util.Log;
@@ -15,23 +16,39 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
+import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
-import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
-import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_YES;
-
 public class App extends Application {
 
     public static final int MAX_BOOK_NUMBER = 548398;
+    private static final String PREFERENCE_CHECK_UPDATES = "check_updates";
+
+    public static int sSearchType = ODPSActivity.SEARCH_BOOKS;
+    public ArrayList<String> mSearchHistory = new ArrayList<>();
+    // место для хранения текста ответа поиска
+    public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();
+    public String mResponce;
+    public MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
+    // место для хранения выбранной серии
+    public final MutableLiveData<FoundedSequence> mSelectedSequence = new MutableLiveData<>();
+    // место для хранения выбранного жанра
+    public final MutableLiveData<Genre> mSelectedGenre = new MutableLiveData<>();
+    // место для хранения результатов парсинга ответа
+    public final MutableLiveData<ArrayList<FoundedItem>> mParsedResult = new MutableLiveData<>();
+    public String mNextPageUrl;
+    // добавление результатов к уже имеющимся
+    public boolean mResultsEscalate = false;
+
 
     public static final File DOWNLOAD_FOLDER_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
@@ -55,23 +72,14 @@ public class App extends Application {
     private static final String PREFERENCE_CONTENT_TYPE_MODE = "content mode";
     public static final int CONTENT_MODE_WEB_VIEW = 1;
     private static final int CONTENT_MODE_ODPS = 0;
-    public static int sSearchType = ODPSActivity.SEARCH_BOOKS;
 
     // место для хранения TOR клиента
     public final MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
 
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchResult = new MutableLiveData<>();
-    // место для хранения результатов парсинга ответа
-    public final MutableLiveData<ArrayList> mParsedResult = new MutableLiveData<>();
-    // место для хранения текста ответа поиска
-    public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();
     // место для хранения выбранного писателя
     public final MutableLiveData<Author> mSelectedAuthor = new MutableLiveData<>();
-    // место для хранения выбранной серии
-    public final MutableLiveData<FoundedSequence> mSelectedSequence = new MutableLiveData<>();
-    // место для хранения выбранного жанра
-    public final MutableLiveData<Genre> mSelectedGenre = new MutableLiveData<>();
     // место для хранения выбора писателей
     public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
@@ -79,18 +87,17 @@ public class App extends Application {
     public File downloadedApkFile;
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
-    public ArrayList<String> mSearchHistory = new ArrayList<>();
-    public MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
-    public String mNextPageUrl;
-    public String mResponce;
+    public MutableLiveData<FoundedBook> mSelectedBook = new MutableLiveData<>();
+    public MutableLiveData<FoundedBook> mContextBook = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
-    private AppDatabase mDb;
+    private MyWebClient mWebClient;
+    public AppDatabase mDatabase;
 
     @Override
     public void onCreate() {
         super.onCreate();
-
         instance = this;
+
 
         // запускаю tor
         OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).build();
@@ -99,15 +106,18 @@ public class App extends Application {
         // читаю настройки sharedPreferences
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        if (getNightMode()) {
-            AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES);
+        // определю ночной режим
+        if(getNightMode()){
+            AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_YES);
         }
         else{
-            AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
+            AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         }
 
-        mDb =  Room.databaseBuilder(getApplicationContext(),
+        // получаю базу данных
+        mDatabase =  Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database").build();
     }
 
@@ -117,10 +127,6 @@ public class App extends Application {
 
     public int getViewMode() {
         return (mSharedPreferences.getInt(PREFERENCE_VIEW_MODE, VIEW_MODE_LIGHT));
-    }
-
-    public AppDatabase getmDb(){
-        return mDb;
     }
 
     public void switchViewMode(int type) {
@@ -223,5 +229,44 @@ public class App extends Application {
             Log.d("surprise", "App switchODPSMode: switch to webView");
             mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW).apply();
         }
+    }
+
+    public MyWebClient getWebClient() {
+        if(mWebClient == null){
+            mWebClient = new MyWebClient();
+        }
+        return mWebClient;
+    }
+
+    public void addToHistory(String s) {
+        mSearchHistory.add(s);
+    }
+
+    public boolean isSearchHistory() {
+        return mSearchHistory.size() > 0;
+    }
+
+    public String getLastHistoryElement() {
+        if(isSearchHistory()){
+            return mSearchHistory.get(mSearchHistory.size() - 1);
+        }
+        return null;
+    }
+
+    public boolean havePreviousPage() {
+        return mSearchHistory.size() > 1;
+    }
+
+    public String getPreviousPageUrl() {
+        // удалю последнее значение из истории и верну предпоследнее
+        mSearchHistory.remove(mSearchHistory.size() - 1);
+        return mSearchHistory.get(mSearchHistory.size() - 1);
+    }
+
+    public boolean isCheckUpdate() {
+        return mSharedPreferences.getBoolean(PREFERENCE_CHECK_UPDATES, true);
+    }
+    public void switchCheckUpdate() {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_CHECK_UPDATES, !isCheckUpdate()).apply();
     }
 }

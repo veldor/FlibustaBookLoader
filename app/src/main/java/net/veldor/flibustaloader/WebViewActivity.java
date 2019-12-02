@@ -16,7 +16,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -48,7 +47,7 @@ import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
 
-public class WebViewActivity extends AppCompatActivity  implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
+public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int REQUEST_WRITE_READ = 22;
     private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
@@ -111,18 +110,20 @@ public class WebViewActivity extends AppCompatActivity  implements SearchView.On
             handleLoading();
         }
 
-        // проверю обновления
-        final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
-        version.observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(@Nullable Boolean aBoolean) {
-                if (aBoolean != null && aBoolean) {
-                    // показываю Snackbar с уведомлением
-                    makeUpdateSnackbar();
+        if(App.getInstance().isCheckUpdate()){
+            // проверю обновления
+            final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
+            version.observe(this, new Observer<Boolean>() {
+                @Override
+                public void onChanged(@Nullable Boolean aBoolean) {
+                    if (aBoolean != null && aBoolean) {
+                        // показываю Snackbar с уведомлением
+                        makeUpdateSnackbar();
+                    }
+                    version.removeObservers(WebViewActivity.this);
                 }
-                version.removeObservers(WebViewActivity.this);
-            }
-        });
+            });
+        }
 
         // создам тестовый массив строк для автозаполнения
         autocompleteStrings = mMyViewModel.getSearchAutocomplete();
@@ -226,6 +227,11 @@ public class WebViewActivity extends AppCompatActivity  implements SearchView.On
         // обработаю переключатель ODPS
         MenuItem useODPSSwitcher = menu.findItem(R.id.menuUseODPS);
         useODPSSwitcher.setChecked(App.getInstance().isODPS());
+
+        // обработаю переключатель проверки обновлений
+        MenuItem checkUpdatesSwitcher = menu.findItem(R.id.setUpdateCheck);
+        checkUpdatesSwitcher.setChecked(App.getInstance().isCheckUpdate());
+
         return true;
     }
 
@@ -265,6 +271,9 @@ public class WebViewActivity extends AppCompatActivity  implements SearchView.On
             case R.id.menuUseODPS:
                 mMyViewModel.switchODPSMode();
                 new Handler().postDelayed(new WebViewActivity.ResetApp(), 100);
+            case R.id.setUpdateCheck:
+                App.getInstance().switchCheckUpdate();
+                return true;
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
             mMyViewModel.switchNightMode();

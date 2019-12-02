@@ -20,9 +20,10 @@
             android:padding="10dp">
 
             <TextView
-                android:id="@+id/sequence_name"
+                android:id="@+id/book_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/sequence_layout"
                 android:text="@{sequence.title}"
                 android:textAlignment="center"
                 android:textColor="@drawable/sequence_text_color"
@@ -34,12 +35,13 @@
             <TextView
                 android:id="@+id/sequence_length"
                 android:layout_width="wrap_content"
+                android:background="@drawable/sequence_layout"
                 android:layout_height="wrap_content"
                 android:text="@{sequence.content}"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/sequence_name" />
+                app:layout_constraintTop_toBottomOf="@+id/book_name" />
 
         </android.support.constraint.ConstraintLayout>
     </android.support.v7.widget.CardView>

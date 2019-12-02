@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background_color">
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/textView"
@@ -19,46 +18,52 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/textView">
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        android:paddingRight="5dp"
+        android:paddingLeft="5dp">
 
         <RadioButton
             android:id="@+id/searchBook"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:checked="true"
             android:text="@string/search_book_message"
+            android:textColor="@color/book_name_color"
             android:textAlignment="center" />
 
         <RadioButton
             android:id="@+id/searchAuthor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:text="@string/search_author_message"
+            android:textColor="@color/author_text_color"
             android:textAlignment="center" />
 
         <RadioButton
             android:id="@+id/searchGenre"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:text="@string/search_genre_message"
+            android:textColor="@color/genre_text_color"
             android:textAlignment="center" />
 
         <RadioButton
             android:id="@+id/searchSequence"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
             android:layout_weight="1"
+            android:textColor="@color/sequences_text"
             android:text="@string/search_sequence_message"
             android:textAlignment="center" />
     </RadioGroup>
@@ -78,7 +83,9 @@
                 android:id="@+id/search_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toTopOf="parent"/>
+                android:textAlignment="center"
+                app:layout_constraintBottom_toTopOf="@+id/search_items_list"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/search_items_list"
@@ -91,6 +98,8 @@
                 style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@color/genre_text_color"
+                android:visibility="gone"
                 android:text="@string/load_more_button"
                 app:layout_constraintBottom_toBottomOf="parent"/>
         </android.support.constraint.ConstraintLayout>
