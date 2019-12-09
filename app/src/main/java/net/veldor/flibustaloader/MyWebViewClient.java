@@ -27,6 +27,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpResponse;
@@ -48,7 +49,7 @@ public class MyWebViewClient extends WebViewClient {
     public static final String TOR_CONNECT_ERROR_ACTION = "net.veldor.flibustaloader.action.TOR_CONNECT_ERROR";
     static final int START_BOOK_LOADING = 1;
     static final int FINISH_BOOK_LOADING = 2;
-    public static final String ENCODING_UTF_8 = "UTF-8";
+    private static final String ENCODING_UTF_8 = "UTF-8";
     private static final String BOOK_FORMAT = "application/octet-stream";
     private static final String FB2_FORMAT = "application/zip";
     private static final String PDF_FORMAT = "application/pdf";
@@ -76,12 +77,12 @@ public class MyWebViewClient extends WebViewClient {
     private static final String MY_CSS_NIGHT_STYLE = "myNightMode.css";
     private static final String MY_COMPAT_FAT_CSS_STYLE = "myCompatFatStyle.css";
     private static final String MY_JS = "myJs.js";
+    private static final String HTML_TYPE = "text/html";
+    private static final String AJAX_REQUEST = "http://flibustahezeous3.onion/makebooklist?";
 
     private final AndroidOnionProxyManager onionProxyManager;
     private int mViewMode;
     private boolean mNightMode;
-    private boolean mIsBook;
-    private int mScroll;
 
     MyWebViewClient() {
         this.onionProxyManager = App.getInstance().mTorManager.getValue();
@@ -117,22 +118,13 @@ public class MyWebViewClient extends WebViewClient {
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
-        mScroll = view.getScrollY();
     }
 
-    @Override
-    public void onPageFinished(WebView view, String url) {
-        super.onPageFinished(view, url);
-        if (!mIsBook) {
-            App.getInstance().setLastLoadedUrl(url);
-            App.getInstance().setLastScroll(mScroll);
-        }
-    }
 
-    private String injectMyJs(String originalJs){
+    private String injectMyJs(String originalJs) {
         String output = originalJs;
-        try{
-            if(mViewMode == App.VIEW_MODE_FAT || mViewMode == App.VIEW_MODE_LIGHT){
+        try {
+            if (mViewMode == App.VIEW_MODE_FAT || mViewMode == App.VIEW_MODE_LIGHT) {
                 App context = App.getInstance();
                 InputStream inputStream = context.getAssets().open(MY_JS);
                 output += inputStreamToString(inputStream);
@@ -156,9 +148,6 @@ public class MyWebViewClient extends WebViewClient {
                         inputStream = context.getAssets().open(MY_COMPAT_FAT_CSS_STYLE);
                         break;
                     case App.VIEW_MODE_LIGHT:
-                    case App.VIEW_MODE_FAST:
-                        inputStream = context.getAssets().open(MY_COMPAT_CSS_STYLE);
-                        break;
                     default:
                         inputStream = context.getAssets().open(MY_COMPAT_CSS_STYLE);
                 }
@@ -198,7 +187,7 @@ public class MyWebViewClient extends WebViewClient {
         return null;
     }
 
-    private WebResourceResponse handleRequest(WebView view, String url){
+    private WebResourceResponse handleRequest(WebView view, String url) {
         try {
             mViewMode = App.getInstance().getViewMode();
             mNightMode = App.getInstance().getNightMode();
@@ -226,16 +215,24 @@ public class MyWebViewClient extends WebViewClient {
             InputStream input = httpResponse.getEntity().getContent();
             String encoding = ENCODING_UTF_8;
             String mime = httpResponse.getEntity().getContentType().getValue();
+
+            // если загружена страница- добавлю её как последнюю загруженную
+            if (mime.startsWith(HTML_TYPE)) {
+                if (!url.startsWith(AJAX_REQUEST)) {
+                    App.getInstance().setLastLoadedUrl(url);
+                    Log.d("surprise", "MyWebViewClient handleRequest remember " + url);
+                }
+            }
             if (mime.equals(CSS_FORMAT)) {
                 InputStream is = httpResponse.getEntity().getContent();
                 // подключу нужные CSS простым объединением строк
                 String origin = inputStreamToString(is);
                 String injectionText = injectMyCss(origin);
-                if(injectionText != null){
+                if (injectionText != null) {
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(injectionText.getBytes(encoding));
                     return new WebResourceResponse(mime, ENCODING_UTF_8, inputStream);
                 }
-                if(origin != null){
+                if (origin != null) {
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(origin.getBytes(encoding));
                     return new WebResourceResponse(mime, ENCODING_UTF_8, inputStream);
                 }
@@ -297,7 +294,6 @@ public class MyWebViewClient extends WebViewClient {
                         activityContext.sendBroadcast(new Intent(BOOK_LOAD_ACTION));*/
                         String message = "<H1 style='text-align:center;'>Книга закачана. Возвращаюсь на предыдущую страницу</H1>";
                         ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(encoding));
-                        mIsBook = true;
                         return new WebResourceResponse(mime, ENCODING_UTF_8, inputStream);
                     } catch (IOException e) {
                         Log.d("surprise", "some output error");
@@ -308,24 +304,27 @@ public class MyWebViewClient extends WebViewClient {
                         activityContext.sendBroadcast(finishLoadingIntent);
                     }
                 }
-            } else {
-                mIsBook = false;
             }
             return new WebResourceResponse(mime, encoding, input);
         } catch (Exception e) {
             e.printStackTrace();
             if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
-                try {
-                    // отправлю оповещение об ошибке загрузки TOR
-                    Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
-                    App.getInstance().sendBroadcast(finishLoadingIntent);
-                    // отображу сообщение о невозможности загрузки
-                    String message = "<H1 style='text-align:center;'>Ошибка подключения к сети</H1>";
-                    ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(ENCODING_UTF_8));
-                    return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
-                } catch (UnsupportedEncodingException e1) {
-                    e1.printStackTrace();
+                // отправлю оповещение об ошибке загрузки TOR
+                Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+                App.getInstance().sendBroadcast(finishLoadingIntent);
+                // отображу сообщение о невозможности загрузки
+                String message = "<H1 style='text-align:center;'>Ошибка подключения к сети</H1>";
+                ByteArrayInputStream inputStream = null;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                    inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+                } else {
+                    try {
+                        inputStream = new ByteArrayInputStream(message.getBytes(ENCODING_UTF_8));
+                    } catch (UnsupportedEncodingException ex) {
+                        ex.printStackTrace();
+                    }
                 }
+                return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
             }
         }
         return super.shouldInterceptRequest(view, url);

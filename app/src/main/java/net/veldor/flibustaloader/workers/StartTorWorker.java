@@ -4,6 +4,9 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
+
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
@@ -12,8 +15,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
-import androidx.work.Worker;
-import androidx.work.WorkerParameters;
 import cz.msebera.android.httpclient.client.protocol.HttpClientContext;
 
 public class StartTorWorker extends Worker {
@@ -25,12 +26,17 @@ public class StartTorWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        Log.d("surprise", "StartTorWorker doWork start work");
         AndroidOnionProxyManager tor;
         if (App.getInstance().mTorManager.getValue() != null) {
             tor = App.getInstance().mTorManager.getValue();
         } else {
             tor = new AndroidOnionProxyManager(getApplicationContext(), App.TOR_FILES_LOCATION);
         }
+
+        // добавлю полученный TOR для отслеживания его состояния
+        App.getInstance().mLoadedTor.postValue(tor);
+
         // просто создание объекта, не запуск
         // тут- время, которое отводится на попытку запуска
         int totalSecondsPerTorStartup = (int) TimeUnit.MINUTES.toSeconds(4);

@@ -3,19 +3,23 @@ package net.veldor.flibustaloader.view_models;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
-import android.content.Intent;
 import android.support.annotation.NonNull;
-import android.util.Log;
+
+import androidx.work.Data;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
+import net.veldor.flibustaloader.ODPSActivity;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
 import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
+import net.veldor.flibustaloader.workers.DatabaseWorker;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -70,5 +74,16 @@ public class MainViewModel extends AndroidViewModel {
 
     public void switchODPSMode() {
         App.getInstance().switchODPSMode();
+    }
+
+    public void setBookRead(FoundedBook book) {
+        // запущу рабочего, который отметит книгу как прочитанную
+        Data inputData = new Data.Builder()
+                .putString(ODPSActivity.BOOK_ID, book.id)
+                .putInt(DatabaseWorker.WORK_TYPE, DatabaseWorker.INSERT_BOOK)
+                .build();
+        // запущу рабочего, загружающего страницу
+        OneTimeWorkRequest getPageWorker = new OneTimeWorkRequest.Builder(DatabaseWorker.class).setInputData(inputData).build();
+        WorkManager.getInstance().enqueue(getPageWorker);
     }
 }

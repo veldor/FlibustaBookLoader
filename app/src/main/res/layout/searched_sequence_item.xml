@@ -8,22 +8,17 @@
             type="net.veldor.flibustaloader.selections.FoundedSequence" />
     </data>
 
-    <android.support.v7.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp">
-
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:background="@drawable/sequence_layout"
-            android:padding="10dp">
+            android:padding="10dp"
+            android:layout_marginBottom="10dp">
 
             <TextView
                 android:id="@+id/book_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/sequence_layout"
                 android:text="@{sequence.title}"
                 android:textAlignment="center"
                 android:textColor="@drawable/sequence_text_color"
@@ -35,7 +30,6 @@
             <TextView
                 android:id="@+id/sequence_length"
                 android:layout_width="wrap_content"
-                android:background="@drawable/sequence_layout"
                 android:layout_height="wrap_content"
                 android:text="@{sequence.content}"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -44,6 +38,5 @@
                 app:layout_constraintTop_toBottomOf="@+id/book_name" />
 
         </android.support.constraint.ConstraintLayout>
-    </android.support.v7.widget.CardView>
 
 </layout>

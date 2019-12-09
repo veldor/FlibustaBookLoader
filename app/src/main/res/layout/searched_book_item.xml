@@ -12,27 +12,21 @@
             type="net.veldor.flibustaloader.selections.FoundedBook" />
     </data>
 
-    <android.support.v7.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp"
-        android:background="@color/sequences_background"
-        android:padding="3dp">
-
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/sequences_background">
+            android:layout_height="wrap_content"
+            android:background="@color/sequences_background"
+            android:padding="5dp"
+            android:layout_marginBottom="10dp">
 
             <TextView
                 android:id="@+id/book_name"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@color/sequences_background"
                 android:text="@{book.name}"
                 android:textAlignment="center"
                 android:textColor="@color/book_name_color"
-                android:textSize="18sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toStartOf="@+id/menuButton"
                 app:layout_constraintStart_toStartOf="parent"
@@ -52,26 +46,23 @@
                 android:id="@+id/authorBlock"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/sequences_background"
                 app:layout_constraintTop_toBottomOf="@+id/book_name"
                 android:layout_marginTop="5dp">
 
                 <TextView
                     android:id="@+id/author_name"
                     android:layout_width="0dp"
-                    android:background="@color/sequences_background"
                     android:gravity="center"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@{book.author}"
                     android:textAlignment="center"
                     android:textColor="@drawable/author_text_color"
-                    android:textSize="14sp" />
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/translator_name"
                     android:layout_width="0dp"
-                    android:background="@color/sequences_background"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:layout_weight="1"
@@ -84,7 +75,6 @@
             <LinearLayout
                 android:id="@+id/detailsBlock"
                 android:layout_width="match_parent"
-                android:background="@color/sequences_background"
                 android:layout_height="wrap_content"
                 app:layout_constraintTop_toBottomOf="@+id/authorBlock"
                 android:paddingLeft="5dp"
@@ -94,7 +84,6 @@
                     android:id="@+id/genre"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@color/sequences_background"
                     android:layout_weight="1"
                     android:text="@{book.genreComplex}"
                     android:textAlignment="center"
@@ -105,7 +94,6 @@
                     android:id="@+id/sequence"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@color/sequences_background"
                     android:layout_weight="1"
                     android:text="@{book.sequenceComplex}"
                     android:textAlignment="center"
@@ -117,7 +105,6 @@
                 android:id="@+id/downloads_count"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@color/sequences_background"
                 android:text="@{book.downloadsCount}"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/detailsBlock" />
@@ -126,7 +113,6 @@
                 android:id="@+id/book_size"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@color/sequences_background"
                 android:layout_marginStart="11dp"
                 android:layout_marginLeft="11dp"
                 android:text="@{book.size}"
@@ -137,7 +123,6 @@
                 android:id="@+id/book_format"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@color/sequences_background"
                 android:layout_marginStart="11dp"
                 android:layout_marginLeft="11dp"
                 android:text="@{book.format}"
@@ -165,6 +150,5 @@
                 app:layout_constraintTop_toBottomOf="@+id/barrier3"/>
 
         </android.support.constraint.ConstraintLayout>
-    </android.support.v7.widget.CardView>
 
 </layout>

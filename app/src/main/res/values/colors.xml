@@ -3,8 +3,8 @@
     <color name="colorPrimary">#3e5f75</color>
     <color name="colorPrimaryDark">#081b86</color>
     <color name="textColor">#000000</color>
-    <color name="background_color">#FFFFFF</color>
-    <color name="sequences_background">#f0f8ff</color>
+    <color name="background_color">#ffffff</color>
+    <color name="sequences_background">#A4FFFFFF</color>
     <color name="sequences_text">#5403ad</color>
     <color name="genre_text_color">#0c6126</color>
     <color name="author_text_color">#081b86</color>

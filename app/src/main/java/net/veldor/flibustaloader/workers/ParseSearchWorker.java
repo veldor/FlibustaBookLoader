@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -37,6 +38,9 @@ public class ParseSearchWorker extends Worker {
     private static final String AUTHOR_TYPE = "tag:author";
     private static final String SEQUENCE_TYPE = "tag:sequences";
     private static final CharSequence AUTHOR_SEQUENCE_TYPE = ":sequence:";
+    private static final String NEW_GENRES = "tag:search:new:genres";
+    private static final String NEW_SEQUENCES = "tag:search:new:sequence";
+    private static final String NEW_AUTHORS = "tag:search:new:author";
     private XPath mXPath;
 
     public ParseSearchWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -71,7 +75,7 @@ public class ParseSearchWorker extends Worker {
                     App.getInstance().mSearchTitle.postValue(((Node) mXPath.evaluate("/feed/title", document, XPathConstants.NODE)).getTextContent());
                     // определю тип содержимого
                     identificateSearchType(entries.item(0));
-
+                    Log.d("surprise", "ParseSearchWorker doWork " + App.sSearchType);
                     // обработаю данные
                     switch (App.sSearchType) {
                         case ODPSActivity
@@ -80,6 +84,8 @@ public class ParseSearchWorker extends Worker {
                             break;
                         case ODPSActivity
                                 .SEARCH_AUTHORS:
+                        case ODPSActivity
+                                .SEARCH_NEW_AUTHORS:
                             handleAuthors(entries);
                             break;
                         case ODPSActivity
@@ -118,12 +124,27 @@ public class ParseSearchWorker extends Worker {
             }
         } else if (id.startsWith(SEQUENCE_TYPE)) {
             App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
+        } else if (id.startsWith(NEW_GENRES)) {
+            App.sSearchType = ODPSActivity.SEARCH_GENRE;
+        } else if (id.startsWith(NEW_SEQUENCES)) {
+            App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
+        } else if (id.startsWith(NEW_AUTHORS)) {
+            App.sSearchType = ODPSActivity.SEARCH_NEW_AUTHORS;
         }
 
     }
 
     private void handleSequences(NodeList entries) throws XPathExpressionException {
-        ArrayList<FoundedItem> result = new ArrayList<>();
+        ArrayList<FoundedItem> result;
+        // если книги добавляются к списку- вместо нового массива возьму уже имеющийся
+        if (App.getInstance().mResultsEscalate) {
+            result = App.getInstance().mParsedResult.getValue();
+            if (result == null) {
+                result = new ArrayList<>();
+            }
+        } else {
+            result = new ArrayList<>();
+        }
         Node entry;
         FoundedSequence sequence;
         int counter = 0;
@@ -139,7 +160,16 @@ public class ParseSearchWorker extends Worker {
     }
 
     private void handleGenres(NodeList entries) {
-        ArrayList<FoundedItem> result = new ArrayList<>();
+        ArrayList<FoundedItem> result;
+        // если книги добавляются к списку- вместо нового массива возьму уже имеющийся
+        if (App.getInstance().mResultsEscalate) {
+            result = App.getInstance().mParsedResult.getValue();
+            if (result == null) {
+                result = new ArrayList<>();
+            }
+        } else {
+            result = new ArrayList<>();
+        }
         Node entry;
         Genre genre;
         int counter = 0;
@@ -184,12 +214,18 @@ public class ParseSearchWorker extends Worker {
         int innerCounter;
         FoundedSequence sequence;
 
+        boolean hideRead = App.getInstance().isHideRead();
+
         while ((entry = entries.item(counter)) != null) {
             book = new FoundedBook();
             book.id = ((Node) mXPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent();
             // узнаю, прочитана ли книга
             AppDatabase db = App.getInstance().mDatabase;
             book.readed = db.readedBooksDao().getBookById(book.id) != null;
+            if (book.readed && hideRead) {
+                counter++;
+                continue;
+            }
             book.name = ((Node) mXPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             counter++;
             result.add(book);
@@ -273,6 +309,15 @@ public class ParseSearchWorker extends Worker {
 
     private void handleAuthors(NodeList entries) throws XPathExpressionException {
         ArrayList<FoundedItem> result;
+        // если авторы добавляются к списку- вместо нового массива возьму уже имеющийся
+        if (App.getInstance().mResultsEscalate) {
+            result = App.getInstance().mParsedResult.getValue();
+            if (result == null) {
+                result = new ArrayList<>();
+            }
+        } else {
+            result = new ArrayList<>();
+        }
         // если книги добавляются к списку- вместо нового массива возьму уже имеющийся
         if (App.getInstance().mResultsEscalate) {
             result = App.getInstance().mParsedResult.getValue();
@@ -288,7 +333,14 @@ public class ParseSearchWorker extends Worker {
         while ((entry = entries.item(counter)) != null) {
             author = new Author();
             author.name = ((Node) mXPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
-            author.uri = explodeByDelimiter(((Node) mXPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent(), ":", 3);
+            // если поиск осуществляется по новинкам- запишу ссылку на новинки, иначе- на автора
+            if(App.sSearchType == ODPSActivity.SEARCH_NEW_AUTHORS){
+                author.link = ((Node) mXPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
+            }
+            else{
+                author.uri = explodeByDelimiter(((Node) mXPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent(), ":", 3);
+            }
+
             author.content = ((Node) mXPath.evaluate("./content", entry, XPathConstants.NODE)).getTextContent();
             result.add(author);
             counter++;

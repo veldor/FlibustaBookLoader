@@ -4,4 +4,5 @@ public class Author implements FoundedItem{
     public String name;
     public String uri;
     public String content;
+    public String link;
 }

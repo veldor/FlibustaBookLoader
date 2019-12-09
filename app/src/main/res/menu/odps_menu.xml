@@ -8,9 +8,15 @@
         yourapp:actionViewClass="android.support.v7.widget.SearchView"
         yourapp:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_new"
+        android:icon="@drawable/ic_new_white_24dp"
+        android:title="@string/show_last"
+        yourapp:showAsAction="ifRoom" />
+    <item
         android:title="@string/look"
         >
         <menu>
+
             <item
                 android:id="@+id/menuUseDarkMode"
                 android:title="@string/use_dark_mode"
@@ -18,6 +24,15 @@
                 yourapp:showAsAction="never"/>
         </menu>
     </item>
+    <item
+        android:id="@+id/downloadAll"
+        android:title="@string/download_all"
+        yourapp:showAsAction="never"/>
+    <item
+        android:id="@+id/hideReadedSwitcher"
+        android:title="@string/hide_read"
+        android:checkable="true"
+        yourapp:showAsAction="never"/>
     <item
         android:id="@+id/buyCoffee"
         android:title="@string/buy_me_coffee"

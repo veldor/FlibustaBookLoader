@@ -59,4 +59,12 @@
     <string name="select_sequences_choose_message">Select sequence</string>
     <string name="set_update_check_message">Check update</string>
     <string name="book_menu">book menu</string>
+    <string name="hide_read">Hide read</string>
+    <string name="initialize_tor_message">Initialize TOR...</string>
+    <string name="showNewDialogTitle">Select new type</string>
+    <string name="tor_loading">TOR is loading</string>
+    <string name="tor_start_loading">TOR start loading</string>
+    <string name="tor_is_loaded">TOR is success loaded</string>
+    <string name="wait_tor_loading_message">Wait for TOR load</string>
+    <string name="download_all">Download all books</string>
 </resources>

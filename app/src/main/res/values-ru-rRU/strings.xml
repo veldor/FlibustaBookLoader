@@ -59,4 +59,12 @@
     <string name="select_sequences_choose_message">Выберите серию</string>
     <string name="set_update_check_message">Проверять обновления</string>
     <string name="book_menu">book menu</string>
+    <string name="hide_read">Скрывать прочитанные</string>
+    <string name="initialize_tor_message">Инициализирую TOR</string>
+    <string name="showNewDialogTitle">Показать новинки</string>
+    <string name="tor_start_loading">Загрузка TOR началась</string>
+    <string name="tor_loading">TOR загружается</string>
+    <string name="tor_is_loaded">TOR загружен</string>
+    <string name="wait_tor_loading_message">Ожидаю загрузку TOR</string>
+    <string name="download_all">Скачать все книги</string>
 </resources>

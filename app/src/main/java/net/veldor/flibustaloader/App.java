@@ -1,15 +1,22 @@
 package net.veldor.flibustaloader;
 
 import android.app.Application;
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.persistence.room.Room;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatDelegate;
 import android.util.Log;
+
+import androidx.work.Constraints;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
@@ -25,13 +32,12 @@ import net.veldor.flibustaloader.workers.StartTorWorker;
 import java.io.File;
 import java.util.ArrayList;
 
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
-
 public class App extends Application {
 
     public static final int MAX_BOOK_NUMBER = 548398;
     private static final String PREFERENCE_CHECK_UPDATES = "check_updates";
+    private static final String PREFERENCE_HIDE_READ = "hide read";
+    private static final String START_TOR = "start_tor";
 
     public static int sSearchType = ODPSActivity.SEARCH_BOOKS;
     public ArrayList<String> mSearchHistory = new ArrayList<>();
@@ -89,21 +95,27 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
     public MutableLiveData<FoundedBook> mSelectedBook = new MutableLiveData<>();
     public MutableLiveData<FoundedBook> mContextBook = new MutableLiveData<>();
+    public MutableLiveData<AndroidOnionProxyManager> mLoadedTor = new MutableLiveData<>();
+    public MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;
+    public LiveData<WorkInfo> mWork = new LiveData<WorkInfo>() {};
 
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
 
-
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType (NetworkType.CONNECTED)
+                .build();
         // запускаю tor
-        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).build();
-        WorkManager.getInstance().enqueue(startTorWork);
+        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
+        WorkManager.getInstance().enqueueUniqueWork(START_TOR, ExistingWorkPolicy.KEEP,  startTorWork);
+        mWork = WorkManager.getInstance().getWorkInfoByIdLiveData(startTorWork.getId());
 
-        // читаю настройки sharedPreferences
+    // читаю настройки sharedPreferences
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         // определю ночной режим
@@ -118,7 +130,10 @@ public class App extends Application {
 
         // получаю базу данных
         mDatabase =  Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "database").build();
+                AppDatabase.class, "database")
+                .addMigrations(AppDatabase.MIGRATION_1_2)
+                .allowMainThreadQueries()
+                .build();
     }
 
     public static App getInstance() {
@@ -165,9 +180,13 @@ public class App extends Application {
     }
 
     public void restartTor() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType (NetworkType.CONNECTED)
+                .build();
         // запускаю tor
-        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).build();
-        WorkManager.getInstance().enqueue(startTorWork);
+        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
+        WorkManager.getInstance().enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE,  startTorWork);
+        mWork = WorkManager.getInstance().getWorkInfoByIdLiveData(startTorWork.getId());
     }
 
     public void setLastLoadedUrl(String url) {
@@ -268,5 +287,12 @@ public class App extends Application {
     }
     public void switchCheckUpdate() {
         mSharedPreferences.edit().putBoolean(PREFERENCE_CHECK_UPDATES, !isCheckUpdate()).apply();
+    }
+
+    public boolean isHideRead() {
+        return mSharedPreferences.getBoolean(PREFERENCE_HIDE_READ, false);
+    }
+    public void switchHideRead() {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_HIDE_READ, !isHideRead()).apply();
     }
 }

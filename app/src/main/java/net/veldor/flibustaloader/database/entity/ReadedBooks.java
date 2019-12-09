@@ -3,10 +3,13 @@ package net.veldor.flibustaloader.database.entity;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
+import org.jetbrains.annotations.NotNull;
+
 @Entity
 public class ReadedBooks {
-    @PrimaryKey
-    public long id;
+    @PrimaryKey(autoGenerate = true)
+    public int id;
 
-    public String bookId;
+    @NotNull
+    public String bookId = "";
 }

@@ -54,12 +54,15 @@ import java.util.Iterator;
 
 import lib.folderpicker.FolderPicker;
 
+import static net.veldor.flibustaloader.MainActivity.START_TOR;
+
 public class ODPSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
+    public static final String BOOK_ID = "book id";
+    public static final int SEARCH_NEW_AUTHORS = 5;
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
     private static final int READ_REQUEST_CODE = 5;
     private AlertDialog mTorRestartDialog;
-    private AlertDialog mTorLoadingDialog;
     private MainViewModel mMyViewModel;
     private LiveData<AndroidOnionProxyManager> mTorClient;
     private SearchView mSearchView;
@@ -248,6 +251,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                     showLoadWaitingDialog();
                     String searching = App.BASE_URL + foundedSequence.link;
                     App.getInstance().addToHistory(searching);
+                    // уточню, что происходит переход от серий к книгам
+                    App.getInstance().mResultsEscalate = false;
                     mWebClient.search(searching);
                 }
             }
@@ -259,6 +264,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onChanged(@Nullable Genre foundedGenre) {
                 if (foundedGenre != null) {
                     showLoadWaitingDialog();
+
+                    // уточню, что происходит переход от жанра к книгам
+                    App.getInstance().mResultsEscalate = false;
                     String searching = App.BASE_URL + foundedGenre.term;
                     App.getInstance().addToHistory(searching);
                     mWebClient.search(searching);
@@ -289,7 +297,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void checkUpdates() {
-        if(App.getInstance().isCheckUpdate()){
+        if (App.getInstance().isCheckUpdate()) {
             Log.d("surprise", "ODPSActivity checkUpdates: check update");
             // проверю обновления
             final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
@@ -368,13 +376,15 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         selectedBook.observe(this, new Observer<FoundedBook>() {
             @Override
             public void onChanged(@Nullable FoundedBook book) {
-                if(book != null){
-                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ODPSActivity.this);
-                    dialogBuilder.setTitle(book.name)
-                            .setMessage(Grammar.textFromHtml(book.bookInfo))
-                            .setCancelable(true)
-                    .setPositiveButton(android.R.string.ok, null);
-                    dialogBuilder.show();
+                if (book != null) {
+                    if (!book.readed) {
+                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ODPSActivity.this);
+                        dialogBuilder.setTitle(book.name)
+                                .setMessage(Grammar.textFromHtml(book.bookInfo))
+                                .setCancelable(true)
+                                .setPositiveButton(android.R.string.ok, null);
+                        dialogBuilder.show();
+                    }
                 }
             }
         });
@@ -384,10 +394,31 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         contextBook.observe(this, new Observer<FoundedBook>() {
             @Override
             public void onChanged(@Nullable FoundedBook foundedBook) {
-                if(foundedBook != null){
+                // добавлю хранилище для книги
+                final FoundedBook book = foundedBook;
+                if (foundedBook != null) {
                     // покажу контекстное меню
-                    Log.d("surprise", "ODPSActivity onChanged: book is " + foundedBook.readed);
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ODPSActivity.this);
+                    String[] items = new String[]{"Пометить книгу как прочитанную"};
+                    dialogBuilder.setItems(items, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // отмечу книгу как прочитанную
+                            mMyViewModel.setBookRead(book);
+                            Toast.makeText(ODPSActivity.this, "Книга отмечена как прочитанная", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                    dialogBuilder.create().show();
                 }
+            }
+        });
+
+        LiveData<Author> authorNewBooks = App.getInstance().mAuthorNewBooks;
+        authorNewBooks.observe(this, new Observer<Author>() {
+            @Override
+            public void onChanged(@Nullable Author author) {
+                if (author != null)
+                    doSearch(App.BASE_URL + author.link);
             }
         });
     }
@@ -429,9 +460,6 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         super.onDestroy();
         if (mTtorConnectErrorReceiver != null) {
             unregisterReceiver(mTtorConnectErrorReceiver);
-        }
-        if (mTorLoadingDialog != null) {
-            mTorLoadingDialog.dismiss();
         }
         if (mShowLoadDialog != null) {
             mShowLoadDialog.dismiss();
@@ -504,6 +532,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         MenuItem checkUpdatesSwitcher = menu.findItem(R.id.setUpdateCheck);
         checkUpdatesSwitcher.setChecked(App.getInstance().isCheckUpdate());
 
+        // обработаю переключатель скрытия прочтённых книг
+        MenuItem hideReadSwitcher = menu.findItem(R.id.hideReadedSwitcher);
+        hideReadSwitcher.setChecked(App.getInstance().isHideRead());
         return true;
     }
 
@@ -518,6 +549,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.setDownloadsFolder:
                 changeDownloadsFolder();
                 return true;
+            case R.id.action_new:
+                showNewDialog();
+                return true;
             case R.id.menuUseODPS:
                 mMyViewModel.switchODPSMode();
                 new Handler().postDelayed(new ResetApp(), 100);
@@ -529,8 +563,44 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 invalidateOptionsMenu();
                 Log.d("surprise", "ODPSActivity onOptionsItemSelected: check update switched");
                 return true;
+            case R.id.hideReadedSwitcher:
+                App.getInstance().switchHideRead();
+                invalidateOptionsMenu();
+                Log.d("surprise", "ODPSActivity onOptionsItemSelected: check update switched");
+                return true;
+            case R.id.downloadAll:
+                Log.d("surprise", "ODPSActivity onOptionsItemSelected download all");
+                return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showNewDialog() {
+        String[] newCategory = new String[]{"Все новинки", "Новые книги по жанрам", "Новые книги по авторам", "Новые книги по сериям"};
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(R.string.showNewDialogTitle)
+                .setItems(newCategory, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // сброшу ранее загруженное
+                        App.getInstance().mResultsEscalate = false;
+                        switch (which) {
+                            case 0:
+                                doSearch(App.BASE_URL + "/opds/new/0/new");
+                                break;
+                            case 1:
+                                doSearch(App.BASE_URL + "/opds/newgenres");
+                                break;
+                            case 2:
+                                doSearch(App.BASE_URL + "/opds/newauthors");
+                                break;
+                            case 3:
+                                doSearch(App.BASE_URL + "/opds/newsequences");
+                                break;
+                        }
+                    }
+                })
+                .show();
     }
 
     private void changeDownloadsFolder() {
@@ -576,10 +646,10 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private void doSearch(String s) {
         // очищу историю поиска и положу туда начальное значение
         App.getInstance().addToHistory(s);
-        Log.d("surprise", "ODPSActivity doSearch: " + App.getInstance().mSearchHistory.size());
         showLoadWaitingDialog();
         mWebClient.search(s);
     }
+
     private void doSearchFromHistory(String s) {
         showLoadWaitingDialog();
         mWebClient.search(s);
@@ -589,8 +659,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         if (mShowLoadDialog == null) {
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setTitle(R.string.load_message)
-                    .setMessage(R.string.waitForLoad)
+            dialogBuilder
+                    .setMessage("Загружаем")
+                    .setView(R.layout.book_loading_dialog_layout)
                     .setCancelable(false);
             mShowLoadDialog = dialogBuilder.create();
         }
@@ -681,6 +752,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void showTorRestartDialog() {
+        hideWaitingDialog();
         if (mTorRestartDialog == null) {
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
@@ -689,9 +761,10 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                     .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            hideTorRestartDialog();
                             App.getInstance().restartTor();
-                            showTorLoadingDialog();
+                            dialog.dismiss();
+                            // вернусь в основное активити и подожду перезапуска
+                            startActivityForResult(new Intent(ODPSActivity.this, StartTorActivity.class), START_TOR);
                         }
                     })
                     .setCancelable(false);
@@ -701,33 +774,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
 
-    private void hideTorRestartDialog() {
-        if (mTorRestartDialog != null) {
-            mTorRestartDialog.hide();
-        }
-    }
-
-    private void hideTorLoadingDialog() {
-        if (mTorLoadingDialog != null) {
-            mTorLoadingDialog.hide();
-        }
-    }
-
-    private void showTorLoadingDialog() {
-        if (mTorLoadingDialog == null) {
-            // создам диалоговое окно
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder
-                    .setView(R.layout.tor_loading_dialog_layout)
-                    .setCancelable(false);
-            mTorLoadingDialog = dialogBuilder.create();
-        }
-        mTorLoadingDialog.show();
-    }
-
     private void handleLoading() {
         if (mTorClient == null) {
-            showTorLoadingDialog();
             // если клиент не загружен- загружаю
             mTorClient = mMyViewModel.getTor();
         }
@@ -749,7 +797,6 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void startBrowsing() {
-        hideTorLoadingDialog();
         mWebClient = new MyWebClient();
         // если нет истории поиска- гружу новинки за неделю, если есть- последнюю загруженную страницу
         if (App.getInstance().isSearchHistory()) {
@@ -769,14 +816,12 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             if (mConfirmExit != 0) {
                 if (mConfirmExit > System.currentTimeMillis() - 3000) {
                     return super.onKeyDown(keyCode, event);
-                }
-                else{
+                } else {
                     Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                     mConfirmExit = System.currentTimeMillis();
                     return true;
                 }
-            }
-            else {
+            } else {
                 Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                 mConfirmExit = System.currentTimeMillis();
                 return true;
@@ -835,6 +880,21 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             ODPSActivity.this.startActivity(intent);
             Runtime.getRuntime().exit(0);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == START_TOR) {
+            // перезагружу страницу
+            String lastUrl = App.getInstance().getLastHistoryElement();
+            if(lastUrl != null && !lastUrl.isEmpty()){
+                showLoadWaitingDialog();
+                mWebClient.search(lastUrl);
+            }
+        }
+        else{
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 }

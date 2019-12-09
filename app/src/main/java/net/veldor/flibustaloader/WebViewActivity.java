@@ -47,6 +47,8 @@ import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
 
+import static net.veldor.flibustaloader.MainActivity.START_TOR;
+
 public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final int REQUEST_WRITE_READ = 22;
@@ -64,6 +66,8 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private SearchView mSearchView;
     private ArrayAdapter<String> mSearchAdapter;
     private AlertDialog mTorRestartDialog;
+    private TorConnectErrorReceiver mTorConnectErrorReceiver;
+    static boolean sAppRestarted = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -101,8 +105,8 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         // зарегистрирую получатель ошибки подключения к TOR
         filter = new IntentFilter();
         filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
-        WebViewActivity.TorConnectErrorReceiver torConnectErrorReceiver = new WebViewActivity.TorConnectErrorReceiver();
-        registerReceiver(torConnectErrorReceiver, filter);
+        mTorConnectErrorReceiver = new WebViewActivity.TorConnectErrorReceiver();
+        registerReceiver(mTorConnectErrorReceiver, filter);
         if (!permissionGranted()) {
             // показываю диалог с требованием предоставить разрешения
             showPermissionDialog();
@@ -110,7 +114,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             handleLoading();
         }
 
-        if(App.getInstance().isCheckUpdate()){
+        if (App.getInstance().isCheckUpdate()) {
             // проверю обновления
             final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
             version.observe(this, new Observer<Boolean>() {
@@ -150,6 +154,14 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         super.onDestroy();
         if (mPageLoadReceiver != null)
             unregisterReceiver(mPageLoadReceiver);
+        if (mTorConnectErrorReceiver != null)
+            unregisterReceiver(mTorConnectErrorReceiver);
+        if (mTorLoadingDialog != null) {
+            mTorLoadingDialog.dismiss();
+        }
+        if (mBookLoadingDialog != null) {
+            mBookLoadingDialog.dismiss();
+        }
     }
 
 
@@ -303,6 +315,9 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                     }
                 }
             }
+        } else if (requestCode == START_TOR) {
+            // перезагружу страницу
+            mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
@@ -470,21 +485,16 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                     .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            hideTorRestartDialog();
                             App.getInstance().restartTor();
-                            showTorLoadingDialog();
+                            dialog.dismiss();
+                            // вернусь в основное активити и подожду перезапуска
+                            startActivityForResult(new Intent(WebViewActivity.this, StartTorActivity.class), START_TOR);
                         }
                     })
                     .setCancelable(false);
             mTorRestartDialog = dialogBuilder.create();
         }
         mTorRestartDialog.show();
-    }
-
-    private void hideTorRestartDialog() {
-        if (mTorRestartDialog != null) {
-            mTorRestartDialog.hide();
-        }
     }
 
     private void showBookLoadingDialog() {

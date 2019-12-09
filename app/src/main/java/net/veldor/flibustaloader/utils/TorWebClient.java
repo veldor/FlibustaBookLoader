@@ -48,7 +48,14 @@ public class TorWebClient {
         catch (IOException e) {
             e.printStackTrace();
             if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
-                Log.d("surprise", "TorWebClient TorWebClient: tor не стартовал");
+                // отправлю оповещение об ошибке загрузки TOR
+                Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+                App.getInstance().sendBroadcast(finishLoadingIntent);
+            }
+        }
+        catch (RuntimeException e) {
+            e.printStackTrace();
+            if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
                 Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
                 App.getInstance().sendBroadcast(finishLoadingIntent);
@@ -58,7 +65,6 @@ public class TorWebClient {
 
 
     public String request(String text) {
-        Log.d("surprise", "TorWebClient request: " + text);
         try {
             HttpGet httpGet = new HttpGet(text);
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");

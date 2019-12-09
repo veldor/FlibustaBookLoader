@@ -79,6 +79,11 @@
             <item
                 android:id="@+id/setDownloadsFolder"
                 android:title="@string/set_downloads_folder"/>
+            <item
+                android:id="@+id/setUpdateCheck"
+                android:title="@string/set_update_check_message"
+                android:checkable="true"
+                yourapp:showAsAction="never"/>
         </menu>
     </item>
 </menu>

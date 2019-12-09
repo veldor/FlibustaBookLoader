@@ -8,22 +8,17 @@
             type="net.veldor.flibustaloader.selections.Genre" />
     </data>
 
-    <android.support.v7.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="3dp">
-
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:background="@drawable/genre_layout"
-            android:padding="10dp">
+            android:padding="10dp"
+            android:layout_marginBottom="10dp">
 
             <TextView
                 android:id="@+id/genre_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/genre_layout"
                 android:text="@{genre.label}"
                 android:textAlignment="center"
                 android:textColor="@drawable/genre_text_color"
@@ -34,6 +29,4 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
         </android.support.constraint.ConstraintLayout>
-    </android.support.v7.widget.CardView>
-
 </layout>

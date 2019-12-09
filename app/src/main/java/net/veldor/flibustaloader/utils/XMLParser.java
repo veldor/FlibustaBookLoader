@@ -64,8 +64,6 @@ public class XMLParser {
 
     public HashMap<String, ArrayList> getSearchResults() {
 
-        Log.d("surprise", "XMLParser getSearchResults start parsing");
-
         // попробую xpath
         XPathFactory factory = XPathFactory.newInstance();
         mXPath = factory.newXPath();

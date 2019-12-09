@@ -10,7 +10,7 @@ import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
 @Dao
 public interface ReadedBooksDao {
-    @Query("SELECT * FROM readedbooks WHERE id = :id")
+    @Query("SELECT * FROM readedbooks WHERE bookId = :id")
     ReadedBooks getBookById(String id);
 
     @Insert

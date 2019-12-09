@@ -14,8 +14,6 @@
         <item name="colorPrimaryDark">@android:color/black</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColor">#ada3a3</item>
-        <item name="android:background">@android:color/black</item>
-        <item name="android:windowBackground">@android:color/black</item>
         <item name="android:textColorPrimary">#ada3a3</item>
     </style>
     <style name="ThemeOverlay.AppTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">

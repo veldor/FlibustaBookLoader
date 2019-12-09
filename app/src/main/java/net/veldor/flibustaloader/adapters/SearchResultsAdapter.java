@@ -47,6 +47,8 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                 break;
             case ODPSActivity
                     .SEARCH_AUTHORS:
+            case ODPSActivity
+                    .SEARCH_NEW_AUTHORS:
                 mAuthors = arrayList;
                 break;
             case ODPSActivity
@@ -146,7 +148,15 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    App.getInstance().mSelectedAuthor.postValue(foundedAuthor);
+                    if(foundedAuthor.uri != null){
+                        Log.d("surprise", "ViewHolder onClick load author");
+                        App.getInstance().mSelectedAuthor.postValue(foundedAuthor);
+                    }
+                    else{
+                        Log.d("surprise", "ViewHolder onClick load new books" + foundedAuthor.link);
+                        // поиск новых книг автора
+                        App.getInstance().mAuthorNewBooks.postValue(foundedAuthor);
+                    }
                 }
             });
         }
