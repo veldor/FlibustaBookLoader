@@ -24,9 +24,9 @@
     <string name="use_normal_style">Use normal</string>
     <string name="use_light_fast_style">Fast light style</string>
     <string name="use_fat_fast_style">Fat fast style</string>
-    <string name="tor_is_stopped">Tor is stopped…</string>
-    <string name="tor_restart_dialog_message">Tor, stopped unfortunately, maybe, no internet connection. Need to restart it.</string>
-    <string name="restart_tor_message">Restart TOR</string>
+    <string name="tor_is_stopped">Can\'t get data…</string>
+    <string name="tor_restart_dialog_message">Can\'t get data. Some reasons can be. Tap button down for next try</string>
+    <string name="restart_tor_message">Try again</string>
     <string name="share_link_message">Share link</string>
     <string name="share_url_message">Sharing page link</string>
     <string name="share_url_title">Share link with</string>
@@ -67,4 +67,8 @@
     <string name="tor_is_loaded">TOR is success loaded</string>
     <string name="wait_tor_loading_message">Wait for TOR load</string>
     <string name="download_all">Download all books</string>
+    <string name="download_books_msg">Download all selected books</string>
+    <string name="download_books_title">Load started</string>
+    <string name="load_waiting_message">Load and handle data, be patient</string>
+    <string name="load_waiting_title">Do my work</string>
 </resources>

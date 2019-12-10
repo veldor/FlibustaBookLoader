@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -21,7 +22,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,9 +32,12 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.work.WorkInfo;
+
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.adapters.SearchResultsAdapter;
+import net.veldor.flibustaloader.dialogs.GifDialog;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
@@ -54,6 +57,9 @@ import java.util.Iterator;
 
 import lib.folderpicker.FolderPicker;
 
+import static androidx.work.WorkInfo.State.ENQUEUED;
+import static androidx.work.WorkInfo.State.RUNNING;
+import static androidx.work.WorkInfo.State.SUCCEEDED;
 import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
 public class ODPSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
@@ -71,7 +77,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private RadioGroup mSearchRadioContainer;
     private MyWebClient mWebClient;
     private SearchResultsAdapter mSearchResultsAdapter;
-    private AlertDialog mShowLoadDialog;
+    private Dialog mShowLoadDialog;
     private Button mLoadMoreBtn;
     private AlertDialog.Builder mDownloadsDialog;
     private TorConnectErrorReceiver mTtorConnectErrorReceiver;
@@ -90,6 +96,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private Author mSelectedAuthor;
     private long mConfirmExit;
     private View mRootView;
+    private Dialog mMultiplyDownloadDialog;
+    private AlertDialog mSelectBookTypeDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -298,7 +306,6 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
 
     private void checkUpdates() {
         if (App.getInstance().isCheckUpdate()) {
-            Log.d("surprise", "ODPSActivity checkUpdates: check update");
             // проверю обновления
             final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
             version.observe(this, new Observer<Boolean>() {
@@ -421,6 +428,63 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                     doSearch(App.BASE_URL + author.link);
             }
         });
+
+        // отслеживание статуса загрузки книг
+        LiveData<String> multiplyDownloadStatus = App.getInstance().mMultiplyDownloadStatus;
+        multiplyDownloadStatus.observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(@Nullable String s) {
+                if (s != null && !s.isEmpty() && mMultiplyDownloadDialog != null) {
+                    TextView dialogText = mMultiplyDownloadDialog.getWindow().findViewById(R.id.title);
+                    dialogText.setText(s);
+                }
+            }
+        });
+
+        // отслеживание незавершённого поиска
+        WorkInfo workStatus = App.getInstance().mSearchWork.getValue();
+        if (workStatus != null) {
+            if (workStatus.getState() == RUNNING || workStatus.getState() == ENQUEUED) {
+                showLoadWaitingDialog();
+            }
+        }
+        // отслеживание незавершённого скачивания
+        if (App.getInstance().mDownloadAllWork != null) {
+            workStatus = App.getInstance().mDownloadAllWork.getValue();
+            if (workStatus != null) {
+                if (workStatus.getState() == RUNNING || workStatus.getState() == ENQUEUED) {
+                    showMultiplyDownloadDialog();
+                    String status = App.getInstance().mMultiplyDownloadStatus.getValue();
+                    if (status != null && !status.isEmpty()) {
+                        TextView dialogText = mMultiplyDownloadDialog.getWindow().findViewById(R.id.title);
+                        dialogText.setText(status);
+                    }
+                }
+            }
+            observeBooksDownload();
+        }
+    }
+
+    private void observeBooksDownload() {
+        // отслежу загрузку книг
+        final LiveData<WorkInfo> booksDownloadStatus = App.getInstance().mDownloadAllWork;
+        if(booksDownloadStatus != null){
+            booksDownloadStatus.observe(this, new Observer<WorkInfo>() {
+                @Override
+                public void onChanged(@Nullable WorkInfo workInfo) {
+                    if (workInfo != null) {
+                        if (workInfo.getState() == SUCCEEDED) {
+                            Toast.makeText(ODPSActivity.this, "Все книги загружены (кажется)", Toast.LENGTH_LONG).show();
+                            // работа закончена, закрою диалог и выведу тост
+                            if (mMultiplyDownloadDialog != null) {
+                                mMultiplyDownloadDialog.dismiss();
+                                booksDownloadStatus.removeObservers(ODPSActivity.this);
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 
 
@@ -461,15 +525,25 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         if (mTtorConnectErrorReceiver != null) {
             unregisterReceiver(mTtorConnectErrorReceiver);
         }
-        if (mShowLoadDialog != null) {
-            mShowLoadDialog.dismiss();
-        }
         App.getInstance().mSelectedAuthor.setValue(null);
         App.getInstance().mSelectedAuthors.setValue(null);
         App.getInstance().mDownloadLinksList.setValue(null);
         App.getInstance().mSelectedGenre.setValue(null);
         App.getInstance().mSelectedSequence.setValue(null);
         App.getInstance().mSelectedSequences.setValue(null);
+
+        if (mShowLoadDialog != null) {
+            mShowLoadDialog.dismiss();
+            mShowLoadDialog = null;
+        }
+        if (mMultiplyDownloadDialog != null) {
+            mMultiplyDownloadDialog.dismiss();
+            mMultiplyDownloadDialog = null;
+        }
+        if (mSelectBookTypeDialog != null) {
+            mSelectBookTypeDialog.dismiss();
+            mSelectBookTypeDialog = null;
+        }
     }
 
     private void nothingFound() {
@@ -483,7 +557,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
 
     private void hideWaitingDialog() {
         if (mShowLoadDialog != null) {
-            mShowLoadDialog.hide();
+            mShowLoadDialog.dismiss();
         }
     }
 
@@ -561,18 +635,63 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.setUpdateCheck:
                 App.getInstance().switchCheckUpdate();
                 invalidateOptionsMenu();
-                Log.d("surprise", "ODPSActivity onOptionsItemSelected: check update switched");
                 return true;
             case R.id.hideReadedSwitcher:
                 App.getInstance().switchHideRead();
                 invalidateOptionsMenu();
-                Log.d("surprise", "ODPSActivity onOptionsItemSelected: check update switched");
                 return true;
             case R.id.downloadAll:
-                Log.d("surprise", "ODPSActivity onOptionsItemSelected download all");
+                downloadAllBooks();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void downloadAllBooks() {
+        // если выбран тип загрузки книг и они существуют- предлагаю выбрать тип загрузки
+        if (App.sSearchType == SEARCH_BOOKS) {
+            ArrayList<FoundedItem> books = App.getInstance().mParsedResult.getValue();
+            if (books != null && books.size() > 0) {
+                if (mSelectBookTypeDialog == null) {
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+                    dialogBuilder.setTitle("Выберите формат скачивания")
+                            //.setMessage("Если возможно, файлы будут скачаны в выбранном формате")
+                            .setItems(MimeTypes.MIMES_LIST, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    // запущу рабочего, который всё закачает и покажу диалог закачки
+                                    doMultiplyDownload(i);
+                                }
+                            });
+                    mSelectBookTypeDialog = dialogBuilder.create();
+                }
+                // покажу диалог с выбором предпочтительного формата
+                mSelectBookTypeDialog.show();
+            } else {
+                Toast.makeText(this, "Нет книг- нечего качать", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(this, "Сначала найдите книги, потом скачаем", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showMultiplyDownloadDialog() {
+        if (mMultiplyDownloadDialog == null) {
+            mMultiplyDownloadDialog = new GifDialog.Builder(this)
+                    .setTitle(getString(R.string.download_books_title))
+                    .setMessage(getString(R.string.download_books_msg))
+                    .setGifResource(R.drawable.loading)   //Pass your Gif here
+                    .isCancellable(false)
+                    .build();
+        }
+        //mMultiplyDownloadDialog.setMessage("Считаю количество книг для скачивания");
+        mMultiplyDownloadDialog.show();
+    }
+
+    private void doMultiplyDownload(int i) {
+        mMyViewModel.downloadMultiply(i);
+        showMultiplyDownloadDialog();
+        observeBooksDownload();
     }
 
     private void showNewDialog() {
@@ -656,16 +775,18 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void showLoadWaitingDialog() {
+
         if (mShowLoadDialog == null) {
-            // создам диалоговое окно
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder
-                    .setMessage("Загружаем")
-                    .setView(R.layout.book_loading_dialog_layout)
-                    .setCancelable(false);
-            mShowLoadDialog = dialogBuilder.create();
+
+            mShowLoadDialog = new GifDialog.Builder(this)
+                    .setTitle(getString(R.string.load_waiting_title))
+                    .setMessage(getString(R.string.load_waiting_message))
+                    .setGifResource(R.drawable.gif1)   //Pass your Gif here
+                    .isCancellable(false)
+                    .build();
         }
         mShowLoadDialog.show();
+
     }
 
 
@@ -888,12 +1009,11 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         if (requestCode == START_TOR) {
             // перезагружу страницу
             String lastUrl = App.getInstance().getLastHistoryElement();
-            if(lastUrl != null && !lastUrl.isEmpty()){
+            if (lastUrl != null && !lastUrl.isEmpty()) {
                 showLoadWaitingDialog();
                 mWebClient.search(lastUrl);
             }
-        }
-        else{
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }

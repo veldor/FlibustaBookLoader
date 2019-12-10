@@ -6,8 +6,8 @@ android {
         applicationId "net.veldor.flibustaloader"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 16
-        versionName "1.7.2"
+        versionCode 18
+        versionName "1.7.2.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -56,6 +56,8 @@ dependencies {
 
     implementation "android.arch.persistence.room:runtime:1.1.1"
     annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
+
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.10'
 }
 
 allprojects {

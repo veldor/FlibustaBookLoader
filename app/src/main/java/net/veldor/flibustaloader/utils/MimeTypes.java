@@ -4,6 +4,9 @@ import java.util.HashMap;
 
 public class MimeTypes {
 
+    public static final String MIME_TYPE = "mime_type";
+    public static String[] MIMES_LIST = new String[]{"fb2", "mobi", "epub", "pdf", "djvu", "html", "txt", "rtf"};
+
     private static HashMap<String, String> MIMES = new HashMap<String, String>() {{
         put("application/fb2+zip", "fb2");
         put("application/x-mobipocket-ebook", "mobi");

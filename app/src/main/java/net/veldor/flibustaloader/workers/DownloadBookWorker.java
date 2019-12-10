@@ -17,16 +17,14 @@ import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebClient;
 import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
+import net.veldor.flibustaloader.utils.TorWebClient;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 
-import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.client.ClientProtocolException;
 import cz.msebera.android.httpclient.client.HttpClient;
@@ -40,12 +38,9 @@ import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManage
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
 import static net.veldor.flibustaloader.MyWebViewClient.TOR_CONNECT_ERROR_ACTION;
-import static net.veldor.flibustaloader.MyWebViewClient.TOR_NOT_RUNNING_ERROR;
 
 public class DownloadBookWorker extends Worker {
 
-    private static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
-    private static final String FILENAME_DELIMITER = "filename=";
 
     public DownloadBookWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -86,11 +81,14 @@ public class DownloadBookWorker extends Worker {
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, properties[0]);
                 App.getInstance().sendBroadcast(intent);
-                Log.d("surprise", "DownloadBookWorker doWork: book loaded!");
 
             } catch (ClientProtocolException e) {
+                // отправлю оповещение об ошибке загрузки TOR
+                TorWebClient.broadcastTorError();
                 e.printStackTrace();
             } catch (IOException e) {
+                // отправлю оповещение об ошибке загрузки TOR
+                TorWebClient.broadcastTorError();
                 e.printStackTrace();
             }
         }

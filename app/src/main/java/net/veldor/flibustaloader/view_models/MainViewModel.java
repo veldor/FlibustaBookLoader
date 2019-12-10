@@ -17,9 +17,11 @@ import net.veldor.flibustaloader.ODPSActivity;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
+import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.workers.DatabaseWorker;
+import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -85,5 +87,15 @@ public class MainViewModel extends AndroidViewModel {
         // запущу рабочего, загружающего страницу
         OneTimeWorkRequest getPageWorker = new OneTimeWorkRequest.Builder(DatabaseWorker.class).setInputData(inputData).build();
         WorkManager.getInstance().enqueue(getPageWorker);
+    }
+
+    public void downloadMultiply(int i) {
+        // запущу рабочего, который загрузит книги
+        Data inputData = new Data.Builder()
+                .putInt(MimeTypes.MIME_TYPE, i)
+                .build();
+        OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).setInputData(inputData).build();
+        WorkManager.getInstance().enqueue(downloadAllWorker);
+        App.getInstance().mDownloadAllWork = WorkManager.getInstance().getWorkInfoByIdLiveData(downloadAllWorker.getId());
     }
 }

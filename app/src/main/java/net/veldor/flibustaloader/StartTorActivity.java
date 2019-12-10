@@ -3,8 +3,11 @@ package net.veldor.flibustaloader;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.Nullable;
@@ -22,6 +25,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
 import static androidx.work.WorkInfo.State.SUCCEEDED;
+import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
 public class StartTorActivity extends AppCompatActivity {
     private static final String TOR_LAUNCHED_MESSAGE = "LAUNCHED";
@@ -31,6 +35,8 @@ public class StartTorActivity extends AppCompatActivity {
     private CountDownTimer mCdt;
     private int mProgressCounter;
     private AndroidOnionProxyManager mTor;
+    private TorConnectErrorReceiver mTtorConnectErrorReceiver;
+    private AlertDialog mTorRestartDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -90,6 +96,12 @@ public class StartTorActivity extends AppCompatActivity {
         });
 
         startTimer();
+
+        // зарегистрирую получатель ошибки подключения к TOR
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
+        mTtorConnectErrorReceiver = new TorConnectErrorReceiver();
+        registerReceiver(mTtorConnectErrorReceiver, filter);
     }
 
     private void startTimer() {
@@ -172,5 +184,44 @@ public class StartTorActivity extends AppCompatActivity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    public class TorConnectErrorReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // покажу диалоговое окно с оповещением, что TOR остановлен и кнопкой повторного запуска
+            showTorRestartDialog();
+        }
+    }
+
+    private void showTorRestartDialog() {
+        if (mTorRestartDialog == null) {
+            // создам диалоговое окно
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setTitle(R.string.tor_is_stopped)
+                    .setMessage(R.string.tor_restart_dialog_message)
+                    .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            App.getInstance().restartTor();
+                            dialog.dismiss();
+                            restartCounter();
+                        }
+                    })
+                    .setCancelable(false);
+            mTorRestartDialog = dialogBuilder.create();
+        }
+        mTorRestartDialog.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mTtorConnectErrorReceiver != null) {
+            unregisterReceiver(mTtorConnectErrorReceiver);
+        }
+        if(mTorRestartDialog != null){
+            mTorRestartDialog.dismiss();
+        }
     }
 }

@@ -65,10 +65,6 @@
         android:title="@string/share_link_message"
         yourapp:showAsAction="never"/>
     <item
-        android:id="@+id/buyCoffee"
-        android:title="@string/buy_me_coffee"
-        yourapp:showAsAction="never"/>
-    <item
         android:id="@+id/menuUseODPS"
         android:title="@string/use_ODPS"
         android:checkable="true"
@@ -86,4 +82,8 @@
                 yourapp:showAsAction="never"/>
         </menu>
     </item>
+    <item
+        android:id="@+id/buyCoffee"
+        android:title="@string/buy_me_coffee"
+        yourapp:showAsAction="never"/>
 </menu>
