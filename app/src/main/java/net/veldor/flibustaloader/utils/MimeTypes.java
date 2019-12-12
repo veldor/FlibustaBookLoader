@@ -14,6 +14,16 @@ public class MimeTypes {
         put("application/txt+zip", "txt");
         put("application/rtf+zip", "rtf");
     }};
+    private static HashMap<String, String> DOWNLOAD_MIMES = new HashMap<String, String>() {{
+        put("application/fb2+zip", "fb2.zip");
+        put("application/x-mobipocket-ebook", "mobi");
+        put("application/epub+zip", "epub");
+        put("application/pdf", "pdf");
+        put("application/djvu", "djvu");
+        put("application/html+zip", "html.zip");
+        put("application/txt+zip", "txt.zip");
+        put("application/rtf+zip", "rtf.zip");
+    }};
 
     private static HashMap<String, String> FULL_MIMES = new HashMap<String, String>() {{
         put("fb2", "application/fb2+zip");
@@ -30,6 +40,12 @@ public class MimeTypes {
     public static String getMime(String mime) {
         if (MIMES.containsKey(mime)){
             return MIMES.get(mime);
+        }
+        return mime;
+    }
+    public static String getDownloadMime(String mime) {
+        if (DOWNLOAD_MIMES.containsKey(mime)){
+            return DOWNLOAD_MIMES.get(mime);
         }
         return mime;
     }
