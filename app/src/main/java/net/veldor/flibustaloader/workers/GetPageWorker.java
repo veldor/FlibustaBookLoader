@@ -22,7 +22,6 @@ public class GetPageWorker extends Worker {
     public Result doWork() {
         Data data = getInputData();
         String text = data.getString(MyWebClient.LOADED_URL);
-        Log.d("surprise", "GetPageWorker doWork load " + text);
         // создам новый экземпляр веб-клиента
         TorWebClient webClient = new TorWebClient();
         String answer = webClient.request(text);

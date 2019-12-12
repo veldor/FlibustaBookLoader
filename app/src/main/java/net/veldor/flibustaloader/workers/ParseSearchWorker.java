@@ -2,7 +2,6 @@ package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -75,7 +74,6 @@ public class ParseSearchWorker extends Worker {
                     App.getInstance().mSearchTitle.postValue(((Node) mXPath.evaluate("/feed/title", document, XPathConstants.NODE)).getTextContent());
                     // определю тип содержимого
                     identificateSearchType(entries.item(0));
-                    Log.d("surprise", "ParseSearchWorker doWork " + App.sSearchType);
                     // обработаю данные
                     switch (App.sSearchType) {
                         case ODPSActivity

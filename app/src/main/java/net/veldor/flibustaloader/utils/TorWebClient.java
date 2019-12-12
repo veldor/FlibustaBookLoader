@@ -9,6 +9,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
+import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -49,18 +50,22 @@ public class TorWebClient {
             e.printStackTrace();
             if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
-                Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
-                App.getInstance().sendBroadcast(finishLoadingIntent);
+                broadcastTorError();
             }
         }
         catch (RuntimeException e) {
             e.printStackTrace();
             if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
-                Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
-                App.getInstance().sendBroadcast(finishLoadingIntent);
+                broadcastTorError();
             }
         }
+    }
+
+    public static void broadcastTorError() {
+        // отправлю оповещение об ошибке загрузки TOR
+        Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+        App.getInstance().sendBroadcast(finishLoadingIntent);
     }
 
 
@@ -74,6 +79,7 @@ public class TorWebClient {
             is = httpResponse.getEntity().getContent();
             return inputStreamToString(is);
         } catch (IOException e) {
+            broadcastTorError();
             e.printStackTrace();
         }
         return null;

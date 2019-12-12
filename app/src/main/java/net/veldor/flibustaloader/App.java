@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatDelegate;
-import android.util.Log;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -71,7 +70,6 @@ public class App extends Application {
     public static final String TOR_FILES_LOCATION = "torfiles";
     private static final String PREFERENCE_NIGHT_MODE_ENABLED = "night mode";
     private static final String PREFERENCE_LAST_LOADED_URL = "last_loaded_url";
-    private static final String PREFERENCE_LAST_SCROLL = "last_scroll";
     private static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";
 
 
@@ -97,10 +95,13 @@ public class App extends Application {
     public MutableLiveData<FoundedBook> mContextBook = new MutableLiveData<>();
     public MutableLiveData<AndroidOnionProxyManager> mLoadedTor = new MutableLiveData<>();
     public MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
+    public MutableLiveData<String> mMultiplyDownloadStatus = new MutableLiveData<>();
+    public LiveData<WorkInfo> mDownloadAllWork;
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;
     public LiveData<WorkInfo> mWork = new LiveData<WorkInfo>() {};
+    public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {};
 
     @Override
     public void onCreate() {
@@ -195,11 +196,7 @@ public class App extends Application {
     }
 
     public String getLastLoadedUrl() {
-        Log.d("surprise", "App getLastLoadedUrl: get last url is " + mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, BASE_BOOK_URL));
         return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, BASE_BOOK_URL);
-    }
-    public void setLastScroll(int mScroll) {
-        mSharedPreferences.edit().putInt(PREFERENCE_LAST_SCROLL, mScroll).apply();
     }
 
     public File getDownloadFolder(){
@@ -207,24 +204,14 @@ public class App extends Application {
         String download_location =  mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, DOWNLOAD_FOLDER_LOCATION.toString());
         File dl = new File(download_location);
         if(dl.isDirectory()){
-            Log.d("surprise", "App getDownloadFolder: found changed dir " + dl.toString());
             return dl;
         }
         else{
-            Log.d("surprise", "App getDownloadFolder: not found changed dir " + dl);
             return DOWNLOAD_FOLDER_LOCATION;
         }
     }
 
     public void setDownloadFolder(Uri uri) {
-        File dl = new File(uri.getPath());
-        Log.d("surprise", "App setDownloadFolder: uri is " + uri.getPath());
-        if(dl.exists()){
-            Log.d("surprise", "App setDownloadFolder: destination exists");
-        }
-        else{
-            Log.d("surprise", "App setDownloadFolder: destination not found");
-        }
         mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.getPath()).apply();
     }
 
@@ -241,11 +228,9 @@ public class App extends Application {
     public void switchODPSMode() {
         int contentTypeMode = getContentTypeMode();
         if(contentTypeMode == CONTENT_MODE_WEB_VIEW){
-            Log.d("surprise", "App switchODPSMode: switch to ODPS");
             mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_ODPS).apply();
         }
         else{
-            Log.d("surprise", "App switchODPSMode: switch to webView");
             mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW).apply();
         }
     }

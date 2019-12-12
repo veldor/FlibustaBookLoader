@@ -53,6 +53,8 @@ public class MyWebClient {
         // запущу рабочего, загружающего страницу
         OneTimeWorkRequest getPageWorker = new OneTimeWorkRequest.Builder(GetPageWorker.class).setInputData(inputData).build();
         WorkManager.getInstance().enqueue(getPageWorker);
+        // отмечу, что выполняется работа по загрузке контента
+        App.getInstance().mSearchWork = WorkManager.getInstance().getWorkInfoByIdLiveData(getPageWorker.getId());
     }
 
     void download(DownloadLink item) {
