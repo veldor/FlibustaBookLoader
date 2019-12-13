@@ -37,8 +37,6 @@ import cz.msebera.android.httpclient.impl.client.HttpClients;
 import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
-import static net.veldor.flibustaloader.MyWebViewClient.TOR_CONNECT_ERROR_ACTION;
-
 public class DownloadBookWorker extends Worker {
 
 
@@ -51,7 +49,7 @@ public class DownloadBookWorker extends Worker {
     public Result doWork() {
         Data data = getInputData();
         String[] properties = data.getStringArray(MyWebClient.DOWNLOAD_ATTRIBUTES);
-        if(properties != null && properties.length == 3 && properties[1] != null){
+        if(properties != null && properties.length == 4 && properties[1] != null){
             HttpClient httpClient = getNewHttpClient();
             int port;
             try {
@@ -66,7 +64,18 @@ public class DownloadBookWorker extends Worker {
                 httpGet.setHeader("X-Compress", "null");
                 HttpResponse httpResponse = httpClient.execute(httpGet, context);
 
-                String name = properties[2] + "." + properties[0];
+                String author_last_name = properties[3].substring(0, properties[3].indexOf(" "));
+                String book_name = properties[2].replaceAll(" ", "_").replaceAll("[^\\d\\w-_]", "");
+                String book_mime = properties[0];
+                String name;
+                // если сумма символов меньше 255- создаю полное имя
+                if(author_last_name.length() + book_name.length() + book_mime.length() + 2 < 255 / 2){
+                    name = author_last_name + "_" + book_name + "." + book_mime;
+                }
+                else{
+                    // сохраняю книгу по имени автора и тому, что влезет от имени книги
+                    name = author_last_name + "_" + book_name.substring(0, 255/2 - author_last_name.length() + book_mime.length() + 2) + "." + book_mime;
+                }
                 File file = new File(App.getInstance().getDownloadFolder(), name);
                 InputStream is = httpResponse.getEntity().getContent();
                 FileOutputStream outputStream = new FileOutputStream(file);
@@ -97,7 +106,6 @@ public class DownloadBookWorker extends Worker {
 
 
     private HttpClient getNewHttpClient() {
-
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new MyConnectionSocketFactory())
                 .register("https", new MySSLConnectionSocketFactory(SSLContexts.createSystemDefault()))
@@ -107,6 +115,4 @@ public class DownloadBookWorker extends Worker {
                 .setConnectionManager(cm)
                 .build();
     }
-
-
 }

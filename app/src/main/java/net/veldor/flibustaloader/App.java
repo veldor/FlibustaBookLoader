@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatDelegate;
+import android.util.Log;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -37,6 +38,7 @@ public class App extends Application {
     private static final String PREFERENCE_CHECK_UPDATES = "check_updates";
     private static final String PREFERENCE_HIDE_READ = "hide read";
     private static final String START_TOR = "start_tor";
+    private static final String PREFERENCE_LOAD_ALL = "load all";
 
     public static int sSearchType = ODPSActivity.SEARCH_BOOKS;
     public ArrayList<String> mSearchHistory = new ArrayList<>();
@@ -97,6 +99,7 @@ public class App extends Application {
     public MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
     public MutableLiveData<String> mMultiplyDownloadStatus = new MutableLiveData<>();
     public LiveData<WorkInfo> mDownloadAllWork;
+    public boolean mDownloadInProgress;
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;
@@ -279,5 +282,21 @@ public class App extends Application {
     }
     public void switchHideRead() {
         mSharedPreferences.edit().putBoolean(PREFERENCE_HIDE_READ, !isHideRead()).apply();
+    }
+
+    public boolean isDownloadAll() {
+        return mSharedPreferences.getBoolean(PREFERENCE_LOAD_ALL, false);
+    }
+    public void switchDownloadAll() {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_LOAD_ALL, !isDownloadAll()).apply();
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        Log.d("surprise", "App onTerminate i terminate");
+        // завершу незаконченные работы
+        WorkManager.getInstance().cancelAllWork();
+
     }
 }

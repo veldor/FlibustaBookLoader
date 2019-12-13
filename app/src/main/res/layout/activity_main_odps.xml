@@ -71,6 +71,7 @@
     </RadioGroup>
 
     <android.support.v4.widget.NestedScrollView
+        android:id="@+id/scrollLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"

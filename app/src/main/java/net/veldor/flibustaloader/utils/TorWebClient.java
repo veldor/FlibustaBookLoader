@@ -3,6 +3,8 @@ package net.veldor.flibustaloader.utils;
 import android.content.Intent;
 import android.util.Log;
 
+import androidx.work.WorkManager;
+
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
@@ -63,6 +65,8 @@ public class TorWebClient {
     }
 
     public static void broadcastTorError() {
+        // остановлю все задачи
+        WorkManager.getInstance().cancelAllWork();
         // отправлю оповещение об ошибке загрузки TOR
         Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
         App.getInstance().sendBroadcast(finishLoadingIntent);

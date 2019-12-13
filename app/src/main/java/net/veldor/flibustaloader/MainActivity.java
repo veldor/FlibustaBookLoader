@@ -6,6 +6,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+
+import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
@@ -52,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
         }
         targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(targetActivityIntent);
-        finish();
     }
 
     @Override
@@ -60,5 +62,12 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             startApp();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("surprise", "MainActivity onDestroy app destroyed?");
+        WorkManager.getInstance().cancelAllWork();
     }
 }

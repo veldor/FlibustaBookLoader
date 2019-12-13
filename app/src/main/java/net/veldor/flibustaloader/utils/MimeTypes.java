@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.utils;
 
+import android.util.Log;
+
 import java.util.HashMap;
 
 public class MimeTypes {
@@ -11,6 +13,7 @@ public class MimeTypes {
         put("application/fb2+zip", "fb2");
         put("application/x-mobipocket-ebook", "mobi");
         put("application/epub+zip", "epub");
+        put("application/epub", "epub");
         put("application/pdf", "pdf");
         put("application/djvu", "djvu");
         put("application/html+zip", "html");
@@ -21,6 +24,8 @@ public class MimeTypes {
         put("application/fb2+zip", "fb2.zip");
         put("application/x-mobipocket-ebook", "mobi");
         put("application/epub+zip", "epub");
+        put("view_models", "djvu");
+        put("application/epub", "epub");
         put("application/pdf", "pdf");
         put("application/djvu", "djvu");
         put("application/html+zip", "html.zip");
@@ -47,6 +52,24 @@ public class MimeTypes {
         return mime;
     }
     public static String getDownloadMime(String mime) {
+        if(mime.equals("application/epub")){
+            return "epub";
+        }
+        if(mime.equals("application/djvu+zip")){
+            return "djvu.zip";
+        }
+        if(mime.equals("application/doc")){
+            return "doc";
+        }
+        if(mime.equals("application/jpg")){
+            return "jpg";
+        }
+        if(mime.equals("application/pdf+zip")){
+            return "pdf.zip";
+        }
+        if(mime.equals("application/rtf")){
+            return "rtf";
+        }
         if (DOWNLOAD_MIMES.containsKey(mime)){
             return DOWNLOAD_MIMES.get(mime);
         }

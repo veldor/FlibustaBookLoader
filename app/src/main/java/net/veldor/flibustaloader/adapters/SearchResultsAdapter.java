@@ -4,7 +4,6 @@ import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -147,11 +146,9 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                 @Override
                 public void onClick(View view) {
                     if(foundedAuthor.uri != null){
-                        Log.d("surprise", "ViewHolder onClick load author");
                         App.getInstance().mSelectedAuthor.postValue(foundedAuthor);
                     }
                     else{
-                        Log.d("surprise", "ViewHolder onClick load new books" + foundedAuthor.link);
                         // поиск новых книг автора
                         App.getInstance().mAuthorNewBooks.postValue(foundedAuthor);
                     }

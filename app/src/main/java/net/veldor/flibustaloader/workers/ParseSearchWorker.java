@@ -35,7 +35,8 @@ public class ParseSearchWorker extends Worker {
     private static final String BOOK_TYPE = "tag:book";
     private static final String GENRE_TYPE = "tag:root:genre";
     private static final String AUTHOR_TYPE = "tag:author";
-    private static final String SEQUENCE_TYPE = "tag:sequences";
+    private static final String SEQUENCES_TYPE = "tag:sequences";
+    private static final String SEQUENCE_TYPE = "tag:sequence";
     private static final CharSequence AUTHOR_SEQUENCE_TYPE = ":sequence:";
     private static final String NEW_GENRES = "tag:search:new:genres";
     private static final String NEW_SEQUENCES = "tag:search:new:sequence";
@@ -109,6 +110,7 @@ public class ParseSearchWorker extends Worker {
     private void identificateSearchType(Node item) throws XPathExpressionException {
         // получу идентификатор
         String id = ((Node) mXPath.evaluate("./id", item, XPathConstants.NODE)).getTextContent();
+        //Log.d("surprise", "ParseSearchWorker identificateSearchType " + id);
         if (id.startsWith(BOOK_TYPE)) {
             App.sSearchType = ODPSActivity.SEARCH_BOOKS;
         } else if (id.startsWith(GENRE_TYPE)) {
@@ -116,11 +118,16 @@ public class ParseSearchWorker extends Worker {
         } else if (id.startsWith(AUTHOR_TYPE)) {
             // проверю на возможность, что загружены серии
             if (id.contains(AUTHOR_SEQUENCE_TYPE)) {
+                //Log.d("surprise", "ParseSearchWorker identificateSearchType author sequence");
                 App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
             } else {
                 App.sSearchType = ODPSActivity.SEARCH_AUTHORS;
             }
-        } else if (id.startsWith(SEQUENCE_TYPE)) {
+        } else if (id.startsWith(SEQUENCES_TYPE)) {
+            //Log.d("surprise", "ParseSearchWorker identificateSearchType sequenceS");
+            App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
+        }else if (id.startsWith(SEQUENCE_TYPE)) {
+            //Log.d("surprise", "ParseSearchWorker identificateSearchType sequence");
             App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
         } else if (id.startsWith(NEW_GENRES)) {
             App.sSearchType = ODPSActivity.SEARCH_GENRE;
@@ -129,7 +136,10 @@ public class ParseSearchWorker extends Worker {
         } else if (id.startsWith(NEW_AUTHORS)) {
             App.sSearchType = ODPSActivity.SEARCH_NEW_AUTHORS;
         }
-
+        else{
+            //Log.d("surprise", "ParseSearchWorker identificateSearchType я ничего не понял");
+        }
+        //Log.d("surprise", "ParseSearchWorker identificateSearchType " + App.sSearchType);
     }
 
     private void handleSequences(NodeList entries) throws XPathExpressionException {
@@ -283,6 +293,7 @@ public class ParseSearchWorker extends Worker {
                 downloadLink.url = someAttributes.getNamedItem("href").getTextContent();
                 downloadLink.mime = someAttributes.getNamedItem("type").getTextContent();
                 downloadLink.name = book.name;
+                downloadLink.author = book.author;
                 book.downloadLinks.add(downloadLink);
                 innerCounter++;
             }
@@ -307,15 +318,6 @@ public class ParseSearchWorker extends Worker {
 
     private void handleAuthors(NodeList entries) throws XPathExpressionException {
         ArrayList<FoundedItem> result;
-        // если авторы добавляются к списку- вместо нового массива возьму уже имеющийся
-        if (App.getInstance().mResultsEscalate) {
-            result = App.getInstance().mParsedResult.getValue();
-            if (result == null) {
-                result = new ArrayList<>();
-            }
-        } else {
-            result = new ArrayList<>();
-        }
         // если книги добавляются к списку- вместо нового массива возьму уже имеющийся
         if (App.getInstance().mResultsEscalate) {
             result = App.getInstance().mParsedResult.getValue();

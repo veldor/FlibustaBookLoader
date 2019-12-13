@@ -71,4 +71,5 @@
     <string name="load_waiting_message">Загружаю и обрабатываю данные, потерпите несколько секунд.</string>
     <string name="download_books_title">Загрузка началась</string>
     <string name="download_books_msg">Загружаю все выбранные книги. Процесс может быть долгим, потерпите.</string>
+    <string name="download_all_message">Загружать сразу весь список</string>
 </resources>

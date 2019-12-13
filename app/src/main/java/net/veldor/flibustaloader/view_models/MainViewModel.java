@@ -4,8 +4,10 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
@@ -27,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class MainViewModel extends AndroidViewModel {
+
+    private static final String MULTIPLY_DOWNLOAD = "multiply download";
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -90,12 +94,15 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void downloadMultiply(int i) {
+        Log.d("surprise", "MainViewModel downloadMultiply initiate download");
+        // отменю все остальные работы
+        WorkManager.getInstance().cancelAllWork();
         // запущу рабочего, который загрузит книги
         Data inputData = new Data.Builder()
                 .putInt(MimeTypes.MIME_TYPE, i)
                 .build();
         OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).setInputData(inputData).build();
-        WorkManager.getInstance().enqueue(downloadAllWorker);
+        WorkManager.getInstance().beginUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.KEEP, downloadAllWorker).enqueue();
         App.getInstance().mDownloadAllWork = WorkManager.getInstance().getWorkInfoByIdLiveData(downloadAllWorker.getId());
     }
 }

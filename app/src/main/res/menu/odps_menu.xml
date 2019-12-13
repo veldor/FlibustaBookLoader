@@ -49,6 +49,11 @@
                 android:title="@string/set_update_check_message"
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/downloadAllData"
+                android:title="@string/download_all_message"
+                android:checkable="true"
+                yourapp:showAsAction="never"/>
         </menu>
     </item>
     <item

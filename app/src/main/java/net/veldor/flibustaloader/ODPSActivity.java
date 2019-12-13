@@ -22,6 +22,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -64,7 +65,6 @@ import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
 public class ODPSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     public static final String BOOK_ID = "book id";
-    public static final int SEARCH_NEW_AUTHORS = 5;
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
     private static final int READ_REQUEST_CODE = 5;
@@ -93,6 +93,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     public static final int SEARCH_AUTHORS = 2;
     public static final int SEARCH_GENRE = 3;
     public static final int SEARCH_SEQUENCE = 4;
+    public static final int SEARCH_NEW_AUTHORS = 5;
     private Author mSelectedAuthor;
     private long mConfirmExit;
     private View mRootView;
@@ -366,12 +367,15 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
 
                     // если была дополнительная загрузка данных и есть адаптер- догружаю в него данные. Иначе- добавляю адаптер
                     if (App.getInstance().mResultsEscalate) {
+                        Log.d("surprise", "ODPSActivity onChanged escalate data");
                         mSearchResultsAdapter.setContent(arrayList);
                         mSearchResultsAdapter.notifyDataSetChanged();
                     } else {
+                        Log.d("surprise", "ODPSActivity onChanged replace data");
                         mSearchResultsAdapter = new SearchResultsAdapter(arrayList);
                         mRecycler.setAdapter(mSearchResultsAdapter);
                         mRecycler.setLayoutManager(new LinearLayoutManager(ODPSActivity.this));
+                        scrollToTop();
                     }
                 } else {
                     nothingFound();
@@ -465,6 +469,23 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
     }
 
+    private void scrollToTop() {
+        Handler h = new Handler();
+        h.postDelayed(new Runnable(){
+            @Override
+            public void run() {
+                try{
+                    findViewById(R.id.scrollLayout).scrollTo(0,0);
+                }
+                catch (NullPointerException e){
+                    Log.d("surprise", "ODPSActivity run nothing scroll");
+                }
+                //mRecycler.getLayoutManager().scrollToPositionWithOffset(0,0);
+            }
+            // give a delay of one second
+        }, 100);
+    }
+
     private void observeBooksDownload() {
         // отслежу загрузку книг
         final LiveData<WorkInfo> booksDownloadStatus = App.getInstance().mDownloadAllWork;
@@ -473,7 +494,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 @Override
                 public void onChanged(@Nullable WorkInfo workInfo) {
                     if (workInfo != null) {
-                        if (workInfo.getState() == SUCCEEDED) {
+                        if (workInfo.getState() == SUCCEEDED && !App.getInstance().mDownloadInProgress) {
                             Toast.makeText(ODPSActivity.this, "Все книги загружены (кажется)", Toast.LENGTH_LONG).show();
                             // работа закончена, закрою диалог и выведу тост
                             if (mMultiplyDownloadDialog != null) {
@@ -609,6 +630,10 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         // обработаю переключатель скрытия прочтённых книг
         MenuItem hideReadSwitcher = menu.findItem(R.id.hideReadedSwitcher);
         hideReadSwitcher.setChecked(App.getInstance().isHideRead());
+
+        // обработаю переключатель быстрой загрузки
+        MenuItem downloadAllPages = menu.findItem(R.id.downloadAllData);
+        downloadAllPages.setChecked(App.getInstance().isDownloadAll());
         return true;
     }
 
@@ -642,6 +667,10 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 return true;
             case R.id.downloadAll:
                 downloadAllBooks();
+                return true;
+            case R.id.downloadAllData:
+                App.getInstance().switchDownloadAll();
+                invalidateOptionsMenu();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -929,6 +958,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             // если доступен возврат назад- возвращаюсь, если нет- закрываю приложение
+            // отменю добавление результатов
+            App.getInstance().mResultsEscalate = false;
             if (App.getInstance().havePreviousPage()) {
                 String lastUrl = App.getInstance().getPreviousPageUrl();
                 doSearchFromHistory(lastUrl);

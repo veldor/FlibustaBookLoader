@@ -1,42 +1,30 @@
 package net.veldor.flibustaloader;
 
-import android.content.Intent;
 import android.util.Log;
 
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
-import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
-
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.workers.DownloadBookWorker;
+import net.veldor.flibustaloader.workers.GetAllPagesWorker;
 import net.veldor.flibustaloader.workers.GetPageWorker;
-import net.veldor.flibustaloader.workers.SetupWebclientWorker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
 
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.client.HttpClient;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
 import cz.msebera.android.httpclient.client.protocol.HttpClientContext;
-import cz.msebera.android.httpclient.config.Registry;
-import cz.msebera.android.httpclient.config.RegistryBuilder;
-import cz.msebera.android.httpclient.conn.socket.ConnectionSocketFactory;
-import cz.msebera.android.httpclient.impl.client.HttpClients;
-import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
-import cz.msebera.android.httpclient.ssl.SSLContexts;
-
-import static net.veldor.flibustaloader.MyWebViewClient.TOR_CONNECT_ERROR_ACTION;
-import static net.veldor.flibustaloader.MyWebViewClient.TOR_NOT_RUNNING_ERROR;
 
 public class MyWebClient {
 
+    private static final String PAGE_LOAD_WORKER = "page load worker";
     public HttpClientContext mContext;
     public HttpClient mHttpClient;
 
@@ -47,22 +35,31 @@ public class MyWebClient {
     public static final String DOWNLOAD_ATTRIBUTES = "download attributes";
 
     void search(String s) {
+        // отменю остальные работы
+        Log.d("surprise", "MyWebClient search search " + s);
         Data inputData = new Data.Builder()
                 .putString(LOADED_URL, s)
                 .build();
+        OneTimeWorkRequest getPageWorker;
         // запущу рабочего, загружающего страницу
-        OneTimeWorkRequest getPageWorker = new OneTimeWorkRequest.Builder(GetPageWorker.class).setInputData(inputData).build();
-        WorkManager.getInstance().enqueue(getPageWorker);
+        if (App.getInstance().isDownloadAll()) {
+            getPageWorker = new OneTimeWorkRequest.Builder(GetAllPagesWorker.class).addTag(PAGE_LOAD_WORKER).setInputData(inputData).build();
+            WorkManager.getInstance().enqueue(getPageWorker);
+        } else {
+            getPageWorker = new OneTimeWorkRequest.Builder(GetPageWorker.class).addTag(PAGE_LOAD_WORKER).setInputData(inputData).build();
+            WorkManager.getInstance().enqueue(getPageWorker);
+        }
         // отмечу, что выполняется работа по загрузке контента
         App.getInstance().mSearchWork = WorkManager.getInstance().getWorkInfoByIdLiveData(getPageWorker.getId());
     }
 
     void download(DownloadLink item) {
         // запущу рабочего, который загрузит книгу
-        String[] data = new String[3];
-        data[0] = MimeTypes.getMime(item.mime);
+        String[] data = new String[4];
+        data[0] = MimeTypes.getDownloadMime(item.mime);
         data[1] = item.url;
         data[2] = item.name;
+        data[3] = item.author;
         Data inputData = new Data.Builder()
                 .putStringArray(DOWNLOAD_ATTRIBUTES, data)
                 .build();
@@ -105,11 +102,10 @@ public class MyWebClient {
     void loadNextPage() {
         // если есть ссылка на следующую страницу- гружу её
         String nextPageLink = App.getInstance().mNextPageUrl;
-        if(nextPageLink != null && !nextPageLink.isEmpty()){
+        if (nextPageLink != null && !nextPageLink.isEmpty()) {
             Log.d("surprise", "MyWebClient loadNextPage: " + nextPageLink);
             search(App.BASE_URL + nextPageLink);
-        }
-        else{
+        } else {
             // видимо, какая то ошибка, делаю вид, что ничего не найдено
             App.getInstance().mSearchResult.postValue(null);
         }
