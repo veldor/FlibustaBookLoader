@@ -10,11 +10,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -42,14 +45,20 @@ public class StartTorActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
+
         // ещё одно отслеживание TOR
         LiveData<WorkInfo> workStatus = App.getInstance().mWork;
         workStatus.observe(this, new Observer<WorkInfo>() {
             @Override
             public void onChanged(@Nullable WorkInfo workInfo) {
                 if (workInfo != null) {
+                    Log.d("surprise", "StartTorActivity onChanged tor load status is " + workInfo.getState());
                     if(workInfo.getState() == SUCCEEDED){
                         Log.d("surprise", "StartTorActivity onChanged work done");
+                        if (mCdt != null) {
+                            mCdt.cancel();
+                        }
                         torLoaded();
                     }
                 }
@@ -68,6 +77,15 @@ public class StartTorActivity extends AppCompatActivity {
         });
         // стартую загрузку TOR, жду, пока загрузится
         setContentView(R.layout.activity_start_tor);
+
+        Button restartBtn = findViewById(R.id.hardRestartTorBtn);
+        restartBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // просто перезапущу приложение
+                new Handler().postDelayed(new ResetApp(), 100);
+            }
+        });
 
         // найду строку статуса загрузки
         mTorLoadingStatusText = findViewById(R.id.progressTorLoadStatus);
@@ -105,12 +123,12 @@ public class StartTorActivity extends AppCompatActivity {
     }
 
     private void startTimer() {
-        int oneMin = 3000000; // 1 minute in milli seconds
+        int oneMin = 100000; // 1 minute in milli seconds
         mProgressCounter = 0;
         mCdt = new CountDownTimer(oneMin, 1000) {
             public void onTick(long millisUntilFinished) {
                 mProgressCounter++;
-                mTorLoadingProgressIndicator.setProgress(mProgressCounter / 3);
+                mTorLoadingProgressIndicator.setProgress(mProgressCounter);
                 if(mTor != null){
                     String last = mTor.getLastLog();
                     if (last != null) {
@@ -222,6 +240,16 @@ public class StartTorActivity extends AppCompatActivity {
         }
         if(mTorRestartDialog != null){
             mTorRestartDialog.dismiss();
+        }
+    }
+
+    private class ResetApp implements Runnable {
+        @Override
+        public void run() {
+            Intent intent = new Intent(StartTorActivity.this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            StartTorActivity.this.startActivity(intent);
+            Runtime.getRuntime().exit(0);
         }
     }
 }

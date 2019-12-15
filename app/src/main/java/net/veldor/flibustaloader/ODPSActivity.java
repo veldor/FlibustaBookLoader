@@ -34,11 +34,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.adapters.SearchResultsAdapter;
 import net.veldor.flibustaloader.dialogs.GifDialog;
+import net.veldor.flibustaloader.dialogs.GifDialogListener;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
@@ -53,6 +55,7 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -62,6 +65,8 @@ import static androidx.work.WorkInfo.State.ENQUEUED;
 import static androidx.work.WorkInfo.State.RUNNING;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 import static net.veldor.flibustaloader.MainActivity.START_TOR;
+import static net.veldor.flibustaloader.MyWebClient.PAGE_LOAD_WORKER;
+import static net.veldor.flibustaloader.utils.XMLParser.PARSE_SEARCH;
 
 public class ODPSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     public static final String BOOK_ID = "book id";
@@ -467,17 +472,28 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
             observeBooksDownload();
         }
+        // добавлю отслеживание неудачно загруженной книги
+        LiveData<String> unloadedBook = App.getInstance().mUnloadedBook;
+        unloadedBook.observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(@Nullable String s) {
+                if (s != null && !s.isEmpty()) {
+                    // не удалось загрузить книгу
+                    Toast.makeText(ODPSActivity.this, "Не удалось сохранить " + s, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
     }
 
     private void scrollToTop() {
         Handler h = new Handler();
-        h.postDelayed(new Runnable(){
+        h.postDelayed(new Runnable() {
             @Override
             public void run() {
-                try{
-                    findViewById(R.id.scrollLayout).scrollTo(0,0);
-                }
-                catch (NullPointerException e){
+                try {
+                    findViewById(R.id.scrollLayout).scrollTo(0, 0);
+                } catch (NullPointerException e) {
                     Log.d("surprise", "ODPSActivity run nothing scroll");
                 }
                 //mRecycler.getLayoutManager().scrollToPositionWithOffset(0,0);
@@ -489,7 +505,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private void observeBooksDownload() {
         // отслежу загрузку книг
         final LiveData<WorkInfo> booksDownloadStatus = App.getInstance().mDownloadAllWork;
-        if(booksDownloadStatus != null){
+        if (booksDownloadStatus != null) {
             booksDownloadStatus.observe(this, new Observer<WorkInfo>() {
                 @Override
                 public void onChanged(@Nullable WorkInfo workInfo) {
@@ -501,6 +517,18 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                                 mMultiplyDownloadDialog.dismiss();
                                 booksDownloadStatus.removeObservers(ODPSActivity.this);
                             }
+                        }
+                        // если есть недогруженные книги- выведу Snackbar, где уведомплю об этом
+                        if (App.getInstance().mBooksDownloadFailed.size() > 0) {
+                            Snackbar updateSnackbar = Snackbar.make(mRootView, "Есть недокачанные книги", Snackbar.LENGTH_INDEFINITE);
+                            updateSnackbar.setAction("Попробовать ещё раз", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+
+                                }
+                            });
+                            updateSnackbar.setActionTextColor(getResources().getColor(android.R.color.white));
+                            updateSnackbar.show();
                         }
                     }
                 }
@@ -711,6 +739,22 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                     .setMessage(getString(R.string.download_books_msg))
                     .setGifResource(R.drawable.loading)   //Pass your Gif here
                     .isCancellable(false)
+                    .setPositiveBtnText("Отменить")
+                    .OnPositiveClicked(new GifDialogListener() {
+                        @Override
+                        public void OnClick() {
+                            if (App.getInstance().mProcess != null) {
+                                Log.d("surprise", "ODPSActivity OnClick kill process");
+                                WorkManager.getInstance().cancelWorkById(App.getInstance().mProcess.getId());
+                            }
+                            if (mMultiplyDownloadDialog != null) {
+                                mMultiplyDownloadDialog.dismiss();
+                            }
+                            // отменю операцию
+                            Toast.makeText(ODPSActivity.this, "Загрузка книг отменена", Toast.LENGTH_LONG).show();
+
+                        }
+                    })
                     .build();
         }
         //mMultiplyDownloadDialog.setMessage("Считаю количество книг для скачивания");
@@ -812,6 +856,20 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                     .setMessage(getString(R.string.load_waiting_message))
                     .setGifResource(R.drawable.gif1)   //Pass your Gif here
                     .isCancellable(false)
+                    .setPositiveBtnText("Отменить")
+                    .OnPositiveClicked(new GifDialogListener() {
+                        @Override
+                        public void OnClick() {
+                            if (App.getInstance().mProcess != null) {
+                                Log.d("surprise", "ODPSActivity OnClick kill process");
+                                WorkManager.getInstance().cancelWorkById(App.getInstance().mProcess.getId());
+                            }
+                            hideWaitingDialog();
+                            // отменю операцию
+                            Toast.makeText(ODPSActivity.this, "Загрузка отменена", Toast.LENGTH_LONG).show();
+
+                        }
+                    })
                     .build();
         }
         mShowLoadDialog.show();

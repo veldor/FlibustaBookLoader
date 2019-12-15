@@ -51,6 +51,7 @@ public class XMLParser {
     private static final String NEW_GENRES = "tag:search:new:genres";
     private static final String NEW_SEQUENCES = "tag:search:new:sequence";
     private static final String NEW_AUTHORS = "tag:search:new:author";
+    public static final String PARSE_SEARCH = "parse search";
 
     public static Document getDocument(String rawText) {
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -71,9 +72,10 @@ public class XMLParser {
 
     public static void handleResults() {
         // запущу рабочего, который обработает результаты запроса
-        OneTimeWorkRequest ParseSearchWorker = new OneTimeWorkRequest.Builder(ParseSearchWorker.class).build();
+        OneTimeWorkRequest ParseSearchWorker = new OneTimeWorkRequest.Builder(ParseSearchWorker.class).addTag(PARSE_SEARCH).build();
         WorkManager.getInstance().enqueue(ParseSearchWorker);
         App.getInstance().mSearchWork = WorkManager.getInstance().getWorkInfoByIdLiveData(ParseSearchWorker.getId());
+        App.getInstance().mProcess = ParseSearchWorker;
     }
 
 

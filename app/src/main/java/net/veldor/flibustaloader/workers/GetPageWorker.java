@@ -13,6 +13,8 @@ import net.veldor.flibustaloader.MyWebClient;
 import net.veldor.flibustaloader.utils.TorWebClient;
 
 public class GetPageWorker extends Worker {
+    private boolean mIsStopped;
+
     public GetPageWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
@@ -25,8 +27,17 @@ public class GetPageWorker extends Worker {
         // создам новый экземпляр веб-клиента
         TorWebClient webClient = new TorWebClient();
         String answer = webClient.request(text);
-        App.getInstance().mSearchResult.postValue(answer);
+        if(!mIsStopped){
+            App.getInstance().mSearchResult.postValue(answer);
+        }
         return Result.success();
     }
 
+    @Override
+    public void onStopped() {
+        super.onStopped();
+        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
+        mIsStopped = true;
+        // остановлю процесс
+    }
 }

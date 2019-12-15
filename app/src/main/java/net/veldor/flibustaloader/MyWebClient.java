@@ -24,7 +24,7 @@ import cz.msebera.android.httpclient.client.protocol.HttpClientContext;
 
 public class MyWebClient {
 
-    private static final String PAGE_LOAD_WORKER = "page load worker";
+    static final String PAGE_LOAD_WORKER = "page load worker";
     public HttpClientContext mContext;
     public HttpClient mHttpClient;
 
@@ -51,6 +51,8 @@ public class MyWebClient {
         }
         // отмечу, что выполняется работа по загрузке контента
         App.getInstance().mSearchWork = WorkManager.getInstance().getWorkInfoByIdLiveData(getPageWorker.getId());
+        // сохраню активный процесс
+        App.getInstance().mProcess = getPageWorker;
     }
 
     void download(DownloadLink item) {

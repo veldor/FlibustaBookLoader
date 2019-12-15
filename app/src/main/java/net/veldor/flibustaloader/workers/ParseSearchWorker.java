@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -42,6 +43,7 @@ public class ParseSearchWorker extends Worker {
     private static final String NEW_SEQUENCES = "tag:search:new:sequence";
     private static final String NEW_AUTHORS = "tag:search:new:author";
     private XPath mXPath;
+    private boolean mIsStopped;
 
     public ParseSearchWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -126,7 +128,7 @@ public class ParseSearchWorker extends Worker {
         } else if (id.startsWith(SEQUENCES_TYPE)) {
             //Log.d("surprise", "ParseSearchWorker identificateSearchType sequenceS");
             App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
-        }else if (id.startsWith(SEQUENCE_TYPE)) {
+        } else if (id.startsWith(SEQUENCE_TYPE)) {
             //Log.d("surprise", "ParseSearchWorker identificateSearchType sequence");
             App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
         } else if (id.startsWith(NEW_GENRES)) {
@@ -135,8 +137,7 @@ public class ParseSearchWorker extends Worker {
             App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
         } else if (id.startsWith(NEW_AUTHORS)) {
             App.sSearchType = ODPSActivity.SEARCH_NEW_AUTHORS;
-        }
-        else{
+        } else {
             //Log.d("surprise", "ParseSearchWorker identificateSearchType я ничего не понял");
         }
         //Log.d("surprise", "ParseSearchWorker identificateSearchType " + App.sSearchType);
@@ -156,7 +157,7 @@ public class ParseSearchWorker extends Worker {
         Node entry;
         FoundedSequence sequence;
         int counter = 0;
-        while ((entry = entries.item(counter)) != null) {
+        while ((entry = entries.item(counter)) != null && !mIsStopped) {
             sequence = new FoundedSequence();
             sequence.title = ((Node) mXPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             sequence.content = ((Node) mXPath.evaluate("./content", entry, XPathConstants.NODE)).getTextContent();
@@ -164,7 +165,8 @@ public class ParseSearchWorker extends Worker {
             result.add(sequence);
             counter++;
         }
-        App.getInstance().mParsedResult.postValue(result);
+        if (!mIsStopped)
+            App.getInstance().mParsedResult.postValue(result);
     }
 
     private void handleGenres(NodeList entries) {
@@ -181,7 +183,7 @@ public class ParseSearchWorker extends Worker {
         Node entry;
         Genre genre;
         int counter = 0;
-        while ((entry = entries.item(counter)) != null) {
+        while ((entry = entries.item(counter)) != null && !mIsStopped) {
             genre = new Genre();
             try {
                 genre.label = ((Node) mXPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
@@ -192,7 +194,8 @@ public class ParseSearchWorker extends Worker {
             result.add(genre);
             counter++;
         }
-        App.getInstance().mParsedResult.postValue(result);
+        if (!mIsStopped)
+            App.getInstance().mParsedResult.postValue(result);
     }
 
     private void handleBooks(NodeList entries) throws XPathExpressionException {
@@ -224,7 +227,7 @@ public class ParseSearchWorker extends Worker {
 
         boolean hideRead = App.getInstance().isHideRead();
 
-        while ((entry = entries.item(counter)) != null) {
+        while ((entry = entries.item(counter)) != null && !mIsStopped) {
             book = new FoundedBook();
             book.id = ((Node) mXPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent();
             // узнаю, прочитана ли книга
@@ -287,7 +290,7 @@ public class ParseSearchWorker extends Worker {
             // найду ссылки на скачивание книги
             xpathResult = (NodeList) mXPath.evaluate("./link[@rel='http://opds-spec.org/acquisition/open-access']", entry, XPathConstants.NODESET);
             innerCounter = 0;
-            while ((someNode = xpathResult.item(innerCounter)) != null) {
+            while ((someNode = xpathResult.item(innerCounter)) != null && !mIsStopped) {
                 someAttributes = someNode.getAttributes();
                 downloadLink = new DownloadLink();
                 downloadLink.url = someAttributes.getNamedItem("href").getTextContent();
@@ -313,7 +316,8 @@ public class ParseSearchWorker extends Worker {
                 innerCounter++;
             }
         }
-        App.getInstance().mParsedResult.postValue(result);
+        if (!mIsStopped)
+            App.getInstance().mParsedResult.postValue(result);
     }
 
     private void handleAuthors(NodeList entries) throws XPathExpressionException {
@@ -330,14 +334,13 @@ public class ParseSearchWorker extends Worker {
         int counter = 0;
         Node entry;
         Author author;
-        while ((entry = entries.item(counter)) != null) {
+        while ((entry = entries.item(counter)) != null && !mIsStopped) {
             author = new Author();
             author.name = ((Node) mXPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             // если поиск осуществляется по новинкам- запишу ссылку на новинки, иначе- на автора
-            if(App.sSearchType == ODPSActivity.SEARCH_NEW_AUTHORS){
+            if (App.sSearchType == ODPSActivity.SEARCH_NEW_AUTHORS) {
                 author.link = ((Node) mXPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
-            }
-            else{
+            } else {
                 author.uri = explodeByDelimiter(((Node) mXPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent(), ":", 3);
             }
 
@@ -345,7 +348,8 @@ public class ParseSearchWorker extends Worker {
             result.add(author);
             counter++;
         }
-        App.getInstance().mParsedResult.postValue(result);
+        if (!mIsStopped)
+            App.getInstance().mParsedResult.postValue(result);
     }
 
     private String getInfoFromContent(String item, String s) {
@@ -362,5 +366,13 @@ public class ParseSearchWorker extends Worker {
             return null;
         }
         return result[offset - 1];
+    }
+
+    @Override
+    public void onStopped() {
+        super.onStopped();
+        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
+        mIsStopped = true;
+        // остановлю процесс
     }
 }

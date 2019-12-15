@@ -40,6 +40,8 @@ import cz.msebera.android.httpclient.ssl.SSLContexts;
 public class DownloadBookWorker extends Worker {
 
 
+    private String mName;
+
     public DownloadBookWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
@@ -67,16 +69,17 @@ public class DownloadBookWorker extends Worker {
                 String author_last_name = properties[3].substring(0, properties[3].indexOf(" "));
                 String book_name = properties[2].replaceAll(" ", "_").replaceAll("[^\\d\\w-_]", "");
                 String book_mime = properties[0];
-                String name;
                 // если сумма символов меньше 255- создаю полное имя
                 if(author_last_name.length() + book_name.length() + book_mime.length() + 2 < 255 / 2){
-                    name = author_last_name + "_" + book_name + "." + book_mime;
+                    mName = author_last_name + "_" + book_name + "." + book_mime;
                 }
                 else{
                     // сохраняю книгу по имени автора и тому, что влезет от имени книги
-                    name = author_last_name + "_" + book_name.substring(0, 255/2 - author_last_name.length() + book_mime.length() + 2) + "." + book_mime;
+                    //name = author_last_name + "_" + book_name.substring(0, 127 - author_last_name.length() + book_mime.length() + 2) + "." + book_mime;
+                    mName = author_last_name + "_" + book_name.substring(0, 127 - (author_last_name.length() + book_mime.length() + 2)) + book_mime;
+
                 }
-                File file = new File(App.getInstance().getDownloadFolder(), name);
+                File file = new File(App.getInstance().getDownloadFolder(), mName);
                 InputStream is = httpResponse.getEntity().getContent();
                 FileOutputStream outputStream = new FileOutputStream(file);
                 int read;
@@ -87,7 +90,7 @@ public class DownloadBookWorker extends Worker {
                 outputStream.close();
                 is.close();
                 Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
-                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);
+                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, mName);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, properties[0]);
                 App.getInstance().sendBroadcast(intent);
 
@@ -96,8 +99,10 @@ public class DownloadBookWorker extends Worker {
                 TorWebClient.broadcastTorError();
                 e.printStackTrace();
             } catch (IOException e) {
+                Log.d("surprise", "DownloadBookWorker doWork  i have error");
+                App.getInstance().mUnloadedBook.postValue(mName);
                 // отправлю оповещение об ошибке загрузки TOR
-                TorWebClient.broadcastTorError();
+                //TorWebClient.broadcastTorError();
                 e.printStackTrace();
             }
         }

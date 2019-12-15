@@ -5,7 +5,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import androidx.work.Data;
-import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -17,7 +16,6 @@ import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.TorWebClient;
@@ -45,6 +43,8 @@ public class DownloadBooksWorker extends Worker {
 
     private HttpClient mHttpClient;
     private HttpClientContext mContext;
+    private boolean mIsStopped;
+    private String mName;
 
     public DownloadBooksWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -54,128 +54,119 @@ public class DownloadBooksWorker extends Worker {
     @Override
     public Result doWork() {
         // отмечу, что процесс уже идёт
-        if(!App.getInstance().mDownloadInProgress) {
-            App.getInstance().mDownloadInProgress = true;
-            Log.d("surprise", "DownloadBooksWorker doWork i start downloads");
-            // получу предпочтительный тип загрузки
-            Data data = getInputData();
-            int bookType = data.getInt(MimeTypes.MIME_TYPE, 0);
-            String bookMime = MimeTypes.MIMES_LIST[bookType];
-            // получу список книг
-            ArrayList<FoundedItem> booksList = App.getInstance().mParsedResult.getValue();
-            if (booksList != null && booksList.size() > 0) {
-                try {
-                    // настрою клиент
-                    mHttpClient = getNewHttpClient();
-                    int port;
-                    AndroidOnionProxyManager onionProxyManager = App.getInstance().mTorManager.getValue();
-                    assert onionProxyManager != null;
-                    port = onionProxyManager.getIPv4LocalHostSocksPort();
-                    InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
-                    mContext = HttpClientContext.create();
-                    mContext.setAttribute("socks.address", socksaddr);
+        Log.d("surprise", "DownloadBooksWorker doWork i start downloads");
+        // получу предпочтительный тип загрузки
+        Data data = getInputData();
+        int bookType = data.getInt(MimeTypes.MIME_TYPE, 0);
+        String bookMime = MimeTypes.MIMES_LIST[bookType];
+        // получу список книг
+        if (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0) {
+                // переберу все книги
+                FoundedBook book;
+                while (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0 && !mIsStopped) {
+                    // возьму первый элемент из списка недогруженных книг
+                    book = (FoundedBook) App.getInstance().mBooksForDownload.get(0);
+                    downloadBook(book, bookMime);
+                    // книга загружена, удалю из списка
+                    App.getInstance().mBooksForDownload.remove(0);
 
-                    // установлю статус загрузки
-                    App.getInstance().mMultiplyDownloadStatus.postValue("Скачано 0 из " + booksList.size() + " книг.");
-                    // переберу все книги
-                    int counter = 0;
-                    int booksLength = booksList.size();
-                    FoundedBook book;
-                    while (counter < booksLength && (book = (FoundedBook) booksList.get(counter)) != null) {
-                        Log.d("surprise", "DownloadBooksWorker doWork " + counter);
-                        try {
-                            downloadBook(book, bookMime);
-                        } catch (IOException e) {
-                            TorWebClient.broadcastTorError();
-                            e.printStackTrace();
-                        }
-                        counter++;
-                        App.getInstance().mMultiplyDownloadStatus.postValue("Скачано " + counter + " из " + booksList.size() + " книг.");
-                    }
-                } catch (ClientProtocolException e) {
-                    App.getInstance().mDownloadInProgress = false;
-                    WorkManager.getInstance().cancelAllWork();
-                    // отправлю оповещение об ошибке загрузки TOR
-                    TorWebClient.broadcastTorError();
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    App.getInstance().mDownloadInProgress = false;
-                    WorkManager.getInstance().cancelAllWork();
-                    // отправлю оповещение об ошибке загрузки TOR
-                    TorWebClient.broadcastTorError();
-                    e.printStackTrace();
+                    App.getInstance().mMultiplyDownloadStatus.postValue("Скачано " + (App.getInstance().mParsedResult.getValue().size() - App.getInstance().mBooksForDownload.size()) + " из " + App.getInstance().mParsedResult.getValue().size() + " книг.");
                 }
-            }
-            App.getInstance().mDownloadInProgress = false;
+
         }
-        else{
-            Log.d("surprise", "DownloadBooksWorker doWork попытка повторно начать грузить книги");
-        }
+        Log.d("surprise", "DownloadBooksWorker doWork закончил загрузку");
+        App.getInstance().mDownloadInProgress = false;
         return Result.success();
     }
 
-    private void downloadBook(FoundedBook book, String bookMime) throws IOException {
-            // получу все ссылки
-            ArrayList<DownloadLink> links = book.downloadLinks;
-            DownloadLink link;
-            // если в списке всего одна ссылка- скачаю файл, как он есть, если несколько- попробую выбрать предпочтительную, если её нет- скачаю первую
-            if(links.size() == 1){
-                link = links.get(0);
+    private void downloadBook(FoundedBook book, String bookMime) {
+        try {
+            // настрою клиент
+            mHttpClient = getNewHttpClient();
+            int port;
+            AndroidOnionProxyManager onionProxyManager = App.getInstance().mTorManager.getValue();
+            assert onionProxyManager != null;
+            port = onionProxyManager.getIPv4LocalHostSocksPort();
+            InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
+            mContext = HttpClientContext.create();
+            mContext.setAttribute("socks.address", socksaddr);
+        } catch (IOException e) {
+            TorWebClient.broadcastTorError();
+            e.printStackTrace();
+        }
+        try{
+        // получу все ссылки
+        ArrayList<DownloadLink> links = book.downloadLinks;
+        DownloadLink link;
+        // если в списке всего одна ссылка- скачаю файл, как он есть, если несколько- попробую выбрать предпочтительную, если её нет- скачаю первую
+        if (links.size() == 1) {
+            link = links.get(0);
+        } else {
+            // получу полный предпочтительный mime
+            String mime = MimeTypes.getFullMime(bookMime);
+            int counter = 0;
+            while ((link = links.get(counter)) != null) {
+                if (link.mime.equals(mime)) {
+                    break;
+                }
+                counter++;
             }
-            else{
-                // получу полный предпочтительный mime
-                String mime = MimeTypes.getFullMime(bookMime);
-                int counter = 0;
-                while ((link = links.get(counter)) != null){
-                    if(link.mime.equals(mime)){
+            // если не нашли предпочтительный тип- попробую поискать fb2, как самый распространённый тип
+            if (link == null) {
+                counter = 0;
+                while ((link = links.get(counter)) != null) {
+                    if (link.mime.equals(MimeTypes.getFullMime("fb2"))) {
                         break;
                     }
                     counter++;
                 }
-                // если не нашли предпочтительный тип- попробую поискать fb2, как самый распространённый тип
-                if(link == null){
-                    counter = 0;
-                    while ((link = links.get(counter)) != null){
-                        if(link.mime.equals(MimeTypes.getFullMime("fb2"))){
-                            break;
-                        }
-                        counter++;
-                    }
-                }
-                // если вообще ничего похожего- загружу первый попавшийся тип :)
-                if(link == null){
-                    link = links.get(0);
-                }
             }
+            // если вообще ничего похожего- загружу первый попавшийся тип :)
+            if (link == null) {
+                link = links.get(0);
+            }
+        }
         // получу ссылку на скачивание
         HttpGet httpGet = new HttpGet(App.BASE_URL + link.url);
         httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
         httpGet.setHeader("X-Compress", "null");
-            HttpResponse httpResponse = mHttpClient.execute(httpGet, mContext);
+        HttpResponse httpResponse = mHttpClient.execute(httpGet, mContext);
         String author_last_name = link.author.substring(0, link.author.indexOf(" "));
         String book_name = link.name.replaceAll(" ", "_").replaceAll("[^\\d\\w-_]", "");
         String book_mime = MimeTypes.getDownloadMime(link.mime);
         //Log.d("surprise", "DownloadBooksWorker downloadBook " + book_mime);
-        String name;
         // если сумма символов меньше 255- создаю полное имя
-        if(author_last_name.length() + book_name.length() + book_mime.length() + 2 < 255 / 2 - 5){
-            name = author_last_name + "_" + book_name + "_" + Grammar.getRandom() +  "."  +  book_mime;
-        }
-        else{
+        if (author_last_name.length() + book_name.length() + book_mime.length() + 2 < 255 / 2 - 6) {
+            mName = author_last_name + "_" + book_name + "_" + Grammar.getRandom() + "." + book_mime;
+        } else {
             // сохраняю книгу по имени автора и тому, что влезет от имени книги
-            name = author_last_name + "_" + book_name.substring(0, 255/2 - author_last_name.length() + book_mime.length() + 2 - 5) + "_" + Grammar.getRandom() + "." + book_mime;
+            mName = author_last_name + "_" + book_name.substring(0, 127 - (author_last_name.length() + book_mime.length() + 2 + 6)) + "_" + Grammar.getRandom() + "." + book_mime;
         }
         //Log.d("surprise", "DownloadBooksWorker downloadBook " + name);
-            File file = new File(App.getInstance().getDownloadFolder(), name);
-            InputStream is = httpResponse.getEntity().getContent();
-            FileOutputStream outputStream = new FileOutputStream(file);
-            int read;
-            byte[] buffer = new byte[1024];
-            while ((read = is.read(buffer)) > 0) {
-                outputStream.write(buffer, 0, read);
-            }
-            outputStream.close();
-            is.close();
+        File file = new File(App.getInstance().getDownloadFolder(), mName);
+        InputStream is = httpResponse.getEntity().getContent();
+        FileOutputStream outputStream = new FileOutputStream(file);
+        int read;
+        byte[] buffer = new byte[1024];
+        while ((read = is.read(buffer)) > 0) {
+            outputStream.write(buffer, 0, read);
+        }
+        outputStream.close();
+        is.close();
+        } catch (ClientProtocolException e) {
+            Log.d("surprise", "DownloadBooksWorker downloadBook clientProtocolException");
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.d("surprise", "DownloadBooksWorker doWork have error here");
+            // добавлю книгу в список книг, которые не удалсь скачать
+            App.getInstance().mBooksDownloadFailed.add(book);
+            App.getInstance().mDownloadInProgress = false;
+            App.getInstance().mUnloadedBook.postValue(mName);
+            //WorkManager.getInstance().cancelAllWork();
+            // отправлю оповещение об ошибке загрузки TOR
+            //TorWebClient.broadcastTorError();
+            e.printStackTrace();
+        }
     }
 
 
@@ -189,5 +180,13 @@ public class DownloadBooksWorker extends Worker {
         return HttpClients.custom()
                 .setConnectionManager(cm)
                 .build();
+    }
+
+    @Override
+    public void onStopped() {
+        super.onStopped();
+        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
+        mIsStopped = true;
+        // остановлю процесс
     }
 }

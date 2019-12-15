@@ -13,7 +13,7 @@
         app:cardCornerRadius="10dp"
         app:cardElevation="16dp"
         app:cardUseCompatPadding="true"
-        app:cardBackgroundColor="@color/sequences_background"
+        app:cardBackgroundColor="@color/background_color"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true">
         <RelativeLayout

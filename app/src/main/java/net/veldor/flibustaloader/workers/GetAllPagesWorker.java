@@ -19,6 +19,7 @@ import java.util.ArrayList;
 public class GetAllPagesWorker extends Worker {
 
     public static String sNextPage;
+    private boolean mIsStopped;
 
     public GetAllPagesWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -38,16 +39,26 @@ public class GetAllPagesWorker extends Worker {
         if(answer != null && !answer.isEmpty()){
             ArrayList<FoundedItem> result = new ArrayList<>();
             XMLParser.handleSearchResults(result, answer);
-            while (sNextPage != null){
+            while (sNextPage != null && !mIsStopped){
                 webClient = new TorWebClient();
                 Log.d("surprise", "GetAllPagesWorker doWork next page is " + App.BASE_URL + sNextPage);
                 answer = webClient.request(App.BASE_URL + sNextPage);
                 XMLParser.handleSearchResults(result, answer);
             }
             Log.d("surprise", "GetAllPagesWorker doWork result length is " + result.size());
-            App.getInstance().mParsedResult.postValue(result);
+            if(!mIsStopped){
+                App.getInstance().mParsedResult.postValue(result);
+            }
         }
         Log.d("surprise", "GetAllPagesWorker doWork work done");
         return Result.success();
+    }
+
+    @Override
+    public void onStopped() {
+        super.onStopped();
+        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
+        mIsStopped = true;
+        // остановлю процесс
     }
 }

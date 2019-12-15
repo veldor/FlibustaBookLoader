@@ -17,6 +17,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
 import net.veldor.flibustaloader.ODPSActivity;
 import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
 import net.veldor.flibustaloader.utils.MimeTypes;
@@ -95,8 +96,10 @@ public class MainViewModel extends AndroidViewModel {
 
     public void downloadMultiply(int i) {
         Log.d("surprise", "MainViewModel downloadMultiply initiate download");
-        // отменю все остальные работы
-        WorkManager.getInstance().cancelAllWork();
+        // добавлю список книг для загрузки
+        App.getInstance().mBooksForDownload = (ArrayList<FoundedItem>)App.getInstance().mParsedResult.getValue().clone();
+        // установлю статус загрузки
+        App.getInstance().mMultiplyDownloadStatus.postValue("Скачано 0 из " + App.getInstance().mParsedResult.getValue().size() + " книг.");
         // запущу рабочего, который загрузит книги
         Data inputData = new Data.Builder()
                 .putInt(MimeTypes.MIME_TYPE, i)
@@ -104,5 +107,6 @@ public class MainViewModel extends AndroidViewModel {
         OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).setInputData(inputData).build();
         WorkManager.getInstance().beginUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.KEEP, downloadAllWorker).enqueue();
         App.getInstance().mDownloadAllWork = WorkManager.getInstance().getWorkInfoByIdLiveData(downloadAllWorker.getId());
+        App.getInstance().mProcess = downloadAllWorker;
     }
 }

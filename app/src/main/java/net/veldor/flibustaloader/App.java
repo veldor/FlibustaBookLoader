@@ -17,6 +17,7 @@ import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
+import androidx.work.Worker;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
@@ -31,6 +32,7 @@ import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.PriorityQueue;
 
 public class App extends Application {
 
@@ -100,6 +102,10 @@ public class App extends Application {
     public MutableLiveData<String> mMultiplyDownloadStatus = new MutableLiveData<>();
     public LiveData<WorkInfo> mDownloadAllWork;
     public boolean mDownloadInProgress;
+    public OneTimeWorkRequest mProcess;
+    public MutableLiveData<String> mUnloadedBook = new MutableLiveData<>();
+    public ArrayList<FoundedItem> mBooksForDownload;
+    public ArrayList<FoundedBook> mBooksDownloadFailed = new ArrayList<>();
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;
@@ -289,14 +295,5 @@ public class App extends Application {
     }
     public void switchDownloadAll() {
         mSharedPreferences.edit().putBoolean(PREFERENCE_LOAD_ALL, !isDownloadAll()).apply();
-    }
-
-    @Override
-    public void onTerminate() {
-        super.onTerminate();
-        Log.d("surprise", "App onTerminate i terminate");
-        // завершу незаконченные работы
-        WorkManager.getInstance().cancelAllWork();
-
     }
 }
