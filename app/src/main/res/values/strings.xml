@@ -73,4 +73,5 @@
     <string name="load_waiting_title">Do my work</string>
     <string name="download_all_message">Download all list</string>
     <string name="hard_restart_tor_message">Hard restart TOR</string>
+    <string name="sort_list">Sort by</string>
 </resources>

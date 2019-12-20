@@ -55,8 +55,9 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 
 import lib.folderpicker.FolderPicker;
@@ -65,13 +66,12 @@ import static androidx.work.WorkInfo.State.ENQUEUED;
 import static androidx.work.WorkInfo.State.RUNNING;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 import static net.veldor.flibustaloader.MainActivity.START_TOR;
-import static net.veldor.flibustaloader.MyWebClient.PAGE_LOAD_WORKER;
-import static net.veldor.flibustaloader.utils.XMLParser.PARSE_SEARCH;
 
 public class ODPSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     public static final String BOOK_ID = "book id";
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
+    private static final String[] bookSortOptions = new String[]{"По названию книги", "По размеру", "По количеству скачиваний", "По серии", "По жанру"};
     private static final int READ_REQUEST_CODE = 5;
     private AlertDialog mTorRestartDialog;
     private MainViewModel mMyViewModel;
@@ -104,6 +104,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private View mRootView;
     private Dialog mMultiplyDownloadDialog;
     private AlertDialog mSelectBookTypeDialog;
+    private int mBookSortingOption;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -662,7 +663,48 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         // обработаю переключатель быстрой загрузки
         MenuItem downloadAllPages = menu.findItem(R.id.downloadAllData);
         downloadAllPages.setChecked(App.getInstance().isDownloadAll());
+
         return true;
+    }
+
+    private void selectSorting() {
+        String[] sortingOptions = null;
+        // в зависимости от выбранного режима поиска покажу вырианты сортировки
+        switch (App.sSearchType){
+            case SEARCH_BOOKS:
+            sortingOptions = bookSortOptions;
+        }
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("Выберите тип сортировки")
+                .setItems(sortingOptions, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        sortList(which);
+                    }
+                });
+        // покажу список типов сортировки
+            dialog.show();
+    }
+
+    private void sortList(int which) {
+        mBookSortingOption = which;
+        // отсортирую список
+        ArrayList<FoundedItem> list = App.getInstance().mParsedResult.getValue();
+
+        Collections.sort(list, new Comparator<FoundedBook>() {
+            @Override
+            public int compare(FoundedBook lhs, FoundedBook rhs) {
+                // -1 - less than, 1 - greater than, 0 - equal, all inversed for descending
+                switch (mBookSortingOption){
+                    case 0:
+                        // сортирую по названию книги
+                        return lhs.name.compareTo(rhs.name);
+                    case 1:
+
+                }
+            }
+        });
     }
 
     @Override
@@ -700,6 +742,10 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 App.getInstance().switchDownloadAll();
                 invalidateOptionsMenu();
                 return true;
+            case R.id.action_sort_by:
+                selectSorting();
+                return true;
+
         }
         return super.onOptionsItemSelected(item);
     }

@@ -86,6 +86,16 @@ public class StartTorActivity extends AppCompatActivity {
                 new Handler().postDelayed(new ResetApp(), 100);
             }
         });
+        Button startBtn = findViewById(R.id.testStartApp);
+        startBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mCdt != null) {
+                    mCdt.cancel();
+                }
+                torLoaded();
+            }
+        });
 
         // найду строку статуса загрузки
         mTorLoadingStatusText = findViewById(R.id.progressTorLoadStatus);
@@ -135,11 +145,13 @@ public class StartTorActivity extends AppCompatActivity {
                         if (!last.isEmpty()) {
                             mTorLoadingStatusText.setText(last);
                             if (last.indexOf(TOR_LAUNCHED_MESSAGE) > 0) {
+                                Log.d("surprise", "StartTorActivity onTick tor loaded");
                                 mTorLoadingStatusText.setText(R.string.tor_is_loaded);
                                 mTorLoadingProgressIndicator.setProgress(100);
                                 if (mCdt != null) {
                                     mCdt.cancel();
                                 }
+                                torLoaded();
                             }
                         } else {
                             mTorLoadingStatusText.setText(R.string.tor_loading);

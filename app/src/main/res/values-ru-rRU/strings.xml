@@ -73,4 +73,5 @@
     <string name="download_books_msg">Загружаю все выбранные книги. Процесс может быть долгим, потерпите.</string>
     <string name="download_all_message">Загружать сразу весь список</string>
     <string name="hard_restart_tor_message">Попробовать перезагрузить TOR</string>
+    <string name="sort_list">Сортировка</string>
 </resources>

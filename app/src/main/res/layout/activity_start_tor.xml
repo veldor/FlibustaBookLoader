@@ -28,10 +28,20 @@
         style="@style/Widget.AppCompat.Light.ActionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="@string/hard_restart_tor_message"
         app:layout_constraintBottom_toTopOf="@+id/torLoadProgressIndicator"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        android:text="@string/hard_restart_tor_message"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/testStartApp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Запустить программу"
+        app:layout_constraintBottom_toTopOf="@+id/hardRestartTorBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
 
     <ProgressBar

@@ -8,6 +8,11 @@
         yourapp:actionViewClass="android.support.v7.widget.SearchView"
         yourapp:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_sort_by"
+        android:icon="@drawable/ic_sort_white_24dp"
+        android:title="@string/sort_list"
+        yourapp:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_new"
         android:icon="@drawable/ic_new_white_24dp"
         android:title="@string/show_last"
