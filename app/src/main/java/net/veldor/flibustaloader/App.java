@@ -106,6 +106,7 @@ public class App extends Application {
     public MutableLiveData<String> mUnloadedBook = new MutableLiveData<>();
     public ArrayList<FoundedItem> mBooksForDownload;
     public ArrayList<FoundedBook> mBooksDownloadFailed = new ArrayList<>();
+    public int mBookSortOption = -1;
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;

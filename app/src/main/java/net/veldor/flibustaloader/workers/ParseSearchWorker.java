@@ -24,6 +24,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -315,6 +317,29 @@ public class ParseSearchWorker extends Worker {
                 }
                 innerCounter++;
             }
+        }
+        // отсортирую результат
+        if(App.getInstance().mBookSortOption != -1){
+            Collections.sort(result, new Comparator<FoundedItem>() {
+                @Override
+                public int compare(FoundedItem lhs, FoundedItem rhs) {
+                    FoundedBook fb1 = (FoundedBook) lhs;
+                    FoundedBook fb2 = (FoundedBook) rhs;
+                    // -1 - less than, 1 - greater than, 0 - equal, all inversed for descending
+                    switch (App.getInstance().mBookSortOption){
+                        case 0:
+                            // сортирую по названию книги
+                            return fb1.name.compareTo(fb2.name);
+                        case 1:
+                            // сортирую по размеру
+                            return fb1.size.compareTo(fb2.size);
+                        case 2:
+                            // сортирую по размеру
+                            return fb1.downloadsCount.compareTo(fb2.downloadsCount);
+                        default: return 0;
+                    }
+                }
+            });
         }
         if (!mIsStopped)
             App.getInstance().mParsedResult.postValue(result);

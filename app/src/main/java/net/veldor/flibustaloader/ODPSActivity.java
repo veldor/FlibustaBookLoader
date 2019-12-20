@@ -688,23 +688,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void sortList(int which) {
-        mBookSortingOption = which;
-        // отсортирую список
-        ArrayList<FoundedItem> list = App.getInstance().mParsedResult.getValue();
-
-        Collections.sort(list, new Comparator<FoundedBook>() {
-            @Override
-            public int compare(FoundedBook lhs, FoundedBook rhs) {
-                // -1 - less than, 1 - greater than, 0 - equal, all inversed for descending
-                switch (mBookSortingOption){
-                    case 0:
-                        // сортирую по названию книги
-                        return lhs.name.compareTo(rhs.name);
-                    case 1:
-
-                }
-            }
-        });
+        App.getInstance().mBookSortOption = which;
     }
 
     @Override
