@@ -68,6 +68,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private AlertDialog mTorRestartDialog;
     private TorConnectErrorReceiver mTorConnectErrorReceiver;
     static boolean sAppRestarted = false;
+    private long mConfirmExit;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -408,7 +409,22 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 if (mWebView.canGoBack()) {
                     mWebView.goBack();
                 } else {
-                    finish();
+                    if (mConfirmExit != 0) {
+                        if (mConfirmExit > System.currentTimeMillis() - 3000) {
+                            // выйду из приложения
+                            Log.d("surprise", "ODPSActivity onKeyDown exit");
+                            this.finishAffinity();
+                            return true;
+                        } else {
+                            Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                            mConfirmExit = System.currentTimeMillis();
+                            return true;
+                        }
+                    } else {
+                        Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                        mConfirmExit = System.currentTimeMillis();
+                        return true;
+                    }
                 }
                 return true;
             }

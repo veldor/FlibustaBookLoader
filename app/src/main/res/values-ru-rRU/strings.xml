@@ -74,4 +74,5 @@
     <string name="download_all_message">Загружать сразу весь список</string>
     <string name="hard_restart_tor_message">Попробовать перезагрузить TOR</string>
     <string name="sort_list">Сортировка</string>
+    <string name="force_start">Принудительный запуск</string>
 </resources>

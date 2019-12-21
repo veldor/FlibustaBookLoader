@@ -17,6 +17,7 @@ import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
+import net.veldor.flibustaloader.utils.SortHandler;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -167,6 +168,7 @@ public class ParseSearchWorker extends Worker {
             result.add(sequence);
             counter++;
         }
+        SortHandler.sortSequences(result);
         if (!mIsStopped)
             App.getInstance().mParsedResult.postValue(result);
     }
@@ -196,6 +198,8 @@ public class ParseSearchWorker extends Worker {
             result.add(genre);
             counter++;
         }
+        // отсортирую результат
+        SortHandler.sortGenres(result);
         if (!mIsStopped)
             App.getInstance().mParsedResult.postValue(result);
     }
@@ -318,29 +322,7 @@ public class ParseSearchWorker extends Worker {
                 innerCounter++;
             }
         }
-        // отсортирую результат
-        if(App.getInstance().mBookSortOption != -1){
-            Collections.sort(result, new Comparator<FoundedItem>() {
-                @Override
-                public int compare(FoundedItem lhs, FoundedItem rhs) {
-                    FoundedBook fb1 = (FoundedBook) lhs;
-                    FoundedBook fb2 = (FoundedBook) rhs;
-                    // -1 - less than, 1 - greater than, 0 - equal, all inversed for descending
-                    switch (App.getInstance().mBookSortOption){
-                        case 0:
-                            // сортирую по названию книги
-                            return fb1.name.compareTo(fb2.name);
-                        case 1:
-                            // сортирую по размеру
-                            return fb1.size.compareTo(fb2.size);
-                        case 2:
-                            // сортирую по размеру
-                            return fb1.downloadsCount.compareTo(fb2.downloadsCount);
-                        default: return 0;
-                    }
-                }
-            });
-        }
+        SortHandler.sortBooks(result);
         if (!mIsStopped)
             App.getInstance().mParsedResult.postValue(result);
     }
@@ -373,6 +355,7 @@ public class ParseSearchWorker extends Worker {
             result.add(author);
             counter++;
         }
+        SortHandler.sortAuthors(result);
         if (!mIsStopped)
             App.getInstance().mParsedResult.postValue(result);
     }

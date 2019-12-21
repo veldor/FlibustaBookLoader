@@ -26,6 +26,7 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
 
@@ -127,6 +128,27 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                 mAuthors = arrayList;
                 break;
         }
+    }
+
+    public void sortBooks() {
+        // сортирую книги
+        SortHandler.sortBooks(mBooks);
+        notifyDataSetChanged();
+    }
+
+    public void sortAuthors() {
+        SortHandler.sortAuthors(mAuthors);
+        notifyDataSetChanged();
+    }
+
+    public void sortGenres() {
+        SortHandler.sortGenres(mGenres);
+        notifyDataSetChanged();
+    }
+
+    public void sortSequences() {
+        SortHandler.sortSequences(mSequences);
+        notifyDataSetChanged();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder{

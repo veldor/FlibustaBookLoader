@@ -11,10 +11,17 @@ import androidx.work.WorkerParameters;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebClient;
 import net.veldor.flibustaloader.selections.FoundedItem;
+import net.veldor.flibustaloader.utils.SortHandler;
 import net.veldor.flibustaloader.utils.TorWebClient;
 import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.util.ArrayList;
+
+import static net.veldor.flibustaloader.ODPSActivity.SEARCH_AUTHORS;
+import static net.veldor.flibustaloader.ODPSActivity.SEARCH_BOOKS;
+import static net.veldor.flibustaloader.ODPSActivity.SEARCH_GENRE;
+import static net.veldor.flibustaloader.ODPSActivity.SEARCH_NEW_AUTHORS;
+import static net.veldor.flibustaloader.ODPSActivity.SEARCH_SEQUENCE;
 
 public class GetAllPagesWorker extends Worker {
 
@@ -47,6 +54,23 @@ public class GetAllPagesWorker extends Worker {
             }
             Log.d("surprise", "GetAllPagesWorker doWork result length is " + result.size());
             if(!mIsStopped){
+                // отсортирую результат
+                switch (App.sSearchType) {
+                    case SEARCH_BOOKS:
+                        // пересортирую то, что уже есть
+                        SortHandler.sortBooks(result);
+                        break;
+                    case SEARCH_AUTHORS:
+                    case SEARCH_NEW_AUTHORS:
+                        SortHandler.sortAuthors(result);
+                        break;
+                    case SEARCH_GENRE:
+                        SortHandler.sortGenres(result);
+                        break;
+                    case SEARCH_SEQUENCE:
+                        SortHandler.sortSequences(result);
+                        break;
+                }
                 App.getInstance().mParsedResult.postValue(result);
             }
         }

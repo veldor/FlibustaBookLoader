@@ -107,6 +107,8 @@ public class App extends Application {
     public ArrayList<FoundedItem> mBooksForDownload;
     public ArrayList<FoundedBook> mBooksDownloadFailed = new ArrayList<>();
     public int mBookSortOption = -1;
+    public int mAuthorSortOptions = -1;
+    public int mOtherSortOptions = -1;
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;

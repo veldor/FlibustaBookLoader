@@ -56,8 +56,6 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 
 import lib.folderpicker.FolderPicker;
@@ -72,6 +70,8 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
     private static final String[] bookSortOptions = new String[]{"По названию книги", "По размеру", "По количеству скачиваний", "По серии", "По жанру"};
+    private static final String[] authorSortOptions = new String[]{"По имени автора от А", "По имени автора от Я", "По количеству книг от большего", "По количеству книг от меньшего"};
+    private static final String[] otherSortOptions = new String[]{"От А", "От Я"};
     private static final int READ_REQUEST_CODE = 5;
     private AlertDialog mTorRestartDialog;
     private MainViewModel mMyViewModel;
@@ -105,6 +105,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private Dialog mMultiplyDownloadDialog;
     private AlertDialog mSelectBookTypeDialog;
     private int mBookSortingOption;
+    private MenuItem mSortingOption;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -664,15 +665,24 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         MenuItem downloadAllPages = menu.findItem(R.id.downloadAllData);
         downloadAllPages.setChecked(App.getInstance().isDownloadAll());
 
+        mSortingOption = menu.findItem(R.id.action_sort_by);
+
         return true;
     }
 
     private void selectSorting() {
         String[] sortingOptions = null;
         // в зависимости от выбранного режима поиска покажу вырианты сортировки
-        switch (App.sSearchType){
+        switch (App.sSearchType) {
             case SEARCH_BOOKS:
-            sortingOptions = bookSortOptions;
+                sortingOptions = bookSortOptions;
+                break;
+            case SEARCH_AUTHORS:
+            case SEARCH_NEW_AUTHORS:
+                sortingOptions = authorSortOptions;
+                break;
+            default:
+                sortingOptions = otherSortOptions;
         }
 
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
@@ -684,10 +694,37 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                     }
                 });
         // покажу список типов сортировки
-            dialog.show();
+        dialog.show();
     }
 
     private void sortList(int which) {
+        Log.d("surprise", "ODPSActivity sortList sort");
+        switch (App.sSearchType) {
+            case SEARCH_BOOKS:
+                App.getInstance().mBookSortOption = which;
+                // пересортирую то, что уже есть
+                mSearchResultsAdapter.sortBooks();
+                break;
+            case SEARCH_AUTHORS:
+            case SEARCH_NEW_AUTHORS:
+                App.getInstance().mAuthorSortOptions = which;
+                // пересортирую то, что уже есть
+                mSearchResultsAdapter.sortAuthors();
+                break;
+            case SEARCH_GENRE:
+                Log.d("surprise", "ODPSActivity sortList sort genre");
+                App.getInstance().mOtherSortOptions = which;
+                // пересортирую то, что уже есть
+                mSearchResultsAdapter.sortGenres();
+                break;
+            case SEARCH_SEQUENCE:
+                App.getInstance().mOtherSortOptions = which;
+                // пересортирую то, что уже есть
+                mSearchResultsAdapter.sortSequences();
+                break;
+            default:
+                App.getInstance().mOtherSortOptions = which;
+        }
         App.getInstance().mBookSortOption = which;
     }
 
@@ -1055,7 +1092,10 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
             if (mConfirmExit != 0) {
                 if (mConfirmExit > System.currentTimeMillis() - 3000) {
-                    return super.onKeyDown(keyCode, event);
+                    // выйду из приложения
+                    Log.d("surprise", "ODPSActivity onKeyDown exit");
+                    this.finishAffinity();
+                    return true;
                 } else {
                     Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                     mConfirmExit = System.currentTimeMillis();

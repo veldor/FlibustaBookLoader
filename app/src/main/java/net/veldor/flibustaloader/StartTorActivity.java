@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.work.WorkInfo;
 
@@ -32,6 +33,7 @@ import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
 public class StartTorActivity extends AppCompatActivity {
     private static final String TOR_LAUNCHED_MESSAGE = "LAUNCHED";
+    private static final String TOR_BUILT_MESSAGE = "BUILT";
     private LiveData<AndroidOnionProxyManager> mTorClient;
     private TextView mTorLoadingStatusText;
     private ProgressBar mTorLoadingProgressIndicator;
@@ -40,6 +42,7 @@ public class StartTorActivity extends AppCompatActivity {
     private AndroidOnionProxyManager mTor;
     private TorConnectErrorReceiver mTtorConnectErrorReceiver;
     private AlertDialog mTorRestartDialog;
+    private long mConfirmExit;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -144,7 +147,7 @@ public class StartTorActivity extends AppCompatActivity {
                     if (last != null) {
                         if (!last.isEmpty()) {
                             mTorLoadingStatusText.setText(last);
-                            if (last.indexOf(TOR_LAUNCHED_MESSAGE) > 0) {
+                            if (last.indexOf(TOR_LAUNCHED_MESSAGE) > 0 || last.indexOf(TOR_BUILT_MESSAGE) > 0) {
                                 Log.d("surprise", "StartTorActivity onTick tor loaded");
                                 mTorLoadingStatusText.setText(R.string.tor_is_loaded);
                                 mTorLoadingProgressIndicator.setProgress(100);
@@ -207,15 +210,6 @@ public class StartTorActivity extends AppCompatActivity {
         finish();
     }
 
-    // не разрешу вернуться в предыдущую активность при нажании кнопки назад
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-
     public class TorConnectErrorReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -253,6 +247,30 @@ public class StartTorActivity extends AppCompatActivity {
         if(mTorRestartDialog != null){
             mTorRestartDialog.dismiss();
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (mConfirmExit != 0) {
+                if (mConfirmExit > System.currentTimeMillis() - 3000) {
+                    // выйду из приложения
+                    Log.d("surprise", "ODPSActivity onKeyDown exit");
+                    this.finishAffinity();
+                    return true;
+                } else {
+                    Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                    mConfirmExit = System.currentTimeMillis();
+                    return true;
+                }
+            } else {
+                Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                mConfirmExit = System.currentTimeMillis();
+                return true;
+            }
+
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     private class ResetApp implements Runnable {
