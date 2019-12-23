@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatDelegate;
-import android.util.Log;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -17,7 +16,6 @@ import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
-import androidx.work.Worker;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
@@ -32,15 +30,17 @@ import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.PriorityQueue;
 
 public class App extends Application {
 
     public static final int MAX_BOOK_NUMBER = 548398;
+    public static final int VIEW_WEB = 1;
+    public static final int VIEW_ODPS = 2;
     private static final String PREFERENCE_CHECK_UPDATES = "check_updates";
     private static final String PREFERENCE_HIDE_READ = "hide read";
     private static final String START_TOR = "start_tor";
     private static final String PREFERENCE_LOAD_ALL = "load all";
+    private static final String PREFERENCE_VIEW = "view";
 
     public static int sSearchType = ODPSActivity.SEARCH_BOOKS;
     public ArrayList<String> mSearchHistory = new ArrayList<>();
@@ -112,8 +112,10 @@ public class App extends Application {
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;
-    public LiveData<WorkInfo> mWork = new LiveData<WorkInfo>() {};
-    public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {};
+    public LiveData<WorkInfo> mWork = new LiveData<WorkInfo>() {
+    };
+    public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
+    };
 
     @Override
     public void onCreate() {
@@ -121,28 +123,27 @@ public class App extends Application {
         instance = this;
 
         Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType (NetworkType.CONNECTED)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
         // запускаю tor
         OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance().enqueueUniqueWork(START_TOR, ExistingWorkPolicy.KEEP,  startTorWork);
+        WorkManager.getInstance().enqueueUniqueWork(START_TOR, ExistingWorkPolicy.KEEP, startTorWork);
         mWork = WorkManager.getInstance().getWorkInfoByIdLiveData(startTorWork.getId());
 
-    // читаю настройки sharedPreferences
+        // читаю настройки sharedPreferences
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         // определю ночной режим
-        if(getNightMode()){
+        if (getNightMode()) {
             AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_YES);
-        }
-        else{
+        } else {
             AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         }
 
         // получаю базу данных
-        mDatabase =  Room.databaseBuilder(getApplicationContext(),
+        mDatabase = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database")
                 .addMigrations(AppDatabase.MIGRATION_1_2)
                 .allowMainThreadQueries()
@@ -194,11 +195,11 @@ public class App extends Application {
 
     public void restartTor() {
         Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType (NetworkType.CONNECTED)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
         // запускаю tor
         OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance().enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE,  startTorWork);
+        WorkManager.getInstance().enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
         mWork = WorkManager.getInstance().getWorkInfoByIdLiveData(startTorWork.getId());
     }
 
@@ -211,14 +212,13 @@ public class App extends Application {
         return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, BASE_BOOK_URL);
     }
 
-    public File getDownloadFolder(){
+    public File getDownloadFolder() {
         // возвращу папку для закачек
-        String download_location =  mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, DOWNLOAD_FOLDER_LOCATION.toString());
+        String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, DOWNLOAD_FOLDER_LOCATION.toString());
         File dl = new File(download_location);
-        if(dl.isDirectory()){
+        if (dl.isDirectory()) {
             return dl;
-        }
-        else{
+        } else {
             return DOWNLOAD_FOLDER_LOCATION;
         }
     }
@@ -232,23 +232,22 @@ public class App extends Application {
     }
 
 
-    public int getContentTypeMode(){
+    public int getContentTypeMode() {
         return mSharedPreferences.getInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW);
     }
 
 
     public void switchODPSMode() {
         int contentTypeMode = getContentTypeMode();
-        if(contentTypeMode == CONTENT_MODE_WEB_VIEW){
+        if (contentTypeMode == CONTENT_MODE_WEB_VIEW) {
             mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_ODPS).apply();
-        }
-        else{
+        } else {
             mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW).apply();
         }
     }
 
     public MyWebClient getWebClient() {
-        if(mWebClient == null){
+        if (mWebClient == null) {
             mWebClient = new MyWebClient();
         }
         return mWebClient;
@@ -263,7 +262,7 @@ public class App extends Application {
     }
 
     public String getLastHistoryElement() {
-        if(isSearchHistory()){
+        if (isSearchHistory()) {
             return mSearchHistory.get(mSearchHistory.size() - 1);
         }
         return null;
@@ -282,6 +281,7 @@ public class App extends Application {
     public boolean isCheckUpdate() {
         return mSharedPreferences.getBoolean(PREFERENCE_CHECK_UPDATES, true);
     }
+
     public void switchCheckUpdate() {
         mSharedPreferences.edit().putBoolean(PREFERENCE_CHECK_UPDATES, !isCheckUpdate()).apply();
     }
@@ -289,6 +289,7 @@ public class App extends Application {
     public boolean isHideRead() {
         return mSharedPreferences.getBoolean(PREFERENCE_HIDE_READ, false);
     }
+
     public void switchHideRead() {
         mSharedPreferences.edit().putBoolean(PREFERENCE_HIDE_READ, !isHideRead()).apply();
     }
@@ -296,7 +297,16 @@ public class App extends Application {
     public boolean isDownloadAll() {
         return mSharedPreferences.getBoolean(PREFERENCE_LOAD_ALL, false);
     }
+
     public void switchDownloadAll() {
         mSharedPreferences.edit().putBoolean(PREFERENCE_LOAD_ALL, !isDownloadAll()).apply();
+    }
+
+    public int getView() {
+        return mSharedPreferences.getInt(PREFERENCE_VIEW, 0);
+    }
+
+    public void setView(int viewType) {
+        mSharedPreferences.edit().putInt(PREFERENCE_VIEW, viewType).apply();
     }
 }

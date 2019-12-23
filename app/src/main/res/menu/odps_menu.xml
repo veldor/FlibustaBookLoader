@@ -21,10 +21,18 @@
         android:title="@string/look"
         >
         <menu>
-
             <item
                 android:id="@+id/menuUseDarkMode"
                 android:title="@string/use_dark_mode"
+                android:checkable="true"
+                yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/switchToWebView"
+                android:title="@string/switch_to_vebview_message"
+                yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/hideReadedSwitcher"
+                android:title="@string/hide_read"
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
         </menu>
@@ -34,13 +42,8 @@
         android:title="@string/download_all"
         yourapp:showAsAction="never"/>
     <item
-        android:id="@+id/hideReadedSwitcher"
-        android:title="@string/hide_read"
-        android:checkable="true"
-        yourapp:showAsAction="never"/>
-    <item
-        android:id="@+id/menuUseODPS"
-        android:title="@string/use_ODPS"
+        android:id="@+id/downloadAllData"
+        android:title="@string/download_all_message"
         android:checkable="true"
         yourapp:showAsAction="never"/>
     <item
@@ -52,11 +55,6 @@
             <item
                 android:id="@+id/setUpdateCheck"
                 android:title="@string/set_update_check_message"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/downloadAllData"
-                android:title="@string/download_all_message"
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
         </menu>

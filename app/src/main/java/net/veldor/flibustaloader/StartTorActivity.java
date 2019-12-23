@@ -29,7 +29,6 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
 import static androidx.work.WorkInfo.State.SUCCEEDED;
-import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
 public class StartTorActivity extends AppCompatActivity {
     private static final String TOR_LAUNCHED_MESSAGE = "LAUNCHED";

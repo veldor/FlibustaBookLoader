@@ -69,7 +69,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     public static final String BOOK_ID = "book id";
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
-    private static final String[] bookSortOptions = new String[]{"По названию книги", "По размеру", "По количеству скачиваний", "По серии", "По жанру"};
+    private static final String[] bookSortOptions = new String[]{"По названию книги", "По размеру", "По количеству скачиваний", "По серии", "По жанру", "По автору"};
     private static final String[] authorSortOptions = new String[]{"По имени автора от А", "По имени автора от Я", "По количеству книг от большего", "По количеству книг от меньшего"};
     private static final String[] otherSortOptions = new String[]{"От А", "От Я"};
     private static final int READ_REQUEST_CODE = 5;
@@ -538,12 +538,6 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
     private void showSequenceSelectDialog(final ArrayList<FoundedSequence> sequences) {
         if (mSelectSequencesDialog == null) {
             // создам диалоговое окно
@@ -649,10 +643,6 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         MenuItem nightModeSwitcher = menu.findItem(R.id.menuUseDarkMode);
         nightModeSwitcher.setChecked(mMyViewModel.getNightModeEnabled());
 
-        // обработаю переключатель ODPS
-        MenuItem useODPSSwitcher = menu.findItem(R.id.menuUseODPS);
-        useODPSSwitcher.setChecked(App.getInstance().isODPS());
-
         // обработаю переключатель проверки обновлений
         MenuItem checkUpdatesSwitcher = menu.findItem(R.id.setUpdateCheck);
         checkUpdatesSwitcher.setChecked(App.getInstance().isCheckUpdate());
@@ -671,7 +661,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void selectSorting() {
-        String[] sortingOptions = null;
+        String[] sortingOptions;
         // в зависимости от выбранного режима поиска покажу вырианты сортировки
         switch (App.sSearchType) {
             case SEARCH_BOOKS:
@@ -742,9 +732,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.action_new:
                 showNewDialog();
                 return true;
-            case R.id.menuUseODPS:
-                mMyViewModel.switchODPSMode();
-                new Handler().postDelayed(new ResetApp(), 100);
+            case R.id.switchToWebView:
+                switchToWebView();
+                return true;
             case R.id.menuUseDarkMode:
                 mMyViewModel.switchNightMode();
                 new Handler().postDelayed(new ResetApp(), 100);
@@ -769,6 +759,13 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void switchToWebView() {
+        // переключу отображение на WebView, запущу webview вид и завершу активность
+        App.getInstance().setView(App.VIEW_WEB);
+        startActivity(new Intent(this, WebViewActivity.class));
+        finish();
     }
 
     private void downloadAllBooks() {

@@ -75,4 +75,6 @@
     <string name="hard_restart_tor_message">Hard restart TOR</string>
     <string name="sort_list">Sort by</string>
     <string name="force_start">Force start</string>
+    <string name="switch_to_vebview_message">Switch to WebView</string>
+    <string name="switch_to_odps_message">Switch to ODPS</string>
 </resources>

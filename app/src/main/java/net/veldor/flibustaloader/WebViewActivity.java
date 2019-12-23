@@ -1,6 +1,5 @@
 package net.veldor.flibustaloader;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.arch.lifecycle.LiveData;
@@ -11,17 +10,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.PermissionChecker;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -36,8 +31,6 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
-import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
-
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
@@ -51,23 +44,19 @@ import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
 public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
 
-    private static final int REQUEST_WRITE_READ = 22;
     private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final int READ_REQUEST_CODE = 5;
     private MyWebView mWebView;
     private MainViewModel mMyViewModel;
-    private LiveData<AndroidOnionProxyManager> mTorClient;
     private SwipeRefreshLayout mRefresher;
     private WebViewActivity.BookLoadingReceiver mPageLoadReceiver;
     private AlertDialog mBookLoadingDialog;
-    private AlertDialog mTorLoadingDialog;
     private View mRootView;
     private ArrayList<String> autocompleteStrings;
     private SearchView mSearchView;
     private ArrayAdapter<String> mSearchAdapter;
     private AlertDialog mTorRestartDialog;
     private TorConnectErrorReceiver mTorConnectErrorReceiver;
-    static boolean sAppRestarted = false;
     private long mConfirmExit;
 
     @Override
@@ -108,12 +97,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
         mTorConnectErrorReceiver = new WebViewActivity.TorConnectErrorReceiver();
         registerReceiver(mTorConnectErrorReceiver, filter);
-        if (!permissionGranted()) {
-            // показываю диалог с требованием предоставить разрешения
-            showPermissionDialog();
-        } else {
-            handleLoading();
-        }
+        handleLoading();
 
         if (App.getInstance().isCheckUpdate()) {
             // проверю обновления
@@ -157,9 +141,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             unregisterReceiver(mPageLoadReceiver);
         if (mTorConnectErrorReceiver != null)
             unregisterReceiver(mTorConnectErrorReceiver);
-        if (mTorLoadingDialog != null) {
-            mTorLoadingDialog.dismiss();
-        }
         if (mBookLoadingDialog != null) {
             mBookLoadingDialog.dismiss();
         }
@@ -237,10 +218,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         MenuItem nightModeSwitcher = menu.findItem(R.id.menuUseDarkMode);
         nightModeSwitcher.setChecked(mMyViewModel.getNightModeEnabled());
 
-        // обработаю переключатель ODPS
-        MenuItem useODPSSwitcher = menu.findItem(R.id.menuUseODPS);
-        useODPSSwitcher.setChecked(App.getInstance().isODPS());
-
         // обработаю переключатель проверки обновлений
         MenuItem checkUpdatesSwitcher = menu.findItem(R.id.setUpdateCheck);
         checkUpdatesSwitcher.setChecked(App.getInstance().isCheckUpdate());
@@ -281,9 +258,8 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             case R.id.setDownloadsFolder:
                 changeDownloadsFolder();
                 return true;
-            case R.id.menuUseODPS:
-                mMyViewModel.switchODPSMode();
-                new Handler().postDelayed(new WebViewActivity.ResetApp(), 100);
+            case R.id.switchToODPS:
+                switchToODPS();
             case R.id.setUpdateCheck:
                 App.getInstance().switchCheckUpdate();
                 return true;
@@ -294,6 +270,12 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void switchToODPS() {
+        App.getInstance().setView(App.VIEW_ODPS);
+        startActivity(new Intent(this, ODPSActivity.class));
+        finish();
     }
 
     private void changeDownloadsFolder() {
@@ -324,55 +306,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         }
     }
 
-    private void showPermissionDialog() {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle("Необходимо предоставить разрешения")
-                .setMessage("Для загрузки книг необходимо предоставить доступ к памяти устройства")
-                .setCancelable(false)
-                .setPositiveButton("Предоставить разрешение", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ActivityCompat.requestPermissions(WebViewActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_WRITE_READ);
-                    }
-                })
-                .setNegativeButton("Нет, закрыть приложение", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-        dialogBuilder.create().show();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_WRITE_READ) {
-            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                showPermissionDialog();
-            } else {
-                // полностью перезапущу приложение
-                Intent intent = new Intent(this, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                this.startActivity(intent);
-                Runtime.getRuntime().exit(0);
-            }
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-    }
-
-    private boolean permissionGranted() {
-        int writeResult;
-        int readResult;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            writeResult = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-            readResult = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-        } else {
-            writeResult = PermissionChecker.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-            readResult = PermissionChecker.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        }
-        return writeResult == PackageManager.PERMISSION_GRANTED && readResult == PackageManager.PERMISSION_GRANTED;
-    }
 
     @Override
     public boolean onQueryTextSubmit(String s) {
@@ -434,30 +367,10 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     private void handleLoading() {
-        if (mTorClient == null) {
-            showTorLoadingDialog();
-            // если клиент не загружен- загружаю
-            mTorClient = mMyViewModel.getTor();
-        }
-        // ещё одна проверка, может вернуться null
-        if (mTorClient.getValue() == null) {
-            // подожду, пока TOR загрузится
-            mTorClient.observe(this, new Observer<AndroidOnionProxyManager>() {
-                @Override
-                public void onChanged(@Nullable AndroidOnionProxyManager androidOnionProxyManager) {
-                    if (androidOnionProxyManager != null) {
-                        startBrowsing();
-                    }
-                }
-            });
-        } else {
-            // запускаю браузер
-            startBrowsing();
-        }
+        startBrowsing();
     }
 
     private void startBrowsing() {
-        hideTorLoadingDialog();
         mWebView.setup();
         mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
     }
@@ -531,23 +444,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         }
     }
 
-    private void showTorLoadingDialog() {
-        if (mTorLoadingDialog == null) {
-            // создам диалоговое окно
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setTitle(R.string.tor_loading_dialog_title)
-                    .setView(R.layout.tor_loading_dialog_layout)
-                    .setCancelable(false);
-            mTorLoadingDialog = dialogBuilder.create();
-        }
-        mTorLoadingDialog.show();
-    }
-
-    private void hideTorLoadingDialog() {
-        if (mTorLoadingDialog != null) {
-            mTorLoadingDialog.hide();
-        }
-    }
 
     @Override
     public void onLowMemory() {

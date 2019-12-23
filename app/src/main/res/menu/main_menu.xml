@@ -30,6 +30,10 @@
         android:title="@string/look"
         >
         <menu>
+            <item
+                android:id="@+id/switchToODPS"
+                android:title="@string/switch_to_odps_message"
+                yourapp:showAsAction="never"/>
             <group android:checkableBehavior="single">
                 <item
                     android:id="@+id/menuUseLightStyle"
@@ -63,11 +67,6 @@
         android:id="@+id/shareLink"
         android:icon="@drawable/ic_share_white_24dp"
         android:title="@string/share_link_message"
-        yourapp:showAsAction="never"/>
-    <item
-        android:id="@+id/menuUseODPS"
-        android:title="@string/use_ODPS"
-        android:checkable="true"
         yourapp:showAsAction="never"/>
     <item
         android:title="@string/miscellaneous">

@@ -33,8 +33,6 @@ public class SortHandler {
                                 size1 = Integer.parseInt(size_1);
                             if (!size_2.isEmpty())
                                 size2 = Integer.parseInt(size_2);
-                            Log.d("surprise", "SortHandler compare size 1 is " + size1);
-                            Log.d("surprise", "SortHandler compare size 2 is " + size2);
                             return size1 < size2 ? 1 : -1;
                         case 2:
                             // сортирую по количеству загрузок
@@ -59,6 +57,15 @@ public class SortHandler {
                                 return -1;
                             }
                             return fb1.genreComplex.compareTo(fb2.genreComplex) > 0 ? 1 : -1;
+                        case 5:
+                            // сортировка по серии
+                            if (fb1.author.isEmpty()) {
+                                return 1;
+                            }
+                            if (fb2.author.isEmpty()) {
+                                return -1;
+                            }
+                            return fb1.author.compareTo(fb2.author) > 0 ? 1 : -1;
                         default:
                         case 0:
                             // сортирую по названию книги
