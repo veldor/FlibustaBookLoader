@@ -363,22 +363,23 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
         handledResults.observe(this, new Observer<ArrayList<FoundedItem>>() {
             @Override
             public void onChanged(@Nullable ArrayList<FoundedItem> arrayList) {
-                hideWaitingDialog();
                 if (arrayList != null) {
                     // если есть возможность дальнейшей загрузки данных- покажу кнопку загрузки, иначе- скрою её
-                    if (App.getInstance().mNextPageUrl != null) {
-                        mLoadMoreBtn.setVisibility(View.VISIBLE);
-                    } else {
+                    if (App.getInstance().isDownloadAll()) {
                         mLoadMoreBtn.setVisibility(View.GONE);
+                    } else {
+                        if (App.getInstance().mNextPageUrl != null) {
+                            mLoadMoreBtn.setVisibility(View.VISIBLE);
+                        } else {
+                            mLoadMoreBtn.setVisibility(View.GONE);
+                        }
                     }
 
                     // если была дополнительная загрузка данных и есть адаптер- догружаю в него данные. Иначе- добавляю адаптер
                     if (App.getInstance().mResultsEscalate) {
-                        Log.d("surprise", "ODPSActivity onChanged escalate data");
                         mSearchResultsAdapter.setContent(arrayList);
                         mSearchResultsAdapter.notifyDataSetChanged();
                     } else {
-                        Log.d("surprise", "ODPSActivity onChanged replace data");
                         mSearchResultsAdapter = new SearchResultsAdapter(arrayList);
                         mRecycler.setAdapter(mSearchResultsAdapter);
                         mRecycler.setLayoutManager(new LinearLayoutManager(ODPSActivity.this));
@@ -387,6 +388,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 } else {
                     nothingFound();
                 }
+                hideWaitingDialog();
             }
         });
         // добавлю отслеживание показа информации о книге
@@ -482,6 +484,18 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 if (s != null && !s.isEmpty()) {
                     // не удалось загрузить книгу
                     Toast.makeText(ODPSActivity.this, "Не удалось сохранить " + s, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+        LiveData<String> loadStatus = App.getInstance().mLoadAllStatus;
+        loadStatus.observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(@Nullable String s) {
+                if (s != null && !s.isEmpty() && mShowLoadDialog != null) {
+                    // изменю сообщение
+                    TextView dialogText = mShowLoadDialog.getWindow().findViewById(R.id.title);
+                    dialogText.setText(s);
                 }
             }
         });
@@ -597,6 +611,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             mSearchResultsAdapter.notifyDataSetChanged();
             // очищу историю поиска
         }
+        mLoadMoreBtn.setVisibility(View.VISIBLE);
         Toast.makeText(ODPSActivity.this, "По запросу ничего не найдено", Toast.LENGTH_LONG).show();
     }
 

@@ -6,17 +6,17 @@
         android:icon="@drawable/ic_search_white_24dp"
         android:title="@android:string/search_go"
         yourapp:actionViewClass="android.support.v7.widget.SearchView"
-        yourapp:showAsAction="ifRoom" />
+        yourapp:showAsAction="always" />
     <item
         android:id="@+id/action_sort_by"
         android:icon="@drawable/ic_sort_white_24dp"
         android:title="@string/sort_list"
-        yourapp:showAsAction="ifRoom" />
+        yourapp:showAsAction="always" />
     <item
         android:id="@+id/action_new"
         android:icon="@drawable/ic_new_white_24dp"
         android:title="@string/show_last"
-        yourapp:showAsAction="ifRoom" />
+        yourapp:showAsAction="always" />
     <item
         android:title="@string/look"
         >

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.StrictMode;
 import android.support.v4.app.ShareCompat;
+import android.util.Log;
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
@@ -17,6 +18,7 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class BookSharer {
     public static void shareBook(String name, String type){
+        Log.d("surprise", "BookSharer shareBook " + type);
         // грязный хак- без него не работает доступ к Kindle, та не умеет в новый метод с контентом
         //todo По возможности- разобраться и заменить на валидное решение
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();

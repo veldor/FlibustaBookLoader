@@ -1,7 +1,5 @@
 package net.veldor.flibustaloader.utils;
 
-import android.util.Log;
-
 import java.util.HashMap;
 
 public class MimeTypes {
@@ -42,6 +40,7 @@ public class MimeTypes {
         put("html", "application/html+zip");
         put("txt", "application/txt+zip");
         put("rtf", "application/rtf+zip");
+        put("zip", "application/zip");
     }};
 
 
@@ -77,7 +76,9 @@ public class MimeTypes {
     }
 
     public static String getFullMime(String shortMime) {
-
+        if(shortMime.endsWith(".zip")){
+            return "application/zip";
+        }
         if (FULL_MIMES.containsKey(shortMime)){
             return FULL_MIMES.get(shortMime);
         }

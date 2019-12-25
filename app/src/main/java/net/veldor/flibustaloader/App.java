@@ -109,6 +109,7 @@ public class App extends Application {
     public int mBookSortOption = -1;
     public int mAuthorSortOptions = -1;
     public int mOtherSortOptions = -1;
+    public MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;
