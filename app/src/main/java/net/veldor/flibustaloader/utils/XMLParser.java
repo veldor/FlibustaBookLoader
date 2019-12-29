@@ -7,7 +7,7 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.ODPSActivity;
+import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -98,21 +98,21 @@ public class XMLParser {
                 identificateSearchType(entries.item(0), xPath);
                 // обработаю данные
                 switch (App.sSearchType) {
-                    case ODPSActivity
+                    case OPDSActivity
                             .SEARCH_BOOKS:
                         handleBooks(entries, result, xPath);
                         break;
-                    case ODPSActivity
+                    case OPDSActivity
                             .SEARCH_AUTHORS:
-                    case ODPSActivity
+                    case OPDSActivity
                             .SEARCH_NEW_AUTHORS:
                         handleAuthors(entries, result, xPath);
                         break;
-                    case ODPSActivity
+                    case OPDSActivity
                             .SEARCH_GENRE:
                         handleGenres(entries, result, xPath);
                         break;
-                    case ODPSActivity
+                    case OPDSActivity
                             .SEARCH_SEQUENCE:
                         handleSequences(entries, result, xPath);
                         break;
@@ -130,29 +130,29 @@ public class XMLParser {
         String id = ((Node) xPath.evaluate("./id", item, XPathConstants.NODE)).getTextContent();
         //Log.d("surprise", "ParseSearchWorker identificateSearchType " + id);
         if (id.startsWith(BOOK_TYPE)) {
-            App.sSearchType = ODPSActivity.SEARCH_BOOKS;
+            App.sSearchType = OPDSActivity.SEARCH_BOOKS;
         } else if (id.startsWith(GENRE_TYPE)) {
-            App.sSearchType = ODPSActivity.SEARCH_GENRE;
+            App.sSearchType = OPDSActivity.SEARCH_GENRE;
         } else if (id.startsWith(AUTHOR_TYPE)) {
             // проверю на возможность, что загружены серии
             if (id.contains(AUTHOR_SEQUENCE_TYPE)) {
                 //Log.d("surprise", "ParseSearchWorker identificateSearchType author sequence");
-                App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
+                App.sSearchType = OPDSActivity.SEARCH_SEQUENCE;
             } else {
-                App.sSearchType = ODPSActivity.SEARCH_AUTHORS;
+                App.sSearchType = OPDSActivity.SEARCH_AUTHORS;
             }
         } else if (id.startsWith(SEQUENCES_TYPE)) {
             //Log.d("surprise", "ParseSearchWorker identificateSearchType sequenceS");
-            App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
+            App.sSearchType = OPDSActivity.SEARCH_SEQUENCE;
         }else if (id.startsWith(SEQUENCE_TYPE)) {
             //Log.d("surprise", "ParseSearchWorker identificateSearchType sequence");
-            App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
+            App.sSearchType = OPDSActivity.SEARCH_SEQUENCE;
         } else if (id.startsWith(NEW_GENRES)) {
-            App.sSearchType = ODPSActivity.SEARCH_GENRE;
+            App.sSearchType = OPDSActivity.SEARCH_GENRE;
         } else if (id.startsWith(NEW_SEQUENCES)) {
-            App.sSearchType = ODPSActivity.SEARCH_SEQUENCE;
+            App.sSearchType = OPDSActivity.SEARCH_SEQUENCE;
         } else if (id.startsWith(NEW_AUTHORS)) {
-            App.sSearchType = ODPSActivity.SEARCH_NEW_AUTHORS;
+            App.sSearchType = OPDSActivity.SEARCH_NEW_AUTHORS;
         }
         else{
             Log.d("surprise", "ParseSearchWorker identificateSearchType я ничего не понял " + id);
@@ -310,7 +310,7 @@ public class XMLParser {
             author = new Author();
             author.name = ((Node) xPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             // если поиск осуществляется по новинкам- запишу ссылку на новинки, иначе- на автора
-            if(App.sSearchType == ODPSActivity.SEARCH_NEW_AUTHORS){
+            if(App.sSearchType == OPDSActivity.SEARCH_NEW_AUTHORS){
                 author.link = ((Node) xPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
             }
             else{

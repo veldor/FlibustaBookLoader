@@ -32,7 +32,7 @@
         <menu>
             <item
                 android:id="@+id/switchToODPS"
-                android:title="@string/switch_to_odps_message"
+                android:title="@string/switch_to_opds_message"
                 yourapp:showAsAction="never"/>
             <group android:checkableBehavior="single">
                 <item

@@ -17,11 +17,11 @@ import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.util.ArrayList;
 
-import static net.veldor.flibustaloader.ODPSActivity.SEARCH_AUTHORS;
-import static net.veldor.flibustaloader.ODPSActivity.SEARCH_BOOKS;
-import static net.veldor.flibustaloader.ODPSActivity.SEARCH_GENRE;
-import static net.veldor.flibustaloader.ODPSActivity.SEARCH_NEW_AUTHORS;
-import static net.veldor.flibustaloader.ODPSActivity.SEARCH_SEQUENCE;
+import static net.veldor.flibustaloader.OPDSActivity.SEARCH_AUTHORS;
+import static net.veldor.flibustaloader.OPDSActivity.SEARCH_BOOKS;
+import static net.veldor.flibustaloader.OPDSActivity.SEARCH_GENRE;
+import static net.veldor.flibustaloader.OPDSActivity.SEARCH_NEW_AUTHORS;
+import static net.veldor.flibustaloader.OPDSActivity.SEARCH_SEQUENCE;
 
 public class GetAllPagesWorker extends Worker {
 

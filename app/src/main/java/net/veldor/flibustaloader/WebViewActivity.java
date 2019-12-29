@@ -274,7 +274,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
 
     private void switchToODPS() {
         App.getInstance().setView(App.VIEW_ODPS);
-        startActivity(new Intent(this, ODPSActivity.class));
+        startActivity(new Intent(this, OPDSActivity.class));
         finish();
     }
 
@@ -300,6 +300,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             }
         } else if (requestCode == START_TOR) {
             // перезагружу страницу
+            mWebView.setup();
             mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -345,7 +346,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                     if (mConfirmExit != 0) {
                         if (mConfirmExit > System.currentTimeMillis() - 3000) {
                             // выйду из приложения
-                            Log.d("surprise", "ODPSActivity onKeyDown exit");
+                            Log.d("surprise", "OPDSActivity onKeyDown exit");
                             this.finishAffinity();
                             return true;
                         } else {

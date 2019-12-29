@@ -34,9 +34,9 @@
     <string name="set_downloads_folder">Установить папку загрузок</string>
     <string name="download_folder_changed_message">"Папка загрузок изменена на "</string>
     <string name="enter_text_message">Введите текст</string>
-    <string name="use_ODPS">Использовать ODPS(бета)</string>
-    <string name="title_activity_odps">ODPS</string>
-    <string name="ready_for_odps_message">Готов</string>
+    <string name="use_OPDS">Использовать OPDS(бета)</string>
+    <string name="title_activity_opds">OPDS</string>
+    <string name="ready_for_opds_message">Готов</string>
     <string name="whoSearchMessage">Что ищем?</string>
     <string name="search_book_message">Книгу</string>
     <string name="search_author_message">Автора</string>
@@ -76,5 +76,5 @@
     <string name="sort_list">Сортировка</string>
     <string name="force_start">Принудительный запуск</string>
     <string name="switch_to_vebview_message">Переключить на WebView</string>
-    <string name="switch_to_odps_message">Переключить на ODPS</string>
+    <string name="switch_to_opds_message">Переключить на OPDS</string>
 </resources>

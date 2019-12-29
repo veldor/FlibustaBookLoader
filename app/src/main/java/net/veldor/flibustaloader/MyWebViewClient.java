@@ -325,7 +325,12 @@ public class MyWebViewClient extends WebViewClient {
                     }
                 }
                 return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+            }else{
+                Log.d("surprise", "MyWebViewClient handleRequest page loading error");
+                Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+                App.getInstance().sendBroadcast(finishLoadingIntent);
             }
+
         }
         return super.shouldInterceptRequest(view, url);
     }

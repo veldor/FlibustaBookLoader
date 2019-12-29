@@ -39,8 +39,8 @@
         </activity>
 
         <activity
-            android:name=".ODPSActivity"
-            android:label="@string/title_activity_odps" />
+            android:name=".OPDSActivity"
+            android:label="@string/title_activity_opds" />
         <activity android:name=".WebViewActivity" />
         <activity android:name=".StartTorActivity" />
 

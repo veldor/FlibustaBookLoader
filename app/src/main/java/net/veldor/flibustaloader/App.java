@@ -42,7 +42,7 @@ public class App extends Application {
     private static final String PREFERENCE_LOAD_ALL = "load all";
     private static final String PREFERENCE_VIEW = "view";
 
-    public static int sSearchType = ODPSActivity.SEARCH_BOOKS;
+    public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
     public ArrayList<String> mSearchHistory = new ArrayList<>();
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();

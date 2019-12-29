@@ -65,7 +65,7 @@ import static androidx.work.WorkInfo.State.RUNNING;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
-public class ODPSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
+public class OPDSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     public static final String BOOK_ID = "book id";
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
@@ -323,7 +323,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                         // показываю Snackbar с уведомлением
                         makeUpdateSnackbar();
                     }
-                    version.removeObservers(ODPSActivity.this);
+                    version.removeObservers(OPDSActivity.this);
                 }
             });
         }
@@ -382,7 +382,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                     } else {
                         mSearchResultsAdapter = new SearchResultsAdapter(arrayList);
                         mRecycler.setAdapter(mSearchResultsAdapter);
-                        mRecycler.setLayoutManager(new LinearLayoutManager(ODPSActivity.this));
+                        mRecycler.setLayoutManager(new LinearLayoutManager(OPDSActivity.this));
                         scrollToTop();
                     }
                 } else {
@@ -398,7 +398,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onChanged(@Nullable FoundedBook book) {
                 if (book != null) {
                     if (!book.readed) {
-                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ODPSActivity.this);
+                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(OPDSActivity.this);
                         dialogBuilder.setTitle(book.name)
                                 .setMessage(Grammar.textFromHtml(book.bookInfo))
                                 .setCancelable(true)
@@ -418,14 +418,14 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 final FoundedBook book = foundedBook;
                 if (foundedBook != null) {
                     // покажу контекстное меню
-                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ODPSActivity.this);
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(OPDSActivity.this);
                     String[] items = new String[]{"Пометить книгу как прочитанную"};
                     dialogBuilder.setItems(items, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             // отмечу книгу как прочитанную
                             mMyViewModel.setBookRead(book);
-                            Toast.makeText(ODPSActivity.this, "Книга отмечена как прочитанная", Toast.LENGTH_LONG).show();
+                            Toast.makeText(OPDSActivity.this, "Книга отмечена как прочитанная", Toast.LENGTH_LONG).show();
                         }
                     });
                     dialogBuilder.create().show();
@@ -483,7 +483,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onChanged(@Nullable String s) {
                 if (s != null && !s.isEmpty()) {
                     // не удалось загрузить книгу
-                    Toast.makeText(ODPSActivity.this, "Не удалось сохранить " + s, Toast.LENGTH_LONG).show();
+                    Toast.makeText(OPDSActivity.this, "Не удалось сохранить " + s, Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -510,7 +510,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 try {
                     findViewById(R.id.scrollLayout).scrollTo(0, 0);
                 } catch (NullPointerException e) {
-                    Log.d("surprise", "ODPSActivity run nothing scroll");
+                    Log.d("surprise", "OPDSActivity run nothing scroll");
                 }
                 //mRecycler.getLayoutManager().scrollToPositionWithOffset(0,0);
             }
@@ -527,11 +527,11 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 public void onChanged(@Nullable WorkInfo workInfo) {
                     if (workInfo != null) {
                         if (workInfo.getState() == SUCCEEDED && !App.getInstance().mDownloadInProgress) {
-                            Toast.makeText(ODPSActivity.this, "Все книги загружены (кажется)", Toast.LENGTH_LONG).show();
+                            Toast.makeText(OPDSActivity.this, "Все книги загружены (кажется)", Toast.LENGTH_LONG).show();
                             // работа закончена, закрою диалог и выведу тост
                             if (mMultiplyDownloadDialog != null) {
                                 mMultiplyDownloadDialog.dismiss();
-                                booksDownloadStatus.removeObservers(ODPSActivity.this);
+                                booksDownloadStatus.removeObservers(OPDSActivity.this);
                             }
                         }
                         // если есть недогруженные книги- выведу Snackbar, где уведомплю об этом
@@ -612,7 +612,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             // очищу историю поиска
         }
         mLoadMoreBtn.setVisibility(View.VISIBLE);
-        Toast.makeText(ODPSActivity.this, "По запросу ничего не найдено", Toast.LENGTH_LONG).show();
+        Toast.makeText(OPDSActivity.this, "По запросу ничего не найдено", Toast.LENGTH_LONG).show();
     }
 
     private void hideWaitingDialog() {
@@ -703,7 +703,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void sortList(int which) {
-        Log.d("surprise", "ODPSActivity sortList sort");
+        Log.d("surprise", "OPDSActivity sortList sort");
         switch (App.sSearchType) {
             case SEARCH_BOOKS:
                 App.getInstance().mBookSortOption = which;
@@ -717,7 +717,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                 mSearchResultsAdapter.sortAuthors();
                 break;
             case SEARCH_GENRE:
-                Log.d("surprise", "ODPSActivity sortList sort genre");
+                Log.d("surprise", "OPDSActivity sortList sort genre");
                 App.getInstance().mOtherSortOptions = which;
                 // пересортирую то, что уже есть
                 mSearchResultsAdapter.sortGenres();
@@ -823,14 +823,14 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                         @Override
                         public void OnClick() {
                             if (App.getInstance().mProcess != null) {
-                                Log.d("surprise", "ODPSActivity OnClick kill process");
+                                Log.d("surprise", "OPDSActivity OnClick kill process");
                                 WorkManager.getInstance().cancelWorkById(App.getInstance().mProcess.getId());
                             }
                             if (mMultiplyDownloadDialog != null) {
                                 mMultiplyDownloadDialog.dismiss();
                             }
                             // отменю операцию
-                            Toast.makeText(ODPSActivity.this, "Загрузка книг отменена", Toast.LENGTH_LONG).show();
+                            Toast.makeText(OPDSActivity.this, "Загрузка книг отменена", Toast.LENGTH_LONG).show();
 
                         }
                     })
@@ -915,10 +915,18 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void doSearch(String s) {
-        // очищу историю поиска и положу туда начальное значение
-        App.getInstance().addToHistory(s);
-        showLoadWaitingDialog();
-        mWebClient.search(s);
+        if(mWebClient == null){
+            Toast.makeText(this, "Не удалось загрузить веб-клиент", Toast.LENGTH_SHORT).show();
+        }
+        if(s!= null && !s.isEmpty()){
+            // очищу историю поиска и положу туда начальное значение
+            App.getInstance().addToHistory(s);
+            showLoadWaitingDialog();
+            mWebClient.search(s);
+        }
+        else{
+            Toast.makeText(this, "Пустой поисковый запрос", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void doSearchFromHistory(String s) {
@@ -940,12 +948,12 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                         @Override
                         public void OnClick() {
                             if (App.getInstance().mProcess != null) {
-                                Log.d("surprise", "ODPSActivity OnClick kill process");
+                                Log.d("surprise", "OPDSActivity OnClick kill process");
                                 WorkManager.getInstance().cancelWorkById(App.getInstance().mProcess.getId());
                             }
                             hideWaitingDialog();
                             // отменю операцию
-                            Toast.makeText(ODPSActivity.this, "Загрузка отменена", Toast.LENGTH_LONG).show();
+                            Toast.makeText(OPDSActivity.this, "Загрузка отменена", Toast.LENGTH_LONG).show();
 
                         }
                     })
@@ -1051,7 +1059,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                             App.getInstance().restartTor();
                             dialog.dismiss();
                             // вернусь в основное активити и подожду перезапуска
-                            startActivityForResult(new Intent(ODPSActivity.this, StartTorActivity.class), START_TOR);
+                            startActivityForResult(new Intent(OPDSActivity.this, StartTorActivity.class), START_TOR);
                         }
                     })
                     .setCancelable(false);
@@ -1105,7 +1113,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
             if (mConfirmExit != 0) {
                 if (mConfirmExit > System.currentTimeMillis() - 3000) {
                     // выйду из приложения
-                    Log.d("surprise", "ODPSActivity onKeyDown exit");
+                    Log.d("surprise", "OPDSActivity onKeyDown exit");
                     this.finishAffinity();
                     return true;
                 } else {
@@ -1154,7 +1162,7 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
                     item = downloadLinks.get(counter);
                     if (item.mime.equals(longMime)) {
                         mWebClient.download(item);
-                        Toast.makeText(ODPSActivity.this, "Загрузка началась", Toast.LENGTH_LONG).show();
+                        Toast.makeText(OPDSActivity.this, "Загрузка началась", Toast.LENGTH_LONG).show();
                         break;
                     }
                     counter++;
@@ -1168,9 +1176,9 @@ public class ODPSActivity extends AppCompatActivity implements SearchView.OnQuer
     private class ResetApp implements Runnable {
         @Override
         public void run() {
-            Intent intent = new Intent(ODPSActivity.this, MainActivity.class);
+            Intent intent = new Intent(OPDSActivity.this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            ODPSActivity.this.startActivity(intent);
+            OPDSActivity.this.startActivity(intent);
             Runtime.getRuntime().exit(0);
         }
     }

@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // проверю, если используем ODPS- перенаправлю в другую активность
             if (App.getInstance().getView() == App.VIEW_ODPS) {
-                targetActivityIntent = new Intent(this, ODPSActivity.class);
+                targetActivityIntent = new Intent(this, OPDSActivity.class);
             } else {
                 targetActivityIntent = new Intent(this, WebViewActivity.class);
             }
