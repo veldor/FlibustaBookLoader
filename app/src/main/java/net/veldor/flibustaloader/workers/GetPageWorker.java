@@ -22,11 +22,14 @@ public class GetPageWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        App.getInstance().mLoadAllStatus.postValue("В процессе");
         Data data = getInputData();
         String text = data.getString(MyWebClient.LOADED_URL);
         // создам новый экземпляр веб-клиента
         TorWebClient webClient = new TorWebClient();
+        App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
         String answer = webClient.request(text);
+        App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
         if(!mIsStopped){
             App.getInstance().mSearchResult.postValue(answer);
         }

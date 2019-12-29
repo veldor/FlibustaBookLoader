@@ -39,11 +39,13 @@ public class GetAllPagesWorker extends Worker {
         App.getInstance().mLoadAllStatus.postValue("В процессе");
         Log.d("surprise", "GetAllPagesWorker doWork start work");
         Data data = getInputData();
+        App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pagesCounter);
         String text = data.getString(MyWebClient.LOADED_URL);
         // создам новый экземпляр веб-клиента
         TorWebClient webClient = new TorWebClient();
+        App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
         String answer = webClient.request(text);
-        App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pagesCounter);
+        App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
         // сразу же обработаю результат
         if(answer != null && !answer.isEmpty()){
             ArrayList<FoundedItem> result = new ArrayList<>();

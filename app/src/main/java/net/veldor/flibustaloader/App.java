@@ -228,10 +228,6 @@ public class App extends Application {
         mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.getPath()).apply();
     }
 
-    public boolean isODPS() {
-        return mSharedPreferences.getInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW) != CONTENT_MODE_WEB_VIEW;
-    }
-
 
     public int getContentTypeMode() {
         return mSharedPreferences.getInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW);

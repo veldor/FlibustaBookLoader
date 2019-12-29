@@ -27,6 +27,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.RadioGroup;
@@ -104,8 +105,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private View mRootView;
     private Dialog mMultiplyDownloadDialog;
     private AlertDialog mSelectBookTypeDialog;
-    private int mBookSortingOption;
-    private MenuItem mSortingOption;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -448,8 +447,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             @Override
             public void onChanged(@Nullable String s) {
                 if (s != null && !s.isEmpty() && mMultiplyDownloadDialog != null) {
-                    TextView dialogText = mMultiplyDownloadDialog.getWindow().findViewById(R.id.title);
-                    dialogText.setText(s);
+                    Window window = mMultiplyDownloadDialog.getWindow();
+                    if(window != null){
+                        TextView dialogText = window.findViewById(R.id.title);
+                        dialogText.setText(s);
+                    }
                 }
             }
         });
@@ -469,8 +471,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     showMultiplyDownloadDialog();
                     String status = App.getInstance().mMultiplyDownloadStatus.getValue();
                     if (status != null && !status.isEmpty()) {
-                        TextView dialogText = mMultiplyDownloadDialog.getWindow().findViewById(R.id.title);
-                        dialogText.setText(status);
+                        Window window = mMultiplyDownloadDialog.getWindow();
+                        if(window != null){
+                            TextView dialogText = window.findViewById(R.id.title);
+                            dialogText.setText(status);
+                        }
                     }
                 }
             }
@@ -494,8 +499,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onChanged(@Nullable String s) {
                 if (s != null && !s.isEmpty() && mShowLoadDialog != null) {
                     // изменю сообщение
-                    TextView dialogText = mShowLoadDialog.getWindow().findViewById(R.id.title);
-                    dialogText.setText(s);
+                    Window window = mMultiplyDownloadDialog.getWindow();
+                    if(window != null){
+                        TextView dialogText = window.findViewById(R.id.title);
+                        dialogText.setText(s);
+                    }
                 }
             }
         });
@@ -669,8 +677,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // обработаю переключатель быстрой загрузки
         MenuItem downloadAllPages = menu.findItem(R.id.downloadAllData);
         downloadAllPages.setChecked(App.getInstance().isDownloadAll());
-
-        mSortingOption = menu.findItem(R.id.action_sort_by);
 
         return true;
     }

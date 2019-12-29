@@ -79,10 +79,12 @@ public class TorWebClient {
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
             httpGet.setHeader("X-Compress", "null");
             HttpResponse httpResponse = mHttpClient.execute(httpGet, mContext);
+            App.getInstance().mLoadAllStatus.postValue("Данные получены");
             InputStream is;
             is = httpResponse.getEntity().getContent();
             return inputStreamToString(is);
         } catch (IOException e) {
+            App.getInstance().mLoadAllStatus.postValue("Ошибка загрузки страницы");
             broadcastTorError();
             e.printStackTrace();
         }

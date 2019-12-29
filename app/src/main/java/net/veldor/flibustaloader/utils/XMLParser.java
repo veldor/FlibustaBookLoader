@@ -165,7 +165,11 @@ public class XMLParser {
         Node entry;
         FoundedSequence sequence;
         int counter = 0;
+        int entriesLength = entries.getLength();
+        int handledEntryCounter = 0;
         while ((entry = entries.item(counter)) != null) {
+            ++handledEntryCounter;
+            App.getInstance().mLoadAllStatus.postValue("Обрабатываю серию " + handledEntryCounter + " из " + entriesLength);
             sequence = new FoundedSequence();
             sequence.title = ((Node) xPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             sequence.content = ((Node) xPath.evaluate("./content", entry, XPathConstants.NODE)).getTextContent();
@@ -179,7 +183,11 @@ public class XMLParser {
         Node entry;
         Genre genre;
         int counter = 0;
+        int entriesLength = entries.getLength();
+        int handledEntryCounter = 0;
         while ((entry = entries.item(counter)) != null) {
+            ++handledEntryCounter;
+            App.getInstance().mLoadAllStatus.postValue("Обрабатываю жанр " + handledEntryCounter + " из " + entriesLength);
             genre = new Genre();
             try {
                 genre.label = ((Node) xPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
@@ -211,7 +219,12 @@ public class XMLParser {
 
         boolean hideRead = App.getInstance().isHideRead();
 
+        int entriesLength = entries.getLength();
+        int handledEntryCounter = 0;
+
         while ((entry = entries.item(counter)) != null) {
+            ++handledEntryCounter;
+            App.getInstance().mLoadAllStatus.postValue("Обрабатываю книгу " + handledEntryCounter + " из " + entriesLength);
             book = new FoundedBook();
             book.id = ((Node) xPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent();
             // узнаю, прочитана ли книга
@@ -306,7 +319,11 @@ public class XMLParser {
         int counter = 0;
         Node entry;
         Author author;
+        int entriesLength = entries.getLength();
+        int handledEntryCounter = 0;
         while ((entry = entries.item(counter)) != null) {
+            ++handledEntryCounter;
+            App.getInstance().mLoadAllStatus.postValue("Обрабатываю автора " + handledEntryCounter + " из " + entriesLength);
             author = new Author();
             author.name = ((Node) xPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             // если поиск осуществляется по новинкам- запишу ссылку на новинки, иначе- на автора
