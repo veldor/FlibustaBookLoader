@@ -147,13 +147,8 @@ public class StartTorActivity extends AppCompatActivity {
                         if (!last.isEmpty()) {
                             mTorLoadingStatusText.setText(last);
                             if (last.indexOf(TOR_LAUNCHED_MESSAGE) > 0 || last.indexOf(TOR_BUILT_MESSAGE) > 0) {
-                                Log.d("surprise", "StartTorActivity onTick tor loaded");
-                                mTorLoadingStatusText.setText(R.string.tor_is_loaded);
-                                mTorLoadingProgressIndicator.setProgress(100);
-                                if (mCdt != null) {
-                                    mCdt.cancel();
-                                }
-                                torLoaded();
+                                // через 5 секунд запущу просмотр
+                                new Handler().postDelayed(new TorLoaded(), 5000);
                             }
                         } else {
                             mTorLoadingStatusText.setText(R.string.tor_loading);
@@ -281,4 +276,17 @@ public class StartTorActivity extends AppCompatActivity {
             Runtime.getRuntime().exit(0);
         }
     }
+    private class TorLoaded implements Runnable {
+        @Override
+        public void run() {
+            Log.d("surprise", "StartTorActivity onTick tor loaded");
+            mTorLoadingStatusText.setText(R.string.tor_is_loaded);
+            mTorLoadingProgressIndicator.setProgress(100);
+            if (mCdt != null) {
+                mCdt.cancel();
+            }
+            torLoaded();
+        }
+    }
+
 }
