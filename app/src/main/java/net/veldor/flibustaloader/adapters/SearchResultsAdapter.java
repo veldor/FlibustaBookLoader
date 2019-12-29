@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
-import net.veldor.flibustaloader.ODPSActivity;
+import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedAuthorItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedBookItemBinding;
@@ -39,21 +39,21 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
 
     public SearchResultsAdapter(ArrayList<FoundedItem> arrayList) {
         switch (App.sSearchType) {
-            case ODPSActivity
+            case OPDSActivity
                     .SEARCH_BOOKS:
                 mBooks = arrayList;
                 break;
-            case ODPSActivity
+            case OPDSActivity
                     .SEARCH_AUTHORS:
-            case ODPSActivity
+            case OPDSActivity
                     .SEARCH_NEW_AUTHORS:
                 mAuthors = arrayList;
                 break;
-            case ODPSActivity
+            case OPDSActivity
                     .SEARCH_GENRE:
                 mGenres = arrayList;
                 break;
-            case ODPSActivity
+            case OPDSActivity
                     .SEARCH_SEQUENCE:
                 mSequences = arrayList;
                 break;
@@ -119,11 +119,11 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
 
     public void setContent(ArrayList<FoundedItem> arrayList) {
         switch (App.sSearchType) {
-            case ODPSActivity
+            case OPDSActivity
                     .SEARCH_BOOKS:
                 mBooks = arrayList;
                 break;
-            case ODPSActivity
+            case OPDSActivity
                     .SEARCH_AUTHORS:
                 mAuthors = arrayList;
                 break;

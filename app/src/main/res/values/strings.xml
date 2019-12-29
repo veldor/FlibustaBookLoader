@@ -34,9 +34,9 @@
     <string name="set_downloads_folder">Set downloads folder</string>
     <string name="download_folder_changed_message">Download folder changed on</string>
     <string name="enter_text_message">Enter text</string>
-    <string name="use_ODPS">Use ODPS(beta)</string>
-    <string name="title_activity_odps">ODPS</string>
-    <string name="ready_for_odps_message">ready</string>
+    <string name="use_OPDS">Use OPDS(beta)</string>
+    <string name="title_activity_opds">OPDS</string>
+    <string name="ready_for_opds_message">ready</string>
     <string name="whoSearchMessage">Search what?</string>
     <string name="search_author_message">Author</string>
     <string name="search_book_message">Book</string>
@@ -60,7 +60,7 @@
     <string name="set_update_check_message">Check update</string>
     <string name="book_menu">book menu</string>
     <string name="hide_read">Hide read</string>
-    <string name="initialize_tor_message">Initialize TOR...</string>
+    <string name="initialize_tor_message">Initialize TOR…</string>
     <string name="showNewDialogTitle">Select new type</string>
     <string name="tor_loading">TOR is loading</string>
     <string name="tor_start_loading">TOR start loading</string>
@@ -76,5 +76,5 @@
     <string name="sort_list">Sort by</string>
     <string name="force_start">Force start</string>
     <string name="switch_to_vebview_message">Switch to WebView</string>
-    <string name="switch_to_odps_message">Switch to ODPS</string>
+    <string name="switch_to_opds_message">Switch to OPDS</string>
 </resources>

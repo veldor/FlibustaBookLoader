@@ -8,7 +8,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.ODPSActivity;
+import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.database.dao.ReadedBooksDao;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
@@ -28,7 +28,7 @@ public class DatabaseWorker extends Worker {
         int requestedWork = data.getInt(WORK_TYPE, 0);
         switch (requestedWork){
             case INSERT_BOOK:
-                String id = data.getString(ODPSActivity.BOOK_ID);
+                String id = data.getString(OPDSActivity.BOOK_ID);
                 insertBook(id);
         }
         return Result.success();

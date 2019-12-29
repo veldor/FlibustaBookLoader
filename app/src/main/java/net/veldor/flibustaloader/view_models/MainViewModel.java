@@ -15,7 +15,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
-import net.veldor.flibustaloader.ODPSActivity;
+import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.updater.Updater;
@@ -86,7 +86,7 @@ public class MainViewModel extends AndroidViewModel {
     public void setBookRead(FoundedBook book) {
         // запущу рабочего, который отметит книгу как прочитанную
         Data inputData = new Data.Builder()
-                .putString(ODPSActivity.BOOK_ID, book.id)
+                .putString(OPDSActivity.BOOK_ID, book.id)
                 .putInt(DatabaseWorker.WORK_TYPE, DatabaseWorker.INSERT_BOOK)
                 .build();
         // запущу рабочего, загружающего страницу

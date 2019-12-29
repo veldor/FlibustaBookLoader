@@ -91,7 +91,7 @@ public class DownloadBookWorker extends Worker {
                 is.close();
                 Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, mName);
-                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, properties[0]);
+                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, book_mime);
                 App.getInstance().sendBroadcast(intent);
 
             } catch (ClientProtocolException e) {

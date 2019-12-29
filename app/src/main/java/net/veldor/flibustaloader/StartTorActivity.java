@@ -249,7 +249,7 @@ public class StartTorActivity extends AppCompatActivity {
             if (mConfirmExit != 0) {
                 if (mConfirmExit > System.currentTimeMillis() - 3000) {
                     // выйду из приложения
-                    Log.d("surprise", "ODPSActivity onKeyDown exit");
+                    Log.d("surprise", "OPDSActivity onKeyDown exit");
                     this.finishAffinity();
                     return true;
                 } else {
