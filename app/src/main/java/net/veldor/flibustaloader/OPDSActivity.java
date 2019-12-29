@@ -499,6 +499,14 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onChanged(@Nullable String s) {
                 if (s != null && !s.isEmpty() && mShowLoadDialog != null) {
                     // изменю сообщение
+                    Window window = mShowLoadDialog.getWindow();
+                    if(window != null){
+                        TextView dialogText = window.findViewById(R.id.title);
+                        dialogText.setText(s);
+                    }
+                }
+                if (s != null && !s.isEmpty() && mMultiplyDownloadDialog != null) {
+                    // изменю сообщение
                     Window window = mMultiplyDownloadDialog.getWindow();
                     if(window != null){
                         TextView dialogText = window.findViewById(R.id.title);

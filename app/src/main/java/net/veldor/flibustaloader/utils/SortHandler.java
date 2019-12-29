@@ -36,8 +36,16 @@ public class SortHandler {
                             return size1 < size2 ? 1 : -1;
                         case 2:
                             // сортирую по количеству загрузок
-                            int downloads1 = Integer.parseInt(fb1.downloadsCount.replaceAll("[^\\d]", ""));
-                            int downloads2 = Integer.parseInt(fb2.downloadsCount.replaceAll("[^\\d]", ""));
+                            String quantity1 = fb1.downloadsCount;
+                            String quantity2 = fb2.downloadsCount;
+                            int downloads1 = 0;
+                            int downloads2 = 0;
+                            if(quantity1 != null && !quantity1.isEmpty()){
+                                downloads1 = Integer.parseInt(quantity1.replaceAll("[^\\d]", ""));
+                            }
+                            if(quantity2 != null && !quantity2.isEmpty()){
+                                downloads2 = Integer.parseInt(quantity2.replaceAll("[^\\d]", ""));
+                            }
                             return downloads1 < downloads2 ? 1 : -1;
                         case 3:
                             // сортировка по серии
