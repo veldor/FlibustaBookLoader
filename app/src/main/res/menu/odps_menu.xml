@@ -42,6 +42,10 @@
         android:title="@string/download_all"
         yourapp:showAsAction="never"/>
     <item
+        android:id="@+id/clearSearchHistory"
+        android:title="@string/clear_search_history_message"
+        yourapp:showAsAction="never"/>
+    <item
         android:id="@+id/downloadAllData"
         android:title="@string/download_all_message"
         android:checkable="true"

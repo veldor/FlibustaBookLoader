@@ -39,6 +39,11 @@ public class MyFileReader {
         Log.d("surprise", "MyFileReader saveSearchAutocomplete: save file " + autocompleteFile);
     }
 
+    public static void clearAutocomplete(){
+        File autocompleteFile = new File(App.getInstance().getFilesDir(), SEARCH_AUTOCOMPLETE_FILE);
+        makeFile(autocompleteFile, SEARCH_AUTOCOMPLETE_NEW);
+    }
+
     private static void makeFile(File file, String content) {
         try {
             FileWriter writer = new FileWriter(file);

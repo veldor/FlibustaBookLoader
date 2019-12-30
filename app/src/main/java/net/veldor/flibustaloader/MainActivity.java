@@ -31,8 +31,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
         // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
 
         if (!permissionGranted()) {

@@ -109,4 +109,8 @@ public class MainViewModel extends AndroidViewModel {
         App.getInstance().mDownloadAllWork = WorkManager.getInstance().getWorkInfoByIdLiveData(downloadAllWorker.getId());
         App.getInstance().mProcess = downloadAllWorker;
     }
+
+    public void clearHistory() {
+        MyFileReader.clearAutocomplete();
+    }
 }

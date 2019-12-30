@@ -105,6 +105,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private View mRootView;
     private Dialog mMultiplyDownloadDialog;
     private AlertDialog mSelectBookTypeDialog;
+    private SearchView.SearchAutoComplete mSearchAutoComplete;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -662,14 +663,15 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         });
 
-        SearchView.SearchAutoComplete searchAutoComplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
-        searchAutoComplete.setDropDownBackgroundResource(R.color.background_color);
-        searchAutoComplete.setDropDownAnchor(R.id.action_search);
-        searchAutoComplete.setThreshold(0);
+        mSearchAutoComplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        mSearchAutoComplete.setDropDownBackgroundResource(R.color.background_color);
+        mSearchAutoComplete.setDropDownAnchor(R.id.action_search);
+        mSearchAutoComplete.setThreshold(0);
+        mSearchAutoComplete.setDropDownHeight(getResources().getDisplayMetrics().heightPixels / 2);
 
         mSearchAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, autocompleteStrings);
 
-        searchAutoComplete.setAdapter(mSearchAdapter);
+        mSearchAutoComplete.setAdapter(mSearchAdapter);
 
         MenuItem nightModeSwitcher = menu.findItem(R.id.menuUseDarkMode);
         nightModeSwitcher.setChecked(mMyViewModel.getNightModeEnabled());
@@ -765,6 +767,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.switchToWebView:
                 switchToWebView();
                 return true;
+            case R.id.clearSearchHistory:
+                clearHistory();
+                return true;
             case R.id.menuUseDarkMode:
                 mMyViewModel.switchNightMode();
                 new Handler().postDelayed(new ResetApp(), 100);
@@ -789,6 +794,14 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void clearHistory() {
+        mMyViewModel.clearHistory();
+        autocompleteStrings = new ArrayList<>();
+        mSearchAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, autocompleteStrings);
+        mSearchAutoComplete.setAdapter(mSearchAdapter);
+        Toast.makeText(this, "Автозаполнение сброшено", Toast.LENGTH_SHORT).show();
     }
 
     private void switchToWebView() {
