@@ -717,32 +717,33 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void sortList(int which) {
-        Log.d("surprise", "OPDSActivity sortList sort");
-        switch (App.sSearchType) {
-            case SEARCH_BOOKS:
-                App.getInstance().mBookSortOption = which;
-                // пересортирую то, что уже есть
-                mSearchResultsAdapter.sortBooks();
-                break;
-            case SEARCH_AUTHORS:
-            case SEARCH_NEW_AUTHORS:
-                App.getInstance().mAuthorSortOptions = which;
-                // пересортирую то, что уже есть
-                mSearchResultsAdapter.sortAuthors();
-                break;
-            case SEARCH_GENRE:
-                Log.d("surprise", "OPDSActivity sortList sort genre");
-                App.getInstance().mOtherSortOptions = which;
-                // пересортирую то, что уже есть
-                mSearchResultsAdapter.sortGenres();
-                break;
-            case SEARCH_SEQUENCE:
-                App.getInstance().mOtherSortOptions = which;
-                // пересортирую то, что уже есть
-                mSearchResultsAdapter.sortSequences();
-                break;
-            default:
-                App.getInstance().mOtherSortOptions = which;
+        if(mSearchResultsAdapter != null){
+            switch (App.sSearchType) {
+                case SEARCH_BOOKS:
+                    App.getInstance().mBookSortOption = which;
+                    // пересортирую то, что уже есть
+                    mSearchResultsAdapter.sortBooks();
+                    break;
+                case SEARCH_AUTHORS:
+                case SEARCH_NEW_AUTHORS:
+                    App.getInstance().mAuthorSortOptions = which;
+                    // пересортирую то, что уже есть
+                    mSearchResultsAdapter.sortAuthors();
+                    break;
+                case SEARCH_GENRE:
+                    Log.d("surprise", "OPDSActivity sortList sort genre");
+                    App.getInstance().mOtherSortOptions = which;
+                    // пересортирую то, что уже есть
+                    mSearchResultsAdapter.sortGenres();
+                    break;
+                case SEARCH_SEQUENCE:
+                    App.getInstance().mOtherSortOptions = which;
+                    // пересортирую то, что уже есть
+                    mSearchResultsAdapter.sortSequences();
+                    break;
+                default:
+                    App.getInstance().mOtherSortOptions = which;
+            }
         }
         App.getInstance().mBookSortOption = which;
     }

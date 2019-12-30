@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         // покажу диалог выбора вида приложения
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle("Выберите внешний вид")
-                .setMessage("Выберите вид приложения. В будущем вы можете переключить вид в меню приложения (Меню => внешний вид). В режиме WebView информация берётся непосредственно с сайта Флибусты и выглядит как страница сайта. В режиме ODPS информация получается из электронного каталога Флибусты. Рекомендую попробовать оба режима, у каждого из них свои плюсы. Приятного поиска.")
+                .setMessage("Выберите вид приложения. В будущем вы можете переключить вид в меню приложения (Меню => внешний вид). В режиме WebView информация берётся непосредственно с сайта Флибусты и выглядит как страница сайта. В режиме OPDS информация получается из электронного каталога Флибусты. Рекомендую попробовать оба режима, у каждого из них свои плюсы. Приятного поиска.")
                 .setCancelable(false)
                 .setPositiveButton("Режим WebView", new DialogInterface.OnClickListener() {
                     @Override
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
                         handleStart();
                     }
                 })
-                .setNegativeButton("Режим ODPS", new DialogInterface.OnClickListener() {
+                .setNegativeButton("Режим OPDS", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         App.getInstance().setView(App.VIEW_ODPS);
