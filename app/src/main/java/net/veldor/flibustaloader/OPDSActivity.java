@@ -1,6 +1,8 @@
 package net.veldor.flibustaloader;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
@@ -10,11 +12,17 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -54,10 +62,12 @@ import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.utils.XMLParser;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
 
@@ -74,6 +84,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private static final String[] authorSortOptions = new String[]{"По имени автора от А", "По имени автора от Я", "По количеству книг от большего", "По количеству книг от меньшего"};
     private static final String[] otherSortOptions = new String[]{"От А", "От Я"};
     private static final int READ_REQUEST_CODE = 5;
+    private static final int REQUEST_CODE = 7;
     private AlertDialog mTorRestartDialog;
     private MainViewModel mMyViewModel;
     private LiveData<AndroidOnionProxyManager> mTorClient;
@@ -124,7 +135,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // определю кнопки прыжков по результатам
         mLoadMoreBtn = findViewById(R.id.load_more_button);
 
-        mRecycler = findViewById(R.id.search_items_list);
+        mRecycler = findViewById(R.id.subscrtibe_items_list);
 
         // добавлю viewModel
         mMyViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
@@ -152,7 +163,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
 
         // добавлю ссылку на тип поиска
-        mSearchRadioContainer = findViewById(R.id.searchType);
+        mSearchRadioContainer = findViewById(R.id.subscribe_type);
         // добавлю отслеживание изменения ваианта поиска
         mSearchRadioContainer.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -294,7 +305,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         addObservers();
 
         checkUpdates();
-
 
 /*        // попробую создать user guide
         new MaterialIntroView.Builder(this)
@@ -525,7 +535,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             @Override
             public void run() {
                 try {
-                    findViewById(R.id.scrollLayout).scrollTo(0, 0);
+                    findViewById(R.id.subscribtions_layout).scrollTo(0, 0);
                 } catch (NullPointerException e) {
                     Log.d("surprise", "OPDSActivity run nothing scroll");
                 }
@@ -791,9 +801,16 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.action_sort_by:
                 selectSorting();
                 return true;
+            case R.id.subscribeForNew:
+                subscribe();
+                return true;
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void subscribe() {
+        startActivity(new Intent(this, SubscribeActivity.class));
     }
 
     private void clearHistory() {
@@ -903,8 +920,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void changeDownloadsFolder() {
-        Intent intent = new Intent(this, FolderPicker.class);
-        startActivityForResult(intent, READ_REQUEST_CODE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_CODE);
+        }
+        else{
+            Intent intent = new Intent(this, FolderPicker.class);
+            startActivityForResult(intent, READ_REQUEST_CODE);
+        }
     }
 
     @Override
@@ -1213,7 +1235,35 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == START_TOR) {
+        if (requestCode == REQUEST_CODE) {
+            Log.d("surprise", "OPDSActivity onActivityResult here");
+            if (resultCode == Activity.RESULT_OK) {
+                if (data != null) {
+                    Uri treeUri = data.getData();
+
+                    if(treeUri != null){
+                        App.getInstance().setNewDownloadFolder(treeUri);
+                        Toast.makeText(this, getText(R.string.download_folder_changed_message_new), Toast.LENGTH_LONG).show();
+
+                    }
+
+
+                }
+            }
+        }
+        else if (requestCode == READ_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (data != null) {
+                    String folderLocation = data.getExtras().getString("data");
+                    File destination = new File(folderLocation);
+                    if (destination.exists()) {
+                        App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
+                        Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        }
+        else if (requestCode == START_TOR) {
             // перезагружу страницу
             String lastUrl = App.getInstance().getLastHistoryElement();
             if (lastUrl != null && !lastUrl.isEmpty()) {

@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
 import androidx.work.Data;
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 
@@ -143,16 +145,32 @@ public class DownloadBooksWorker extends Worker {
             mName = author_last_name + "_" + book_name.substring(0, 127 - (author_last_name.length() + book_mime.length() + 2 + 6)) + "_" + Grammar.getRandom() + "." + book_mime;
         }
         //Log.d("surprise", "DownloadBooksWorker downloadBook " + name);
-        File file = new File(App.getInstance().getDownloadFolder(), mName);
-        InputStream is = httpResponse.getEntity().getContent();
-        FileOutputStream outputStream = new FileOutputStream(file);
-        int read;
-        byte[] buffer = new byte[1024];
-        while ((read = is.read(buffer)) > 0) {
-            outputStream.write(buffer, 0, read);
-        }
-        outputStream.close();
-        is.close();
+            DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
+            if(downloadsDir != null){
+                DocumentFile newFile = downloadsDir.createFile(book_mime, mName);
+                if(newFile != null){
+                    InputStream is = httpResponse.getEntity().getContent();
+                    OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
+                    int read;
+                    byte[] buffer = new byte[1024];
+                    while ((read = is.read(buffer)) > 0) {
+                        out.write(buffer, 0, read);
+                    }
+                    out.close();
+                }
+            }
+            else{
+                File file = new File(App.getInstance().getDownloadFolder(), mName);
+                InputStream is = httpResponse.getEntity().getContent();
+                FileOutputStream outputStream = new FileOutputStream(file);
+                int read;
+                byte[] buffer = new byte[1024];
+                while ((read = is.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, read);
+                }
+                outputStream.close();
+                is.close();
+            }
         } catch (ClientProtocolException e) {
             Log.d("surprise", "DownloadBooksWorker downloadBook clientProtocolException");
             e.printStackTrace();

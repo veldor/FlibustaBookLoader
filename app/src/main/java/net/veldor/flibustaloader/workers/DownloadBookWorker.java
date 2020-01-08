@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.workers;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
 import androidx.work.Data;
@@ -23,6 +24,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
 import cz.msebera.android.httpclient.HttpResponse;
@@ -51,7 +53,7 @@ public class DownloadBookWorker extends Worker {
     public Result doWork() {
         Data data = getInputData();
         String[] properties = data.getStringArray(MyWebClient.DOWNLOAD_ATTRIBUTES);
-        if(properties != null && properties.length == 4 && properties[1] != null){
+        if (properties != null && properties.length == 4 && properties[1] != null) {
             HttpClient httpClient = getNewHttpClient();
             int port;
             try {
@@ -70,25 +72,42 @@ public class DownloadBookWorker extends Worker {
                 String book_name = properties[2].replaceAll(" ", "_").replaceAll("[^\\d\\w-_]", "");
                 String book_mime = properties[0];
                 // если сумма символов меньше 255- создаю полное имя
-                if(author_last_name.length() + book_name.length() + book_mime.length() + 2 < 255 / 2){
+                if (author_last_name.length() + book_name.length() + book_mime.length() + 2 < 255 / 2) {
                     mName = author_last_name + "_" + book_name + "." + book_mime;
-                }
-                else{
+                } else {
                     // сохраняю книгу по имени автора и тому, что влезет от имени книги
                     //name = author_last_name + "_" + book_name.substring(0, 127 - author_last_name.length() + book_mime.length() + 2) + "." + book_mime;
                     mName = author_last_name + "_" + book_name.substring(0, 127 - (author_last_name.length() + book_mime.length() + 2)) + book_mime;
 
                 }
-                File file = new File(App.getInstance().getDownloadFolder(), mName);
-                InputStream is = httpResponse.getEntity().getContent();
-                FileOutputStream outputStream = new FileOutputStream(file);
-                int read;
-                byte[] buffer = new byte[1024];
-                while ((read = is.read(buffer)) > 0) {
-                    outputStream.write(buffer, 0, read);
+
+                DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
+                if(downloadsDir != null){
+                    DocumentFile newFile = downloadsDir.createFile(book_mime, mName);
+                    if(newFile != null){
+                        InputStream is = httpResponse.getEntity().getContent();
+                        OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
+                        int read;
+                        byte[] buffer = new byte[1024];
+                        while ((read = is.read(buffer)) > 0) {
+                            out.write(buffer, 0, read);
+                        }
+                        out.close();
+                    }
                 }
-                outputStream.close();
-                is.close();
+                else{
+                    File file = new File(App.getInstance().getDownloadFolder(), mName);
+                    InputStream is = httpResponse.getEntity().getContent();
+                    FileOutputStream outputStream = new FileOutputStream(file);
+                    int read;
+                    byte[] buffer = new byte[1024];
+                    while ((read = is.read(buffer)) > 0) {
+                        outputStream.write(buffer, 0, read);
+                    }
+                    outputStream.close();
+                    is.close();
+                }
+
                 Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, mName);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, book_mime);

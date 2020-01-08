@@ -67,4 +67,8 @@
         android:id="@+id/buyCoffee"
         android:title="@string/buy_me_coffee"
         yourapp:showAsAction="never"/>
+    <item
+        android:id="@+id/subscribeForNew"
+        android:title="@string/subscribe_message"
+        yourapp:showAsAction="never"/>
 </menu>

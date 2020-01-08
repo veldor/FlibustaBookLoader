@@ -13,6 +13,8 @@ import java.io.IOException;
 public class MyFileReader {
     private static final String SEARCH_AUTOCOMPLETE_FILE = "searchAutocomplete.xml";
     private static final String SEARCH_AUTOCOMPLETE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><search> </search>";
+    private static final String SUBSCRIBE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><subscribe> </subscribe>";
+    private static final String BOOKS_SUBSCRIBE_FILE = "booksSubscribe.xml";
 
     public static String getSearchAutocomplete() {
 
@@ -33,13 +35,32 @@ public class MyFileReader {
         return text.toString();
     }
 
+    static String getBooksSubscribe() {
+
+        File booksSubscribeFile = new File(App.getInstance().getFilesDir(), BOOKS_SUBSCRIBE_FILE);
+        if (!booksSubscribeFile.exists()) {
+            makeFile(booksSubscribeFile, SUBSCRIBE_NEW);
+        }
+        StringBuilder text = new StringBuilder();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(booksSubscribeFile));
+            String line;
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return text.toString();
+    }
+
     static void saveSearchAutocomplete(String value) {
         File autocompleteFile = new File(App.getInstance().getFilesDir(), SEARCH_AUTOCOMPLETE_FILE);
         makeFile(autocompleteFile, value);
         Log.d("surprise", "MyFileReader saveSearchAutocomplete: save file " + autocompleteFile);
     }
 
-    public static void clearAutocomplete(){
+    public static void clearAutocomplete() {
         File autocompleteFile = new File(App.getInstance().getFilesDir(), SEARCH_AUTOCOMPLETE_FILE);
         makeFile(autocompleteFile, SEARCH_AUTOCOMPLETE_NEW);
     }
@@ -54,4 +75,15 @@ public class MyFileReader {
             e.printStackTrace();
         }
     }
+
+    static void saveBooksSubscription(String value) {
+        File subscriptionFile = new File(App.getInstance().getFilesDir(), BOOKS_SUBSCRIBE_FILE);
+        makeFile(subscriptionFile, value);
+    }
+
+    public static boolean isInternalMemory(File downloadFolder) {
+        return downloadFolder.toString().startsWith("/storage/emulated/0");
+    }
+
+
 }

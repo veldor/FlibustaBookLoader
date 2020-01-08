@@ -78,4 +78,7 @@
     <string name="switch_to_vebview_message">Переключить на WebView</string>
     <string name="switch_to_opds_message">Переключить на OPDS</string>
     <string name="clear_search_history_message">Удалить автозаполнение поиска</string>
+    <string name="subscribe_message">Подписаться на обновления</string>
+    <string name="subscribe_msg">Подписаться</string>
+    <string name="download_folder_changed_message_new">Папка загрузок изменена</string>
 </resources>

@@ -15,6 +15,7 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.workers.CheckSubsctiptionsWorker;
 import net.veldor.flibustaloader.workers.GetAllPagesWorker;
 import net.veldor.flibustaloader.workers.ParseSearchWorker;
 
@@ -90,6 +91,7 @@ public class XMLParser {
         try {
             entry = (Node) xPath.evaluate("/feed/link[@rel='next']", document, XPathConstants.NODE);
             GetAllPagesWorker.sNextPage = entry == null ? null : entry.getAttributes().getNamedItem("href").getNodeValue();
+            CheckSubsctiptionsWorker.sNextPage = entry == null ? null : entry.getAttributes().getNamedItem("href").getNodeValue();
             // получу сущности
             NodeList entries = (NodeList) xPath.evaluate("/feed/entry", document, XPathConstants.NODESET);
             if (entries.getLength() > 0) {

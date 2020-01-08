@@ -8,7 +8,9 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AppCompatDelegate;
+import android.util.Log;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -26,6 +28,7 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.utils.SubscribeBooks;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
@@ -41,6 +44,7 @@ public class App extends Application {
     private static final String START_TOR = "start_tor";
     private static final String PREFERENCE_LOAD_ALL = "load all";
     private static final String PREFERENCE_VIEW = "view";
+    public static final String PREFERENCE_NEW_DOWNLOAD_LOCATION = "new_download_folder";
 
     public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
     public ArrayList<String> mSearchHistory = new ArrayList<>();
@@ -117,6 +121,7 @@ public class App extends Application {
     };
     public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
+    private SubscribeBooks mBooksSubscribe;
 
     @Override
     public void onCreate() {
@@ -149,6 +154,9 @@ public class App extends Application {
                 .addMigrations(AppDatabase.MIGRATION_1_2)
                 .allowMainThreadQueries()
                 .build();
+
+        File sdCard = Environment.getExternalStorageDirectory();
+        Log.d("surprise", "App onCreate " + sdCard);
     }
 
     public static App getInstance() {
@@ -217,6 +225,7 @@ public class App extends Application {
         // возвращу папку для закачек
         String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, DOWNLOAD_FOLDER_LOCATION.toString());
         File dl = new File(download_location);
+        Log.d("surprise", "App getDownloadFolder " + dl);
         if (dl.isDirectory()) {
             return dl;
         } else {
@@ -225,6 +234,7 @@ public class App extends Application {
     }
 
     public void setDownloadFolder(Uri uri) {
+        Log.d("surprise", "App setDownloadFolder url is " + uri);
         mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.getPath()).apply();
     }
 
@@ -305,5 +315,25 @@ public class App extends Application {
 
     public void setView(int viewType) {
         mSharedPreferences.edit().putInt(PREFERENCE_VIEW, viewType).apply();
+    }
+
+    // добавлю хранилище подписок
+    public SubscribeBooks getBooksSubscribe(){
+        if(mBooksSubscribe == null){
+            mBooksSubscribe = new SubscribeBooks();
+        }
+        return mBooksSubscribe;
+    }
+
+    public void setNewDownloadFolder(Uri uri) {
+        mSharedPreferences.edit().putString(PREFERENCE_NEW_DOWNLOAD_LOCATION, uri.toString()).apply();
+    }
+
+    public DocumentFile getNewDownloadDir() {
+        String download_location = mSharedPreferences.getString(PREFERENCE_NEW_DOWNLOAD_LOCATION, null);
+        if(download_location != null){
+            return DocumentFile.fromTreeUri(this, Uri.parse(download_location));
+        }
+        return null;
     }
 }

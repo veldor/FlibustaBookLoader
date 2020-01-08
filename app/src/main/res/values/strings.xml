@@ -78,4 +78,8 @@
     <string name="switch_to_vebview_message">Switch to WebView</string>
     <string name="switch_to_opds_message">Switch to OPDS</string>
     <string name="clear_search_history_message">Clear search history</string>
+    <string name="subscribe_message">Subscribe</string>
+    <string name="subscribe_msg">Subscribe</string>
+    <string name="deleteitem" translatable="false">deleteItem</string>
+    <string name="download_folder_changed_message_new">Download folder changed</string>
 </resources>

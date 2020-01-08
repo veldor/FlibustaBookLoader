@@ -4,10 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.StrictMode;
+import android.support.v4.provider.DocumentFile;
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
 
 import java.io.File;
@@ -22,18 +22,36 @@ public class BookOpener {
         StrictMode.setVmPolicy(builder.build());
         // ========================================================================================
         Context context = App.getInstance();
-        // получу путь к файлу
-        File file = new File(App.getInstance().getDownloadFolder(), name);
-        if(file.exists()){
-            // отправлю запрос на открытие файла
-            Intent openIntent = new Intent(Intent.ACTION_VIEW);
-            openIntent.setDataAndType(Uri.fromFile(file), MimeTypes.getFullMime(type));
-            Intent starter = Intent.createChooser(openIntent, context.getString(R.string.open_with_message));
-            starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(starter);
+        DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
+        if(downloadsDir != null){
+            DocumentFile file = downloadsDir.findFile(name);
+            if(file != null){
+                Intent openIntent = new Intent(Intent.ACTION_VIEW);
+                openIntent.setDataAndType(file.getUri(), MimeTypes.getFullMime(type));
+                openIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                Intent starter = Intent.createChooser(openIntent, context.getString(R.string.open_with_message));
+                starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(starter);
+            }
+            else{
+                Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
+            }
         }
         else{
-            Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
+            // получу путь к файлу
+            File file = new File(App.getInstance().getDownloadFolder(), name);
+            if(file.exists()){
+                // отправлю запрос на открытие файла
+                Intent openIntent = new Intent(Intent.ACTION_VIEW);
+                openIntent.setDataAndType(Uri.fromFile(file), MimeTypes.getFullMime(type));
+                Intent starter = Intent.createChooser(openIntent, context.getString(R.string.open_with_message));
+                starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(starter);
+            }
+            else{
+                Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
+            }
         }
+
     }
 }
