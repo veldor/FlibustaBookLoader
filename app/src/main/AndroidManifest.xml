@@ -39,6 +39,13 @@
                 <data android:host="flibusta.is" />
                 <data android:host="flibustahezeous3.onion" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="application/*" />
+            </intent-filter>
+
         </activity>
         <activity
             android:name=".OPDSActivity"

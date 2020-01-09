@@ -7,17 +7,27 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.provider.DocumentsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
+import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
+
+import net.veldor.flibustaloader.utils.MimeTypes;
+
+import java.io.File;
+
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,15 +41,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
 
-        if (!permissionGranted()) {
+        // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
+       if (!permissionGranted()) {
             // показываю диалог с требованием предоставить разрешения
             showPermissionDialog();
         } else {
-
             handleStart();
         }
+
     }
 
     private void handleStart() {
@@ -49,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         if (App.getInstance().getView() != 0) {
             // если приложению передана ссылка на страницу
             if (getIntent().getData() != null) {//check if intent is not null
+                Log.d("surprise", "handleStart: have intent");
                 mLink = getIntent().getData();//set a variable for the WebViewActivity
             }
 
