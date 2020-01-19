@@ -12,15 +12,18 @@ import android.support.v4.app.NotificationCompat;
 
 import net.veldor.flibustaloader.MainActivity;
 import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.SubscriptionsActivity;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.receivers.BookActionReceiver;
 
 public class Notificator {
     private static final String SHIFTS_CHANNEL_ID = "books";
     public static final int BOOK_LOADED_NOTIFICATION = 1;
+    public static final int SUBSCRIBE_NOTIFICATION = 2;
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;
+    private static final String SUBSCRIBES_CHANNEL_ID = "subscribes";
     private final Context mContext;
     private final NotificationManager mNotificationManager;
 
@@ -35,6 +38,13 @@ public class Notificator {
             nc.setLightColor(Color.RED);
             nc.enableVibration(true);
             mNotificationManager.createNotificationChannel(nc);
+            // создам канал уведомлений о скачанных книгах
+            NotificationChannel nc1 = new NotificationChannel(SUBSCRIBES_CHANNEL_ID, mContext.getString(R.string.subscribes_channel), NotificationManager.IMPORTANCE_DEFAULT);
+            nc1.setDescription(mContext.getString(R.string.subscribe_description));
+            nc1.enableLights(true);
+            nc1.setLightColor(Color.BLUE);
+            nc1.enableVibration(true);
+            mNotificationManager.createNotificationChannel(nc1);
         }
     }
 
@@ -68,5 +78,20 @@ public class Notificator {
                 .addAction(R.drawable.ic_open_black_24dp, "Открыть", openPendingIntent);
         Notification notification = notificationBuilder.build();
         mNotificationManager.notify(BOOK_LOADED_NOTIFICATION, notification);
+    }
+
+    public void sendFoundSubscribesNotification() {
+
+        Intent openSubscriptionsIntent = new Intent(mContext, SubscriptionsActivity.class);
+        PendingIntent startMainPending = PendingIntent.getActivity(mContext, START_APP_CODE, openSubscriptionsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, SUBSCRIBES_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_book_black_24dp)
+                .setContentTitle("Найдены новые книги")
+                .setStyle(new NotificationCompat.BigTextStyle().bigText("Есть новые поступления по темам, которые вас интересуют"))
+                .setContentIntent(startMainPending)
+                .setAutoCancel(true);
+        Notification notification = notificationBuilder.build();
+        mNotificationManager.notify(SUBSCRIBE_NOTIFICATION, notification);
     }
 }

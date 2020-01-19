@@ -2,6 +2,7 @@ package net.veldor.flibustaloader;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Dialog;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -31,6 +32,10 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import androidx.work.WorkManager;
+
+import net.veldor.flibustaloader.dialogs.GifDialog;
+import net.veldor.flibustaloader.dialogs.GifDialogListener;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
@@ -46,6 +51,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
 
     private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final int READ_REQUEST_CODE = 5;
+    private static final int REQUEST_CODE = 7;
     private MyWebView mWebView;
     private MainViewModel mMyViewModel;
     private SwipeRefreshLayout mRefresher;
@@ -58,6 +64,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private AlertDialog mTorRestartDialog;
     private TorConnectErrorReceiver mTorConnectErrorReceiver;
     private long mConfirmExit;
+    private Dialog mShowLoadDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -279,15 +286,33 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     private void changeDownloadsFolder() {
-        Intent intent = new Intent(this, FolderPicker.class);
-        startActivityForResult(intent, READ_REQUEST_CODE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_CODE);
+        } else {
+            Intent intent = new Intent(this, FolderPicker.class);
+            startActivityForResult(intent, READ_REQUEST_CODE);
+        }
     }
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == READ_REQUEST_CODE) {
+        if (requestCode == REQUEST_CODE) {
+            Log.d("surprise", "OPDSActivity onActivityResult here");
+            if (resultCode == Activity.RESULT_OK) {
+                if (data != null) {
+                    Uri treeUri = data.getData();
+                    if (treeUri != null) {
+                        App.getInstance().setNewDownloadFolder(treeUri);
+                        Toast.makeText(this, getText(R.string.download_folder_changed_message_new), Toast.LENGTH_LONG).show();
+                    }
+
+
+                }
+            }
+        }
+        else if (requestCode == READ_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
                     String folderLocation = Objects.requireNonNull(data.getExtras()).getString("data");
@@ -428,20 +453,21 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     private void showBookLoadingDialog() {
-        if (mBookLoadingDialog == null) {
-            // создам диалоговое окно
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setTitle(R.string.book_loading_dialog_title)
-                    .setView(R.layout.book_loading_dialog_layout)
-                    .setCancelable(false);
-            mBookLoadingDialog = dialogBuilder.create();
+        if (mShowLoadDialog == null) {
+
+            mShowLoadDialog = new GifDialog.Builder(this)
+                    .setTitle(getString(R.string.load_waiting_title))
+                    .setMessage(getString(R.string.load_waiting_message))
+                    .setGifResource(R.drawable.gif1)   //Pass your Gif here
+                    .isCancellable(false)
+                    .build();
         }
-        mBookLoadingDialog.show();
+        mShowLoadDialog.show();
     }
 
     private void hideBookLoadingDialog() {
-        if (mBookLoadingDialog != null) {
-            mBookLoadingDialog.hide();
+        if (mShowLoadDialog != null) {
+            mShowLoadDialog.hide();
         }
     }
 

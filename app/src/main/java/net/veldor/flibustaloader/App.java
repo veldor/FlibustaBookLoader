@@ -28,23 +28,34 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
+import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
+
+import static java.util.Calendar.HOUR_OF_DAY;
+import static java.util.Calendar.MINUTE;
 
 public class App extends Application {
 
+
+    private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
     public static final int MAX_BOOK_NUMBER = 548398;
     public static final int VIEW_WEB = 1;
     public static final int VIEW_ODPS = 2;
     private static final String PREFERENCE_CHECK_UPDATES = "check_updates";
     private static final String PREFERENCE_HIDE_READ = "hide read";
-    private static final String START_TOR = "start_tor";
+    public static final String START_TOR = "start_tor";
     private static final String PREFERENCE_LOAD_ALL = "load all";
     private static final String PREFERENCE_VIEW = "view";
     public static final String PREFERENCE_NEW_DOWNLOAD_LOCATION = "new_download_folder";
+    private static final String PREFERENCE_LAST_CHECKED_BOOK = "last_checked_book";
+    private static final String PREFERENCE_FAVORITE_MIME = "favorite_mime";
 
     public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
     public ArrayList<String> mSearchHistory = new ArrayList<>();
@@ -100,12 +111,14 @@ public class App extends Application {
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
     public MutableLiveData<FoundedBook> mSelectedBook = new MutableLiveData<>();
+    // отслеживание загрузки книги
+    public MutableLiveData<Boolean> mDownloadProgress = new MutableLiveData<>();
     public MutableLiveData<FoundedBook> mContextBook = new MutableLiveData<>();
     public MutableLiveData<AndroidOnionProxyManager> mLoadedTor = new MutableLiveData<>();
     public MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
     public MutableLiveData<String> mMultiplyDownloadStatus = new MutableLiveData<>();
     public LiveData<WorkInfo> mDownloadAllWork;
-    public boolean mDownloadInProgress;
+    public boolean mDownloadsInProgress;
     public OneTimeWorkRequest mProcess;
     public MutableLiveData<String> mUnloadedBook = new MutableLiveData<>();
     public ArrayList<FoundedItem> mBooksForDownload;
@@ -114,6 +127,7 @@ public class App extends Application {
     public int mAuthorSortOptions = -1;
     public int mOtherSortOptions = -1;
     public MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
+    public MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     private MyWebClient mWebClient;
     public AppDatabase mDatabase;
@@ -122,6 +136,8 @@ public class App extends Application {
     public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
     private SubscribeBooks mBooksSubscribe;
+    private SubscribeAuthors mAuthorsSubscribe;
+
 
     @Override
     public void onCreate() {
@@ -155,8 +171,32 @@ public class App extends Application {
                 .allowMainThreadQueries()
                 .build();
 
-        File sdCard = Environment.getExternalStorageDirectory();
-        Log.d("surprise", "App onCreate " + sdCard);
+        planeBookSubscribes();
+    }
+
+    private void planeBookSubscribes() {
+        Calendar cal = Calendar.getInstance();
+        // буду проверять обновления в полдень
+        int now_hour = cal.get(HOUR_OF_DAY);
+        // проверю, нужно ли планировать проверку расписания
+        if(now_hour < 12){
+            long currentTime = cal.getTimeInMillis();
+            cal.set(HOUR_OF_DAY, 12);
+            cal.set(MINUTE, 0);
+            long plannedTime = cal.getTimeInMillis();
+            OneTimeWorkRequest checkSubs = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).addTag(CHECK_SUBSCRIPTIONS).setInitialDelay(plannedTime - currentTime, TimeUnit.MILLISECONDS).build();
+            WorkManager.getInstance().enqueueUniqueWork(CHECK_SUBSCRIPTIONS, ExistingWorkPolicy.REPLACE, checkSubs);
+        }
+        else{
+            // запланирую проверку на следующий день
+            long currentTime = cal.getTimeInMillis();
+            cal.set(HOUR_OF_DAY, 12);
+            cal.set(MINUTE, 0);
+            cal.add(Calendar.HOUR_OF_DAY, 24);
+            long plannedTime = cal.getTimeInMillis();
+            OneTimeWorkRequest checkSubs = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).addTag(CHECK_SUBSCRIPTIONS).setInitialDelay(plannedTime - currentTime, TimeUnit.MILLISECONDS).build();
+            WorkManager.getInstance().enqueueUniqueWork(CHECK_SUBSCRIPTIONS, ExistingWorkPolicy.REPLACE, checkSubs);
+        }
     }
 
     public static App getInstance() {
@@ -318,8 +358,8 @@ public class App extends Application {
     }
 
     // добавлю хранилище подписок
-    public SubscribeBooks getBooksSubscribe(){
-        if(mBooksSubscribe == null){
+    public SubscribeBooks getBooksSubscribe() {
+        if (mBooksSubscribe == null) {
             mBooksSubscribe = new SubscribeBooks();
         }
         return mBooksSubscribe;
@@ -331,9 +371,37 @@ public class App extends Application {
 
     public DocumentFile getNewDownloadDir() {
         String download_location = mSharedPreferences.getString(PREFERENCE_NEW_DOWNLOAD_LOCATION, null);
-        if(download_location != null){
+        if (download_location != null) {
             return DocumentFile.fromTreeUri(this, Uri.parse(download_location));
         }
         return null;
+    }
+
+    public SubscribeAuthors getAuthorsSubscribe() {
+        if (mAuthorsSubscribe == null) {
+            mAuthorsSubscribe = new SubscribeAuthors();
+        }
+        return mAuthorsSubscribe;
+    }
+
+    public String getLastCheckedBookId() {
+        return (mSharedPreferences.getString(PREFERENCE_LAST_CHECKED_BOOK, "tag:book:0"));
+    }
+    public void setLastCheckedBook(String firstCheckedId) {
+        mSharedPreferences.edit().putString(PREFERENCE_LAST_CHECKED_BOOK, firstCheckedId).apply();
+    }
+
+    public void discardFavoriteType() {
+        mSharedPreferences.edit().remove(PREFERENCE_FAVORITE_MIME).apply();
+    }
+
+
+    public  void saveFavoriteMime(String longMime) {
+        Log.d("surprise", "App saveFavoriteMime mime is " + longMime);
+        mSharedPreferences.edit().putString(PREFERENCE_FAVORITE_MIME, longMime).apply();
+    }
+
+    public String getFavoriteMime() {
+        return (mSharedPreferences.getString(PREFERENCE_FAVORITE_MIME, null));
     }
 }

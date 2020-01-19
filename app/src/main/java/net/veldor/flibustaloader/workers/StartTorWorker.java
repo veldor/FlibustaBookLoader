@@ -26,7 +26,6 @@ public class StartTorWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        Log.d("surprise", "StartTorWorker doWork start work");
         AndroidOnionProxyManager tor;
         if (App.getInstance().mTorManager.getValue() != null) {
             tor = App.getInstance().mTorManager.getValue();

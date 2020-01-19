@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -23,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -275,7 +277,7 @@ public class MyWebViewClient extends WebViewClient {
                         startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
                         activityContext.sendBroadcast(startLoadingIntent);
                         // сохраняю книгу в памяти устройства
-                        File file = new File(App.getInstance().getDownloadFolder(), name);
+                       /* File file = new File(App.getInstance().getDownloadFolder(), name);
                         InputStream is = httpResponse.getEntity().getContent();
                         FileOutputStream outputStream = new FileOutputStream(file);
                         int read;
@@ -284,7 +286,42 @@ public class MyWebViewClient extends WebViewClient {
                             outputStream.write(buffer, 0, read);
                         }
                         outputStream.close();
-                        is.close();
+                        is.close();*/
+
+                        DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
+                        if(downloadsDir != null){
+                            // проверю, не сохдан ли уже файл, если создан- удалю
+                            DocumentFile existentFile = downloadsDir.findFile(name);
+                            if(existentFile != null){
+                                existentFile.delete();
+                            }
+                            DocumentFile newFile = downloadsDir.createFile(mime, name);
+                            if(newFile != null){
+                                InputStream is = httpResponse.getEntity().getContent();
+                                OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
+                                int read;
+                                byte[] buffer = new byte[1024];
+                                while ((read = is.read(buffer)) > 0) {
+                                    assert out != null;
+                                    out.write(buffer, 0, read);
+                                }
+                                assert out != null;
+                                out.close();
+                            }
+                        }
+                        else{
+                            File file = new File(App.getInstance().getDownloadFolder(), name);
+                            InputStream is = httpResponse.getEntity().getContent();
+                            FileOutputStream outputStream = new FileOutputStream(file);
+                            int read;
+                            byte[] buffer = new byte[1024];
+                            while ((read = is.read(buffer)) > 0) {
+                                outputStream.write(buffer, 0, read);
+                            }
+                            outputStream.close();
+                            is.close();
+                        }
+
                         // отправлю сообщение о скачанном файле через broadcastReceiver
                         Intent intent = new Intent(activityContext, BookLoadedReceiver.class);
                         intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);

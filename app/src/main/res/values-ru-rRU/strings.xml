@@ -81,4 +81,9 @@
     <string name="subscribe_message">Подписаться на обновления</string>
     <string name="subscribe_msg">Подписаться</string>
     <string name="download_folder_changed_message_new">Папка загрузок изменена</string>
+    <string name="subscribe_description">Уведомления о подписках</string>
+    <string name="subscribes_channel">Подписки</string>
+    <string name="download_subscribes_msg">Подождите, загружаю список книг</string>
+    <string name="download_subscribes_title">Гружу книги по подписке</string>
+    <string name="discard_favorite_type">Сбросить формат загрузок</string>
 </resources>

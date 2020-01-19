@@ -68,6 +68,7 @@ public class DownloadBooksWorker extends Worker {
                 while (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0 && !mIsStopped) {
                     // возьму первый элемент из списка недогруженных книг
                     book = (FoundedBook) App.getInstance().mBooksForDownload.get(0);
+                    Log.d("surprise", "DownloadBooksWorker doWork downloading book " + book.name);
                     downloadBook(book, bookMime);
                     // книга загружена, удалю из списка
                     App.getInstance().mBooksForDownload.remove(0);
@@ -77,7 +78,7 @@ public class DownloadBooksWorker extends Worker {
 
         }
         Log.d("surprise", "DownloadBooksWorker doWork закончил загрузку");
-        App.getInstance().mDownloadInProgress = false;
+        App.getInstance().mDownloadsInProgress = false;
         return Result.success();
     }
 
@@ -147,6 +148,10 @@ public class DownloadBooksWorker extends Worker {
         //Log.d("surprise", "DownloadBooksWorker downloadBook " + name);
             DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
             if(downloadsDir != null){
+                DocumentFile existentFile = downloadsDir.findFile(mName);
+                if(existentFile != null){
+                    existentFile.delete();
+                }
                 DocumentFile newFile = downloadsDir.createFile(book_mime, mName);
                 if(newFile != null){
                     InputStream is = httpResponse.getEntity().getContent();
@@ -178,7 +183,7 @@ public class DownloadBooksWorker extends Worker {
             Log.d("surprise", "DownloadBooksWorker doWork have error here");
             // добавлю книгу в список книг, которые не удалсь скачать
             App.getInstance().mBooksDownloadFailed.add(book);
-            App.getInstance().mDownloadInProgress = false;
+            App.getInstance().mDownloadsInProgress = false;
             App.getInstance().mUnloadedBook.postValue(mName);
             //WorkManager.getInstance().cancelAllWork();
             // отправлю оповещение об ошибке загрузки TOR

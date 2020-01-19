@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.utils;
 
+import android.util.Log;
+
 import java.util.HashMap;
 
 public class MimeTypes {
@@ -45,43 +47,58 @@ public class MimeTypes {
 
 
     public static String getMime(String mime) {
-        if (MIMES.containsKey(mime)){
+        if (MIMES.containsKey(mime)) {
             return MIMES.get(mime);
         }
         return mime;
     }
+
     public static String getDownloadMime(String mime) {
-        if(mime.equals("application/epub")){
+        if (mime.equals("application/epub")) {
             return "epub";
         }
-        if(mime.equals("application/djvu+zip")){
+        if (mime.equals("application/djvu+zip")) {
             return "djvu.zip";
         }
-        if(mime.equals("application/doc")){
+        if (mime.equals("application/doc")) {
             return "doc";
         }
-        if(mime.equals("application/jpg")){
+        if (mime.equals("application/docx")) {
+            return "docx";
+        }
+        if (mime.equals("application/jpg")) {
             return "jpg";
         }
-        if(mime.equals("application/pdf+zip")){
+        if (mime.equals("application/pdf+zip")) {
             return "pdf.zip";
         }
-        if(mime.equals("application/rtf")){
+        if (mime.equals("application/rtf")) {
             return "rtf";
         }
-        if (DOWNLOAD_MIMES.containsKey(mime)){
+        if (DOWNLOAD_MIMES.containsKey(mime)) {
             return DOWNLOAD_MIMES.get(mime);
         }
         return mime;
     }
 
     public static String getFullMime(String shortMime) {
-        if(shortMime.endsWith(".zip")){
+        if (shortMime.endsWith(".zip")) {
             return "application/zip";
         }
-        if (FULL_MIMES.containsKey(shortMime)){
+        if (FULL_MIMES.containsKey(shortMime)) {
             return FULL_MIMES.get(shortMime);
         }
         return shortMime;
+    }
+
+    public static int getIntMime(String favoriteFormat) {
+        int counter = 0;
+        for(String mime:MIMES_LIST){
+            if(mime.equals(getMime(favoriteFormat))){
+                return counter;
+            }
+            counter++;
+        }
+        return 0;
     }
 }

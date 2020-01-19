@@ -20,7 +20,8 @@
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup">
-        <activity android:name=".SubscribeActivity"/>
+        <activity android:name=".SubscriptionsActivity"/>
+        <activity android:name=".SubscribeActivity" />
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboardHidden|orientation">
@@ -39,13 +40,6 @@
                 <data android:host="flibusta.is" />
                 <data android:host="flibustahezeous3.onion" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:mimeType="application/*" />
-            </intent-filter>
-
         </activity>
         <activity
             android:name=".OPDSActivity"

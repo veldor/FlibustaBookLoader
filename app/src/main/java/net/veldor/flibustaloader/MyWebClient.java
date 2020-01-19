@@ -25,6 +25,7 @@ import cz.msebera.android.httpclient.client.protocol.HttpClientContext;
 public class MyWebClient {
 
     static final String PAGE_LOAD_WORKER = "page load worker";
+    public static final String DOWNLOAD_BOOK_WORKER = "download_book_worker";
     public HttpClientContext mContext;
     public HttpClient mHttpClient;
 
@@ -66,7 +67,7 @@ public class MyWebClient {
                 .putStringArray(DOWNLOAD_ATTRIBUTES, data)
                 .build();
         // запущу рабочего, загружающего файл
-        OneTimeWorkRequest downloadBookWorker = new OneTimeWorkRequest.Builder(DownloadBookWorker.class).setInputData(inputData).build();
+        OneTimeWorkRequest downloadBookWorker = new OneTimeWorkRequest.Builder(DownloadBookWorker.class).setInputData(inputData).addTag(DOWNLOAD_BOOK_WORKER).build();
         WorkManager.getInstance().enqueue(downloadBookWorker);
     }
 

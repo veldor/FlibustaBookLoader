@@ -51,6 +51,7 @@ public class DownloadBookWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        App.getInstance().mDownloadProgress.postValue(true);
         Data data = getInputData();
         String[] properties = data.getStringArray(MyWebClient.DOWNLOAD_ATTRIBUTES);
         if (properties != null && properties.length == 4 && properties[1] != null) {
@@ -80,9 +81,13 @@ public class DownloadBookWorker extends Worker {
                     mName = author_last_name + "_" + book_name.substring(0, 127 - (author_last_name.length() + book_mime.length() + 2)) + book_mime;
 
                 }
-
                 DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
                 if(downloadsDir != null){
+                    // проверю, не сохдан ли уже файл, если создан- удалю
+                    DocumentFile existentFile = downloadsDir.findFile(mName);
+                    if(existentFile != null){
+                        existentFile.delete();
+                    }
                     DocumentFile newFile = downloadsDir.createFile(book_mime, mName);
                     if(newFile != null){
                         InputStream is = httpResponse.getEntity().getContent();
@@ -125,6 +130,7 @@ public class DownloadBookWorker extends Worker {
                 e.printStackTrace();
             }
         }
+        App.getInstance().mDownloadProgress.postValue(false);
         return Result.success();
     }
 

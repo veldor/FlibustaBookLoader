@@ -7,27 +7,24 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.StrictMode;
-import android.provider.DocumentsContract;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
-import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
-import net.veldor.flibustaloader.utils.MimeTypes;
+import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 
-import java.io.File;
-
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -146,7 +143,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d("surprise", "MainActivity onDestroy app destroyed?");
-        WorkManager.getInstance().cancelAllWork();
+        // остановлю запуск TOR
+        WorkManager.getInstance().cancelAllWorkByTag(App.START_TOR);
     }
 
 

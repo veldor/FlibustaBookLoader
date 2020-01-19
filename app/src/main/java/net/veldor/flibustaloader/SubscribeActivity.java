@@ -18,8 +18,9 @@ import androidx.work.WorkManager;
 
 import net.veldor.flibustaloader.adapters.SubscribesAdapter;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
+import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
-import net.veldor.flibustaloader.workers.CheckSubsctiptionsWorker;
+import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 
 import java.util.ArrayList;
 
@@ -28,6 +29,9 @@ public class SubscribeActivity extends AppCompatActivity {
     private EditText mSubsctibeInput;
     private SubscribeBooks mBooksSubscribeContainer;
     private SubscribesAdapter mSubscribesAdapter;
+    private SubscribeAuthors mAuthorsSubscribeContainer;
+    private RecyclerView mRecycler;
+    private RadioGroup mRadioContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,39 +39,47 @@ public class SubscribeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_subscribe);
 
         // отслежу переключение типа подписки
-        RadioGroup radioContainer = findViewById(R.id.subscribe_type);
-        radioContainer.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        mRadioContainer = findViewById(R.id.subscribe_type);
+        mRadioContainer.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 switch (checkedId){
                     case R.id.searchBook:
-                        Log.d("surprise", "SubscribeActivity onCheckedChanged book");
+                        showBooks();
                         break;
                     case R.id.searchAuthor:
-                        Log.d("surprise", "SubscribeActivity onCheckedChanged author");
+                        showAuthors();
                         break;
                 }
             }
         });
 
-        RecyclerView recycler = findViewById(R.id.subscrtibe_items_list);
-        recycler.setLayoutManager(new LinearLayoutManager(this));
+        mRecycler = findViewById(R.id.subscribe_items_list);
+        mRecycler.setLayoutManager(new LinearLayoutManager(this));
 
-        // получу подписки на книги
         mBooksSubscribeContainer = App.getInstance().getBooksSubscribe();
-        ArrayList<SubscriptionItem> autocompleteValues = mBooksSubscribeContainer.getSubscribes();
-        Log.d("surprise", "SubscribeActivity onCreate " + autocompleteValues.size());
-        mSubscribesAdapter = new SubscribesAdapter(autocompleteValues);
-        recycler.setAdapter(mSubscribesAdapter);
+        mAuthorsSubscribeContainer = App.getInstance().getAuthorsSubscribe();
+        showBooks();
+
+
 
         // буду отслеживать изменения списка книг
         LiveData<Boolean> refresh = mBooksSubscribeContainer.mListRefreshed;
         refresh.observe(this, new Observer<Boolean>() {
             @Override
             public void onChanged(@Nullable Boolean aBoolean) {
-                if(aBoolean != null && aBoolean){
-                    Log.d("surprise", "SubscribeActivity onChanged data changed");
+                if(aBoolean != null && aBoolean && mRadioContainer.getCheckedRadioButtonId() == R.id.searchBook){
                     refreshSubscriptionList();
+                }
+            }
+        });
+        // буду отслеживать изменения списка авторов
+        LiveData<Boolean> authorRefresh = mAuthorsSubscribeContainer.mListRefreshed;
+        authorRefresh.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                if(aBoolean != null && aBoolean && mRadioContainer.getCheckedRadioButtonId() == R.id.searchAuthor){
+                    refreshAuthorSubscriptionList();
                 }
             }
         });
@@ -76,6 +88,28 @@ public class SubscribeActivity extends AppCompatActivity {
         // добавлю идентификатор строки поиска
         mSubsctibeInput = findViewById(R.id.subscribe_name);
         mSubsctibeInput.requestFocus();
+    }
+
+    private void refreshAuthorSubscriptionList() {
+        ArrayList<SubscriptionItem> autocompleteValues = mAuthorsSubscribeContainer.getSubscribes();
+        mSubscribesAdapter.changeList(autocompleteValues);
+        mSubscribesAdapter.notifyDataSetChanged();
+    }
+
+    private void showAuthors() {
+        // получу подписки на авторов
+        ArrayList<SubscriptionItem> autocompleteValues = mAuthorsSubscribeContainer.getSubscribes();
+        Log.d("surprise", "SubscribeActivity onCreate " + autocompleteValues.size());
+        mSubscribesAdapter = new SubscribesAdapter(autocompleteValues);
+        mRecycler.setAdapter(mSubscribesAdapter);
+    }
+
+    private void showBooks() {
+        // получу подписки на книги
+        ArrayList<SubscriptionItem> autocompleteValues = mBooksSubscribeContainer.getSubscribes();
+        Log.d("surprise", "SubscribeActivity onCreate " + autocompleteValues.size());
+        mSubscribesAdapter = new SubscribesAdapter(autocompleteValues);
+        mRecycler.setAdapter(mSubscribesAdapter);
     }
 
     private void refreshSubscriptionList() {
@@ -89,12 +123,23 @@ public class SubscribeActivity extends AppCompatActivity {
         // получу содержимое строки ввода
         String value = mSubsctibeInput.getText().toString().trim();
         if(!value.isEmpty()){
-            mBooksSubscribeContainer.addValue(value);
+            // добавлю подписку в зависимости от типа
+            switch (mRadioContainer.getCheckedRadioButtonId()){
+                case R.id.searchBook:
+                    Log.d("surprise", "SubscribeActivity addSubscribe add book");
+                    mBooksSubscribeContainer.addValue(value);
+                    break;
+                case R.id.searchAuthor:
+                    Log.d("surprise", "SubscribeActivity addSubscribe add author");
+                    mAuthorsSubscribeContainer.addValue(value);
+                    break;
+
+            }
             mSubsctibeInput.setText("");
             Toast.makeText(this, "Добавляю значение " + value, Toast.LENGTH_LONG).show();
         }
         else{
-            Toast.makeText(this, "Введите название книги для подписки", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Введите значение для подписки", Toast.LENGTH_LONG).show();
             mSubsctibeInput.requestFocus();
         }
     }
@@ -103,7 +148,7 @@ public class SubscribeActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // проверю новые поступления
-        OneTimeWorkRequest worker = new OneTimeWorkRequest.Builder(CheckSubsctiptionsWorker.class).build();
+        OneTimeWorkRequest worker = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).build();
         WorkManager.getInstance().enqueue(worker);
     }
 }

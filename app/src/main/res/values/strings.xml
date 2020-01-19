@@ -82,4 +82,9 @@
     <string name="subscribe_msg">Subscribe</string>
     <string name="deleteitem" translatable="false">deleteItem</string>
     <string name="download_folder_changed_message_new">Download folder changed</string>
+    <string name="subscribes_channel">subscribes</string>
+    <string name="subscribe_description">Subscribe notifications</string>
+    <string name="download_subscribes_title">Download subscribes</string>
+    <string name="download_subscribes_msg">Wait for subscribes list getting</string>
+    <string name="discard_favorite_type">Сбросить формат загрузок</string>
 </resources>

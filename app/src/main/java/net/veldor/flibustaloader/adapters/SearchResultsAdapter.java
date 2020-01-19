@@ -4,6 +4,7 @@ import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -22,6 +23,7 @@ import net.veldor.flibustaloader.databinding.SearchedBookItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedGenreItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedSequenceItemBinding;
 import net.veldor.flibustaloader.selections.Author;
+import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
@@ -36,6 +38,9 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
     private ArrayList mGenres;
     private ArrayList mSequences;
     private LayoutInflater mLayoutInflater;
+
+
+    DownloadLink mCurrentLink;
 
     public SearchResultsAdapter(ArrayList<FoundedItem> arrayList) {
         switch (App.sSearchType) {
@@ -222,9 +227,26 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             downloadButton.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
+
                     // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
                     if (foundedBook.downloadLinks.size() == 1) {
                         Toast.makeText(App.getInstance(), "Начинаю скачивание", Toast.LENGTH_LONG).show();
+                    }
+                    else{
+                        String savedMime = App.getInstance().getFavoriteMime();
+                        if(savedMime !=null){
+                            Log.d("surprise", "ViewHolder onClick saved mime is " + savedMime);
+                            // проверю, нет ли в списке выбранного формата
+                            for(DownloadLink dl:foundedBook.downloadLinks){
+                                mCurrentLink = dl;
+                                if(dl.mime.equals(savedMime)){
+                                    ArrayList<DownloadLink> result = new ArrayList<>();
+                                    result.add(mCurrentLink);
+                                    App.getInstance().mDownloadLinksList.postValue(result);
+                                    return;
+                                }
+                            }
+                        }
                     }
                     App.getInstance().mDownloadLinksList.postValue(foundedBook.downloadLinks);
                 }

@@ -57,6 +57,9 @@
                 android:id="@+id/setDownloadsFolder"
                 android:title="@string/set_downloads_folder"/>
             <item
+                android:id="@+id/discardFavoriteType"
+                android:title="@string/discard_favorite_type"/>
+            <item
                 android:id="@+id/setUpdateCheck"
                 android:title="@string/set_update_check_message"
                 android:checkable="true"

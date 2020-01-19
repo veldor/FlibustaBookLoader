@@ -25,6 +25,7 @@ public class MyFileReader {
     private static final String SEARCH_AUTOCOMPLETE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><search> </search>";
     private static final String SUBSCRIBE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><subscribe> </subscribe>";
     private static final String BOOKS_SUBSCRIBE_FILE = "booksSubscribe.xml";
+    private static final String AUTHORS_SUBSCRIBE_FILE = "authorsSubscribe.xml";
 
     public static String getSearchAutocomplete() {
 
@@ -63,6 +64,23 @@ public class MyFileReader {
         }
         return text.toString();
     }
+    static String getAuthorsSubscribe() {
+        File authorsSubscribeFile = new File(App.getInstance().getFilesDir(), AUTHORS_SUBSCRIBE_FILE);
+        if (!authorsSubscribeFile.exists()) {
+            makeFile(authorsSubscribeFile, SUBSCRIBE_NEW);
+        }
+        StringBuilder text = new StringBuilder();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(authorsSubscribeFile));
+            String line;
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return text.toString();
+    }
 
     static void saveSearchAutocomplete(String value) {
         File autocompleteFile = new File(App.getInstance().getFilesDir(), SEARCH_AUTOCOMPLETE_FILE);
@@ -88,6 +106,12 @@ public class MyFileReader {
 
     static void saveBooksSubscription(String value) {
         File subscriptionFile = new File(App.getInstance().getFilesDir(), BOOKS_SUBSCRIBE_FILE);
+        makeFile(subscriptionFile, value);
+    }
+
+
+    static void saveAuthorsSubscription(String value) {
+        File subscriptionFile = new File(App.getInstance().getFilesDir(), AUTHORS_SUBSCRIBE_FILE);
         makeFile(subscriptionFile, value);
     }
 
@@ -226,4 +250,5 @@ public class MyFileReader {
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
+
 }
