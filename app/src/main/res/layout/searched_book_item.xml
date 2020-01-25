@@ -149,6 +149,26 @@
                 android:textColor="@color/book_name_color"
                 app:layout_constraintTop_toBottomOf="@+id/barrier3"/>
 
+            <ImageButton
+                android:id="@+id/book_read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_readed_24dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/downloadBookBtn"
+                android:visibility="gone"
+                android:contentDescription="@string/book_readed_message" />
+
+            <ImageButton
+                android:id="@+id/book_downloaded"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_downloaded_24dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toStartOf="@+id/book_read"
+                app:layout_constraintTop_toBottomOf="@+id/downloadBookBtn"
+                android:contentDescription="@string/book_downloaded_message" />
+
         </android.support.constraint.ConstraintLayout>
 
 </layout>

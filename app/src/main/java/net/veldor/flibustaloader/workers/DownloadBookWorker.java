@@ -54,7 +54,7 @@ public class DownloadBookWorker extends Worker {
         App.getInstance().mDownloadProgress.postValue(true);
         Data data = getInputData();
         String[] properties = data.getStringArray(MyWebClient.DOWNLOAD_ATTRIBUTES);
-        if (properties != null && properties.length == 4 && properties[1] != null) {
+        if (properties != null && properties.length == 5 && properties[1] != null) {
             HttpClient httpClient = getNewHttpClient();
             int port;
             try {
@@ -117,6 +117,8 @@ public class DownloadBookWorker extends Worker {
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, mName);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, book_mime);
                 App.getInstance().sendBroadcast(intent);
+                // помещу книгу в список загруженных
+                DatabaseWorker.makeBookDownloaded(properties[4]);
 
             } catch (ClientProtocolException e) {
                 // отправлю оповещение об ошибке загрузки TOR

@@ -10,7 +10,6 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AppCompatDelegate;
-import android.util.Log;
 
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -56,6 +55,8 @@ public class App extends Application {
     public static final String PREFERENCE_NEW_DOWNLOAD_LOCATION = "new_download_folder";
     private static final String PREFERENCE_LAST_CHECKED_BOOK = "last_checked_book";
     private static final String PREFERENCE_FAVORITE_MIME = "favorite_mime";
+    private static final String PREFERENCE_SAVE_ONLY_SELECTED = "save only selected";
+    private static final String PREFERENCE_REDOWNLOAD = "redownload";
 
     public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
     public ArrayList<String> mSearchHistory = new ArrayList<>();
@@ -167,7 +168,7 @@ public class App extends Application {
         // получаю базу данных
         mDatabase = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database")
-                .addMigrations(AppDatabase.MIGRATION_1_2)
+                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
                 .allowMainThreadQueries()
                 .build();
 
@@ -265,7 +266,6 @@ public class App extends Application {
         // возвращу папку для закачек
         String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, DOWNLOAD_FOLDER_LOCATION.toString());
         File dl = new File(download_location);
-        Log.d("surprise", "App getDownloadFolder " + dl);
         if (dl.isDirectory()) {
             return dl;
         } else {
@@ -274,7 +274,6 @@ public class App extends Application {
     }
 
     public void setDownloadFolder(Uri uri) {
-        Log.d("surprise", "App setDownloadFolder url is " + uri);
         mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.getPath()).apply();
     }
 
@@ -397,11 +396,24 @@ public class App extends Application {
 
 
     public  void saveFavoriteMime(String longMime) {
-        Log.d("surprise", "App saveFavoriteMime mime is " + longMime);
         mSharedPreferences.edit().putString(PREFERENCE_FAVORITE_MIME, longMime).apply();
     }
 
     public String getFavoriteMime() {
         return (mSharedPreferences.getString(PREFERENCE_FAVORITE_MIME, null));
     }
+
+    public void setSaveOnlySelected(boolean checked) {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_SAVE_ONLY_SELECTED, checked).apply();
+    }
+    public Boolean isSaveOnlySelected() {
+        return (mSharedPreferences.getBoolean(PREFERENCE_SAVE_ONLY_SELECTED, false));
+    }
+    public void setRedownload(boolean checked) {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_REDOWNLOAD, checked).apply();
+    }
+    public Boolean isRedownload() {
+        return (mSharedPreferences.getBoolean(PREFERENCE_REDOWNLOAD, true));
+    }
+
 }

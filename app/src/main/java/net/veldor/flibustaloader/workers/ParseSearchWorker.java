@@ -2,7 +2,6 @@ package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -250,6 +249,7 @@ public class ParseSearchWorker extends Worker {
             // узнаю, прочитана ли книга
             AppDatabase db = App.getInstance().mDatabase;
             book.readed = db.readedBooksDao().getBookById(book.id) != null;
+            book.downloaded = db.downloadedBooksDao().getBookById(book.id) != null;
             if (book.readed && hideRead) {
                 counter++;
                 continue;
@@ -310,6 +310,7 @@ public class ParseSearchWorker extends Worker {
             while ((someNode = xpathResult.item(innerCounter)) != null && !mIsStopped) {
                 someAttributes = someNode.getAttributes();
                 downloadLink = new DownloadLink();
+                downloadLink.id = book.id;
                 downloadLink.url = someAttributes.getNamedItem("href").getTextContent();
                 downloadLink.mime = someAttributes.getNamedItem("type").getTextContent();
                 downloadLink.name = book.name;
@@ -394,7 +395,6 @@ public class ParseSearchWorker extends Worker {
     @Override
     public void onStopped() {
         super.onStopped();
-        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
         mIsStopped = true;
         // остановлю процесс
     }

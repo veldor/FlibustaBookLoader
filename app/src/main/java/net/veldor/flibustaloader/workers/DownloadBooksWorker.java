@@ -15,6 +15,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
+import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.utils.Grammar;
@@ -68,7 +69,6 @@ public class DownloadBooksWorker extends Worker {
                 while (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0 && !mIsStopped) {
                     // возьму первый элемент из списка недогруженных книг
                     book = (FoundedBook) App.getInstance().mBooksForDownload.get(0);
-                    Log.d("surprise", "DownloadBooksWorker doWork downloading book " + book.name);
                     downloadBook(book, bookMime);
                     // книга загружена, удалю из списка
                     App.getInstance().mBooksForDownload.remove(0);
@@ -83,6 +83,33 @@ public class DownloadBooksWorker extends Worker {
     }
 
     private void downloadBook(FoundedBook book, String bookMime) {
+        // проверю перезагрузку уже загруженного
+        if(!App.getInstance().isRedownload()){
+            AppDatabase db = App.getInstance().mDatabase;
+            if(db.downloadedBooksDao().getBookById(book.id) != null){
+                Log.d("surprise", "downloadBook: повторная загрузка книги пропущена");
+                return;
+            }
+        }
+
+        // проверю, не загружаются ли книги только в выбранном формате
+        if(App.getInstance().isSaveOnlySelected()){
+            // переберу ссылки в поисках нужной, если не найду- не загружаю книгу
+            int counter = 0;
+            boolean isValidFormat = false;
+            DownloadLink link;
+            while (counter < book.downloadLinks.size() && (link = book.downloadLinks.get(counter)) != null) {
+                if (link.mime.contains(bookMime)) {
+                    isValidFormat = true;
+                    break;
+                }
+                counter++;
+            }
+            if(!isValidFormat){
+                Log.d("surprise", "downloadBook: не найден выбранный формат");
+                return;
+            }
+        }
         try {
             // настрою клиент
             mHttpClient = getNewHttpClient();
@@ -176,6 +203,8 @@ public class DownloadBooksWorker extends Worker {
                 outputStream.close();
                 is.close();
             }
+            // помещу книгу в список загруженных
+            DatabaseWorker.makeBookDownloaded(book.id);
         } catch (ClientProtocolException e) {
             Log.d("surprise", "DownloadBooksWorker downloadBook clientProtocolException");
             e.printStackTrace();

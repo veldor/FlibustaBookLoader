@@ -27,6 +27,7 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -114,6 +115,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private SearchView.SearchAutoComplete mSearchAutoComplete;
     private Snackbar mBookLoadNotificaton;
     private ImageButton mForwardBtn, mBackwardBtn;
+    private AlertDialog mBookTypeDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -477,16 +479,23 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 if (foundedBook != null) {
                     // покажу контекстное меню
                     AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(OPDSActivity.this);
-                    String[] items = new String[]{"Пометить книгу как прочитанную"};
+                    String[] items = new String[]{"Пометить книгу как прочитанную", "Показать страницу книги"};
                     dialogBuilder.setItems(items, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            // отмечу книгу как прочитанную
-                            mMyViewModel.setBookRead(book);
-                            Toast.makeText(OPDSActivity.this, "Книга отмечена как прочитанная", Toast.LENGTH_LONG).show();
+                            switch (which) {
+                                case 0:
+                                    // отмечу книгу как прочитанную
+                                    mMyViewModel.setBookRead(book);
+                                    Toast.makeText(OPDSActivity.this, "Книга отмечена как прочитанная", Toast.LENGTH_LONG).show();
+                                    break;
+                                case 1:
+                                    showPage(book);
+                            }
                         }
                     });
-                    dialogBuilder.create().show();
+                    mBookTypeDialog = dialogBuilder.create();
+                    mBookTypeDialog.show();
                 }
             }
         });
@@ -586,6 +595,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 }
             }
         });
+    }
+
+    private void showPage(FoundedBook book) {
+        Intent intent = new Intent(this, WebViewActivity.class);
+        String link = book.id.split(":")[2];
+        intent.setData(Uri.parse(App.BASE_BOOK_URL + link));
+        startActivity(intent);
     }
 
     private void hideBookLoadNotification() {
@@ -695,6 +711,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             mSelectBookTypeDialog.dismiss();
             mSelectBookTypeDialog = null;
         }
+        if (mBookTypeDialog != null) {
+            mBookTypeDialog.dismiss();
+            mBookTypeDialog = null;
+        }
     }
 
     private void nothingFound() {
@@ -771,6 +791,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // обработаю переключатель быстрой загрузки
         MenuItem discardFavorite = menu.findItem(R.id.discardFavoriteType);
         discardFavorite.setEnabled(App.getInstance().getFavoriteMime() != null);
+        // обработаю переключатель загрузки в приоритетном формате
+        MenuItem myItem = menu.findItem(R.id.downloadOnlySelected);
+        myItem.setChecked(App.getInstance().isSaveOnlySelected());
+
+        // переключатель повторной загрузки
+        myItem = menu.findItem(R.id.doNotReDownload);
+        myItem.setChecked(App.getInstance().isRedownload());
         return true;
     }
 
@@ -841,6 +868,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
                 startActivity(intent);
                 return true;
+            case R.id.goToTest:
+                intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
+                startActivity(intent);
+                return true;
             case R.id.setDownloadsFolder:
                 changeDownloadsFolder();
                 return true;
@@ -881,6 +913,14 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 App.getInstance().discardFavoriteType();
                 Toast.makeText(this, "Выбранный тип загрузок сброшен", Toast.LENGTH_SHORT).show();
                 return true;
+            case R.id.doNotReDownload:
+                App.getInstance().setRedownload(!App.getInstance().isRedownload());
+                invalidateOptionsMenu();
+                return true;
+            case R.id.downloadOnlySelected:
+                App.getInstance().setSaveOnlySelected(!App.getInstance().isSaveOnlySelected());
+                invalidateOptionsMenu();
+                return true;
 
         }
         return super.onOptionsItemSelected(item);
@@ -918,6 +958,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     doMultiplyDownload(MimeTypes.getIntMime(favoriteFormat));
                 } else {
                     if (mSelectBookTypeDialog == null) {
+                        LayoutInflater inflate = getLayoutInflater();
+                        View view = inflate.inflate(R.layout.confirm_book_type_select, null);
+                        AppCompatCheckBox checker = view.findViewById(R.id.save_only_selected);
+                        checker.setChecked(App.getInstance().isSaveOnlySelected());
+                        checker = view.findViewById(R.id.redownload);
+                        checker.setChecked(App.getInstance().isRedownload());
+
                         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
                         dialogBuilder.setTitle("Выберите формат скачивания")
                                 //.setMessage("Если возможно, файлы будут скачаны в выбранном формате")
@@ -933,9 +980,14 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                                             Toast.makeText(OPDSActivity.this, "Предпочтительный формат для скачивания сохранён. Вы можете сбросить его в настройки +> разное.", Toast.LENGTH_LONG).show();
                                             App.getInstance().saveFavoriteMime(MimeTypes.getFullMime(MimeTypes.MIMES_LIST[i]));
                                         }
+                                        switcher = dialog.findViewById(R.id.save_only_selected);
+                                        App.getInstance().setSaveOnlySelected(switcher.isChecked());
+                                        switcher = dialog.findViewById(R.id.redownload);
+                                        App.getInstance().setRedownload(switcher.isChecked());
+                                        invalidateOptionsMenu();
                                     }
                                 })
-                                .setView(R.layout.confirm_book_type_select);
+                                .setView(view);
                         mSelectBookTypeDialog = dialogBuilder.create();
                     }
                     // покажу диалог с выбором предпочтительного формата

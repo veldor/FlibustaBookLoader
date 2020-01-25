@@ -58,11 +58,12 @@ public class MyWebClient {
 
     void download(DownloadLink item) {
         // запущу рабочего, который загрузит книгу
-        String[] data = new String[4];
+        String[] data = new String[5];
         data[0] = MimeTypes.getDownloadMime(item.mime);
         data[1] = item.url;
         data[2] = item.name;
         data[3] = item.author;
+        data[4] = item.id;
         Data inputData = new Data.Builder()
                 .putStringArray(DOWNLOAD_ATTRIBUTES, data)
                 .build();

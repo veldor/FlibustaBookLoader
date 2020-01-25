@@ -86,4 +86,11 @@
     <string name="download_subscribes_msg">Подождите, загружаю список книг</string>
     <string name="download_subscribes_title">Гружу книги по подписке</string>
     <string name="discard_favorite_type">Сбросить формат загрузок</string>
+    <string name="book_readed_message">Book readed</string>
+    <string name="book_downloaded_message">Book downloaded</string>
+    <string name="remember_format">Запомнить формат</string>
+    <string name="download_only_this_format">Только выбранный формат</string>
+    <string name="do_not_redownload">Загружать повторно</string>
+    <string name="mass_download">Пакетное скачивание</string>
+    <string name="go_to_test_message">Участвовать в тестировании</string>
 </resources>

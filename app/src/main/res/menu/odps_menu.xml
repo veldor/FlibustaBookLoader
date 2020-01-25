@@ -18,6 +18,10 @@
         android:title="@string/show_last"
         yourapp:showAsAction="always" />
     <item
+        android:id="@+id/switchToWebView"
+        android:title="@string/switch_to_vebview_message"
+        yourapp:showAsAction="never"/>
+    <item
         android:title="@string/look"
         >
         <menu>
@@ -27,14 +31,27 @@
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
             <item
-                android:id="@+id/switchToWebView"
-                android:title="@string/switch_to_vebview_message"
-                yourapp:showAsAction="never"/>
-            <item
                 android:id="@+id/hideReadedSwitcher"
                 android:title="@string/hide_read"
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
+        </menu>
+    </item>
+    <item
+        android:title="@string/mass_download">
+        <menu>
+
+            <item
+                android:id="@+id/discardFavoriteType"
+                android:title="@string/discard_favorite_type"/>
+            <item
+                android:id="@+id/downloadOnlySelected"
+                android:checkable="true"
+                android:title="@string/download_only_this_format"/>
+            <item
+                android:id="@+id/doNotReDownload"
+                android:checkable="true"
+                android:title="@string/do_not_redownload"/>
         </menu>
     </item>
     <item
@@ -57,9 +74,6 @@
                 android:id="@+id/setDownloadsFolder"
                 android:title="@string/set_downloads_folder"/>
             <item
-                android:id="@+id/discardFavoriteType"
-                android:title="@string/discard_favorite_type"/>
-            <item
                 android:id="@+id/setUpdateCheck"
                 android:title="@string/set_update_check_message"
                 android:checkable="true"
@@ -67,11 +81,15 @@
         </menu>
     </item>
     <item
-        android:id="@+id/buyCoffee"
-        android:title="@string/buy_me_coffee"
-        yourapp:showAsAction="never"/>
-    <item
         android:id="@+id/subscribeForNew"
         android:title="@string/subscribe_message"
+        yourapp:showAsAction="never"/>
+    <item
+        android:id="@+id/goToTest"
+        android:title="@string/go_to_test_message"
+        yourapp:showAsAction="never"/>
+    <item
+        android:id="@+id/buyCoffee"
+        android:title="@string/buy_me_coffee"
         yourapp:showAsAction="never"/>
 </menu>

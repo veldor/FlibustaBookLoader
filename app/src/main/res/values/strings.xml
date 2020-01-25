@@ -87,4 +87,11 @@
     <string name="download_subscribes_title">Download subscribes</string>
     <string name="download_subscribes_msg">Wait for subscribes list getting</string>
     <string name="discard_favorite_type">Сбросить формат загрузок</string>
+    <string name="book_readed_message">Book readed</string>
+    <string name="book_downloaded_message">Book downloaded</string>
+    <string name="download_only_this_format">Download only this format</string>
+    <string name="remember_format">Remember type</string>
+    <string name="do_not_redownload">Download again</string>
+    <string name="mass_download">Mass Download</string>
+    <string name="go_to_test_message">Test app</string>
 </resources>

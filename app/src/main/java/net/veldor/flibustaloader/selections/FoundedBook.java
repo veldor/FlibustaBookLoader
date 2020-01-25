@@ -20,4 +20,5 @@ public class FoundedBook implements FoundedItem {
     public String bookInfo;
     public String id;
     public boolean readed;
+    public boolean downloaded;
 }

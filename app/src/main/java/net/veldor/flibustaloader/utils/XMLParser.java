@@ -234,6 +234,7 @@ public class XMLParser {
             // узнаю, прочитана ли книга
             AppDatabase db = App.getInstance().mDatabase;
             book.readed = db.readedBooksDao().getBookById(book.id) != null;
+            book.downloaded = db.downloadedBooksDao().getBookById(book.id) != null;
             if (book.readed && hideRead) {
                 counter++;
                 continue;
@@ -294,6 +295,7 @@ public class XMLParser {
             while ((someNode = xpathResult.item(innerCounter)) != null) {
                 someAttributes = someNode.getAttributes();
                 downloadLink = new DownloadLink();
+                downloadLink.id = book.id;
                 downloadLink.url = someAttributes.getNamedItem("href").getTextContent();
                 downloadLink.mime = someAttributes.getNamedItem("type").getTextContent();
                 downloadLink.name = book.name;

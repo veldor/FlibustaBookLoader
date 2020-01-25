@@ -32,10 +32,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
-import androidx.work.WorkManager;
-
 import net.veldor.flibustaloader.dialogs.GifDialog;
-import net.veldor.flibustaloader.dialogs.GifDialogListener;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
@@ -65,6 +62,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private TorConnectErrorReceiver mTorConnectErrorReceiver;
     private long mConfirmExit;
     private Dialog mShowLoadDialog;
+    private SearchView.SearchAutoComplete mSearchAutocomplete;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -193,15 +191,15 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             }
         });
 
-        SearchView.SearchAutoComplete searchAutoComplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        mSearchAutocomplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
 
-        searchAutoComplete.setDropDownBackgroundResource(android.R.color.white);
-        searchAutoComplete.setDropDownAnchor(R.id.action_search);
-        searchAutoComplete.setThreshold(0);
+        mSearchAutocomplete.setDropDownBackgroundResource(android.R.color.white);
+        mSearchAutocomplete.setDropDownAnchor(R.id.action_search);
+        mSearchAutocomplete.setThreshold(0);
 
         mSearchAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, autocompleteStrings);
 
-        searchAutoComplete.setAdapter(mSearchAdapter);
+        mSearchAutocomplete.setAdapter(mSearchAdapter);
 
         // добавлю обработку вида страницы
         // определю, какой пункт вида выбран
@@ -262,6 +260,11 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
                 startActivity(intent);
                 return true;
+            case R.id.goToTest:
+                intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
+                startActivity(intent);
+                return true;
             case R.id.setDownloadsFolder:
                 changeDownloadsFolder();
                 return true;
@@ -270,6 +273,12 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             case R.id.setUpdateCheck:
                 App.getInstance().switchCheckUpdate();
                 return true;
+            case R.id.subscribeForNew:
+                subscribe();
+                return true;
+            case R.id.clearSearchHistory:
+                clearHistory();
+                return true;
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
             mMyViewModel.switchNightMode();
@@ -277,6 +286,19 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    private void clearHistory() {
+        mMyViewModel.clearHistory();
+        autocompleteStrings = new ArrayList<>();
+        mSearchAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, autocompleteStrings);
+        mSearchAutocomplete.setAdapter(mSearchAdapter);
+        Toast.makeText(this, "Автозаполнение сброшено", Toast.LENGTH_SHORT).show();
+    }
+
+    private void subscribe() {
+        startActivity(new Intent(this, SubscribeActivity.class));
     }
 
     private void switchToODPS() {

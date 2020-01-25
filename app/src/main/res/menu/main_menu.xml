@@ -13,6 +13,10 @@
         android:title="@string/go_home"
         yourapp:showAsAction="ifRoom"/>
     <item
+        android:id="@+id/switchToODPS"
+        android:title="@string/switch_to_opds_message"
+        yourapp:showAsAction="never"/>
+    <item
         android:title="@string/navigation"
         >
         <menu>
@@ -30,10 +34,6 @@
         android:title="@string/look"
         >
         <menu>
-            <item
-                android:id="@+id/switchToODPS"
-                android:title="@string/switch_to_opds_message"
-                yourapp:showAsAction="never"/>
             <group android:checkableBehavior="single">
                 <item
                     android:id="@+id/menuUseLightStyle"
@@ -81,6 +81,18 @@
                 yourapp:showAsAction="never"/>
         </menu>
     </item>
+    <item
+        android:id="@+id/clearSearchHistory"
+        android:title="@string/clear_search_history_message"
+        yourapp:showAsAction="never"/>
+    <item
+        android:id="@+id/subscribeForNew"
+        android:title="@string/subscribe_message"
+        yourapp:showAsAction="never"/>
+    <item
+        android:id="@+id/goToTest"
+        android:title="@string/go_to_test_message"
+        yourapp:showAsAction="never"/>
     <item
         android:id="@+id/buyCoffee"
         android:title="@string/buy_me_coffee"

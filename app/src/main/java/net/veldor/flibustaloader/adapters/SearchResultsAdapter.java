@@ -213,6 +213,33 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             // добавлю действие при клике на кнопку скачивания
             View container = mBinding.getRoot();
 
+            // проверю, если книга прочитана- покажу это
+            if(foundedBook.readed){
+                ImageButton readView = container.findViewById(R.id.book_read);
+                if(readView != null){
+                    readView.setVisibility(View.VISIBLE);
+                    readView.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Toast.makeText(App.getInstance(), "Книга отмечена как прочитанная", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+            // проверю, если книга прочитана- покажу это
+            if(foundedBook.downloaded){
+                ImageButton downloadedView = container.findViewById(R.id.book_downloaded);
+                if(downloadedView != null){
+                    downloadedView.setVisibility(View.VISIBLE);
+                    downloadedView.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Toast.makeText(App.getInstance(), "Книга уже скачивалась", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+
             // обработаю нажатие на кнопку меню
             ImageButton menuButton = container.findViewById(R.id.menuButton);
             menuButton.setOnClickListener(new OnClickListener() {
