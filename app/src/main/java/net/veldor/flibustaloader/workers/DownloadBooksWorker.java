@@ -183,12 +183,17 @@ public class DownloadBooksWorker extends Worker {
                 if(newFile != null){
                     InputStream is = httpResponse.getEntity().getContent();
                     OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
-                    int read;
-                    byte[] buffer = new byte[1024];
-                    while ((read = is.read(buffer)) > 0) {
-                        out.write(buffer, 0, read);
+                    if(out != null){
+                        int read;
+                        byte[] buffer = new byte[1024];
+                        while ((read = is.read(buffer)) > 0) {
+                            out.write(buffer, 0, read);
+                        }
+                        out.close();
                     }
-                    out.close();
+                    else{
+                        throw new IOException("Не удалось создать файл");
+                    }
                 }
             }
             else{
@@ -202,6 +207,13 @@ public class DownloadBooksWorker extends Worker {
                 }
                 outputStream.close();
                 is.close();
+
+                // проверю, загрузилась ли книга
+                if(!file.exists() || file.length() == 0){
+                    // файл не создан
+                    throw new IOException("Не удалось создать файл");
+                }
+
             }
             // помещу книгу в список загруженных
             DatabaseWorker.makeBookDownloaded(book.id);

@@ -601,6 +601,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         Intent intent = new Intent(this, WebViewActivity.class);
         String link = book.id.split(":")[2];
         intent.setData(Uri.parse(App.BASE_BOOK_URL + link));
+        intent.putExtra(WebViewActivity.CALLED, true);
         startActivity(intent);
     }
 
@@ -685,6 +686,27 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         mSelectSequencesDialog.show();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (mShowLoadDialog != null) {
+            mShowLoadDialog.dismiss();
+            mShowLoadDialog = null;
+        }
+        if (mMultiplyDownloadDialog != null) {
+            mMultiplyDownloadDialog.dismiss();
+            mMultiplyDownloadDialog = null;
+        }
+        if (mSelectBookTypeDialog != null) {
+            mSelectBookTypeDialog.dismiss();
+            mSelectBookTypeDialog = null;
+        }
+        if (mBookTypeDialog != null) {
+            mBookTypeDialog.dismiss();
+            mBookTypeDialog = null;
+        }
+    }
 
     @Override
     protected void onDestroy() {
@@ -954,7 +976,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 // если назначен приоритетный формат для скачивания- скачаю в нём
                 String favoriteFormat = App.getInstance().getFavoriteMime();
                 if (favoriteFormat != null) {
-                    Log.d("surprise", "OPDSActivity downloadAllBooks format is " + MimeTypes.getIntMime(favoriteFormat));
                     doMultiplyDownload(MimeTypes.getIntMime(favoriteFormat));
                 } else {
                     if (mSelectBookTypeDialog == null) {

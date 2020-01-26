@@ -19,6 +19,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
@@ -46,6 +47,7 @@ import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
 public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
 
+    public static final String CALLED = "activity_called";
     private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final int READ_REQUEST_CODE = 5;
     private static final int REQUEST_CODE = 7;
@@ -63,6 +65,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private long mConfirmExit;
     private Dialog mShowLoadDialog;
     private SearchView.SearchAutoComplete mSearchAutocomplete;
+    private boolean mIsActivityCalled;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -78,6 +81,14 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             Uri data = getIntent().getData();//set a variable for the Intent
             String fullPath = data.getEncodedPath();
             App.getInstance().setLastLoadedUrl(App.BASE_URL + fullPath);
+        }
+        // проверю, не вызвана ли активность
+        mIsActivityCalled = getIntent().getBooleanExtra(CALLED, false);
+        if(mIsActivityCalled){
+            ActionBar actionBar = getSupportActionBar();
+            if(actionBar != null){
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
         }
         // инициализирую переменные
         mWebView = findViewById(R.id.myWebView);
@@ -123,6 +134,11 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         autocompleteStrings = mMyViewModel.getSearchAutocomplete();
     }
 
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
+    }
 
     @Override
     protected void onResume() {
@@ -390,6 +406,10 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 if (mWebView.canGoBack()) {
                     mWebView.goBack();
                 } else {
+                    if(mIsActivityCalled){
+                        finish();
+                        return true;
+                    }
                     if (mConfirmExit != 0) {
                         if (mConfirmExit > System.currentTimeMillis() - 3000) {
                             // выйду из приложения

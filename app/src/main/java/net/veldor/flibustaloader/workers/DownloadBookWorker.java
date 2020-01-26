@@ -92,12 +92,22 @@ public class DownloadBookWorker extends Worker {
                     if(newFile != null){
                         InputStream is = httpResponse.getEntity().getContent();
                         OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
-                        int read;
-                        byte[] buffer = new byte[1024];
-                        while ((read = is.read(buffer)) > 0) {
-                            out.write(buffer, 0, read);
+                        if(out != null){
+                            int read;
+                            byte[] buffer = new byte[1024];
+                            while ((read = is.read(buffer)) > 0) {
+                                out.write(buffer, 0, read);
+                            }
+                            out.close();
                         }
-                        out.close();
+                        else{
+                            throw new IOException("Не удалось создать файл");
+                        }
+                    }
+                    // проверю, загрузилась ли книга
+                    if(newFile == null || !newFile.exists() || newFile.length() == 0){
+                        // файл не создан
+                        throw new IOException("Не удалось создать файл");
                     }
                 }
                 else{
@@ -111,8 +121,13 @@ public class DownloadBookWorker extends Worker {
                     }
                     outputStream.close();
                     is.close();
-                }
 
+                    // проверю, загрузилась ли книга
+                    if(!file.exists() || file.length() == 0){
+                        // файл не создан
+                        throw new IOException("Не удалось создать файл");
+                    }
+                }
                 Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, mName);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, book_mime);
