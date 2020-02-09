@@ -1,16 +1,16 @@
 package net.veldor.flibustaloader;
 
 import android.app.Dialog;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -35,7 +35,7 @@ public class SubscriptionsActivity extends AppCompatActivity {
     private Dialog mLoadDialog;
     private SubscribeResultsAdapter mAdapter;
     private AlertDialog.Builder mDownloadsDialog;
-    private Snackbar mBookLoadNotificaton;
+    private Snackbar mBookLoadNotification;
     private View mRootView;
 
     @Override
@@ -55,7 +55,7 @@ public class SubscriptionsActivity extends AppCompatActivity {
         // запущу рабочего, загружающего книги
         OneTimeWorkRequest checkSubs = new OneTimeWorkRequest.Builder(LoadSubscriptionsWorker.class).addTag(MY_TAG).setInitialDelay(10, TimeUnit.MILLISECONDS).build();
         Log.d("surprise", "MainActivity onCreate work planned");
-        WorkManager.getInstance().enqueueUniqueWork(MY_TAG, ExistingWorkPolicy.REPLACE, checkSubs);
+        WorkManager.getInstance(this).enqueueUniqueWork(MY_TAG, ExistingWorkPolicy.REPLACE, checkSubs);
         // отслежу добавление книг по подписке
         LiveData<ArrayList<FoundedBook>> books = App.getInstance().mSubscribeResults;
         books.observe(this, new Observer<ArrayList<FoundedBook>>() {
@@ -174,19 +174,19 @@ public class SubscriptionsActivity extends AppCompatActivity {
     }
 
     private void showBookLoadNotification() {
-        mBookLoadNotificaton = Snackbar.make(mRootView, "Загружаю книгу", Snackbar.LENGTH_INDEFINITE);
-        mBookLoadNotificaton.setAction(getString(R.string.cancel), new View.OnClickListener() {
+        mBookLoadNotification = Snackbar.make(mRootView, "Загружаю книгу", Snackbar.LENGTH_INDEFINITE);
+        mBookLoadNotification.setAction(getString(R.string.cancel), new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                WorkManager.getInstance().cancelAllWorkByTag(MyWebClient.DOWNLOAD_BOOK_WORKER);
+                WorkManager.getInstance(SubscriptionsActivity.this).cancelAllWorkByTag(MyWebClient.DOWNLOAD_BOOK_WORKER);
                 Toast.makeText(SubscriptionsActivity.this, "Загрузка книги отменена", Toast.LENGTH_SHORT).show();
             }
         });
-        mBookLoadNotificaton.show();
+        mBookLoadNotification.show();
     }
     private void hideBookLoadNotification() {
-        if (mBookLoadNotificaton != null) {
-            mBookLoadNotificaton.dismiss();
+        if (mBookLoadNotification != null) {
+            mBookLoadNotification.dismiss();
         }
     }
 }

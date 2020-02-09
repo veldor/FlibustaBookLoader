@@ -6,7 +6,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.DocumentsContract;
-import android.support.v4.provider.DocumentFile;
+import androidx.documentfile.provider.DocumentFile;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -26,10 +26,10 @@ public class BookSharer {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
             DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
             if (downloadsDir != null) {
-                DocumentFile dfile = downloadsDir.findFile(name);
-                if (dfile != null) {
+                DocumentFile downloadFile = downloadsDir.findFile(name);
+                if (downloadFile != null) {
                     final String docId;
-                    docId = DocumentsContract.getDocumentId(dfile.getUri());
+                    docId = DocumentsContract.getDocumentId(downloadFile.getUri());
                     Log.d("surprise", "BookSharer shareBook " + docId);
                     final String[] split = docId.split(":");
                     final String storage = split[0];

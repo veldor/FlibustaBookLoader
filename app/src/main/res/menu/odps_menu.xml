@@ -5,18 +5,18 @@
         android:id="@+id/action_search"
         android:icon="@drawable/ic_search_white_24dp"
         android:title="@android:string/search_go"
-        yourapp:actionViewClass="android.support.v7.widget.SearchView"
-        yourapp:showAsAction="always" />
+        yourapp:actionViewClass="androidx.appcompat.widget.SearchView"
+        yourapp:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_sort_by"
         android:icon="@drawable/ic_sort_white_24dp"
         android:title="@string/sort_list"
-        yourapp:showAsAction="always" />
+        yourapp:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_new"
         android:icon="@drawable/ic_new_white_24dp"
         android:title="@string/show_last"
-        yourapp:showAsAction="always" />
+        yourapp:showAsAction="ifRoom" />
     <item
         android:id="@+id/switchToWebView"
         android:title="@string/switch_to_vebview_message"
@@ -31,7 +31,7 @@
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
             <item
-                android:id="@+id/hideReadedSwitcher"
+                android:id="@+id/hideReadSwitcher"
                 android:title="@string/hide_read"
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
@@ -51,7 +51,7 @@
             <item
                 android:id="@+id/doNotReDownload"
                 android:checkable="true"
-                android:title="@string/do_not_redownload"/>
+                android:title="@string/do_not_re_download"/>
         </menu>
     </item>
     <item

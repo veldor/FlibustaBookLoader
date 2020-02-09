@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/back_2">
+    android:background="@drawable/back_2"
+    tools:ignore="Overdraw">
 
     <TextView
         android:id="@+id/textView"
@@ -69,14 +71,14 @@
             android:textColor="@color/sequences_text" />
     </RadioGroup>
 
-    <android.support.v4.widget.NestedScrollView
-        android:id="@+id/subscribtions_layout"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/subscriptions_layout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/subscribe_type">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:orientation="vertical">
@@ -89,7 +91,7 @@
                 app:layout_constraintBottom_toTopOf="@+id/subscribe_items_list"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <android.support.v7.widget.RecyclerView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/subscribe_items_list"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -102,7 +104,8 @@
                 android:visibility="invisible"
                 android:background="@drawable/backward_arrow_24dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list" />
+                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list"
+                android:contentDescription="@string/backward" />
 
             <ImageButton
                 android:id="@+id/forward_btn"
@@ -111,7 +114,8 @@
                 android:background="@drawable/forward_arrow_24dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:visibility="invisible"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list" />
+                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list"
+                android:contentDescription="@string/forward_button" />
 
             <Button
                 android:id="@+id/load_more_button"
@@ -124,8 +128,14 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/forward_btn"
                 app:layout_constraintStart_toEndOf="@+id/backward_btn" />
-        </android.support.constraint.ConstraintLayout>
-    </android.support.v4.widget.NestedScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+<!--    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="crash"
+        android:onClick="crash"/>-->
 
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,8 +1,5 @@
 package net.veldor.flibustaloader;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,9 +8,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -22,6 +16,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.work.WorkInfo;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
@@ -39,7 +39,7 @@ public class StartTorActivity extends AppCompatActivity {
     private CountDownTimer mCdt;
     private int mProgressCounter;
     private AndroidOnionProxyManager mTor;
-    private TorConnectErrorReceiver mTtorConnectErrorReceiver;
+    private TorConnectErrorReceiver mTorConnectErrorReceiver;
     private AlertDialog mTorRestartDialog;
     private long mConfirmExit;
 
@@ -107,7 +107,7 @@ public class StartTorActivity extends AppCompatActivity {
 
         mTorLoadingProgressIndicator.setProgress(0);
 
-        MainViewModel myViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        MainViewModel myViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         if (mTorClient == null) {
             // если клиент не загружен- загружаю
@@ -130,8 +130,8 @@ public class StartTorActivity extends AppCompatActivity {
         // зарегистрирую получатель ошибки подключения к TOR
         IntentFilter filter = new IntentFilter();
         filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
-        mTtorConnectErrorReceiver = new TorConnectErrorReceiver();
-        registerReceiver(mTtorConnectErrorReceiver, filter);
+        mTorConnectErrorReceiver = new TorConnectErrorReceiver();
+        registerReceiver(mTorConnectErrorReceiver, filter);
     }
 
     private void startTimer() {
@@ -235,8 +235,8 @@ public class StartTorActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mTtorConnectErrorReceiver != null) {
-            unregisterReceiver(mTtorConnectErrorReceiver);
+        if (mTorConnectErrorReceiver != null) {
+            unregisterReceiver(mTorConnectErrorReceiver);
         }
         if(mTorRestartDialog != null){
             mTorRestartDialog.dismiss();

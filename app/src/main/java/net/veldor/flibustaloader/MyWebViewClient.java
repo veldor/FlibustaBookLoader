@@ -4,9 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
-import android.support.v4.provider.DocumentFile;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.documentfile.provider.DocumentFile;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -60,11 +60,11 @@ public class MyWebViewClient extends WebViewClient {
 
 
     // content types
-    public static final String FB2_TYPE = "fb2";
-    public static final String MOBI_TYPE = "mobi";
-    public static final String EPUB_TYPE = "epub";
-    public static final String PDF_TYPE = "pdf";
-    public static final String DJVU_TYPE = "djvu";
+    private static final String FB2_TYPE = "fb2";
+    private static final String MOBI_TYPE = "mobi";
+    private static final String EPUB_TYPE = "epub";
+    private static final String PDF_TYPE = "pdf";
+    private static final String DJVU_TYPE = "djvu";
 
     private static final String JPG_TYPE = "jpg";
     private static final String JPEG_TYPE = "jpeg";
@@ -189,6 +189,7 @@ public class MyWebViewClient extends WebViewClient {
         return null;
     }
 
+    @SuppressWarnings("CharsetObjectCanBeUsed")
     private WebResourceResponse handleRequest(WebView view, String url) {
         try {
             mViewMode = App.getInstance().getViewMode();
@@ -345,7 +346,7 @@ public class MyWebViewClient extends WebViewClient {
             return new WebResourceResponse(mime, encoding, input);
         } catch (Exception e) {
             e.printStackTrace();
-            if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
+            if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
                 Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
                 App.getInstance().sendBroadcast(finishLoadingIntent);

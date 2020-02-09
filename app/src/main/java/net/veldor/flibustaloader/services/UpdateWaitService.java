@@ -2,7 +2,7 @@ package net.veldor.flibustaloader.services;
 
 import android.app.DownloadManager;
 import android.app.Service;
-import android.arch.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,8 +11,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.v4.content.FileProvider;
+import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -51,31 +51,33 @@ public class UpdateWaitService extends Service {
                 query.setFilterById(finishedDownloadId);
                 DownloadManager manager = (DownloadManager) getApplication().getSystemService(
                         Context.DOWNLOAD_SERVICE);
-                Cursor cursor = manager.query(query);
-                if(cursor.moveToFirst()){
-                    int columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
-                    int status = cursor.getInt(columnIndex);
-                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                        //open the downloaded file
-                        Intent install = new Intent(Intent.ACTION_VIEW);
-                        install.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        Uri downloadUri = App.getInstance().updateDownloadUri;
-                        if (Build.VERSION.SDK_INT >= 24) {
-                            downloadUri = FileProvider.getUriForFile(context,
-                                    "net.veldor.flibustaloader.fileProvider",
-                                    App.getInstance().downloadedApkFile);
+                if(manager != null){
+                    Cursor cursor = manager.query(query);
+                    if(cursor.moveToFirst()){
+                        int columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                        int status = cursor.getInt(columnIndex);
+                        if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                            //open the downloaded file
+                            Intent install = new Intent(Intent.ACTION_VIEW);
+                            install.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            Uri downloadUri = App.getInstance().updateDownloadUri;
+                            if (Build.VERSION.SDK_INT >= 24) {
+                                downloadUri = FileProvider.getUriForFile(context,
+                                        "net.veldor.flibustaloader.fileProvider",
+                                        App.getInstance().downloadedApkFile);
+                            }
+                            install.setDataAndType(downloadUri,
+                                    manager.getMimeTypeForDownloadedFile(mDownloadId));
+                            Log.d("surprise", "DownloadReceiver onReceive: trying install update");
+                            context.startActivity(install);
                         }
-                        install.setDataAndType(downloadUri,
-                        manager.getMimeTypeForDownloadedFile(mDownloadId));
-                        Log.d("surprise", "DownloadReceiver onReceive: trying install update");
-                        context.startActivity(install);
+                        else{
+                            clearFile();
+                        }
                     }
                     else{
                         clearFile();
                     }
-                }
-                else{
-                    clearFile();
                 }
                 App.getInstance().downloadedApkFile = null;
                 App.getInstance().updateDownloadUri = null;

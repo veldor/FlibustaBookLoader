@@ -3,9 +3,6 @@ package net.veldor.flibustaloader;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,14 +12,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.AppCompatCheckBox;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
@@ -39,9 +28,20 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatCheckBox;
+import androidx.appcompat.widget.SearchView;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.adapters.SearchResultsAdapter;
@@ -93,8 +93,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private Dialog mShowLoadDialog;
     private Button mLoadMoreBtn;
     private AlertDialog.Builder mDownloadsDialog;
-    private TorConnectErrorReceiver mTtorConnectErrorReceiver;
-    private String[] mAuthorViewTypes = new String[]{"Книги по сериям", "Книги вне серий", "Книги по алфавиту", "Книги по дате поступления"};
+    private TorConnectErrorReceiver mTorConnectErrorReceiver;
+    private final String[] mAuthorViewTypes = new String[]{"Книги по сериям", "Книги вне серий", "Книги по алфавиту", "Книги по дате поступления"};
     private AlertDialog mSelectAuthorViewDialog;
     private AlertDialog.Builder mSelectAuthorsDialog;
     private RecyclerView mRecycler;
@@ -113,13 +113,14 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private Dialog mMultiplyDownloadDialog;
     private AlertDialog mSelectBookTypeDialog;
     private SearchView.SearchAutoComplete mSearchAutoComplete;
-    private Snackbar mBookLoadNotificaton;
+    private Snackbar mBookLoadNotification;
     private ImageButton mForwardBtn, mBackwardBtn;
     private AlertDialog mBookTypeDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
 
         if (App.getInstance().getNightMode()) {
             setTheme(R.style.NightTheme);
@@ -180,12 +181,12 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         mRecycler = findViewById(R.id.subscribe_items_list);
 
         // добавлю viewModel
-        mMyViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
         // зарегистрирую получатель ошибки подключения к TOR
         IntentFilter filter = new IntentFilter();
         filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
-        mTtorConnectErrorReceiver = new TorConnectErrorReceiver();
-        registerReceiver(mTtorConnectErrorReceiver, filter);
+        mTorConnectErrorReceiver = new TorConnectErrorReceiver();
+        registerReceiver(mTorConnectErrorReceiver, filter);
         handleLoading();
 
         // создам тестовый массив строк для автозаполнения
@@ -404,7 +405,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             @Override
             public void onChanged(@Nullable String s) {
                 if (s != null && !s.isEmpty()) {
-                    App.getInstance().mResponce = s;
+                    App.getInstance().mResponse = s;
                     // получен ответ сервера, разберу его и положу содержимое в список
                     XMLParser.handleResults();
                 } else {
@@ -457,7 +458,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             @Override
             public void onChanged(@Nullable FoundedBook book) {
                 if (book != null) {
-                    if (!book.readed) {
+                    if (!book.read) {
                         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(OPDSActivity.this);
                         dialogBuilder.setTitle(book.name)
                                 .setMessage(Grammar.textFromHtml(book.bookInfo))
@@ -606,8 +607,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void hideBookLoadNotification() {
-        if (mBookLoadNotificaton != null) {
-            mBookLoadNotificaton.dismiss();
+        if (mBookLoadNotification != null) {
+            mBookLoadNotification.dismiss();
         }
     }
 
@@ -617,7 +618,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             @Override
             public void run() {
                 try {
-                    findViewById(R.id.subscribtions_layout).scrollTo(0, 0);
+                    findViewById(R.id.subscriptions_layout).scrollTo(0, 0);
                 } catch (NullPointerException e) {
                     Log.d("surprise", "OPDSActivity run nothing scroll");
                 }
@@ -711,8 +712,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mTtorConnectErrorReceiver != null) {
-            unregisterReceiver(mTtorConnectErrorReceiver);
+        if (mTorConnectErrorReceiver != null) {
+            unregisterReceiver(mTorConnectErrorReceiver);
         }
         App.getInstance().mSelectedAuthor.setValue(null);
         App.getInstance().mSelectedAuthors.setValue(null);
@@ -785,7 +786,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         });
 
-        mSearchAutoComplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        mSearchAutoComplete = mSearchView.findViewById(R.id.search_src_text);
         mSearchAutoComplete.setDropDownBackgroundResource(R.color.background_color);
         mSearchAutoComplete.setDropDownAnchor(R.id.action_search);
         mSearchAutoComplete.setThreshold(0);
@@ -803,7 +804,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         checkUpdatesSwitcher.setChecked(App.getInstance().isCheckUpdate());
 
         // обработаю переключатель скрытия прочтённых книг
-        MenuItem hideReadSwitcher = menu.findItem(R.id.hideReadedSwitcher);
+        MenuItem hideReadSwitcher = menu.findItem(R.id.hideReadSwitcher);
         hideReadSwitcher.setChecked(App.getInstance().isHideRead());
 
         // обработаю переключатель быстрой загрузки
@@ -819,7 +820,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // переключатель повторной загрузки
         myItem = menu.findItem(R.id.doNotReDownload);
-        myItem.setChecked(App.getInstance().isRedownload());
+        myItem.setChecked(App.getInstance().isReDownload());
         return true;
     }
 
@@ -914,7 +915,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 App.getInstance().switchCheckUpdate();
                 invalidateOptionsMenu();
                 return true;
-            case R.id.hideReadedSwitcher:
+            case R.id.hideReadSwitcher:
                 App.getInstance().switchHideRead();
                 invalidateOptionsMenu();
                 return true;
@@ -936,7 +937,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 Toast.makeText(this, "Выбранный тип загрузок сброшен", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.doNotReDownload:
-                App.getInstance().setRedownload(!App.getInstance().isRedownload());
+                App.getInstance().setReDownload(!App.getInstance().isReDownload());
                 invalidateOptionsMenu();
                 return true;
             case R.id.downloadOnlySelected:
@@ -980,11 +981,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 } else {
                     if (mSelectBookTypeDialog == null) {
                         LayoutInflater inflate = getLayoutInflater();
-                        View view = inflate.inflate(R.layout.confirm_book_type_select, null);
+                        @SuppressLint("InflateParams") View view = inflate.inflate(R.layout.confirm_book_type_select, null);
                         AppCompatCheckBox checker = view.findViewById(R.id.save_only_selected);
                         checker.setChecked(App.getInstance().isSaveOnlySelected());
-                        checker = view.findViewById(R.id.redownload);
-                        checker.setChecked(App.getInstance().isRedownload());
+                        checker = view.findViewById(R.id.reDownload);
+                        checker.setChecked(App.getInstance().isReDownload());
 
                         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
                         dialogBuilder.setTitle("Выберите формат скачивания")
@@ -1003,8 +1004,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                                         }
                                         switcher = dialog.findViewById(R.id.save_only_selected);
                                         App.getInstance().setSaveOnlySelected(switcher.isChecked());
-                                        switcher = dialog.findViewById(R.id.redownload);
-                                        App.getInstance().setRedownload(switcher.isChecked());
+                                        switcher = dialog.findViewById(R.id.reDownload);
+                                        App.getInstance().setReDownload(switcher.isChecked());
                                         invalidateOptionsMenu();
                                     }
                                 })
@@ -1036,7 +1037,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                         public void OnClick() {
                             if (App.getInstance().mProcess != null) {
                                 Log.d("surprise", "OPDSActivity OnClick kill process");
-                                WorkManager.getInstance().cancelWorkById(App.getInstance().mProcess.getId());
+                                WorkManager.getInstance(OPDSActivity.this).cancelWorkById(App.getInstance().mProcess.getId());
                             }
                             if (mMultiplyDownloadDialog != null) {
                                 mMultiplyDownloadDialog.dismiss();
@@ -1164,7 +1165,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                         @Override
                         public void OnClick() {
                             if (App.getInstance().mProcess != null) {
-                                WorkManager.getInstance().cancelWorkById(App.getInstance().mProcess.getId());
+                                WorkManager.getInstance(OPDSActivity.this).cancelWorkById(App.getInstance().mProcess.getId());
                             }
                             hideWaitingDialog();
                             // отменю операцию
@@ -1252,6 +1253,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onQueryTextChange(String s) {
         return false;
     }
+
+/*    public void crash(View view) {
+        Crashlytics.getInstance().crash(); // Force a crash
+    }*/
 
     public class TorConnectErrorReceiver extends BroadcastReceiver {
         @Override
@@ -1402,15 +1407,15 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void showBookLoadNotification() {
-        mBookLoadNotificaton = Snackbar.make(mRootView, "Загружаю книгу", Snackbar.LENGTH_INDEFINITE);
-        mBookLoadNotificaton.setAction(getString(R.string.cancel), new View.OnClickListener() {
+        mBookLoadNotification = Snackbar.make(mRootView, "Загружаю книгу", Snackbar.LENGTH_INDEFINITE);
+        mBookLoadNotification.setAction(getString(R.string.cancel), new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                WorkManager.getInstance().cancelAllWorkByTag(MyWebClient.DOWNLOAD_BOOK_WORKER);
+                WorkManager.getInstance(OPDSActivity.this).cancelAllWorkByTag(MyWebClient.DOWNLOAD_BOOK_WORKER);
                 Toast.makeText(OPDSActivity.this, "Загрузка книги отменена", Toast.LENGTH_SHORT).show();
             }
         });
-        mBookLoadNotificaton.show();
+        mBookLoadNotification.show();
     }
 
 
@@ -1441,12 +1446,14 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         } else if (requestCode == READ_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
+                if (data != null && data.getExtras() != null) {
                     String folderLocation = data.getExtras().getString("data");
-                    File destination = new File(folderLocation);
-                    if (destination.exists()) {
-                        App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
-                        Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
+                    if(folderLocation != null){
+                        File destination = new File(folderLocation);
+                        if (destination.exists()) {
+                            App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
+                            Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
             }

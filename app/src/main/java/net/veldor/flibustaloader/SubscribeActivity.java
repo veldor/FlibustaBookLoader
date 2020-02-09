@@ -1,12 +1,12 @@
 package net.veldor.flibustaloader;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -24,9 +24,10 @@ import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 
 import java.util.ArrayList;
 
+@SuppressWarnings("unused")
 public class SubscribeActivity extends AppCompatActivity {
 
-    private EditText mSubsctibeInput;
+    private EditText mSubscribeInput;
     private SubscribeBooks mBooksSubscribeContainer;
     private SubscribesAdapter mSubscribesAdapter;
     private SubscribeAuthors mAuthorsSubscribeContainer;
@@ -86,8 +87,8 @@ public class SubscribeActivity extends AppCompatActivity {
 
         // обработаю добавление книги в список загрузки
         // добавлю идентификатор строки поиска
-        mSubsctibeInput = findViewById(R.id.subscribe_name);
-        mSubsctibeInput.requestFocus();
+        mSubscribeInput = findViewById(R.id.subscribe_name);
+        mSubscribeInput.requestFocus();
     }
 
     private void refreshAuthorSubscriptionList() {
@@ -121,7 +122,7 @@ public class SubscribeActivity extends AppCompatActivity {
 
     public void addSubscribe(View view) {
         // получу содержимое строки ввода
-        String value = mSubsctibeInput.getText().toString().trim();
+        String value = mSubscribeInput.getText().toString().trim();
         if(!value.isEmpty()){
             // добавлю подписку в зависимости от типа
             switch (mRadioContainer.getCheckedRadioButtonId()){
@@ -135,12 +136,12 @@ public class SubscribeActivity extends AppCompatActivity {
                     break;
 
             }
-            mSubsctibeInput.setText("");
+            mSubscribeInput.setText("");
             Toast.makeText(this, "Добавляю значение " + value, Toast.LENGTH_LONG).show();
         }
         else{
             Toast.makeText(this, "Введите значение для подписки", Toast.LENGTH_LONG).show();
-            mSubsctibeInput.requestFocus();
+            mSubscribeInput.requestFocus();
         }
     }
 
@@ -149,6 +150,6 @@ public class SubscribeActivity extends AppCompatActivity {
         super.onResume();
         // проверю новые поступления
         OneTimeWorkRequest worker = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).build();
-        WorkManager.getInstance().enqueue(worker);
+        WorkManager.getInstance(this).enqueue(worker);
     }
 }

@@ -19,7 +19,8 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:allowBackup">
+        tools:replace="android:allowBackup"
+        tools:targetApi="m">
         <activity android:name=".SubscriptionsActivity"/>
         <activity android:name=".SubscribeActivity" />
         <activity
@@ -51,7 +52,7 @@
         <receiver android:name=".receivers.BookActionReceiver" />
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="net.veldor.flibustaloader.fileProvider"
             android:exported="false"
             android:grantUriPermissions="true">

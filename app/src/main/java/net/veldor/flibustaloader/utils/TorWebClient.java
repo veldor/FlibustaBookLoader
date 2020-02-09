@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader.utils;
 
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.work.WorkManager;
 
@@ -11,7 +10,6 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
-import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -50,14 +48,14 @@ public class TorWebClient {
         }
         catch (IOException e) {
             e.printStackTrace();
-            if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
+            if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
                 broadcastTorError();
             }
         }
         catch (RuntimeException e) {
             e.printStackTrace();
-            if (e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
+            if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
                 broadcastTorError();
             }
@@ -66,7 +64,7 @@ public class TorWebClient {
 
     public static void broadcastTorError() {
         // остановлю все задачи
-        WorkManager.getInstance().cancelAllWork();
+        WorkManager.getInstance(App.getInstance()).cancelAllWork();
         // отправлю оповещение об ошибке загрузки TOR
         Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
         App.getInstance().sendBroadcast(finishLoadingIntent);

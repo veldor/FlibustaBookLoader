@@ -10,5 +10,4 @@
     <color name="author_text_color">#081b86</color>
     <color name="book_name_color">#881515</color>
     <color name="translator_text_color">#3e5f75</color>
-    <color name="download_button_clicked_color">#FFAAAA</color>
 </resources>

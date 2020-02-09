@@ -2,11 +2,7 @@
     <string name="app_name">Flibusta book loading</string>
     <string name="books_loaded_channel">Loaded books</string>
     <string name="shifts_reminder" translatable="false">Loaded books notifications</string>
-    <string name="loading_tor_message">Loading TOR, please, wait</string>
     <string name="use_light_style">Use light style</string>
-    <string name="book_loading_dialog_title">Book loading</string>
-    <string name="book_loading_dialog_message">Loading book, please, wait</string>
-    <string name="tor_loading_dialog_title">Tor load</string>
     <string name="snackbar_found_update_message">New update available!</string>
     <string name="snackbar_update_action_message">Update now</string>
     <string name="update_file_name">Flibusta books</string>
@@ -33,24 +29,13 @@
     <string name="miscellaneous">Miscellaneous</string>
     <string name="set_downloads_folder">Set downloads folder</string>
     <string name="download_folder_changed_message">Download folder changed on</string>
-    <string name="enter_text_message">Enter text</string>
-    <string name="use_OPDS">Use OPDS(beta)</string>
     <string name="title_activity_opds">OPDS</string>
-    <string name="ready_for_opds_message">ready</string>
     <string name="whoSearchMessage">Search what?</string>
     <string name="search_author_message">Author</string>
     <string name="search_book_message">Book</string>
-    <string name="to_author_page_message">To author page</string>
-    <string name="to_author_series">To author series</string>
-    <string name="to_author_without_series">To author no series</string>
-    <string name="waitForLoad">Please, be patient</string>
-    <string name="load_message">Loading</string>
     <string name="forward_button">Forward</string>
-    <string name="back_button">Back</string>
-    <string name="no_results_more">No more results found</string>
     <string name="downloads_dialog_header">Select download type</string>
     <string name="download_message">Download</string>
-    <string name="book_details">Details</string>
     <string name="select_author_view_message">Select author view</string>
     <string name="select_authors_choose_message">Choose a author</string>
     <string name="search_genre_message">Genre</string>
@@ -80,7 +65,7 @@
     <string name="clear_search_history_message">Clear search history</string>
     <string name="subscribe_message">Subscribe</string>
     <string name="subscribe_msg">Subscribe</string>
-    <string name="deleteitem" translatable="false">deleteItem</string>
+    <string name="delete_item" translatable="false">deleteItem</string>
     <string name="download_folder_changed_message_new">Download folder changed</string>
     <string name="subscribes_channel">subscribes</string>
     <string name="subscribe_description">Subscribe notifications</string>
@@ -91,7 +76,9 @@
     <string name="book_downloaded_message">Book downloaded</string>
     <string name="download_only_this_format">Download only this format</string>
     <string name="remember_format">Remember type</string>
-    <string name="do_not_redownload">Download again</string>
+    <string name="do_not_re_download">Download again</string>
     <string name="mass_download">Mass Download</string>
     <string name="go_to_test_message">Test app</string>
+    <string name="backward">backward</string>
+    <string name="enter_value_message">Enter value</string>
 </resources>

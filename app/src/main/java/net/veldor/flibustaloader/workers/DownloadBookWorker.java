@@ -2,8 +2,8 @@ package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.v4.provider.DocumentFile;
+import androidx.annotation.NonNull;
+import androidx.documentfile.provider.DocumentFile;
 import android.util.Log;
 
 import androidx.work.Data;

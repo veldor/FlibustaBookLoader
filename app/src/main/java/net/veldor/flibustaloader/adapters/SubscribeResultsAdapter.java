@@ -1,32 +1,22 @@
 package net.veldor.flibustaloader.adapters;
 
-import android.databinding.DataBindingUtil;
-import android.databinding.ViewDataBinding;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
-import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.R;
-import net.veldor.flibustaloader.databinding.SearchedAuthorItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedBookItemBinding;
-import net.veldor.flibustaloader.databinding.SearchedGenreItemBinding;
-import net.veldor.flibustaloader.databinding.SearchedSequenceItemBinding;
-import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.FoundedItem;
-import net.veldor.flibustaloader.selections.FoundedSequence;
-import net.veldor.flibustaloader.selections.Genre;
-import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
 

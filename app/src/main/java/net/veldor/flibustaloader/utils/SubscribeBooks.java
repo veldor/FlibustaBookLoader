@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader.utils;
 
-import android.arch.lifecycle.MutableLiveData;
-import android.util.Log;
+import androidx.lifecycle.MutableLiveData;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
@@ -34,8 +33,8 @@ public class SubscribeBooks {
     private static final String SUBSCRIBE_NAME = "book";
     private Document mDom;
     private ArrayList<SubscriptionItem> mSubscribeValues;
-    private ArrayList<String> mExistentValues = new ArrayList<>();
-    public MutableLiveData<Boolean> mListRefreshed = new MutableLiveData<>();
+    private final ArrayList<String> mExistentValues = new ArrayList<>();
+    public final MutableLiveData<Boolean> mListRefreshed = new MutableLiveData<>();
 
     public SubscribeBooks(){
         refreshSubscribes();
