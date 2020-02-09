@@ -1461,4 +1461,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+    }
 }

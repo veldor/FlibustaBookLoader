@@ -25,6 +25,7 @@ public class GetPageWorker extends Worker {
         App.getInstance().mLoadAllStatus.postValue("В процессе");
         Data data = getInputData();
         String text = data.getString(MyWebClient.LOADED_URL);
+        // попробую повтороно использовать веб-клиент
         // создам новый экземпляр веб-клиента
         TorWebClient webClient = new TorWebClient();
         App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
