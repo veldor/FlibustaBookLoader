@@ -3,9 +3,6 @@ package net.veldor.flibustaloader;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,14 +12,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
-import android.support.design.widget.Snackbar;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.SearchView;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
@@ -33,9 +22,24 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.android.material.snackbar.Snackbar;
+
 import net.veldor.flibustaloader.dialogs.GifDialog;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,7 +59,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private MainViewModel mMyViewModel;
     private SwipeRefreshLayout mRefresher;
     private WebViewActivity.BookLoadingReceiver mPageLoadReceiver;
-    private AlertDialog mBookLoadingDialog;
     private View mRootView;
     private ArrayList<String> autocompleteStrings;
     private SearchView mSearchView;
@@ -84,9 +87,9 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         }
         // проверю, не вызвана ли активность
         mIsActivityCalled = getIntent().getBooleanExtra(CALLED, false);
-        if(mIsActivityCalled){
+        if (mIsActivityCalled) {
             ActionBar actionBar = getSupportActionBar();
-            if(actionBar != null){
+            if (actionBar != null) {
                 actionBar.setDisplayHomeAsUpEnabled(true);
             }
         }
@@ -95,7 +98,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         mRootView = findViewById(R.id.rootView);
 
         // добавлю viewModel
-        mMyViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
         Log.d("surprise", "WebViewActivity onCreate " + mMyViewModel);
 
         // добавлю модный перезагрузчик страницы
@@ -162,9 +165,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             unregisterReceiver(mPageLoadReceiver);
         if (mTorConnectErrorReceiver != null)
             unregisterReceiver(mTorConnectErrorReceiver);
-        if (mBookLoadingDialog != null) {
-            mBookLoadingDialog.dismiss();
-        }
     }
 
 
@@ -207,7 +207,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             }
         });
 
-        mSearchAutocomplete = mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+        mSearchAutocomplete = mSearchView.findViewById(R.id.search_src_text);
 
         mSearchAutocomplete.setDropDownBackgroundResource(android.R.color.white);
         mSearchAutocomplete.setDropDownAnchor(R.id.action_search);
@@ -349,15 +349,16 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
 
                 }
             }
-        }
-        else if (requestCode == READ_REQUEST_CODE) {
+        } else if (requestCode == READ_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
                     String folderLocation = Objects.requireNonNull(data.getExtras()).getString("data");
-                    File destination = new File(folderLocation);
-                    if (destination.exists()) {
-                        App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
-                        Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
+                    if (folderLocation != null) {
+                        File destination = new File(folderLocation);
+                        if (destination.exists()) {
+                            App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
+                            Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
             }
@@ -406,7 +407,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 if (mWebView.canGoBack()) {
                     mWebView.goBack();
                 } else {
-                    if(mIsActivityCalled){
+                    if (mIsActivityCalled) {
                         finish();
                         return true;
                     }
@@ -521,13 +522,13 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NotNull Bundle outState) {
         super.onSaveInstanceState(outState);
         mWebView.saveState(outState);
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    protected void onRestoreInstanceState(@NotNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         mWebView.restoreState(savedInstanceState);
     }

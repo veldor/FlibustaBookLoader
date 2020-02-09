@@ -1,7 +1,7 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import androidx.work.Data;
@@ -12,9 +12,9 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
-import net.veldor.flibustaloader.database.dao.ReadedBooksDao;
+import net.veldor.flibustaloader.database.dao.ReadBooksDao;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
-import net.veldor.flibustaloader.database.entity.ReadedBooks;
+import net.veldor.flibustaloader.database.entity.ReadBooks;
 
 public class DatabaseWorker extends Worker {
     public static final int INSERT_BOOK = 1;
@@ -29,19 +29,18 @@ public class DatabaseWorker extends Worker {
     public Result doWork() {
         Data data = getInputData();
         int requestedWork = data.getInt(WORK_TYPE, 0);
-        switch (requestedWork) {
-            case INSERT_BOOK:
-                String id = data.getString(OPDSActivity.BOOK_ID);
-                insertBook(id);
+        if (requestedWork == INSERT_BOOK) {
+            String id = data.getString(OPDSActivity.BOOK_ID);
+            insertBook(id);
         }
         return Result.success();
     }
 
     private void insertBook(String id) {
         AppDatabase db = App.getInstance().mDatabase;
-        ReadedBooks book = new ReadedBooks();
+        ReadBooks book = new ReadBooks();
         book.bookId = id;
-        ReadedBooksDao bookDao = db.readedBooksDao();
+        ReadBooksDao bookDao = db.readBooksDao();
         bookDao.insert(book);
     }
 

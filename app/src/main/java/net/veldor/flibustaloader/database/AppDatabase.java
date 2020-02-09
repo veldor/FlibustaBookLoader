@@ -1,18 +1,18 @@
 package net.veldor.flibustaloader.database;
 
-import android.arch.persistence.db.SupportSQLiteDatabase;
-import android.arch.persistence.room.Database;
-import android.arch.persistence.room.RoomDatabase;
-import android.arch.persistence.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
+import androidx.room.Database;
+import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
 
 import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
-import net.veldor.flibustaloader.database.dao.ReadedBooksDao;
+import net.veldor.flibustaloader.database.dao.ReadBooksDao;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
-import net.veldor.flibustaloader.database.entity.ReadedBooks;
+import net.veldor.flibustaloader.database.entity.ReadBooks;
 
-@Database(entities = {ReadedBooks.class, DownloadedBooks.class}, version = 3, exportSchema = false)
+@Database(entities = {ReadBooks.class, DownloadedBooks.class}, version = 3, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
-    public abstract ReadedBooksDao readedBooksDao();
+    public abstract ReadBooksDao readBooksDao();
     public abstract DownloadedBooksDao downloadedBooksDao();
 
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {

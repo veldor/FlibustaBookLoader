@@ -1,8 +1,10 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v4.provider.DocumentFile;
+
+import androidx.annotation.NonNull;
+import androidx.documentfile.provider.DocumentFile;
+
 import android.util.Log;
 
 import androidx.work.Data;
@@ -64,17 +66,17 @@ public class DownloadBooksWorker extends Worker {
         String bookMime = MimeTypes.MIMES_LIST[bookType];
         // получу список книг
         if (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0) {
-                // переберу все книги
-                FoundedBook book;
-                while (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0 && !mIsStopped) {
-                    // возьму первый элемент из списка недогруженных книг
-                    book = (FoundedBook) App.getInstance().mBooksForDownload.get(0);
-                    downloadBook(book, bookMime);
-                    // книга загружена, удалю из списка
-                    App.getInstance().mBooksForDownload.remove(0);
-
+            // переберу все книги
+            FoundedBook book;
+            while (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0 && !mIsStopped) {
+                // возьму первый элемент из списка недогруженных книг
+                book = (FoundedBook) App.getInstance().mBooksForDownload.get(0);
+                downloadBook(book, bookMime);
+                // книга загружена, удалю из списка
+                App.getInstance().mBooksForDownload.remove(0);
+                if (App.getInstance().mParsedResult.getValue() != null)
                     App.getInstance().mMultiplyDownloadStatus.postValue("Скачано " + (App.getInstance().mParsedResult.getValue().size() - App.getInstance().mBooksForDownload.size()) + " из " + App.getInstance().mParsedResult.getValue().size() + " книг.");
-                }
+            }
 
         }
         Log.d("surprise", "DownloadBooksWorker doWork закончил загрузку");
@@ -84,16 +86,16 @@ public class DownloadBooksWorker extends Worker {
 
     private void downloadBook(FoundedBook book, String bookMime) {
         // проверю перезагрузку уже загруженного
-        if(!App.getInstance().isRedownload()){
+        if (!App.getInstance().isReDownload()) {
             AppDatabase db = App.getInstance().mDatabase;
-            if(db.downloadedBooksDao().getBookById(book.id) != null){
+            if (db.downloadedBooksDao().getBookById(book.id) != null) {
                 Log.d("surprise", "downloadBook: повторная загрузка книги пропущена");
                 return;
             }
         }
 
         // проверю, не загружаются ли книги только в выбранном формате
-        if(App.getInstance().isSaveOnlySelected()){
+        if (App.getInstance().isSaveOnlySelected()) {
             // переберу ссылки в поисках нужной, если не найду- не загружаю книгу
             int counter = 0;
             boolean isValidFormat = false;
@@ -105,7 +107,7 @@ public class DownloadBooksWorker extends Worker {
                 }
                 counter++;
             }
-            if(!isValidFormat){
+            if (!isValidFormat) {
                 Log.d("surprise", "downloadBook: не найден выбранный формат");
                 return;
             }
@@ -124,79 +126,77 @@ public class DownloadBooksWorker extends Worker {
             TorWebClient.broadcastTorError();
             e.printStackTrace();
         }
-        try{
-        // получу все ссылки
-        ArrayList<DownloadLink> links = book.downloadLinks;
-        DownloadLink link;
-        // если в списке всего одна ссылка- скачаю файл, как он есть, если несколько- попробую выбрать предпочтительную, если её нет- скачаю первую
-        if (links.size() == 1) {
-            link = links.get(0);
-        } else {
-            // получу полный предпочтительный mime
-            String mime = MimeTypes.getFullMime(bookMime);
-            int counter = 0;
-            while ((link = links.get(counter)) != null) {
-                if (link.mime.equals(mime)) {
-                    break;
-                }
-                counter++;
-            }
-            // если не нашли предпочтительный тип- попробую поискать fb2, как самый распространённый тип
-            if (link == null) {
-                counter = 0;
+        try {
+            // получу все ссылки
+            ArrayList<DownloadLink> links = book.downloadLinks;
+            DownloadLink link;
+            // если в списке всего одна ссылка- скачаю файл, как он есть, если несколько- попробую выбрать предпочтительную, если её нет- скачаю первую
+            if (links.size() == 1) {
+                link = links.get(0);
+            } else {
+                // получу полный предпочтительный mime
+                String mime = MimeTypes.getFullMime(bookMime);
+                int counter = 0;
                 while ((link = links.get(counter)) != null) {
-                    if (link.mime.equals(MimeTypes.getFullMime("fb2"))) {
+                    if (link.mime.equals(mime)) {
                         break;
                     }
                     counter++;
                 }
+                // если не нашли предпочтительный тип- попробую поискать fb2, как самый распространённый тип
+                if (link == null) {
+                    counter = 0;
+                    while ((link = links.get(counter)) != null) {
+                        if (link.mime.equals(MimeTypes.getFullMime("fb2"))) {
+                            break;
+                        }
+                        counter++;
+                    }
+                }
+                // если вообще ничего похожего- загружу первый попавшийся тип :)
+                if (link == null) {
+                    link = links.get(0);
+                }
             }
-            // если вообще ничего похожего- загружу первый попавшийся тип :)
-            if (link == null) {
-                link = links.get(0);
+            // получу ссылку на скачивание
+            HttpGet httpGet = new HttpGet(App.BASE_URL + link.url);
+            httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
+            httpGet.setHeader("X-Compress", "null");
+            HttpResponse httpResponse = mHttpClient.execute(httpGet, mContext);
+            String author_last_name = link.author.substring(0, link.author.indexOf(" "));
+            String book_name = link.name.replaceAll(" ", "_").replaceAll("[^\\d\\w-_]", "");
+            String book_mime = MimeTypes.getDownloadMime(link.mime);
+            //Log.d("surprise", "DownloadBooksWorker downloadBook " + book_mime);
+            // если сумма символов меньше 255- создаю полное имя
+            if (author_last_name.length() + book_name.length() + book_mime.length() + 2 < 255 / 2 - 6) {
+                mName = author_last_name + "_" + book_name + "_" + Grammar.getRandom() + "." + book_mime;
+            } else {
+                // сохраняю книгу по имени автора и тому, что влезет от имени книги
+                mName = author_last_name + "_" + book_name.substring(0, 127 - (author_last_name.length() + book_mime.length() + 2 + 6)) + "_" + Grammar.getRandom() + "." + book_mime;
             }
-        }
-        // получу ссылку на скачивание
-        HttpGet httpGet = new HttpGet(App.BASE_URL + link.url);
-        httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
-        httpGet.setHeader("X-Compress", "null");
-        HttpResponse httpResponse = mHttpClient.execute(httpGet, mContext);
-        String author_last_name = link.author.substring(0, link.author.indexOf(" "));
-        String book_name = link.name.replaceAll(" ", "_").replaceAll("[^\\d\\w-_]", "");
-        String book_mime = MimeTypes.getDownloadMime(link.mime);
-        //Log.d("surprise", "DownloadBooksWorker downloadBook " + book_mime);
-        // если сумма символов меньше 255- создаю полное имя
-        if (author_last_name.length() + book_name.length() + book_mime.length() + 2 < 255 / 2 - 6) {
-            mName = author_last_name + "_" + book_name + "_" + Grammar.getRandom() + "." + book_mime;
-        } else {
-            // сохраняю книгу по имени автора и тому, что влезет от имени книги
-            mName = author_last_name + "_" + book_name.substring(0, 127 - (author_last_name.length() + book_mime.length() + 2 + 6)) + "_" + Grammar.getRandom() + "." + book_mime;
-        }
-        //Log.d("surprise", "DownloadBooksWorker downloadBook " + name);
+            //Log.d("surprise", "DownloadBooksWorker downloadBook " + name);
             DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
-            if(downloadsDir != null){
+            if (downloadsDir != null) {
                 DocumentFile existentFile = downloadsDir.findFile(mName);
-                if(existentFile != null){
+                if (existentFile != null) {
                     existentFile.delete();
                 }
                 DocumentFile newFile = downloadsDir.createFile(book_mime, mName);
-                if(newFile != null){
+                if (newFile != null) {
                     InputStream is = httpResponse.getEntity().getContent();
                     OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
-                    if(out != null){
+                    if (out != null) {
                         int read;
                         byte[] buffer = new byte[1024];
                         while ((read = is.read(buffer)) > 0) {
                             out.write(buffer, 0, read);
                         }
                         out.close();
-                    }
-                    else{
+                    } else {
                         throw new IOException("Не удалось создать файл");
                     }
                 }
-            }
-            else{
+            } else {
                 File file = new File(App.getInstance().getDownloadFolder(), mName);
                 InputStream is = httpResponse.getEntity().getContent();
                 FileOutputStream outputStream = new FileOutputStream(file);
@@ -209,7 +209,7 @@ public class DownloadBooksWorker extends Worker {
                 is.close();
 
                 // проверю, загрузилась ли книга
-                if(!file.exists() || file.length() == 0){
+                if (!file.exists() || file.length() == 0) {
                     // файл не создан
                     throw new IOException("Не удалось создать файл");
                 }

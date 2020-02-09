@@ -1,30 +1,20 @@
 package net.veldor.flibustaloader;
 
 import android.Manifest;
-import android.arch.lifecycle.LiveData;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.PermissionChecker;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.PermissionChecker;
 import androidx.work.WorkManager;
-
-import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
-
-import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
-
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,15 +22,16 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_WRITE_READ = 22;
 
     public static final int START_TOR = 3;
-    private LiveData<AndroidOnionProxyManager> mTorClient;
+    //private LiveData<AndroidOnionProxyManager> mTorClient;
     private Uri mLink;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
-       if (!permissionGranted()) {
+        if (!permissionGranted()) {
             // показываю диалог с требованием предоставить разрешения
             showPermissionDialog();
         } else {
@@ -60,11 +51,7 @@ public class MainActivity extends AppCompatActivity {
                 mLink = getIntent().getData();//set a variable for the WebViewActivity
             }
 
-            if (mTorClient == null) {
-                startActivityForResult(new Intent(this, StartTorActivity.class), START_TOR);
-            } else {
-                startApp();
-            }
+            startActivityForResult(new Intent(this, StartTorActivity.class), START_TOR);
         } else {
             selectView();
         }
@@ -136,6 +123,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (resultCode == RESULT_OK) {
             startApp();
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -144,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d("surprise", "MainActivity onDestroy app destroyed?");
         // остановлю запуск TOR
-        WorkManager.getInstance().cancelAllWorkByTag(App.START_TOR);
+        WorkManager.getInstance(this).cancelAllWorkByTag(App.START_TOR);
     }
 
 
@@ -164,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_WRITE_READ) {
+        if (requestCode == REQUEST_WRITE_READ && grantResults.length > 0) {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 showPermissionDialog();
             } else {

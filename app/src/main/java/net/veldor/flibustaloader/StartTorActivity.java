@@ -1,8 +1,5 @@
 package net.veldor.flibustaloader;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,9 +8,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -22,6 +16,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.work.WorkInfo;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
@@ -31,6 +31,9 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 
 public class StartTorActivity extends AppCompatActivity {
+
+    static boolean active = false;
+
     private static final String TOR_LAUNCHED_MESSAGE = "LAUNCHED";
     private static final String TOR_BUILT_MESSAGE = "BUILT";
     private LiveData<AndroidOnionProxyManager> mTorClient;
@@ -39,14 +42,13 @@ public class StartTorActivity extends AppCompatActivity {
     private CountDownTimer mCdt;
     private int mProgressCounter;
     private AndroidOnionProxyManager mTor;
-    private TorConnectErrorReceiver mTtorConnectErrorReceiver;
+    private TorConnectErrorReceiver mTorConnectErrorReceiver;
     private AlertDialog mTorRestartDialog;
     private long mConfirmExit;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
 
 
         // ещё одно отслеживание TOR
@@ -56,7 +58,7 @@ public class StartTorActivity extends AppCompatActivity {
             public void onChanged(@Nullable WorkInfo workInfo) {
                 if (workInfo != null) {
                     Log.d("surprise", "StartTorActivity onChanged tor load status is " + workInfo.getState());
-                    if(workInfo.getState() == SUCCEEDED){
+                    if (workInfo.getState() == SUCCEEDED) {
                         Log.d("surprise", "StartTorActivity onChanged work done");
                         if (mCdt != null) {
                             mCdt.cancel();
@@ -107,7 +109,7 @@ public class StartTorActivity extends AppCompatActivity {
 
         mTorLoadingProgressIndicator.setProgress(0);
 
-        MainViewModel myViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        MainViewModel myViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         if (mTorClient == null) {
             // если клиент не загружен- загружаю
@@ -130,8 +132,8 @@ public class StartTorActivity extends AppCompatActivity {
         // зарегистрирую получатель ошибки подключения к TOR
         IntentFilter filter = new IntentFilter();
         filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
-        mTtorConnectErrorReceiver = new TorConnectErrorReceiver();
-        registerReceiver(mTtorConnectErrorReceiver, filter);
+        mTorConnectErrorReceiver = new TorConnectErrorReceiver();
+        registerReceiver(mTorConnectErrorReceiver, filter);
     }
 
     private void startTimer() {
@@ -141,7 +143,7 @@ public class StartTorActivity extends AppCompatActivity {
             public void onTick(long millisUntilFinished) {
                 mProgressCounter++;
                 mTorLoadingProgressIndicator.setProgress(mProgressCounter);
-                if(mTor != null){
+                if (mTor != null) {
                     String last = mTor.getLastLog();
                     if (last != null) {
                         if (!last.isEmpty()) {
@@ -158,11 +160,11 @@ public class StartTorActivity extends AppCompatActivity {
                         mTorLoadingStatusText.setText(R.string.tor_start_loading);
 
                     }
-                }
-                else{
+                } else {
                     mTorLoadingStatusText.setText(R.string.wait_tor_loading_message);
                 }
             }
+
             public void onFinish() {
                 // tor не загрузился, покажу сообщение с предложением подождать или перезапустить процесс
                 torLoadTooLongDialog();
@@ -172,22 +174,24 @@ public class StartTorActivity extends AppCompatActivity {
     }
 
     private void torLoadTooLongDialog() {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle("Tor load too long")
-                .setMessage("Подождём ещё или перезапустим?")
-                .setPositiveButton("Перезапуск", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        restartCounter();
-                        App.getInstance().restartTor();
-                    }
-                })
-                .setNegativeButton("Подождать ещё", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        restartCounter();
-                    }
-                }).show();
+        if (active) {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setTitle("Tor load too long")
+                    .setMessage("Подождём ещё или перезапустим?")
+                    .setPositiveButton("Перезапуск", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            restartCounter();
+                            App.getInstance().restartTor();
+                        }
+                    })
+                    .setNegativeButton("Подождать ещё", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            restartCounter();
+                        }
+                    }).show();
+        }
     }
 
     private void restartCounter() {
@@ -235,10 +239,10 @@ public class StartTorActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mTtorConnectErrorReceiver != null) {
-            unregisterReceiver(mTtorConnectErrorReceiver);
+        if (mTorConnectErrorReceiver != null) {
+            unregisterReceiver(mTorConnectErrorReceiver);
         }
-        if(mTorRestartDialog != null){
+        if (mTorRestartDialog != null) {
             mTorRestartDialog.dismiss();
         }
     }
@@ -276,6 +280,7 @@ public class StartTorActivity extends AppCompatActivity {
             Runtime.getRuntime().exit(0);
         }
     }
+
     private class TorLoaded implements Runnable {
         @Override
         public void run() {
@@ -289,4 +294,15 @@ public class StartTorActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        active = true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        active = false;
+    }
 }

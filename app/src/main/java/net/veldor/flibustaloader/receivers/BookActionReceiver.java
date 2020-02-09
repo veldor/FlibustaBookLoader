@@ -17,16 +17,17 @@ public class BookActionReceiver extends BroadcastReceiver {
         // закрою меню уведомлений
         Intent closeIntent = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         context.sendBroadcast(closeIntent);
-
-        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE)).cancel(Notificator.BOOK_LOADED_NOTIFICATION);
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null)
+            notificationManager.cancel(Notificator.BOOK_LOADED_NOTIFICATION);
 
         String actionType = intent.getStringExtra(BookLoadedReceiver.EXTRA_ACTION_TYPE);
         Log.d("surprise", "BookActionReceiver onReceive: action type is " + actionType);
         String name = intent.getStringExtra(BookLoadedReceiver.EXTRA_BOOK_NAME);
         String type = intent.getStringExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE);
-        if(actionType.equals(BookLoadedReceiver.ACTION_TYPE_SHARE))
+        if (actionType != null && actionType.equals(BookLoadedReceiver.ACTION_TYPE_SHARE))
             BookSharer.shareBook(name, type);
-        else if(actionType.equals(BookLoadedReceiver.ACTION_TYPE_OPEN))
+        else if (actionType != null && actionType.equals(BookLoadedReceiver.ACTION_TYPE_OPEN))
             BookOpener.openBook(name, type);
     }
 }

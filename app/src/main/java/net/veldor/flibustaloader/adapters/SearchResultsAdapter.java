@@ -1,9 +1,9 @@
 package net.veldor.flibustaloader.adapters;
 
-import android.databinding.DataBindingUtil;
-import android.databinding.ViewDataBinding;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +32,7 @@ import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
 
+@SuppressWarnings({"unchecked"})
 public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdapter.ViewHolder> {
     private ArrayList mAuthors;
     private ArrayList mBooks;
@@ -40,7 +41,7 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
     private LayoutInflater mLayoutInflater;
 
 
-    DownloadLink mCurrentLink;
+    private DownloadLink mCurrentLink;
 
     public SearchResultsAdapter(ArrayList<FoundedItem> arrayList) {
         switch (App.sSearchType) {
@@ -214,7 +215,7 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             View container = mBinding.getRoot();
 
             // проверю, если книга прочитана- покажу это
-            if(foundedBook.readed){
+            if(foundedBook.read){
                 ImageButton readView = container.findViewById(R.id.book_read);
                 if(readView != null){
                     readView.setVisibility(View.VISIBLE);
@@ -292,7 +293,7 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                 }
             });
             // добавлю действие поиска по серии
-            if (foundedBook.sequences != null && foundedBook.sequences.size() > 0) {
+            if (foundedBook.sequences.size() > 0) {
                 TextView sequenceView = container.findViewById(R.id.sequence);
                 sequenceView.setOnClickListener(new OnClickListener() {
                     @Override

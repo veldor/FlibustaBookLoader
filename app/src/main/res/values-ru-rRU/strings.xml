@@ -2,11 +2,7 @@
 <resources>
     <string name="app_name">Флибуста.книги</string>
     <string name="books_loaded_channel">Загруженные книги</string>
-    <string name="loading_tor_message">Инициализирую TOR</string>
     <string name="use_light_style">Упрощённый вид</string>
-    <string name="book_loading_dialog_title">Загрузка книги</string>
-    <string name="book_loading_dialog_message">Загружаю книгу, подождите.</string>
-    <string name="tor_loading_dialog_title">Загрузка TOR</string>
     <string name="snackbar_found_update_message">Доступно обновление!</string>
     <string name="snackbar_update_action_message">Обновить</string>
     <string name="update_file_name">Флибуста.книги</string>
@@ -33,24 +29,13 @@
     <string name="miscellaneous">Разное</string>
     <string name="set_downloads_folder">Установить папку загрузок</string>
     <string name="download_folder_changed_message">"Папка загрузок изменена на "</string>
-    <string name="enter_text_message">Введите текст</string>
-    <string name="use_OPDS">Использовать OPDS(бета)</string>
     <string name="title_activity_opds">OPDS</string>
-    <string name="ready_for_opds_message">Готов</string>
     <string name="whoSearchMessage">Что ищем?</string>
     <string name="search_book_message">Книгу</string>
     <string name="search_author_message">Автора</string>
-    <string name="to_author_page_message">На страницу автора</string>
-    <string name="to_author_series">Книги автора по сериям</string>
-    <string name="to_author_without_series">Книги автора вне серий</string>
-    <string name="load_message">Загрузка</string>
-    <string name="waitForLoad">Нужно немного подождать</string>
-    <string name="back_button">Назад</string>
     <string name="forward_button">Далее</string>
-    <string name="no_results_more">Больше результатов нет</string>
     <string name="downloads_dialog_header">Выберите тип загрузки</string>
     <string name="download_message">Загрузить</string>
-    <string name="book_details">Подробности</string>
     <string name="select_author_view_message">Отобразить книги автора</string>
     <string name="select_authors_choose_message">Выберите автора</string>
     <string name="search_genre_message">Жанры</string>
@@ -90,7 +75,9 @@
     <string name="book_downloaded_message">Book downloaded</string>
     <string name="remember_format">Запомнить формат</string>
     <string name="download_only_this_format">Только выбранный формат</string>
-    <string name="do_not_redownload">Загружать повторно</string>
+    <string name="do_not_re_download">Загружать повторно</string>
     <string name="mass_download">Пакетное скачивание</string>
     <string name="go_to_test_message">Участвовать в тестировании</string>
+    <string name="enter_value_message">Введите значение</string>
+    <string name="backward">Назад</string>
 </resources>

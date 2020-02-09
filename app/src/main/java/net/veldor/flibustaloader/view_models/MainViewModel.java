@@ -1,9 +1,9 @@
 package net.veldor.flibustaloader.view_models;
 
 import android.app.Application;
-import android.arch.lifecycle.AndroidViewModel;
-import android.arch.lifecycle.LiveData;
-import android.support.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import androidx.work.Data;
@@ -29,6 +29,7 @@ import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import java.util.ArrayList;
 import java.util.Random;
 
+@SuppressWarnings("unchecked")
 public class MainViewModel extends AndroidViewModel {
 
     private static final String MULTIPLY_DOWNLOAD = "multiply download";
@@ -79,10 +80,6 @@ public class MainViewModel extends AndroidViewModel {
         BookSharer.shareLink(mWebView.getUrl());
     }
 
-    public void switchODPSMode() {
-        App.getInstance().switchODPSMode();
-    }
-
     public void setBookRead(FoundedBook book) {
         // запущу рабочего, который отметит книгу как прочитанную
         Data inputData = new Data.Builder()
@@ -91,22 +88,26 @@ public class MainViewModel extends AndroidViewModel {
                 .build();
         // запущу рабочего, загружающего страницу
         OneTimeWorkRequest getPageWorker = new OneTimeWorkRequest.Builder(DatabaseWorker.class).setInputData(inputData).build();
-        WorkManager.getInstance().enqueue(getPageWorker);
+        WorkManager.getInstance(App.getInstance()).enqueue(getPageWorker);
     }
 
     public void downloadMultiply(int i) {
         Log.d("surprise", "MainViewModel downloadMultiply initiate download");
         // добавлю список книг для загрузки
-        App.getInstance().mBooksForDownload = (ArrayList<FoundedItem>)App.getInstance().mParsedResult.getValue().clone();
+        ArrayList<FoundedItem> foundedItems = App.getInstance().mParsedResult.getValue();
+        if(foundedItems != null)
+        App.getInstance().mBooksForDownload = (ArrayList<FoundedItem>)foundedItems.clone();
         // установлю статус загрузки
-        App.getInstance().mMultiplyDownloadStatus.postValue("Скачано 0 из " + App.getInstance().mParsedResult.getValue().size() + " книг.");
+        ArrayList<FoundedItem> downloadSize = App.getInstance().mParsedResult.getValue();
+        if(downloadSize != null)
+        App.getInstance().mMultiplyDownloadStatus.postValue("Скачано 0 из " + downloadSize.size() + " книг.");
         // запущу рабочего, который загрузит книги
         Data inputData = new Data.Builder()
                 .putInt(MimeTypes.MIME_TYPE, i)
                 .build();
         OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).setInputData(inputData).build();
-        WorkManager.getInstance().beginUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.KEEP, downloadAllWorker).enqueue();
-        App.getInstance().mDownloadAllWork = WorkManager.getInstance().getWorkInfoByIdLiveData(downloadAllWorker.getId());
+        WorkManager.getInstance(App.getInstance()).beginUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.KEEP, downloadAllWorker).enqueue();
+        App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
         App.getInstance().mProcess = downloadAllWorker;
     }
 

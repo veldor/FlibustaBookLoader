@@ -15,7 +15,7 @@ import java.util.Comparator;
 
 public class SortHandler {
     public static void sortBooks(ArrayList<FoundedItem> books) {
-        if (App.getInstance().mBookSortOption != -1) {
+        if (App.getInstance().mBookSortOption != -1 && books != null && books.size() > 0) {
             Collections.sort(books, new Comparator<FoundedItem>() {
                 @Override
                 public int compare(FoundedItem lhs, FoundedItem rhs) {
@@ -86,7 +86,7 @@ public class SortHandler {
 
     public static void sortAuthors(ArrayList mAuthors) {
         // отсортирую результат
-        if (App.getInstance().mAuthorSortOptions != -1) {
+        if (App.getInstance().mAuthorSortOptions != -1 && mAuthors != null && mAuthors.size() > 0) {
             Collections.sort(mAuthors, new Comparator<FoundedItem>() {
                 @Override
                 public int compare(FoundedItem lhs, FoundedItem rhs) {
@@ -118,8 +118,8 @@ public class SortHandler {
 
     public static void sortGenres(ArrayList genres) {
         // отсортирую результат
-        if (App.getInstance().mOtherSortOptions != -1) {
-            Log.d("surprise", "SortHandler sortGenres sort in process");
+        if (App.getInstance().mOtherSortOptions != -1 && genres != null && genres.size() > 0) {
+
             Collections.sort(genres, new Comparator<FoundedItem>() {
                 @Override
                 public int compare(FoundedItem lhs, FoundedItem rhs) {
@@ -141,7 +141,7 @@ public class SortHandler {
 
     public static void sortSequences(ArrayList sequences) {
         // отсортирую результат
-        if (App.getInstance().mOtherSortOptions != -1) {
+        if (App.getInstance().mOtherSortOptions != -1 && sequences != null && sequences.size() > 0) {
             Collections.sort(sequences, new Comparator<FoundedItem>() {
                 @Override
                 public int compare(FoundedItem lhs, FoundedItem rhs) {

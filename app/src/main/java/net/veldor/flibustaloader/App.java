@@ -1,16 +1,16 @@
 package net.veldor.flibustaloader;
 
 import android.app.Application;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.persistence.room.Room;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.support.v4.provider.DocumentFile;
-import android.support.v7.app.AppCompatDelegate;
 
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.documentfile.provider.DocumentFile;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.room.Room;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
@@ -52,18 +52,18 @@ public class App extends Application {
     public static final String START_TOR = "start_tor";
     private static final String PREFERENCE_LOAD_ALL = "load all";
     private static final String PREFERENCE_VIEW = "view";
-    public static final String PREFERENCE_NEW_DOWNLOAD_LOCATION = "new_download_folder";
+    private static final String PREFERENCE_NEW_DOWNLOAD_LOCATION = "new_download_folder";
     private static final String PREFERENCE_LAST_CHECKED_BOOK = "last_checked_book";
     private static final String PREFERENCE_FAVORITE_MIME = "favorite_mime";
     private static final String PREFERENCE_SAVE_ONLY_SELECTED = "save only selected";
-    private static final String PREFERENCE_REDOWNLOAD = "redownload";
+    private static final String PREFERENCE_RE_DOWNLOAD = "re download";
 
     public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
-    public ArrayList<String> mSearchHistory = new ArrayList<>();
+    public final ArrayList<String> mSearchHistory = new ArrayList<>();
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();
-    public String mResponce;
-    public MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
+    public String mResponse;
+    public final MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
     // место для хранения выбранной серии
     public final MutableLiveData<FoundedSequence> mSelectedSequence = new MutableLiveData<>();
     // место для хранения выбранного жанра
@@ -75,7 +75,7 @@ public class App extends Application {
     public boolean mResultsEscalate = false;
 
 
-    public static final File DOWNLOAD_FOLDER_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+    private static final File DOWNLOAD_FOLDER_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
     public static final String NEW_BOOKS = "http://flibustahezeous3.onion/new";
     private static final String PREFERENCE_VIEW_MODE = "view mode";
@@ -92,11 +92,6 @@ public class App extends Application {
     private static final String PREFERENCE_LAST_LOADED_URL = "last_loaded_url";
     private static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";
 
-
-    private static final String PREFERENCE_CONTENT_TYPE_MODE = "content mode";
-    public static final int CONTENT_MODE_WEB_VIEW = 1;
-    private static final int CONTENT_MODE_ODPS = 0;
-
     // место для хранения TOR клиента
     public final MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
 
@@ -111,26 +106,25 @@ public class App extends Application {
     public File downloadedApkFile;
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
-    public MutableLiveData<FoundedBook> mSelectedBook = new MutableLiveData<>();
+    public final MutableLiveData<FoundedBook> mSelectedBook = new MutableLiveData<>();
     // отслеживание загрузки книги
-    public MutableLiveData<Boolean> mDownloadProgress = new MutableLiveData<>();
-    public MutableLiveData<FoundedBook> mContextBook = new MutableLiveData<>();
-    public MutableLiveData<AndroidOnionProxyManager> mLoadedTor = new MutableLiveData<>();
-    public MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
-    public MutableLiveData<String> mMultiplyDownloadStatus = new MutableLiveData<>();
+    public final MutableLiveData<Boolean> mDownloadProgress = new MutableLiveData<>();
+    public final MutableLiveData<FoundedBook> mContextBook = new MutableLiveData<>();
+    public final MutableLiveData<AndroidOnionProxyManager> mLoadedTor = new MutableLiveData<>();
+    public final MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
+    public final MutableLiveData<String> mMultiplyDownloadStatus = new MutableLiveData<>();
     public LiveData<WorkInfo> mDownloadAllWork;
     public boolean mDownloadsInProgress;
     public OneTimeWorkRequest mProcess;
-    public MutableLiveData<String> mUnloadedBook = new MutableLiveData<>();
+    public final MutableLiveData<String> mUnloadedBook = new MutableLiveData<>();
     public ArrayList<FoundedItem> mBooksForDownload;
-    public ArrayList<FoundedBook> mBooksDownloadFailed = new ArrayList<>();
+    public final ArrayList<FoundedBook> mBooksDownloadFailed = new ArrayList<>();
     public int mBookSortOption = -1;
     public int mAuthorSortOptions = -1;
     public int mOtherSortOptions = -1;
-    public MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
-    public MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
+    public final MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
+    public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
-    private MyWebClient mWebClient;
     public AppDatabase mDatabase;
     public LiveData<WorkInfo> mWork = new LiveData<WorkInfo>() {
     };
@@ -143,6 +137,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
         instance = this;
 
         Constraints constraints = new Constraints.Builder()
@@ -150,8 +145,8 @@ public class App extends Application {
                 .build();
         // запускаю tor
         OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance().enqueueUniqueWork(START_TOR, ExistingWorkPolicy.KEEP, startTorWork);
-        mWork = WorkManager.getInstance().getWorkInfoByIdLiveData(startTorWork.getId());
+        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.KEEP, startTorWork);
+        mWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
 
         // читаю настройки sharedPreferences
 
@@ -180,15 +175,14 @@ public class App extends Application {
         // буду проверять обновления в полдень
         int now_hour = cal.get(HOUR_OF_DAY);
         // проверю, нужно ли планировать проверку расписания
-        if(now_hour < 12){
+        if (now_hour < 12) {
             long currentTime = cal.getTimeInMillis();
             cal.set(HOUR_OF_DAY, 12);
             cal.set(MINUTE, 0);
             long plannedTime = cal.getTimeInMillis();
             OneTimeWorkRequest checkSubs = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).addTag(CHECK_SUBSCRIPTIONS).setInitialDelay(plannedTime - currentTime, TimeUnit.MILLISECONDS).build();
-            WorkManager.getInstance().enqueueUniqueWork(CHECK_SUBSCRIPTIONS, ExistingWorkPolicy.REPLACE, checkSubs);
-        }
-        else{
+            WorkManager.getInstance(this).enqueueUniqueWork(CHECK_SUBSCRIPTIONS, ExistingWorkPolicy.REPLACE, checkSubs);
+        } else {
             // запланирую проверку на следующий день
             long currentTime = cal.getTimeInMillis();
             cal.set(HOUR_OF_DAY, 12);
@@ -196,7 +190,7 @@ public class App extends Application {
             cal.add(Calendar.HOUR_OF_DAY, 24);
             long plannedTime = cal.getTimeInMillis();
             OneTimeWorkRequest checkSubs = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).addTag(CHECK_SUBSCRIPTIONS).setInitialDelay(plannedTime - currentTime, TimeUnit.MILLISECONDS).build();
-            WorkManager.getInstance().enqueueUniqueWork(CHECK_SUBSCRIPTIONS, ExistingWorkPolicy.REPLACE, checkSubs);
+            WorkManager.getInstance(this).enqueueUniqueWork(CHECK_SUBSCRIPTIONS, ExistingWorkPolicy.REPLACE, checkSubs);
         }
     }
 
@@ -249,8 +243,8 @@ public class App extends Application {
                 .build();
         // запускаю tor
         OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance().enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
-        mWork = WorkManager.getInstance().getWorkInfoByIdLiveData(startTorWork.getId());
+        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
+        mWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
     }
 
     public void setLastLoadedUrl(String url) {
@@ -277,27 +271,6 @@ public class App extends Application {
         mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.getPath()).apply();
     }
 
-
-    public int getContentTypeMode() {
-        return mSharedPreferences.getInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW);
-    }
-
-
-    public void switchODPSMode() {
-        int contentTypeMode = getContentTypeMode();
-        if (contentTypeMode == CONTENT_MODE_WEB_VIEW) {
-            mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_ODPS).apply();
-        } else {
-            mSharedPreferences.edit().putInt(PREFERENCE_CONTENT_TYPE_MODE, CONTENT_MODE_WEB_VIEW).apply();
-        }
-    }
-
-    public MyWebClient getWebClient() {
-        if (mWebClient == null) {
-            mWebClient = new MyWebClient();
-        }
-        return mWebClient;
-    }
 
     public void addToHistory(String s) {
         mSearchHistory.add(s);
@@ -386,6 +359,7 @@ public class App extends Application {
     public String getLastCheckedBookId() {
         return (mSharedPreferences.getString(PREFERENCE_LAST_CHECKED_BOOK, "tag:book:0"));
     }
+
     public void setLastCheckedBook(String firstCheckedId) {
         mSharedPreferences.edit().putString(PREFERENCE_LAST_CHECKED_BOOK, firstCheckedId).apply();
     }
@@ -395,7 +369,7 @@ public class App extends Application {
     }
 
 
-    public  void saveFavoriteMime(String longMime) {
+    public void saveFavoriteMime(String longMime) {
         mSharedPreferences.edit().putString(PREFERENCE_FAVORITE_MIME, longMime).apply();
     }
 
@@ -406,14 +380,17 @@ public class App extends Application {
     public void setSaveOnlySelected(boolean checked) {
         mSharedPreferences.edit().putBoolean(PREFERENCE_SAVE_ONLY_SELECTED, checked).apply();
     }
+
     public Boolean isSaveOnlySelected() {
         return (mSharedPreferences.getBoolean(PREFERENCE_SAVE_ONLY_SELECTED, false));
     }
-    public void setRedownload(boolean checked) {
-        mSharedPreferences.edit().putBoolean(PREFERENCE_REDOWNLOAD, checked).apply();
+
+    public void setReDownload(boolean checked) {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_RE_DOWNLOAD, checked).apply();
     }
-    public Boolean isRedownload() {
-        return (mSharedPreferences.getBoolean(PREFERENCE_REDOWNLOAD, true));
+
+    public Boolean isReDownload() {
+        return (mSharedPreferences.getBoolean(PREFERENCE_RE_DOWNLOAD, true));
     }
 
 }

@@ -1,13 +1,10 @@
 package net.veldor.flibustaloader.database.dao;
 
-import android.arch.persistence.room.Dao;
-import android.arch.persistence.room.Delete;
-import android.arch.persistence.room.Insert;
-import android.arch.persistence.room.Query;
-import android.arch.persistence.room.Update;
+import androidx.room.Dao;
+import androidx.room.Insert;
+import androidx.room.Query;
 
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
-import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
 @Dao
 public interface DownloadedBooksDao {
@@ -16,10 +13,10 @@ public interface DownloadedBooksDao {
 
     @Insert
     void insert(DownloadedBooks book);
-
+/*
     @Update
     void update(DownloadedBooks book);
 
     @Delete
-    void delete(DownloadedBooks book);
+    void delete(DownloadedBooks book);*/
 }

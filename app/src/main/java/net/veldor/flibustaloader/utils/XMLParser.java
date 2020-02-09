@@ -53,7 +53,7 @@ public class XMLParser {
     private static final String NEW_GENRES = "tag:search:new:genres";
     private static final String NEW_SEQUENCES = "tag:search:new:sequence";
     private static final String NEW_AUTHORS = "tag:search:new:author";
-    public static final String PARSE_SEARCH = "parse search";
+    private static final String PARSE_SEARCH = "parse search";
 
     public static Document getDocument(String rawText) {
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -75,8 +75,8 @@ public class XMLParser {
     public static void handleResults() {
         // запущу рабочего, который обработает результаты запроса
         OneTimeWorkRequest ParseSearchWorker = new OneTimeWorkRequest.Builder(ParseSearchWorker.class).addTag(PARSE_SEARCH).build();
-        WorkManager.getInstance().enqueue(ParseSearchWorker);
-        App.getInstance().mSearchWork = WorkManager.getInstance().getWorkInfoByIdLiveData(ParseSearchWorker.getId());
+        WorkManager.getInstance(App.getInstance()).enqueue(ParseSearchWorker);
+        App.getInstance().mSearchWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(ParseSearchWorker.getId());
         App.getInstance().mProcess = ParseSearchWorker;
     }
 
@@ -99,7 +99,7 @@ public class XMLParser {
             if (entries.getLength() > 0) {
                 App.getInstance().mSearchTitle.postValue(((Node) xPath.evaluate("/feed/title", document, XPathConstants.NODE)).getTextContent());
                 // определю тип содержимого
-                identificateSearchType(entries.item(0), xPath);
+                identificationSearchType(entries.item(0), xPath);
                 // обработаю данные
                 switch (App.sSearchType) {
                     case OPDSActivity
@@ -129,10 +129,10 @@ public class XMLParser {
     }
 
 
-    private static void identificateSearchType(Node item, XPath xPath) throws XPathExpressionException {
+    private static void identificationSearchType(Node item, XPath xPath) throws XPathExpressionException {
         // получу идентификатор
         String id = ((Node) xPath.evaluate("./id", item, XPathConstants.NODE)).getTextContent();
-        //Log.d("surprise", "ParseSearchWorker identificateSearchType " + id);
+        //Log.d("surprise", "ParseSearchWorker identificationSearchType " + id);
         if (id.startsWith(BOOK_TYPE)) {
             App.sSearchType = OPDSActivity.SEARCH_BOOKS;
         } else if (id.startsWith(GENRE_TYPE)) {
@@ -140,16 +140,16 @@ public class XMLParser {
         } else if (id.startsWith(AUTHOR_TYPE)) {
             // проверю на возможность, что загружены серии
             if (id.contains(AUTHOR_SEQUENCE_TYPE)) {
-                //Log.d("surprise", "ParseSearchWorker identificateSearchType author sequence");
+                //Log.d("surprise", "ParseSearchWorker identificationSearchType author sequence");
                 App.sSearchType = OPDSActivity.SEARCH_SEQUENCE;
             } else {
                 App.sSearchType = OPDSActivity.SEARCH_AUTHORS;
             }
         } else if (id.startsWith(SEQUENCES_TYPE)) {
-            //Log.d("surprise", "ParseSearchWorker identificateSearchType sequenceS");
+            //Log.d("surprise", "ParseSearchWorker identificationSearchType sequenceS");
             App.sSearchType = OPDSActivity.SEARCH_SEQUENCE;
         }else if (id.startsWith(SEQUENCE_TYPE)) {
-            //Log.d("surprise", "ParseSearchWorker identificateSearchType sequence");
+            //Log.d("surprise", "ParseSearchWorker identificationSearchType sequence");
             App.sSearchType = OPDSActivity.SEARCH_SEQUENCE;
         } else if (id.startsWith(NEW_GENRES)) {
             App.sSearchType = OPDSActivity.SEARCH_GENRE;
@@ -159,9 +159,9 @@ public class XMLParser {
             App.sSearchType = OPDSActivity.SEARCH_NEW_AUTHORS;
         }
         else{
-            Log.d("surprise", "ParseSearchWorker identificateSearchType я ничего не понял " + id);
+            Log.d("surprise", "ParseSearchWorker identificationSearchType я ничего не понял " + id);
         }
-        //Log.d("surprise", "ParseSearchWorker identificateSearchType " + App.sSearchType);
+        //Log.d("surprise", "ParseSearchWorker identificationSearchType " + App.sSearchType);
     }
 
 
@@ -233,9 +233,9 @@ public class XMLParser {
             book.id = ((Node) xPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent();
             // узнаю, прочитана ли книга
             AppDatabase db = App.getInstance().mDatabase;
-            book.readed = db.readedBooksDao().getBookById(book.id) != null;
+            book.read = db.readBooksDao().getBookById(book.id) != null;
             book.downloaded = db.downloadedBooksDao().getBookById(book.id) != null;
-            if (book.readed && hideRead) {
+            if (book.read && hideRead) {
                 counter++;
                 continue;
             }
@@ -337,7 +337,7 @@ public class XMLParser {
                 author.link = ((Node) xPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
             }
             else{
-                author.uri = explodeByDelimiter(((Node) xPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent(), ":", 3);
+                author.uri = explodeByDelimiter(((Node) xPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent());
             }
 
             author.content = ((Node) xPath.evaluate("./content", entry, XPathConstants.NODE)).getTextContent();
@@ -354,11 +354,11 @@ public class XMLParser {
         return "";
     }
 
-    private static String explodeByDelimiter(String s, String delimiter, int offset) {
-        String[] result = s.split(delimiter);
-        if (result.length < offset) {
+    private static String explodeByDelimiter(String s) {
+        String[] result = s.split(":");
+        if (result.length < 3) {
             return null;
         }
-        return result[offset - 1];
+        return result[3 - 1];
     }
 }

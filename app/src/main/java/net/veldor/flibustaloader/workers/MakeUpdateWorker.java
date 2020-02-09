@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import net.veldor.flibustaloader.App;
@@ -78,12 +78,14 @@ public class MakeUpdateWorker extends Worker {
                                 request.setDestinationUri(downloadUri);
                                 DownloadManager manager = (DownloadManager) mContext.getSystemService(
                                         Context.DOWNLOAD_SERVICE);
-                                long startedDownloadId = manager.enqueue(request);
-                                // загрузка начата, отправлю идентификатор загрузки менеджеру
-                                Updater.updateDownloadIdentification.postValue(startedDownloadId);
-                                App.getInstance().downloadedApkFile = downloadedApkFile;
-                                // запущу сервис отслеживания окончания загрузки
-                                mContext.startService(new Intent(mContext, UpdateWaitService.class));
+                                if(manager != null){
+                                    long startedDownloadId = manager.enqueue(request);
+                                    // загрузка начата, отправлю идентификатор загрузки менеджеру
+                                    Updater.updateDownloadIdentification.postValue(startedDownloadId);
+                                    App.getInstance().downloadedApkFile = downloadedApkFile;
+                                    // запущу сервис отслеживания окончания загрузки
+                                    mContext.startService(new Intent(mContext, UpdateWaitService.class));
+                                }
                             }
                         } catch (IOException e) {
                             e.printStackTrace();

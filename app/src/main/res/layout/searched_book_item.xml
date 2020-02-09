@@ -12,7 +12,7 @@
             type="net.veldor.flibustaloader.selections.FoundedBook" />
     </data>
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/sequences_background"
@@ -129,7 +129,7 @@
                 app:layout_constraintStart_toEndOf="@+id/book_size"
                 app:layout_constraintTop_toBottomOf="@+id/detailsBlock" />
 
-            <android.support.constraint.Barrier
+            <androidx.constraintlayout.widget.Barrier
                 android:id="@+id/barrier3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -169,6 +169,6 @@
                 app:layout_constraintTop_toBottomOf="@+id/downloadBookBtn"
                 android:contentDescription="@string/book_downloaded_message" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

@@ -8,7 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
+import androidx.core.app.NotificationCompat;
 
 import net.veldor.flibustaloader.MainActivity;
 import net.veldor.flibustaloader.R;
@@ -19,7 +19,7 @@ import net.veldor.flibustaloader.receivers.BookActionReceiver;
 public class Notificator {
     private static final String SHIFTS_CHANNEL_ID = "books";
     public static final int BOOK_LOADED_NOTIFICATION = 1;
-    public static final int SUBSCRIBE_NOTIFICATION = 2;
+    private static final int SUBSCRIBE_NOTIFICATION = 2;
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;
@@ -37,14 +37,16 @@ public class Notificator {
             nc.enableLights(true);
             nc.setLightColor(Color.RED);
             nc.enableVibration(true);
-            mNotificationManager.createNotificationChannel(nc);
-            // создам канал уведомлений о скачанных книгах
-            NotificationChannel nc1 = new NotificationChannel(SUBSCRIBES_CHANNEL_ID, mContext.getString(R.string.subscribes_channel), NotificationManager.IMPORTANCE_DEFAULT);
-            nc1.setDescription(mContext.getString(R.string.subscribe_description));
-            nc1.enableLights(true);
-            nc1.setLightColor(Color.BLUE);
-            nc1.enableVibration(true);
-            mNotificationManager.createNotificationChannel(nc1);
+            if(mNotificationManager != null){
+                mNotificationManager.createNotificationChannel(nc);
+                // создам канал уведомлений о скачанных книгах
+                NotificationChannel nc1 = new NotificationChannel(SUBSCRIBES_CHANNEL_ID, mContext.getString(R.string.subscribes_channel), NotificationManager.IMPORTANCE_DEFAULT);
+                nc1.setDescription(mContext.getString(R.string.subscribe_description));
+                nc1.enableLights(true);
+                nc1.setLightColor(Color.BLUE);
+                nc1.enableVibration(true);
+                mNotificationManager.createNotificationChannel(nc1);
+            }
         }
     }
 

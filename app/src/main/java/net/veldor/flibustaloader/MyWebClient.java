@@ -12,22 +12,10 @@ import net.veldor.flibustaloader.workers.DownloadBookWorker;
 import net.veldor.flibustaloader.workers.GetAllPagesWorker;
 import net.veldor.flibustaloader.workers.GetPageWorker;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
-import cz.msebera.android.httpclient.HttpResponse;
-import cz.msebera.android.httpclient.client.HttpClient;
-import cz.msebera.android.httpclient.client.methods.HttpGet;
-import cz.msebera.android.httpclient.client.protocol.HttpClientContext;
-
 public class MyWebClient {
 
-    static final String PAGE_LOAD_WORKER = "page load worker";
-    public static final String DOWNLOAD_BOOK_WORKER = "download_book_worker";
-    public HttpClientContext mContext;
-    public HttpClient mHttpClient;
+    private static final String PAGE_LOAD_WORKER = "page load worker";
+    static final String DOWNLOAD_BOOK_WORKER = "download_book_worker";
 
     MyWebClient() {
     }
@@ -45,13 +33,13 @@ public class MyWebClient {
         // запущу рабочего, загружающего страницу
         if (App.getInstance().isDownloadAll()) {
             getPageWorker = new OneTimeWorkRequest.Builder(GetAllPagesWorker.class).addTag(PAGE_LOAD_WORKER).setInputData(inputData).build();
-            WorkManager.getInstance().enqueue(getPageWorker);
+            WorkManager.getInstance(App.getInstance()).enqueue(getPageWorker);
         } else {
             getPageWorker = new OneTimeWorkRequest.Builder(GetPageWorker.class).addTag(PAGE_LOAD_WORKER).setInputData(inputData).build();
-            WorkManager.getInstance().enqueue(getPageWorker);
+            WorkManager.getInstance(App.getInstance()).enqueue(getPageWorker);
         }
         // отмечу, что выполняется работа по загрузке контента
-        App.getInstance().mSearchWork = WorkManager.getInstance().getWorkInfoByIdLiveData(getPageWorker.getId());
+        App.getInstance().mSearchWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(getPageWorker.getId());
         // сохраню активный процесс
         App.getInstance().mProcess = getPageWorker;
     }
@@ -69,11 +57,11 @@ public class MyWebClient {
                 .build();
         // запущу рабочего, загружающего файл
         OneTimeWorkRequest downloadBookWorker = new OneTimeWorkRequest.Builder(DownloadBookWorker.class).setInputData(inputData).addTag(DOWNLOAD_BOOK_WORKER).build();
-        WorkManager.getInstance().enqueue(downloadBookWorker);
+        WorkManager.getInstance(App.getInstance()).enqueue(downloadBookWorker);
     }
 
 
-    public String request(String text) {
+/*    public String request(String text) {
         try {
             HttpGet httpGet = new HttpGet(text);
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
@@ -86,22 +74,9 @@ public class MyWebClient {
             e.printStackTrace();
         }
         return null;
-    }
+    }*/
 
 
-    private String inputStreamToString(InputStream is) {
-        try {
-            BufferedReader r = new BufferedReader(new InputStreamReader(is));
-            StringBuilder total = new StringBuilder();
-            for (String line; (line = r.readLine()) != null; ) {
-                total.append(line).append('\n');
-            }
-            return total.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     void loadNextPage() {
         // если есть ссылка на следующую страницу- гружу её

@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Movie;
@@ -11,7 +12,7 @@ import java.io.IOException;
 
 public class GIFView extends View {
     private Movie movie;
-    private long moviestart;
+    private long movie_start;
     public GIFView(Context context) throws IOException {
         super(context);
         movie=Movie.decodeStream(getResources().getAssets().open("loading.gif"));
@@ -28,12 +29,12 @@ public class GIFView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         long now=android.os.SystemClock.uptimeMillis();
-        Paint p = new Paint();
+        @SuppressLint("DrawAllocation") Paint p = new Paint();
         p.setAntiAlias(true);
-        if (moviestart == 0)
-            moviestart = now;
+        if (movie_start == 0)
+            movie_start = now;
         int relTime;
-        relTime = (int)((now - moviestart) % movie.duration());
+        relTime = (int)((now - movie_start) % movie.duration());
         movie.setTime(relTime);
         movie.draw(canvas,0,0);
         this.invalidate();

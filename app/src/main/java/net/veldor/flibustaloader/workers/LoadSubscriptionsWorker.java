@@ -1,7 +1,7 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import androidx.work.Worker;
@@ -11,7 +11,6 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.OPDSActivity;
-import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.SubscriptionItem;

@@ -6,6 +6,7 @@ import android.text.Html;
 import java.util.Random;
 
 public class Grammar {
+    @SuppressWarnings("deprecation")
     public static String textFromHtml(String html) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             return (Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT)).toString();
