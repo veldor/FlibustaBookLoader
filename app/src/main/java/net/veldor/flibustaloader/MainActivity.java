@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     //private LiveData<AndroidOnionProxyManager> mTorClient;
     private Uri mLink;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -152,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_WRITE_READ) {
+        if (requestCode == REQUEST_WRITE_READ && grantResults.length > 0) {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 showPermissionDialog();
             } else {

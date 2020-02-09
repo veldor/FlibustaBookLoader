@@ -211,6 +211,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         mSearchRadioContainer.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (mWebClient == null) {
+                    // не загружен веб-клиент, перезапущу приложение
+                    Toast.makeText(OPDSActivity.this, "Не удалось загрузить веб-клиент, попробуйте перезапустить приложение", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 // очищу список найденного
                 if (mSearchResultsAdapter != null) {
                     mSearchResultsAdapter.nothingFound();
@@ -438,7 +443,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
                     // если была дополнительная загрузка данных и есть адаптер- догружаю в него данные. Иначе- добавляю адаптер
                     if (App.getInstance().mResultsEscalate) {
-                        mSearchResultsAdapter.setContent(arrayList);
+                        if (mSearchResultsAdapter == null)
+                            mSearchResultsAdapter = new SearchResultsAdapter(arrayList);
+                        else
+                            mSearchResultsAdapter.setContent(arrayList);
                         mSearchResultsAdapter.notifyDataSetChanged();
                     } else {
                         mSearchResultsAdapter = new SearchResultsAdapter(arrayList);
@@ -1133,7 +1141,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
     private void doSearch(String s) {
         if (mWebClient == null) {
-            Toast.makeText(this, "Не удалось загрузить веб-клиент", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Не удалось загрузить веб-клиент, попробуйте перезапустить приложение", Toast.LENGTH_SHORT).show();
+            return;
         }
         if (s != null && !s.isEmpty()) {
             // очищу историю поиска и положу туда начальное значение
@@ -1448,7 +1457,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null && data.getExtras() != null) {
                     String folderLocation = data.getExtras().getString("data");
-                    if(folderLocation != null){
+                    if (folderLocation != null) {
                         File destination = new File(folderLocation);
                         if (destination.exists()) {
                             App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
@@ -1467,5 +1476,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
     }
 }
