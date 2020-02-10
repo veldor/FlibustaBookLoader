@@ -33,7 +33,8 @@ public class CheckSubscriptionsWorker extends Worker {
     public Result doWork() {
         ArrayList<SubscriptionItem> subscribes = App.getInstance().getBooksSubscribe().getSubscribes();
         ArrayList<SubscriptionItem> authorSubscribes = App.getInstance().getAuthorsSubscribe().getSubscribes();
-        if(subscribes.size() > 0 || authorSubscribes.size() > 0){
+        ArrayList<SubscriptionItem> sequenceSubscribes = App.getInstance().getSequencesSubscribe().getSubscribes();
+        if(subscribes.size() > 0 || authorSubscribes.size() > 0 ||sequenceSubscribes.size() > 0){
 
             String lastCheckedId = App.getInstance().getLastCheckedBookId();
             Log.d("surprise", "CheckSubscriptionsWorker doWork last checked " + lastCheckedId);

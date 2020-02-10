@@ -59,7 +59,10 @@ public class StartTorWorker extends Worker {
             Log.d("surprise", "запуск TOR прерван");
             e.printStackTrace();
         } catch (IOException e) {
-            Log.d("surprise", "ошибка запуска TOR");
+            e.printStackTrace();
+            if(e.getMessage() != null && e.getMessage().contains("Permission denied")){
+                return Result.failure();
+            }
             e.printStackTrace();
         }
         return Result.success();

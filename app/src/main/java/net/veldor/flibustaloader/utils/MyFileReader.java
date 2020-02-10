@@ -16,6 +16,7 @@ public class MyFileReader {
     private static final String SUBSCRIBE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><subscribe> </subscribe>";
     private static final String BOOKS_SUBSCRIBE_FILE = "booksSubscribe.xml";
     private static final String AUTHORS_SUBSCRIBE_FILE = "authorsSubscribe.xml";
+    private static final String SEQUENCES_SUBSCRIBE_FILE = "sequencesSubscribe.xml";
 
     public static String getSearchAutocomplete() {
 
@@ -71,6 +72,23 @@ public class MyFileReader {
         }
         return text.toString();
     }
+    static String getSequencesSubscribe() {
+        File sequencesSubscribeFile = new File(App.getInstance().getFilesDir(), SEQUENCES_SUBSCRIBE_FILE);
+        if (!sequencesSubscribeFile.exists()) {
+            makeFile(sequencesSubscribeFile, SUBSCRIBE_NEW);
+        }
+        StringBuilder text = new StringBuilder();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(sequencesSubscribeFile));
+            String line;
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return text.toString();
+    }
 
     static void saveSearchAutocomplete(String value) {
         File autocompleteFile = new File(App.getInstance().getFilesDir(), SEARCH_AUTOCOMPLETE_FILE);
@@ -102,6 +120,11 @@ public class MyFileReader {
 
     static void saveAuthorsSubscription(String value) {
         File subscriptionFile = new File(App.getInstance().getFilesDir(), AUTHORS_SUBSCRIBE_FILE);
+        makeFile(subscriptionFile, value);
+    }
+
+    static void saveSequencesSubscription(String value) {
+        File subscriptionFile = new File(App.getInstance().getFilesDir(), SEQUENCES_SUBSCRIBE_FILE);
         makeFile(subscriptionFile, value);
     }
 }

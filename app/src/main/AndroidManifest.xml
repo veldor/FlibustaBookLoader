@@ -20,7 +20,7 @@
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
-        tools:targetApi="m">
+        tools:targetApi="q">
         <activity android:name=".SubscriptionsActivity"/>
         <activity android:name=".SubscribeActivity" />
         <activity

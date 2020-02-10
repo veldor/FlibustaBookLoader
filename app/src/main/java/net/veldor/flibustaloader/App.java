@@ -29,6 +29,7 @@ import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
+import net.veldor.flibustaloader.utils.SubscribeSequences;
 import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
@@ -132,6 +133,7 @@ public class App extends Application {
     };
     private SubscribeBooks mBooksSubscribe;
     private SubscribeAuthors mAuthorsSubscribe;
+    private SubscribeSequences mSequencesSubscribe;
 
 
     @Override
@@ -354,6 +356,12 @@ public class App extends Application {
             mAuthorsSubscribe = new SubscribeAuthors();
         }
         return mAuthorsSubscribe;
+    }
+    public SubscribeSequences getSequencesSubscribe() {
+        if (mSequencesSubscribe == null) {
+            mSequencesSubscribe = new SubscribeSequences();
+        }
+        return mSequencesSubscribe;
     }
 
     public String getLastCheckedBookId() {

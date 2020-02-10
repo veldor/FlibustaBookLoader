@@ -28,6 +28,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
+import static androidx.work.WorkInfo.State.FAILED;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 
 public class StartTorActivity extends AppCompatActivity {
@@ -64,6 +65,10 @@ public class StartTorActivity extends AppCompatActivity {
                             mCdt.cancel();
                         }
                         torLoaded();
+                    }
+                    else if(workInfo.getState() == FAILED){
+                        // покажу диалоговое окно с предупрежением, что TOR не запускается на этой версии Android
+                        showTorNotWorkDialog();
                     }
                 }
             }
@@ -103,7 +108,7 @@ public class StartTorActivity extends AppCompatActivity {
 
         // найду строку статуса загрузки
         mTorLoadingStatusText = findViewById(R.id.progressTorLoadStatus);
-        mTorLoadingStatusText.setText("Начинаю инициализацию");
+        mTorLoadingStatusText.setText(StartTorActivity.this.getString(R.string.begin_tor_init_msg));
         // найду индикатор прогресса
         mTorLoadingProgressIndicator = findViewById(R.id.torLoadProgressIndicator);
 
@@ -134,6 +139,14 @@ public class StartTorActivity extends AppCompatActivity {
         filter.addAction(MyWebViewClient.TOR_CONNECT_ERROR_ACTION);
         mTorConnectErrorReceiver = new TorConnectErrorReceiver();
         registerReceiver(mTorConnectErrorReceiver, filter);
+    }
+
+    private void showTorNotWorkDialog() {
+        if (active) {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setTitle(StartTorActivity.this.getString(R.string.tor_not_load_message))
+                    .setMessage(StartTorActivity.this.getString(R.string.tor_not_run_body)).show();
+        }
     }
 
     private void startTimer() {

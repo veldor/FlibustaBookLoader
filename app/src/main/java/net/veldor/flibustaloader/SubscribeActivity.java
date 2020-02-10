@@ -20,6 +20,7 @@ import net.veldor.flibustaloader.adapters.SubscribesAdapter;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
+import net.veldor.flibustaloader.utils.SubscribeSequences;
 import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class SubscribeActivity extends AppCompatActivity {
     private SubscribeAuthors mAuthorsSubscribeContainer;
     private RecyclerView mRecycler;
     private RadioGroup mRadioContainer;
+    private SubscribeSequences mSequencesSubscribeContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +53,9 @@ public class SubscribeActivity extends AppCompatActivity {
                     case R.id.searchAuthor:
                         showAuthors();
                         break;
+                    case R.id.searchSequence:
+                        showSequences();
+                        break;
                 }
             }
         });
@@ -60,6 +65,7 @@ public class SubscribeActivity extends AppCompatActivity {
 
         mBooksSubscribeContainer = App.getInstance().getBooksSubscribe();
         mAuthorsSubscribeContainer = App.getInstance().getAuthorsSubscribe();
+        mSequencesSubscribeContainer = App.getInstance().getSequencesSubscribe();
         showBooks();
 
 
@@ -84,11 +90,35 @@ public class SubscribeActivity extends AppCompatActivity {
                 }
             }
         });
+        // буду отслеживать изменения списка серий
+        LiveData<Boolean> sequenceRefresh = mSequencesSubscribeContainer.mListRefreshed;
+        sequenceRefresh.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                if(aBoolean != null && aBoolean && mRadioContainer.getCheckedRadioButtonId() == R.id.searchSequence){
+                    refreshSequenceSubscriptionList();
+                }
+            }
+        });
 
         // обработаю добавление книги в список загрузки
         // добавлю идентификатор строки поиска
         mSubscribeInput = findViewById(R.id.subscribe_name);
         mSubscribeInput.requestFocus();
+    }
+
+    private void refreshSequenceSubscriptionList() {
+        ArrayList<SubscriptionItem> autocompleteValues = mSequencesSubscribeContainer.getSubscribes();
+        mSubscribesAdapter.changeList(autocompleteValues);
+        mSubscribesAdapter.notifyDataSetChanged();
+    }
+
+    private void showSequences() {
+        // получу подписки на серии
+        ArrayList<SubscriptionItem> autocompleteValues = mSequencesSubscribeContainer.getSubscribes();
+        Log.d("surprise", "SubscribeActivity onCreate " + autocompleteValues.size());
+        mSubscribesAdapter = new SubscribesAdapter(autocompleteValues);
+        mRecycler.setAdapter(mSubscribesAdapter);
     }
 
     private void refreshAuthorSubscriptionList() {
@@ -133,6 +163,10 @@ public class SubscribeActivity extends AppCompatActivity {
                 case R.id.searchAuthor:
                     Log.d("surprise", "SubscribeActivity addSubscribe add author");
                     mAuthorsSubscribeContainer.addValue(value);
+                    break;
+                case R.id.searchSequence:
+                    Log.d("surprise", "SubscribeActivity addSubscribe add sequence");
+                    mSequencesSubscribeContainer.addValue(value);
                     break;
 
             }

@@ -81,4 +81,7 @@
     <string name="go_to_test_message">Test app</string>
     <string name="backward">backward</string>
     <string name="enter_value_message">Enter value</string>
+    <string name="tor_not_load_message">Tor not load</string>
+    <string name="begin_tor_init_msg">Begin initialize</string>
+    <string name="tor_not_run_body">Unfortunately, looks like TOR library not support your Android OS version or device. You can retry, but, maybe, wait for time, when i resolve this problem. Sorry for this :(</string>
 </resources>
