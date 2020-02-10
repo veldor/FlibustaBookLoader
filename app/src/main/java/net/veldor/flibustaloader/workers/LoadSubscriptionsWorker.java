@@ -32,7 +32,8 @@ public class LoadSubscriptionsWorker extends Worker {
     public Result doWork() {
         ArrayList<SubscriptionItem> subscribes = App.getInstance().getBooksSubscribe().getSubscribes();
         ArrayList<SubscriptionItem> authorSubscribes = App.getInstance().getAuthorsSubscribe().getSubscribes();
-        if (subscribes.size() > 0 || authorSubscribes.size() > 0) {
+        ArrayList<SubscriptionItem> sequenceSubscribes = App.getInstance().getSequencesSubscribe().getSubscribes();
+        if ((subscribes != null && subscribes.size() > 0 ) || (authorSubscribes != null && authorSubscribes.size() > 0 )|| (sequenceSubscribes != null && sequenceSubscribes.size() > 0)) {
             // получу последний проверенный ID
             String lastCheckedId = App.getInstance().getLastCheckedBookId();
             String firstCheckedId = null;
@@ -77,6 +78,7 @@ public class LoadSubscriptionsWorker extends Worker {
                     Log.d("surprise", "LoadSubscriptionsWorker doWork last id is " + firstCheckedId);
                 }
                 while (sNextPage != null) {
+                    Log.d("surprise", "LoadSubscriptionsWorker doWork load next results page");
                     webClient = new TorWebClient();
                     answer = webClient.request(App.BASE_URL + sNextPage);
                     XMLParser.handleSearchResults(result, answer);
@@ -88,22 +90,39 @@ public class LoadSubscriptionsWorker extends Worker {
                 Log.d("surprise", "CheckSubscriptionsWorker doWork найдены книги, проверяю");
                 for (FoundedItem book : result) {
                     realBook = (FoundedBook) book;
-                    // сравню название книги со всеми подписками
-                    for (SubscriptionItem needle : subscribes) {
-                        if (realBook.name.toLowerCase().contains(needle.name.toLowerCase())) {
-                            // найдено совпадение
-                            // добавлю книгу в список найденных
-                            booksResult.add(realBook);
-                        }
-                    }
-                    // сравню название книги со всеми подписками
-                    for (SubscriptionItem needle : authorSubscribes) {
-                        // если есть автор
-                        if (realBook.author != null && !realBook.author.isEmpty()) {
-                            if (realBook.author.toLowerCase().contains(needle.name.toLowerCase())) {
+                    if(subscribes != null){
+                        // сравню название книги со всеми подписками
+                        for (SubscriptionItem needle : subscribes) {
+                            if (realBook.name.toLowerCase().contains(needle.name.toLowerCase())) {
                                 // найдено совпадение
                                 // добавлю книгу в список найденных
                                 booksResult.add(realBook);
+                            }
+                        }
+                    }
+                    if(authorSubscribes != null){
+                        // сравню название книги со всеми подписками
+                        for (SubscriptionItem needle : authorSubscribes) {
+                            // если есть автор
+                            if (realBook.author != null && !realBook.author.isEmpty()) {
+                                if (realBook.author.toLowerCase().contains(needle.name.toLowerCase())) {
+                                    // найдено совпадение
+                                    // добавлю книгу в список найденных
+                                    booksResult.add(realBook);
+                                }
+                            }
+                        }
+                    }
+                    if(sequenceSubscribes != null){
+                        // сравню название книги со всеми подписками
+                        for (SubscriptionItem needle : sequenceSubscribes) {
+                            // если есть автор
+                            if (realBook.sequenceComplex != null && !realBook.sequenceComplex.isEmpty()) {
+                                if (realBook.sequenceComplex.toLowerCase().contains(needle.name.toLowerCase())) {
+                                    // найдено совпадение
+                                    // добавлю книгу в список найденных
+                                    booksResult.add(realBook);
+                                }
                             }
                         }
                     }

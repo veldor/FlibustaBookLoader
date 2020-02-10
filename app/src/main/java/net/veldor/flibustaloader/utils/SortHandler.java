@@ -1,7 +1,5 @@
 package net.veldor.flibustaloader.utils;
 
-import android.util.Log;
-
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.FoundedBook;

@@ -54,7 +54,7 @@ public class SubscriptionsActivity extends AppCompatActivity {
         showLoadDialog();
         // запущу рабочего, загружающего книги
         OneTimeWorkRequest checkSubs = new OneTimeWorkRequest.Builder(LoadSubscriptionsWorker.class).addTag(MY_TAG).setInitialDelay(10, TimeUnit.MILLISECONDS).build();
-        Log.d("surprise", "MainActivity onCreate work planned");
+        Log.d("surprise", "MainActivity onCreate show subscribes work planned");
         WorkManager.getInstance(this).enqueueUniqueWork(MY_TAG, ExistingWorkPolicy.REPLACE, checkSubs);
         // отслежу добавление книг по подписке
         LiveData<ArrayList<FoundedBook>> books = App.getInstance().mSubscribeResults;

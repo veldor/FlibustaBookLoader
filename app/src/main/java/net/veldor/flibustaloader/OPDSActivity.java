@@ -121,7 +121,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         if (App.getInstance().getNightMode()) {
             setTheme(R.style.NightTheme);
         }
@@ -1078,6 +1077,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                         App.getInstance().mResultsEscalate = false;
                         switch (which) {
                             case 0:
+                                App.sSearchType = SEARCH_BOOKS;
                                 doSearch(App.BASE_URL + "/opds/new/0/new");
                                 break;
                             case 1:
@@ -1167,7 +1167,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             mShowLoadDialog = new GifDialog.Builder(this)
                     .setTitle(getString(R.string.load_waiting_title))
                     .setMessage(getString(R.string.load_waiting_message))
-                    .setGifResource(R.drawable.gif1)   //Pass your Gif here
+                    .setGifResource(R.drawable.loading)   //Pass your Gif here
                     .isCancellable(false)
                     .setPositiveBtnText("Отменить")
                     .OnPositiveClicked(new GifDialogListener() {
@@ -1478,8 +1478,4 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
     }
 
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-    }
 }

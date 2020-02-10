@@ -33,7 +33,7 @@ import static androidx.work.WorkInfo.State.SUCCEEDED;
 
 public class StartTorActivity extends AppCompatActivity {
 
-    static boolean active = false;
+    private static boolean active = false;
 
     private static final String TOR_LAUNCHED_MESSAGE = "LAUNCHED";
     private static final String TOR_BUILT_MESSAGE = "BUILT";

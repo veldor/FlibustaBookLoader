@@ -44,25 +44,21 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
     private DownloadLink mCurrentLink;
 
     public SearchResultsAdapter(ArrayList<FoundedItem> arrayList) {
-        switch (App.sSearchType) {
-            case OPDSActivity
-                    .SEARCH_BOOKS:
+        nothingFound();
+        if(arrayList != null && arrayList.size() > 0){
+            FoundedItem firstItem = arrayList.get(0);
+            if(firstItem instanceof FoundedBook){
                 mBooks = arrayList;
-                break;
-            case OPDSActivity
-                    .SEARCH_AUTHORS:
-            case OPDSActivity
-                    .SEARCH_NEW_AUTHORS:
+            }
+            if(firstItem instanceof Author){
                 mAuthors = arrayList;
-                break;
-            case OPDSActivity
-                    .SEARCH_GENRE:
-                mGenres = arrayList;
-                break;
-            case OPDSActivity
-                    .SEARCH_SEQUENCE:
+            }
+            if(firstItem instanceof FoundedSequence){
                 mSequences = arrayList;
-                break;
+            }
+            if(firstItem instanceof Genre){
+                mGenres = arrayList;
+            }
         }
     }
 
@@ -124,15 +120,21 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
 
 
     public void setContent(ArrayList<FoundedItem> arrayList) {
-        switch (App.sSearchType) {
-            case OPDSActivity
-                    .SEARCH_BOOKS:
+        nothingFound();
+        if(arrayList != null && arrayList.size() > 0){
+            FoundedItem firstItem = arrayList.get(0);
+            if(firstItem instanceof FoundedBook){
                 mBooks = arrayList;
-                break;
-            case OPDSActivity
-                    .SEARCH_AUTHORS:
+            }
+            if(firstItem instanceof Author){
                 mAuthors = arrayList;
-                break;
+            }
+            if(firstItem instanceof FoundedSequence){
+                mSequences = arrayList;
+            }
+            if(firstItem instanceof Genre){
+                mGenres = arrayList;
+            }
         }
     }
 

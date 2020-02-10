@@ -75,6 +75,7 @@ public class CheckSubscriptionsWorker extends Worker {
                 // проверю последнюю загруженную книгу
                 String lastId = ((FoundedBook) result.get(result.size() - 1)).id;
                 while (sNextPage != null && lastId.compareTo(lastCheckedId) > 0){
+                    Log.d("surprise", "CheckSubscriptionsWorker doWork load next page");
                     webClient = new TorWebClient();
                     answer = webClient.request(App.BASE_URL + sNextPage);
                     XMLParser.handleSearchResults(result, answer);
@@ -99,6 +100,16 @@ public class CheckSubscriptionsWorker extends Worker {
                     // сравню автора книги со всеми подписками
                     for (SubscriptionItem needle : authorSubscribes){
                         if(realBook.author.toLowerCase().contains(needle.name.toLowerCase())){
+                            // найдено совпадение
+                            // отправлю нотификацию
+                            new Notificator(App.getInstance()).sendFoundSubscribesNotification();
+                            return Result.success();
+                        }
+                    }
+                    // сравню серии книги со всеми подписками
+
+                    for (SubscriptionItem needle : sequenceSubscribes){
+                        if(realBook.sequenceComplex != null && realBook.sequenceComplex.toLowerCase().contains(needle.name.toLowerCase())){
                             // найдено совпадение
                             // отправлю нотификацию
                             new Notificator(App.getInstance()).sendFoundSubscribesNotification();
