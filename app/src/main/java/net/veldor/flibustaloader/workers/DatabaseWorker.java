@@ -12,9 +12,9 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
-import net.veldor.flibustaloader.database.dao.ReadBooksDao;
+import net.veldor.flibustaloader.database.dao.ReadedBooksDao;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
-import net.veldor.flibustaloader.database.entity.ReadBooks;
+import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
 public class DatabaseWorker extends Worker {
     public static final int INSERT_BOOK = 1;
@@ -38,9 +38,9 @@ public class DatabaseWorker extends Worker {
 
     private void insertBook(String id) {
         AppDatabase db = App.getInstance().mDatabase;
-        ReadBooks book = new ReadBooks();
+        ReadedBooks book = new ReadedBooks();
         book.bookId = id;
-        ReadBooksDao bookDao = db.readBooksDao();
+        ReadedBooksDao bookDao = db.readedBooksDao();
         bookDao.insert(book);
     }
 

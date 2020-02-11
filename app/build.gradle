@@ -6,9 +6,10 @@ android {
     defaultConfig {
         applicationId "net.veldor.flibustaloader"
         minSdkVersion 16
+        //noinspection OldTargetApi
         targetSdkVersion 28
-        versionCode 30
-        versionName "2.0.7"
+        versionCode 31
+        versionName "2.0.7.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

@@ -6,13 +6,13 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 
 import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
-import net.veldor.flibustaloader.database.dao.ReadBooksDao;
+import net.veldor.flibustaloader.database.dao.ReadedBooksDao;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
-import net.veldor.flibustaloader.database.entity.ReadBooks;
+import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
-@Database(entities = {ReadBooks.class, DownloadedBooks.class}, version = 3, exportSchema = false)
+@Database(entities = {ReadedBooks.class, DownloadedBooks.class}, version = 3, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
-    public abstract ReadBooksDao readBooksDao();
+    public abstract ReadedBooksDao readedBooksDao();
     public abstract DownloadedBooksDao downloadedBooksDao();
 
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {

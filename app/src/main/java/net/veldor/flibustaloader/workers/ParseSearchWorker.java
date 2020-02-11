@@ -246,7 +246,7 @@ public class ParseSearchWorker extends Worker {
             book.id = ((Node) mXPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent();
             // узнаю, прочитана ли книга
             AppDatabase db = App.getInstance().mDatabase;
-            book.read = db.readBooksDao().getBookById(book.id) != null;
+            book.read = db.readedBooksDao().getBookById(book.id) != null;
             book.downloaded = db.downloadedBooksDao().getBookById(book.id) != null;
             if (book.read && hideRead) {
                 counter++;

@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey;
 import org.jetbrains.annotations.NotNull;
 
 @Entity
-public class ReadBooks {
+public class ReadedBooks {
     @PrimaryKey(autoGenerate = true)
     public int id;
 

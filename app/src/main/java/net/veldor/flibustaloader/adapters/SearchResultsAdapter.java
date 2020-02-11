@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
-import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedAuthorItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedBookItemBinding;
