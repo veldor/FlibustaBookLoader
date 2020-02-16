@@ -81,6 +81,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private static final String[] otherSortOptions = new String[]{"От А", "От Я"};
     private static final int READ_REQUEST_CODE = 5;
     private static final int REQUEST_CODE = 7;
+    private static final int BACKUP_FILE_REQUEST_CODE = 8;
     private AlertDialog mTorRestartDialog;
     private MainViewModel mMyViewModel;
     private LiveData<AndroidOnionProxyManager> mTorClient;
@@ -951,9 +952,24 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 App.getInstance().setSaveOnlySelected(!App.getInstance().isSaveOnlySelected());
                 invalidateOptionsMenu();
                 return true;
+            case R.id.reserveSettings:
+                Toast.makeText(this, "Начато резервирование настрек, после завершения вы получите уведомление.", Toast.LENGTH_LONG).show();
+                mMyViewModel.reserveSettings();
+                return true;
+            case R.id.restoreSettings:
+                restoreSettings();
+                return true;
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void restoreSettings() {
+        Toast.makeText(this, "Выберите сохранённый ранее файл с настройками.", Toast.LENGTH_LONG).show();
+        // открою окно выбота файла для восстановления
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/zip");
+        startActivityForResult(intent, BACKUP_FILE_REQUEST_CODE);
     }
 
     private void subscribe() {
@@ -1472,6 +1488,15 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             if (lastUrl != null && !lastUrl.isEmpty()) {
                 showLoadWaitingDialog();
                 mWebClient.search(lastUrl);
+            }
+        } else if (requestCode == BACKUP_FILE_REQUEST_CODE) {
+            // выбран файл, вероятно с бекапом
+            if (resultCode == Activity.RESULT_OK) {
+                Uri uri;
+                if (data != null) {
+                    uri = data.getData();
+                    mMyViewModel.restore(uri);
+                }
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);

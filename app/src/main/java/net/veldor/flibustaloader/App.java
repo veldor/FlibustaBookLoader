@@ -44,6 +44,8 @@ import static java.util.Calendar.MINUTE;
 public class App extends Application {
 
 
+    public static final String BACKUP_DIR_NAME = "FlibusaDownloader";
+    public static final String BACKUP_FILE_NAME = "settings_backup.zip";
     private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
     public static final int MAX_BOOK_NUMBER = 548398;
     public static final int VIEW_WEB = 1;

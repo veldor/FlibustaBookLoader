@@ -6,10 +6,16 @@ import androidx.room.Query;
 
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Dao
 public interface DownloadedBooksDao {
     @Query("SELECT * FROM downloadedbooks WHERE bookId = :id")
     DownloadedBooks getBookById(String id);
+
+    @Query("SELECT * FROM downloadedbooks")
+    List<DownloadedBooks> getAllBooks();
 
     @Insert
     void insert(DownloadedBooks book);

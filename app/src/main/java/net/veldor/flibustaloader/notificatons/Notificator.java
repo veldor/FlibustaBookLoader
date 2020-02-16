@@ -8,36 +8,41 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
+
 import androidx.core.app.NotificationCompat;
 
+import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MainActivity;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.SubscriptionsActivity;
+import net.veldor.flibustaloader.receivers.BackupActionReceiver;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.receivers.BookActionReceiver;
 
 public class Notificator {
     private static final String SHIFTS_CHANNEL_ID = "books";
+    private static final String SUBSCRIBES_CHANNEL_ID = "subscribes";
+    private static final String MISC_CHANNEL_ID = "misc";
     public static final int BOOK_LOADED_NOTIFICATION = 1;
     private static final int SUBSCRIBE_NOTIFICATION = 2;
+    public static final int BACKUP_COMPLETED_NOTIFICATION = 3;
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;
-    private static final String SUBSCRIBES_CHANNEL_ID = "subscribes";
     private final Context mContext;
     private final NotificationManager mNotificationManager;
 
-    public Notificator(Context context){
+    public Notificator(Context context) {
         mContext = context;
         mNotificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // создам канал уведомлений о скачанных книгах
-            NotificationChannel nc = new NotificationChannel(SHIFTS_CHANNEL_ID, mContext.getString(R.string.books_loaded_channel), NotificationManager.IMPORTANCE_DEFAULT);
-            nc.setDescription(mContext.getString(R.string.shifts_reminder));
-            nc.enableLights(true);
-            nc.setLightColor(Color.RED);
-            nc.enableVibration(true);
-            if(mNotificationManager != null){
+            if (mNotificationManager != null) {
+                // создам канал уведомлений о скачанных книгах
+                NotificationChannel nc = new NotificationChannel(SHIFTS_CHANNEL_ID, mContext.getString(R.string.books_loaded_channel), NotificationManager.IMPORTANCE_DEFAULT);
+                nc.setDescription(mContext.getString(R.string.shifts_reminder));
+                nc.enableLights(true);
+                nc.setLightColor(Color.RED);
+                nc.enableVibration(true);
                 mNotificationManager.createNotificationChannel(nc);
                 // создам канал уведомлений о скачанных книгах
                 NotificationChannel nc1 = new NotificationChannel(SUBSCRIBES_CHANNEL_ID, mContext.getString(R.string.subscribes_channel), NotificationManager.IMPORTANCE_DEFAULT);
@@ -46,11 +51,18 @@ public class Notificator {
                 nc1.setLightColor(Color.BLUE);
                 nc1.enableVibration(true);
                 mNotificationManager.createNotificationChannel(nc1);
+                // создам канал различных уведомлений
+                nc1 = new NotificationChannel(MISC_CHANNEL_ID, mContext.getString(R.string.misc_channel), NotificationManager.IMPORTANCE_DEFAULT);
+                nc1.setDescription(mContext.getString(R.string.misc_description));
+                nc1.enableLights(true);
+                nc1.setLightColor(Color.BLUE);
+                nc1.enableVibration(true);
+                mNotificationManager.createNotificationChannel(nc1);
             }
         }
     }
 
-    public void sendLoadedBookNotification(String name, String type){
+    public void sendLoadedBookNotification(String name, String type) {
 
         // создам интент для функции отправки файла
         Intent shareIntent = new Intent(mContext, BookActionReceiver.class);
@@ -95,5 +107,15 @@ public class Notificator {
                 .setAutoCancel(true);
         Notification notification = notificationBuilder.build();
         mNotificationManager.notify(SUBSCRIBE_NOTIFICATION, notification);
+    }
+
+    public void sendBackupSuccessNotification() {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, MISC_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_backup_black_24dp)
+                .setContentTitle("Настройки сохранены")
+                .setStyle(new NotificationCompat.BigTextStyle().bigText("Резервная копия настроек сохранена в папку " + App.BACKUP_DIR_NAME))
+                .setAutoCancel(true);
+        Notification notification = notificationBuilder.build();
+        mNotificationManager.notify(BACKUP_COMPLETED_NOTIFICATION, notification);
     }
 }

@@ -74,6 +74,12 @@
                 android:id="@+id/setDownloadsFolder"
                 android:title="@string/set_downloads_folder"/>
             <item
+                android:id="@+id/reserveSettings"
+                android:title="@string/reserve_settings_message"/>
+            <item
+                android:id="@+id/restoreSettings"
+                android:title="@string/restore_settings_message"/>
+            <item
                 android:id="@+id/setUpdateCheck"
                 android:title="@string/set_update_check_message"
                 android:checkable="true"
