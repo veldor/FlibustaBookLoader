@@ -364,3 +364,17 @@ a.book-link.searched.selected:active{
 #main > div.item-list>ul.pager{
 	display: block;
 }
+
+
+div#navigationButtonsDiv{
+    display:inline-block;
+    position:fixed;
+    top:50%;
+    right:10px;
+}
+
+
+div#navigationButtonsDiv button{
+    display:block;
+    width:60px;
+}

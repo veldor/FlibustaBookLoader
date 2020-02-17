@@ -24,6 +24,8 @@ import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,6 +36,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatCheckBox;
 import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -55,6 +58,7 @@ import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MimeTypes;
+import net.veldor.flibustaloader.utils.TransportUtils;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.utils.XMLParser;
 import net.veldor.flibustaloader.view_models.MainViewModel;
@@ -64,6 +68,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.zip.Inflater;
 
 import lib.folderpicker.FolderPicker;
 
@@ -117,6 +122,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private Snackbar mBookLoadNotification;
     private ImageButton mForwardBtn, mBackwardBtn;
     private AlertDialog mBookTypeDialog;
+    private Dialog mCoverPerviewDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -354,8 +360,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // добавлю обсерверы
         addObservers();
-
-        checkUpdates();
+        //todo включить в стабильной версии
+        //checkUpdates();
 
 /*        // попробую создать user guide
         new MaterialIntroView.Builder(this)
@@ -416,6 +422,27 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 } else {
                     hideWaitingDialog();
                 }
+
+                // отслеживание отображения обложки книги
+                MutableLiveData<FoundedBook> bookWithCover = App.getInstance().mShowCover;
+                bookWithCover.observe(OPDSActivity.this, new Observer<FoundedBook>() {
+                    @Override
+                    public void onChanged(FoundedBook foundedBook) {
+                        if(foundedBook != null && foundedBook.preview != null && foundedBook.preview.getByteCount() > 0){
+                            if(mCoverPerviewDialog == null){
+                                 mCoverPerviewDialog = new Dialog(OPDSActivity.this, android.R.style.Theme_Light);
+                                mCoverPerviewDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                            }
+                            LayoutInflater inflater = getLayoutInflater();
+                            View dialogLayout = inflater.inflate(R.layout.book_cover, null);
+                            ImageView imageContainer = dialogLayout.findViewById(R.id.cover_view);
+                            imageContainer.setImageBitmap(foundedBook.preview);
+                            mCoverPerviewDialog.setContentView(dialogLayout);
+                            mCoverPerviewDialog.show();
+                            Log.d("surprise", "onChanged: i showed");
+                        }
+                    }
+                });
             }
         });
 
@@ -458,6 +485,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     nothingFound();
                 }
                 hideWaitingDialog();
+                App.getInstance().mResultsEscalate = false;
             }
         });
         // добавлю отслеживание показа информации о книге
@@ -746,6 +774,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             mBookTypeDialog.dismiss();
             mBookTypeDialog = null;
         }
+        if (mCoverPerviewDialog != null) {
+            mCoverPerviewDialog.dismiss();
+            mCoverPerviewDialog = null;
+        }
     }
 
     private void nothingFound() {
@@ -829,6 +861,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // переключатель повторной загрузки
         myItem = menu.findItem(R.id.doNotReDownload);
         myItem.setChecked(App.getInstance().isReDownload());
+        // переключатель превью обложек
+        myItem = menu.findItem(R.id.showPreviews);
+        myItem.setChecked(App.getInstance().isPreviews());
         return true;
     }
 
@@ -944,6 +979,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 App.getInstance().discardFavoriteType();
                 Toast.makeText(this, "Выбранный тип загрузок сброшен", Toast.LENGTH_SHORT).show();
                 return true;
+            case R.id.reserveSettings:
+                Toast.makeText(this, "Начато резервирование настрек, после завершения вы получите уведомление.", Toast.LENGTH_LONG).show();
+                mMyViewModel.reserveSettings();
+                return true;
+            case R.id.restoreSettings:
+                restoreSettings();
+                return true;
             case R.id.doNotReDownload:
                 App.getInstance().setReDownload(!App.getInstance().isReDownload());
                 invalidateOptionsMenu();
@@ -952,12 +994,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 App.getInstance().setSaveOnlySelected(!App.getInstance().isSaveOnlySelected());
                 invalidateOptionsMenu();
                 return true;
-            case R.id.reserveSettings:
-                Toast.makeText(this, "Начато резервирование настрек, после завершения вы получите уведомление.", Toast.LENGTH_LONG).show();
-                mMyViewModel.reserveSettings();
-                return true;
-            case R.id.restoreSettings:
-                restoreSettings();
+            case R.id.showPreviews:
+                App.getInstance().switchShowPreviews();
+                invalidateOptionsMenu();
                 return true;
 
         }
@@ -969,7 +1008,12 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // открою окно выбота файла для восстановления
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("application/zip");
-        startActivityForResult(intent, BACKUP_FILE_REQUEST_CODE);
+        if(TransportUtils.intentCanBeHandled(intent)){
+            startActivityForResult(intent, BACKUP_FILE_REQUEST_CODE);
+        }
+        else{
+            Toast.makeText(this, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void subscribe() {
@@ -1347,6 +1391,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if(mCoverPerviewDialog != null && mCoverPerviewDialog.isShowing()){
+                mBookTypeDialog.dismiss();
+                return true;
+            }
             // если доступен возврат назад- возвращаюсь, если нет- закрываю приложение
             // отменю добавление результатов
             App.getInstance().mResultsEscalate = false;
@@ -1495,7 +1543,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 Uri uri;
                 if (data != null) {
                     uri = data.getData();
-                    mMyViewModel.restore(uri);
+                    if (uri != null)
+                        mMyViewModel.restore(uri);
+                    Toast.makeText(OPDSActivity.this, "Настройки приложения восстановлены", Toast.LENGTH_SHORT).show();
                 }
             }
         } else {

@@ -89,4 +89,7 @@
     <string name="restore_settings_message">Restore settings</string>
     <string name="misc_channel">misc notifications</string>
     <string name="misc_description">misc notifications</string>
+    <string name="show_previews">Show books covers</string>
+    <string name="preview_image">preview_image</string>
+    <string name="cover">cover</string>
 </resources>

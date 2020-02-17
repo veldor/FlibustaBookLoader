@@ -1,6 +1,9 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import androidx.work.Worker;
@@ -16,6 +19,7 @@ import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
+import net.veldor.flibustaloader.utils.ImageLoadHandler;
 import net.veldor.flibustaloader.utils.SortHandler;
 
 import org.w3c.dom.Document;
@@ -23,6 +27,8 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import javax.xml.xpath.XPath;
@@ -208,6 +214,8 @@ public class ParseSearchWorker extends Worker {
     }
 
     private void handleBooks(NodeList entries) throws XPathExpressionException {
+        // переключатель загрузки превью
+        boolean isLoadPreviews = App.getInstance().isPreviews();
         // обработаю найденные книги
         Node entry;
         Node someNode;
@@ -330,6 +338,18 @@ public class ParseSearchWorker extends Worker {
                     book.sequences.add(sequence);
                 }
                 innerCounter++;
+            }
+            // если назначена загрузка превью- гружу их
+            if(isLoadPreviews){
+                someNode = ((Node) mXPath.evaluate("./link[@rel='http://opds-spec.org/image']", entry, XPathConstants.NODE));
+                if(someNode != null){
+                    someString = someNode.getAttributes().getNamedItem("href").getTextContent();
+                    if(someString != null && !someString.isEmpty()){
+                        book.previewUrl = someString;
+                        Bitmap preview = ImageLoadHandler.loadImage(App.BASE_URL + someString);
+                        book.preview = preview;
+                    }
+                }
             }
         }
         SortHandler.sortBooks(result);

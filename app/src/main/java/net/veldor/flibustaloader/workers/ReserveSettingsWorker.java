@@ -30,9 +30,9 @@ public class ReserveSettingsWorker extends Worker {
 
 
     private static final int BUFFER = 1024;
-    private static final String PREF_BACKUP_NAME = "data1";
-    private static final String DOWNLOADED_BOOKS_BACKUP_NAME = "data2";
-    private static final String READED_BOOKS_BACKUP_NAME = "data3";
+    static final String PREF_BACKUP_NAME = "data1";
+    static final String DOWNLOADED_BOOKS_BACKUP_NAME = "data2";
+    static final String READED_BOOKS_BACKUP_NAME = "data3";
 
     public ReserveSettingsWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);

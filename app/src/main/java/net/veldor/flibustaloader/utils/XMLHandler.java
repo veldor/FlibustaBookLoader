@@ -1,7 +1,15 @@
 package net.veldor.flibustaloader.utils;
 
+import android.util.Log;
+
+import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.database.entity.DownloadedBooks;
+import net.veldor.flibustaloader.database.entity.ReadedBooks;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
@@ -11,6 +19,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -21,6 +31,10 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 public class XMLHandler {
     private static final String SEARCH_VALUE_NAME = "string";
@@ -106,5 +120,62 @@ public class XMLHandler {
             e.printStackTrace();
         }
         return writer.toString();
+    }
+
+    public static void handleBackup(ZipInputStream zin) {
+        try {
+            AppDatabase db = App.getInstance().mDatabase;
+            StringBuilder s = new StringBuilder();
+            byte[] buffer = new byte[1024];
+            int read = 0;
+            ZipEntry entry;
+            while ((read = zin.read(buffer, 0, 1024)) >= 0) {
+                s.append(new String(buffer, 0, read));
+            }
+            String xml = s.toString();
+            Document document = XMLHandler.getDocument(xml);
+            XPathFactory factory = XPathFactory.newInstance();
+            XPath xPath = factory.newXPath();
+            NodeList entries = (NodeList) xPath.evaluate("/readed_books/book", document, XPathConstants.NODESET);
+            if (entries != null && entries.getLength() > 0) {
+                int counter = 0;
+                int entriesLen = entries.getLength();
+                Node node;
+                while (counter < entriesLen) {
+                    node = entries.item(counter);
+                    // получу идентификатор книги
+                    String id = node.getAttributes().getNamedItem("id").getTextContent();
+                    ReadedBooks rb = new ReadedBooks();
+                    rb.bookId = id;
+                    db.readedBooksDao().insert(rb);
+                    Log.d("surprise", "handleBackup: founded readed book");
+                    ++counter;
+                }
+            }
+            entries = (NodeList) xPath.evaluate("/downloaded_books/book", document, XPathConstants.NODESET);
+            if (entries != null && entries.getLength() > 0) {
+                int counter = 0;
+                int entriesLen = entries.getLength();
+                Node node;
+                while (counter < entriesLen) {
+                    node = entries.item(counter);
+                    // получу идентификатор книги
+                    String id = node.getAttributes().getNamedItem("id").getTextContent();
+                    DownloadedBooks rb = new DownloadedBooks();
+                    rb.bookId = id;
+                    db.downloadedBooksDao().insert(rb);
+                    Log.d("surprise", "handleBackup: founded downloaded book");
+                    ++counter;
+                }
+            }
+
+        } catch (IOException e) {
+            Log.d("surprise", "handleBackup: error");
+            e.printStackTrace();
+        } catch (XPathExpressionException e) {
+            Log.d("surprise", "handleBackup: error1");
+            e.printStackTrace();
+        }
+
     }
 }

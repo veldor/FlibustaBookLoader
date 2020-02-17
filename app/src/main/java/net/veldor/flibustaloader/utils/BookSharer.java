@@ -50,7 +50,12 @@ public class BookSharer {
                         shareIntent.setType(MimeTypes.getFullMime(type));
                         Intent starter = Intent.createChooser(shareIntent, context.getString(R.string.share_with_message));
                         starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(starter);
+                        if (TransportUtils.intentCanBeHandled(starter)) {
+                            context.startActivity(starter);
+                        }
+                        else{
+                            Toast.makeText(App.getInstance(), "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
+                        }
                     } else {
                         Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
                     }
@@ -72,7 +77,12 @@ public class BookSharer {
                     shareIntent.setType(MimeTypes.getFullMime(type));
                     Intent starter = Intent.createChooser(shareIntent, context.getString(R.string.share_with_message));
                     starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(starter);
+                    if (TransportUtils.intentCanBeHandled(starter)) {
+                        context.startActivity(starter);
+                    }
+                    else{
+                        Toast.makeText(context, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
+                    }
                 } else {
                     Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
                 }
@@ -91,7 +101,12 @@ public class BookSharer {
                 shareIntent.setType(MimeTypes.getFullMime(type));
                 Intent starter = Intent.createChooser(shareIntent, context.getString(R.string.share_with_message));
                 starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(starter);
+                if (TransportUtils.intentCanBeHandled(starter)) {
+                    context.startActivity(starter);
+                }
+                else{
+                    Toast.makeText(context, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
+                }
             } else {
                 Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
             }
@@ -106,6 +121,11 @@ public class BookSharer {
         i.putExtra(Intent.EXTRA_TEXT, link);
         Intent starter = Intent.createChooser(i, context.getString(R.string.share_url_title));
         starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(starter);
+        if (TransportUtils.intentCanBeHandled(starter)) {
+            context.startActivity(starter);
+        }
+        else{
+            Toast.makeText(context, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
+        }
     }
 }

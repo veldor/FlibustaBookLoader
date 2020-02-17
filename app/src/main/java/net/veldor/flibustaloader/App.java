@@ -46,6 +46,7 @@ public class App extends Application {
 
     public static final String BACKUP_DIR_NAME = "FlibusaDownloader";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
+    public static final String FB_URL = "http://flibusta.is";
     private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
     public static final int MAX_BOOK_NUMBER = 548398;
     public static final int VIEW_WEB = 1;
@@ -60,6 +61,7 @@ public class App extends Application {
     private static final String PREFERENCE_FAVORITE_MIME = "favorite_mime";
     private static final String PREFERENCE_SAVE_ONLY_SELECTED = "save only selected";
     private static final String PREFERENCE_RE_DOWNLOAD = "re download";
+    private static final String PREFERENCE_PREVIEWS = "cover_previews_show";
 
     public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
     public final ArrayList<String> mSearchHistory = new ArrayList<>();
@@ -127,6 +129,7 @@ public class App extends Application {
     public int mOtherSortOptions = -1;
     public final MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
     public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
+    public MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
     public LiveData<WorkInfo> mWork = new LiveData<WorkInfo>() {
@@ -403,4 +406,11 @@ public class App extends Application {
         return (mSharedPreferences.getBoolean(PREFERENCE_RE_DOWNLOAD, true));
     }
 
+    public boolean isPreviews() {
+        return (mSharedPreferences.getBoolean(PREFERENCE_PREVIEWS, false));
+    }
+
+    public void switchShowPreviews() {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_PREVIEWS, !isPreviews()).apply();
+    }
 }

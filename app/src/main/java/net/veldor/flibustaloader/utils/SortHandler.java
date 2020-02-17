@@ -31,6 +31,8 @@ public class SortHandler {
                                 size1 = Integer.parseInt(size_1);
                             if (!size_2.isEmpty())
                                 size2 = Integer.parseInt(size_2);
+                            if (size1 == size2)
+                                return 0;
                             return size1 < size2 ? 1 : -1;
                         case 2:
                             // сортирую по количеству загрузок
@@ -38,12 +40,14 @@ public class SortHandler {
                             String quantity2 = fb2.downloadsCount;
                             int downloads1 = 0;
                             int downloads2 = 0;
-                            if(quantity1 != null && !quantity1.isEmpty()){
+                            if (quantity1 != null && !quantity1.isEmpty()) {
                                 downloads1 = Integer.parseInt(quantity1.replaceAll("[^\\d]", ""));
                             }
-                            if(quantity2 != null && !quantity2.isEmpty()){
+                            if (quantity2 != null && !quantity2.isEmpty()) {
                                 downloads2 = Integer.parseInt(quantity2.replaceAll("[^\\d]", ""));
                             }
+                            if (downloads1 == downloads2)
+                                return 0;
                             return downloads1 < downloads2 ? 1 : -1;
                         case 3:
                             // сортировка по серии
@@ -53,6 +57,8 @@ public class SortHandler {
                             if (fb2.sequenceComplex.isEmpty()) {
                                 return -1;
                             }
+                            if (fb1.sequenceComplex.equals(fb2.sequenceComplex))
+                                return 0;
                             return fb1.sequenceComplex.compareTo(fb2.sequenceComplex) > 0 ? 1 : -1;
                         case 4:
                             // сортировка по серии
@@ -62,6 +68,8 @@ public class SortHandler {
                             if (fb2.genreComplex.isEmpty()) {
                                 return -1;
                             }
+                            if(fb1.genreComplex.equals(fb2.genreComplex))
+                                return 0;
                             return fb1.genreComplex.compareTo(fb2.genreComplex) > 0 ? 1 : -1;
                         case 5:
                             // сортировка по серии
@@ -71,11 +79,15 @@ public class SortHandler {
                             if (fb2.author.isEmpty()) {
                                 return -1;
                             }
+                            if(fb1.author.equals(fb2.author))
+                                return 0;
                             return fb1.author.compareTo(fb2.author) > 0 ? 1 : -1;
                         default:
                         case 0:
                             // сортирую по названию книги
-                            return fb1.name.compareTo(fb2.name);
+                            if(fb1.name.equals(fb2.name))
+                                return 0;
+                            return fb1.name.compareTo(fb2.name) > 0 ? 1 : -1;
                     }
                 }
             });
@@ -93,20 +105,28 @@ public class SortHandler {
                     // -1 - less than, 1 - greater than, 0 - equal, all inversed for descending
                     switch (App.getInstance().mAuthorSortOptions) {
                         case 1:
+                            if(fa1.name.equals(fa2.name))
+                                return 0;
                             return fa1.name.compareTo(fa2.name) > 0 ? -1 : 1;
                         case 2:
                             // сортирую по размеру
                             int size1 = Integer.parseInt(fa1.content.replaceAll("[^\\d]", ""));
                             int size2 = Integer.parseInt(fa2.content.replaceAll("[^\\d]", ""));
+                            if(size1 == size2)
+                                return 0;
                             return size1 < size2 ? 1 : -1;
                         case 3:
                             // сортирую по размеру
                             size1 = Integer.parseInt(fa1.content.replaceAll("[^\\d]", ""));
                             size2 = Integer.parseInt(fa2.content.replaceAll("[^\\d]", ""));
+                            if(size1 == size2)
+                                return 0;
                             return size1 < size2 ? -1 : 1;
                         default:
                         case 0:
                             // сортирую по названию книги
+                            if(fa1.name.equals(fa2.name))
+                                return 0;
                             return fa1.name.compareTo(fa2.name);
                     }
                 }
@@ -126,9 +146,13 @@ public class SortHandler {
                     // -1 - less than, 1 - greater than, 0 - equal, all inversed for descending
                     switch (App.getInstance().mOtherSortOptions) {
                         case 1:
+                            if(fa1.label.equals(fa2.label))
+                                return 0;
                             return fa1.label.compareTo(fa2.label) > 0 ? -1 : 1;
                         case 0:
                         default:
+                            if(fa1.label.equals(fa2.label))
+                                return 0;
                             // сортирую по названию книги
                             return fa1.label.compareTo(fa2.label);
                     }
@@ -148,9 +172,13 @@ public class SortHandler {
                     // -1 - less than, 1 - greater than, 0 - equal, all inversed for descending
                     switch (App.getInstance().mOtherSortOptions) {
                         case 1:
+                            if(fa1.title.equals(fa2.title))
+                                return 0;
                             return fa1.title.compareTo(fa2.title) > 0 ? -1 : 1;
                         case 0:
                         default:
+                            if(fa1.title.equals(fa2.title))
+                                return 0;
                             // сортирую по названию книги
                             return fa1.title.compareTo(fa2.title);
                     }

@@ -1,4 +1,20 @@
 $(window).on("load.my", function () {
+
+    var navigationButtonsDiv = document.createElement('div');
+    navigationButtonsDiv.id = 'navigationButtonsDiv';
+    navigationButtonsDiv.innerHTML = "<button id='moveUpBtn'>Вверх</button><button id='moveDownBtn'>Вниз</button>";
+    document.body.appendChild(navigationButtonsDiv);
+
+    var upBtn = document.getElementById('moveUpBtn');
+    var downBtn = document.getElementById('moveDownBtn');
+
+    upBtn.onclick = function(){
+        window.scrollTo(0, 0);
+    }
+    downBtn.onclick = function(){
+        window.scrollTo(0,document.body.scrollHeight);
+    }
+
     var href = location.href;
     if (href === 'http://flibustahezeous3.onion/') {
         var menu = document.getElementsByClassName('pager');

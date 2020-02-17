@@ -31,7 +31,6 @@ import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -49,7 +48,7 @@ import lib.folderpicker.FolderPicker;
 
 import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
-public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
+public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
 
     public static final String CALLED = "activity_called";
     private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
@@ -57,7 +56,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private static final int REQUEST_CODE = 7;
     private MyWebView mWebView;
     private MainViewModel mMyViewModel;
-    private SwipeRefreshLayout mRefresher;
     private WebViewActivity.BookLoadingReceiver mPageLoadReceiver;
     private View mRootView;
     private ArrayList<String> autocompleteStrings;
@@ -101,10 +99,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
         Log.d("surprise", "WebViewActivity onCreate " + mMyViewModel);
 
-        // добавлю модный перезагрузчик страницы
-        mRefresher = findViewById(R.id.refreshView);
-        mRefresher.setOnRefreshListener(this);
-
         // зарегистрирую получатель команды возвращения на предыдущую страницу
         IntentFilter filter = new IntentFilter();
         filter.addAction(MyWebViewClient.BOOK_LOAD_ACTION);
@@ -126,7 +120,8 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 public void onChanged(@Nullable Boolean aBoolean) {
                     if (aBoolean != null && aBoolean) {
                         // показываю Snackbar с уведомлением
-                        makeUpdateSnackbar();
+                        // TODO: 17.02.2020 включить в стабильной версии 
+                        //makeUpdateSnackbar();
                     }
                     version.removeObservers(WebViewActivity.this);
                 }
@@ -442,12 +437,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private void startBrowsing() {
         mWebView.setup();
         mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
-    }
-
-    @Override
-    public void onRefresh() {
-        mWebView.reload();
-        mRefresher.setRefreshing(false);
     }
 
     public class BookLoadingReceiver extends BroadcastReceiver {

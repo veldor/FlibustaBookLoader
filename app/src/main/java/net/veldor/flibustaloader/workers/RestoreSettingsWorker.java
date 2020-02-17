@@ -22,6 +22,7 @@ import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.utils.MimeTypes;
+import net.veldor.flibustaloader.utils.XMLHandler;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -52,58 +53,57 @@ public class RestoreSettingsWorker extends Worker {
     @Override
     public Result doWork() {
         try {
-        // получу дату
-        Data data = getInputData();
-        String uriString = data.getString(URI);
-        if(uriString != null && !uriString.isEmpty()){
-            Uri uri = Uri.parse(uriString);
-            // далее- получу содержимое файла
-            DocumentFile file = DocumentFile.fromTreeUri(App.getInstance(), uri);
-            if(file != null && file.exists()){
+            // получу дату
+            Data data = getInputData();
+            String uriString = data.getString(URI);
+            if (uriString != null && !uriString.isEmpty()) {
+                Uri uri = Uri.parse(uriString);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
 
-                    final String docId;
-                    docId = DocumentsContract.getDocumentId(downloadFile.getUri());
-                    Log.d("surprise", "BookSharer shareBook " + docId);
-                    final String[] split = docId.split(":");
-                    final String storage = split[0];
-                    String path = "///storage/" + storage + "/" + split[1];
-                    file = new File(path);
-                    Log.d("surprise", "BookSharer shareBook " + file);
-                    // костыли, проверю существование файла с условием, что он находится на основной флешке
-                    if(!file.exists()){
-                        file = new File(Environment.getExternalStorageDirectory() + "/" + split[1]);
+                    InputStream fileData = App.getInstance().getContentResolver().openInputStream(uri);
+                    ZipInputStream zin = new ZipInputStream(fileData);
+                    ZipEntry ze;
+                    File targetFile;
+                    while ((ze = zin.getNextEntry()) != null) {
+                        Log.d("surprise", "doWork: found file " + ze.getName());
+                        switch (ze.getName()) {
+                            case ReserveSettingsWorker.PREF_BACKUP_NAME:
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                    targetFile = new File(App.getInstance().getDataDir() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml");
+                                } else {
+                                    targetFile = new File(Environment.getDataDirectory() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml");
+                                }
+                                extractFromZip(zin, targetFile);
+                                break;
+                            case ReserveSettingsWorker.DOWNLOADED_BOOKS_BACKUP_NAME:
+                            case ReserveSettingsWorker.READED_BOOKS_BACKUP_NAME:
+                                // преобразую файл из XML в массив значений
+                                XMLHandler.handleBackup(zin);
+                        }
                     }
-                    if (file.exists()) {
-                        //todo По возможности- разобраться и заменить на валидное решение
-                        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-                        StrictMode.setVmPolicy(builder.build());
-                        // отправлю запрос на открытие файла
-                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-                        shareIntent.setType(MimeTypes.getFullMime(type));
-                        Intent starter = Intent.createChooser(shareIntent, context.getString(R.string.share_with_message));
-                        starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(starter);
-                    } else {
-                        Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
-                    }
-
-                // прочитаю данные из файла
-                InputStream fin = App.getInstance().getContentResolver().openInputStream(file.getUri());
-                ZipInputStream zin = new ZipInputStream(fin);
-                ZipEntry ze;
-                File targetFile;
-                while ((ze = zin.getNextEntry()) != null) {
-                    Log.d("surprise", "RestoreSettingsWorker doWork " + ze.getName());
+                    zin.close();
                 }
-                zin.close();
             }
-        }
-    } catch (FileNotFoundException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return Result.success();
+    }
+
+    private void extractFromZip(ZipInputStream zis, File fileName) {
+        try {
+            FileOutputStream fout = new FileOutputStream(fileName);
+            for (int c = zis.read(); c != -1; c = zis.read()) {
+                fout.write(c);
+            }
+            zis.closeEntry();
+            fout.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
