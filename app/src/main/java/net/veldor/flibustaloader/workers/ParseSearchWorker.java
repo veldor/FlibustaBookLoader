@@ -1,8 +1,6 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -27,8 +25,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 
 import javax.xml.xpath.XPath;
@@ -345,9 +341,7 @@ public class ParseSearchWorker extends Worker {
                 if(someNode != null){
                     someString = someNode.getAttributes().getNamedItem("href").getTextContent();
                     if(someString != null && !someString.isEmpty()){
-                        book.previewUrl = someString;
-                        Bitmap preview = ImageLoadHandler.loadImage(App.BASE_URL + someString);
-                        book.preview = preview;
+                        book.preview = ImageLoadHandler.loadImage(App.BASE_URL + someString);
                     }
                 }
             }

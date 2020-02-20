@@ -5,13 +5,11 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.room.Room;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -48,7 +46,6 @@ public class App extends Application {
 
     public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
-    public static final String FB_URL = "http://flibusta.is";
     private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
     public static final int MAX_BOOK_NUMBER = 548398;
     public static final int VIEW_WEB = 1;
@@ -131,7 +128,7 @@ public class App extends Application {
     public int mOtherSortOptions = -1;
     public final MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
     public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
-    public MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
+    public final MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
     public LiveData<WorkInfo> TorStartWork;

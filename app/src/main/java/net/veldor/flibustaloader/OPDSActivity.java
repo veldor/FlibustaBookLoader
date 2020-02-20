@@ -26,7 +26,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,7 +68,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.zip.Inflater;
 
 import lib.folderpicker.FolderPicker;
 
@@ -123,7 +121,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private Snackbar mBookLoadNotification;
     private ImageButton mForwardBtn, mBackwardBtn;
     private AlertDialog mBookTypeDialog;
-    private Dialog mCoverPerviewDialog;
+    private Dialog mCoverPreviewDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -368,8 +366,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // добавлю обсерверы
         addObservers();
-        //todo включить в стабильной версии
-        //checkUpdates();
+        checkUpdates();
 
 /*        // попробую создать user guide
         new MaterialIntroView.Builder(this)
@@ -634,20 +631,20 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void showPreview(FoundedBook foundedBook) {
-        if(mCoverPerviewDialog == null){
-            mCoverPerviewDialog = new Dialog(OPDSActivity.this, android.R.style.Theme_Light);
-            mCoverPerviewDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        if(mCoverPreviewDialog == null){
+            mCoverPreviewDialog = new Dialog(OPDSActivity.this, android.R.style.Theme_Light);
+            mCoverPreviewDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         }
         LayoutInflater inflater = getLayoutInflater();
-        View dialogLayout = inflater.inflate(R.layout.book_cover, null);
+        @SuppressLint("InflateParams") View dialogLayout = inflater.inflate(R.layout.book_cover, null);
         ImageView imageContainer = dialogLayout.findViewById(R.id.cover_view);
         imageContainer.setImageBitmap(foundedBook.preview);
-        mCoverPerviewDialog.setContentView(dialogLayout);
-        mCoverPerviewDialog.show();
-        mCoverPerviewDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+        mCoverPreviewDialog.setContentView(dialogLayout);
+        mCoverPreviewDialog.show();
+        mCoverPreviewDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
-                mCoverPerviewDialog = null;
+                mCoverPreviewDialog = null;
             }
         });
     }
@@ -792,9 +789,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             mBookTypeDialog.dismiss();
             mBookTypeDialog = null;
         }
-        if (mCoverPerviewDialog != null) {
-            mCoverPerviewDialog.dismiss();
-            mCoverPerviewDialog = null;
+        if (mCoverPreviewDialog != null) {
+            mCoverPreviewDialog.dismiss();
+            mCoverPreviewDialog = null;
         }
     }
 
@@ -1409,7 +1406,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if(mCoverPerviewDialog != null && mCoverPerviewDialog.isShowing()){
+            if(mCoverPreviewDialog != null && mCoverPreviewDialog.isShowing()){
                 mBookTypeDialog.dismiss();
                 return true;
             }

@@ -6,7 +6,6 @@ import androidx.room.Query;
 
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Dao

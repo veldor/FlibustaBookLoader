@@ -127,8 +127,7 @@ public class XMLHandler {
             AppDatabase db = App.getInstance().mDatabase;
             StringBuilder s = new StringBuilder();
             byte[] buffer = new byte[1024];
-            int read = 0;
-            ZipEntry entry;
+            int read;
             while ((read = zin.read(buffer, 0, 1024)) >= 0) {
                 s.append(new String(buffer, 0, read));
             }

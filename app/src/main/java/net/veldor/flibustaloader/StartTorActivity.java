@@ -201,10 +201,10 @@ public class StartTorActivity extends AppCompatActivity {
                         if (!last.isEmpty()) {
                             mTorLoadingStatusText.setText(last);
                         } else {
-                            mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loadig), mProgressCounter));
+                            mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loading), mProgressCounter));
                         }
                     } else {
-                        mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loadig), mProgressCounter));
+                        mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loading), mProgressCounter));
 
                     }
                 } else {

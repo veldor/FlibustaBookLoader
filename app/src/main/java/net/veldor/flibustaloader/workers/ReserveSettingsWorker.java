@@ -9,7 +9,6 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;

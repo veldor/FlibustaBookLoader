@@ -64,7 +64,8 @@
                     android:text="@{book.author}"
                     android:textAlignment="center"
                     android:textColor="@drawable/author_text_color"
-                    android:textSize="10sp" />
+                    android:textSize="10sp"
+                    tools:ignore="SmallSp" />
 
                 <TextView
                     android:id="@+id/translator_name"
@@ -75,7 +76,8 @@
                     android:text="@{book.translate}"
                     android:textAlignment="center"
                     android:textColor="@color/translator_text_color"
-                    android:textSize="10sp" />
+                    android:textSize="10sp"
+                    tools:ignore="SmallSp" />
             </LinearLayout>
 
             <LinearLayout
@@ -93,7 +95,8 @@
                     android:text="@{book.genreComplex}"
                     android:textAlignment="center"
                     android:textColor="@drawable/genre_text_color"
-                    android:textSize="10sp" />
+                    android:textSize="10sp"
+                    tools:ignore="SmallSp" />
 
                 <TextView
                     android:id="@+id/sequence"
@@ -103,7 +106,8 @@
                     android:text="@{book.sequenceComplex}"
                     android:textAlignment="center"
                     android:textColor="@drawable/sequence_text_color"
-                    android:textSize="10sp" />
+                    android:textSize="10sp"
+                    tools:ignore="SmallSp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -122,7 +126,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@{book.downloadsCount}"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                tools:ignore="SmallSp" />
 
             <TextView
                 android:id="@+id/book_size"
@@ -130,7 +135,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@{book.size}"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                tools:ignore="SmallSp" />
 
             <TextView
                 android:id="@+id/book_format"
@@ -138,7 +144,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@{book.format}"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                tools:ignore="SmallSp" />
         </LinearLayout>
 
 

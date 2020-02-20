@@ -49,7 +49,7 @@ dependencies {
     annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.2.0'
 
 
-    implementation 'androidx.work:work-runtime:2.3.1'
+    implementation 'androidx.work:work-runtime:2.3.2'
     implementation 'org.jetbrains:annotations-java5:15.0'
 
     implementation 'lib.kashif:folderpicker:2.4'
@@ -58,8 +58,8 @@ dependencies {
     implementation 'com.google.dagger:dagger:2.24'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.24'
 
-    implementation 'androidx.room:room-runtime:2.2.3'
-    annotationProcessor 'androidx.room:room-compiler:2.2.3'
+    implementation 'androidx.room:room-runtime:2.2.4'
+    annotationProcessor 'androidx.room:room-compiler:2.2.4'
 
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.10'
 

@@ -21,6 +21,5 @@ public class FoundedBook implements FoundedItem {
     public String id;
     public boolean read;
     public boolean downloaded;
-    public String previewUrl;
     public Bitmap preview;
 }

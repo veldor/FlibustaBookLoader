@@ -47,8 +47,6 @@
     <string name="hide_read">Hide read</string>
     <string name="initialize_tor_message">Initialize TOR…</string>
     <string name="showNewDialogTitle">Select new type</string>
-    <string name="tor_loading">TOR is loading</string>
-    <string name="tor_start_loading">TOR start loading</string>
     <string name="tor_is_loaded">TOR is success loaded</string>
     <string name="wait_tor_loading_message">Wait for TOR load</string>
     <string name="download_all">Download all books</string>
@@ -57,7 +55,6 @@
     <string name="load_waiting_message">Load and handle data, be patient</string>
     <string name="load_waiting_title">Do my work</string>
     <string name="download_all_message">Download all list</string>
-    <string name="hard_restart_tor_message">Hard restart TOR</string>
     <string name="sort_list">Sort by</string>
     <string name="force_start">Force start</string>
     <string name="switch_to_vebview_message">Switch to WebView</string>
@@ -81,9 +78,7 @@
     <string name="go_to_test_message">Test app</string>
     <string name="backward">backward</string>
     <string name="enter_value_message">Enter value</string>
-    <string name="tor_not_load_message">Tor not load</string>
     <string name="begin_tor_init_msg">Begin initialize</string>
-    <string name="tor_not_run_body">Unfortunately, looks like TOR library not support your Android OS version or device. You can retry, but, maybe, wait for time, when i resolve this problem. Sorry for this :(</string>
     <string name="default_app_version">1.0</string>
     <string name="reserve_settings_message">Reserve settings</string>
     <string name="restore_settings_message">Restore settings</string>
@@ -96,10 +91,10 @@
     <string name="tor_not_start_body">Tor can\'t start. You can try again or wait for good internet connection. Sorry for that.</string>
     <string name="try_again_message">Try again!</string>
     <string name="try_later_message">Thanks, close app, i\'ll try later</string>
-    <string name="application_version_message">Applicaton version is %s</string>
+    <string name="application_version_message">Application version is %s</string>
     <string name="launch_begin_message">Launch initiated!</string>
     <string name="tor_load_waiting_internet_message">Tor waiting stable internet connection</string>
-    <string name="tor_continue_loadig">Tor loading by %d second</string>
+    <string name="tor_continue_loading">Tor loading by %d seconds</string>
     <string name="subscription_describe">Тут можно подписаться на новинки книжной индустрии. Выберите, на что вы хотите подписаться, после этого нажмите кнопку \'Подписаться\' и каждый день в полдень программа будет проверять, не появилось ли что-то новое по интересующей вас теме. Если найдётся что-то интересное- вы получите уведомление!</string>
     <string name="title_activity_webview">WebView</string>
     <string name="title_activity_start_tor">Prepare</string>

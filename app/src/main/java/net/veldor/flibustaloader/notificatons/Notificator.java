@@ -15,7 +15,6 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MainActivity;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.SubscriptionsActivity;
-import net.veldor.flibustaloader.receivers.BackupActionReceiver;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.receivers.BookActionReceiver;
 
@@ -25,7 +24,7 @@ public class Notificator {
     private static final String MISC_CHANNEL_ID = "misc";
     public static final int BOOK_LOADED_NOTIFICATION = 1;
     private static final int SUBSCRIBE_NOTIFICATION = 2;
-    public static final int BACKUP_COMPLETED_NOTIFICATION = 3;
+    private static final int BACKUP_COMPLETED_NOTIFICATION = 3;
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;

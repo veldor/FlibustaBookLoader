@@ -120,8 +120,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 public void onChanged(@Nullable Boolean aBoolean) {
                     if (aBoolean != null && aBoolean) {
                         // показываю Snackbar с уведомлением
-                        // TODO: 17.02.2020 включить в стабильной версии 
-                        //makeUpdateSnackbar();
+                        makeUpdateSnackbar();
                     }
                     version.removeObservers(WebViewActivity.this);
                 }
