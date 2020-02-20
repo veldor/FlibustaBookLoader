@@ -22,6 +22,7 @@ import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.utils.MimeTypes;
+import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
 
 import java.io.BufferedInputStream;
@@ -39,6 +40,9 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static net.veldor.flibustaloader.utils.MyFileReader.AUTHORS_SUBSCRIBE_FILE;
+import static net.veldor.flibustaloader.utils.MyFileReader.BOOKS_SUBSCRIBE_FILE;
+import static net.veldor.flibustaloader.utils.MyFileReader.SEQUENCES_SUBSCRIBE_FILE;
 
 public class RestoreSettingsWorker extends Worker {
 
@@ -73,6 +77,22 @@ public class RestoreSettingsWorker extends Worker {
                                 } else {
                                     targetFile = new File(Environment.getDataDirectory() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml");
                                 }
+                                extractFromZip(zin, targetFile);
+                                break;
+                            case ReserveSettingsWorker.AUTOFILL_BACKUP_NAME:
+                                targetFile = new File(App.getInstance().getFilesDir(), MyFileReader.SEARCH_AUTOCOMPLETE_FILE);
+                                extractFromZip(zin, targetFile);
+                                break;
+                            case ReserveSettingsWorker.BOOKS_SUBSCRIBE_BACKUP_NAME:
+                                targetFile = new File(App.getInstance().getFilesDir(), BOOKS_SUBSCRIBE_FILE);
+                                extractFromZip(zin, targetFile);
+                                break;
+                            case ReserveSettingsWorker.AUTHORS_SUBSCRIBE_BACKUP_NAME:
+                                targetFile = new File(App.getInstance().getFilesDir(), AUTHORS_SUBSCRIBE_FILE);
+                                extractFromZip(zin, targetFile);
+                                break;
+                            case ReserveSettingsWorker.SEQUENCES_SUBSCRIBE_BACKUP_NAME:
+                                targetFile = new File(App.getInstance().getFilesDir(), SEQUENCES_SUBSCRIBE_FILE);
                                 extractFromZip(zin, targetFile);
                                 break;
                             case ReserveSettingsWorker.DOWNLOADED_BOOKS_BACKUP_NAME:

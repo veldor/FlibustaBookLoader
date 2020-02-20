@@ -49,7 +49,7 @@
     <string name="showNewDialogTitle">Показать новинки</string>
     <string name="tor_start_loading">Загрузка TOR началась</string>
     <string name="tor_loading">TOR загружается</string>
-    <string name="tor_is_loaded">TOR загружен</string>
+    <string name="tor_is_loaded">TOR загружен!</string>
     <string name="wait_tor_loading_message">Ожидаю загрузку TOR</string>
     <string name="download_all">Скачать все книги</string>
     <string name="load_waiting_title">В процессе</string>
@@ -84,10 +84,22 @@
     <string name="begin_tor_init_msg">Начинаю инициализацию</string>
     <string name="tor_not_load_message">TOR не смог…</string>
     <string name="default_app_version">1.0</string>
-    <string name="reserve_settings_message">Сохранить настроки</string>
+    <string name="reserve_settings_message">Сохранить настройки</string>
     <string name="restore_settings_message">Восстановить настройки</string>
     <string name="misc_channel">Различные уведомления</string>
     <string name="misc_description">Различные уведомления</string>
     <string name="show_previews">Показывать обложки книг</string>
     <string name="cover">cover</string>
+    <string name="tor_cant_load_message">TOR не запустился</string>
+    <string name="tor_not_start_body">"TOR не смог запуститься. Возможно, у вас медленное интернет-соединение или оно вообще отсутствует. Вы можете попробовать повторить попытку или запустить приложение позже, со стабильным доступом к интернету. Жаль, что так получилось. "</string>
+    <string name="try_again_message">Попробовать ещё раз!</string>
+    <string name="try_later_message">Нет, спасибо, закройте приложение</string>
+    <string name="application_version_message">Версия приложения: %s</string>
+    <string name="launch_begin_message">Запуск инициирован!</string>
+    <string name="tor_load_waiting_internet_message">Ожидаем подключения к интернету</string>
+    <string name="tor_continue_loadig">Tor загружается %d сек.</string>
+    <string name="subscription_describe">Тут можно подписаться на новинки книжной индустрии. Выберите, на что вы хотите подписаться, после этого нажмите кнопку \'Подписаться\' и каждый день в полдень программа будет проверять, не появилось ли что-то новое по интересующей вас теме. Если найдётся что-то интересное- вы получите уведомление!</string>
+    <string name="title_activity_webview">WebView</string>
+    <string name="title_activity_start_tor">Подготовка</string>
+    <string name="title_activity_subscribe">Подписки</string>
 </resources>

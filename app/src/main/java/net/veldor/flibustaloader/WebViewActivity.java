@@ -472,7 +472,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                     .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            App.getInstance().restartTor();
+                            App.getInstance().startTor();
                             dialog.dismiss();
                             // вернусь в основное активити и подожду перезапуска
                             startActivityForResult(new Intent(WebViewActivity.this, StartTorActivity.class), START_TOR);

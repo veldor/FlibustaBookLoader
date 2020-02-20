@@ -24,6 +24,8 @@ public class MyWebClient {
     public static final String DOWNLOAD_ATTRIBUTES = "download attributes";
 
     void search(String s) {
+        // сброшу обложку
+        App.getInstance().mShowCover.postValue(null);
         // отменю остальные работы
         Log.d("surprise", "MyWebClient search search " + s);
         Data inputData = new Data.Builder()

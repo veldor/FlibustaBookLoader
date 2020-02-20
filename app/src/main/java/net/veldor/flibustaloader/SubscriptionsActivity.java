@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader;
 
+import android.app.ActionBar;
 import android.app.Dialog;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
@@ -42,6 +43,12 @@ public class SubscriptionsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subscribtions);
+
+        // переназову окно
+        ActionBar actionbar = getActionBar();
+        if(actionbar != null){
+            actionbar.setTitle("Подписки");
+        }
 
         mRootView = findViewById(R.id.rootView);
 

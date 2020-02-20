@@ -11,12 +11,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class MyFileReader {
-    private static final String SEARCH_AUTOCOMPLETE_FILE = "searchAutocomplete.xml";
+    public static final String SEARCH_AUTOCOMPLETE_FILE = "searchAutocomplete.xml";
     private static final String SEARCH_AUTOCOMPLETE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><search> </search>";
     private static final String SUBSCRIBE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><subscribe> </subscribe>";
-    private static final String BOOKS_SUBSCRIBE_FILE = "booksSubscribe.xml";
-    private static final String AUTHORS_SUBSCRIBE_FILE = "authorsSubscribe.xml";
-    private static final String SEQUENCES_SUBSCRIBE_FILE = "sequencesSubscribe.xml";
+    public static final String BOOKS_SUBSCRIBE_FILE = "booksSubscribe.xml";
+    public static final String AUTHORS_SUBSCRIBE_FILE = "authorsSubscribe.xml";
+    public static final String SEQUENCES_SUBSCRIBE_FILE = "sequencesSubscribe.xml";
 
     public static String getSearchAutocomplete() {
 

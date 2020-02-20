@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
@@ -133,6 +134,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
 
         setContentView(R.layout.activity_main_odps);
+
+
+        // переназову окно
+        ActionBar actionbar = getActionBar();
+        if(actionbar != null){
+            actionbar.setTitle("OPDS");
+        }
 
         mSearchTitle = findViewById(R.id.search_title);
 
@@ -429,17 +437,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     @Override
                     public void onChanged(FoundedBook foundedBook) {
                         if(foundedBook != null && foundedBook.preview != null && foundedBook.preview.getByteCount() > 0){
-                            if(mCoverPerviewDialog == null){
-                                 mCoverPerviewDialog = new Dialog(OPDSActivity.this, android.R.style.Theme_Light);
-                                mCoverPerviewDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                            }
-                            LayoutInflater inflater = getLayoutInflater();
-                            View dialogLayout = inflater.inflate(R.layout.book_cover, null);
-                            ImageView imageContainer = dialogLayout.findViewById(R.id.cover_view);
-                            imageContainer.setImageBitmap(foundedBook.preview);
-                            mCoverPerviewDialog.setContentView(dialogLayout);
-                            mCoverPerviewDialog.show();
-                            Log.d("surprise", "onChanged: i showed");
+                            Log.d("surprise", "onChanged: show again");
+                            showPreview(foundedBook);
                         }
                     }
                 });
@@ -630,6 +629,25 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 if (aBoolean != null && !aBoolean) {
                     hideBookLoadNotification();
                 }
+            }
+        });
+    }
+
+    private void showPreview(FoundedBook foundedBook) {
+        if(mCoverPerviewDialog == null){
+            mCoverPerviewDialog = new Dialog(OPDSActivity.this, android.R.style.Theme_Light);
+            mCoverPerviewDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        }
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogLayout = inflater.inflate(R.layout.book_cover, null);
+        ImageView imageContainer = dialogLayout.findViewById(R.id.cover_view);
+        imageContainer.setImageBitmap(foundedBook.preview);
+        mCoverPerviewDialog.setContentView(dialogLayout);
+        mCoverPerviewDialog.show();
+        mCoverPerviewDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                mCoverPerviewDialog = null;
             }
         });
     }
@@ -1345,7 +1363,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            App.getInstance().restartTor();
+                            App.getInstance().startTor();
                             dialog.dismiss();
                             // вернусь в основное активити и подожду перезапуска
                             startActivityForResult(new Intent(OPDSActivity.this, StartTorActivity.class), START_TOR);

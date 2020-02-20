@@ -9,10 +9,12 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 import net.veldor.flibustaloader.notificatons.Notificator;
+import net.veldor.flibustaloader.utils.MyFileReader;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -33,6 +35,10 @@ public class ReserveSettingsWorker extends Worker {
     static final String PREF_BACKUP_NAME = "data1";
     static final String DOWNLOADED_BOOKS_BACKUP_NAME = "data2";
     static final String READED_BOOKS_BACKUP_NAME = "data3";
+    static final String AUTOFILL_BACKUP_NAME = "data4";
+    static final String BOOKS_SUBSCRIBE_BACKUP_NAME = "data5";
+    static final String AUTHORS_SUBSCRIBE_BACKUP_NAME = "data6";
+    static final String SEQUENCES_SUBSCRIBE_BACKUP_NAME = "data7";
 
     public ReserveSettingsWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -61,6 +67,26 @@ public class ReserveSettingsWorker extends Worker {
                 sharedPrefsFile = new File(Environment.getDataDirectory() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml");
             }
             writeToZip(out, dataBuffer, sharedPrefsFile, PREF_BACKUP_NAME);
+
+            // сохраню автозаполнение поиска
+            File autocompleteFile = new File(App.getInstance().getFilesDir(), MyFileReader.SEARCH_AUTOCOMPLETE_FILE);
+            if(autocompleteFile.isFile()){
+                writeToZip(out, dataBuffer, autocompleteFile, AUTOFILL_BACKUP_NAME);
+            }
+            // сохраню подписки
+            File subscriptionFile = new File(App.getInstance().getFilesDir(), MyFileReader.BOOKS_SUBSCRIBE_FILE);
+            if(autocompleteFile.isFile()){
+                writeToZip(out, dataBuffer, subscriptionFile, BOOKS_SUBSCRIBE_BACKUP_NAME);
+            }
+            subscriptionFile = new File(App.getInstance().getFilesDir(), MyFileReader.AUTHORS_SUBSCRIBE_FILE);
+            if(autocompleteFile.isFile()){
+                writeToZip(out, dataBuffer, subscriptionFile, AUTHORS_SUBSCRIBE_BACKUP_NAME);
+            }
+            subscriptionFile = new File(App.getInstance().getFilesDir(), MyFileReader.SEQUENCES_SUBSCRIBE_FILE);
+            if(autocompleteFile.isFile()){
+                writeToZip(out, dataBuffer, subscriptionFile, SEQUENCES_SUBSCRIBE_BACKUP_NAME);
+            }
+
             // первым делом- получу из базы данных списки прочитанных и скачанных книг
             AppDatabase db = App.getInstance().mDatabase;
             List<DownloadedBooks> books = db.downloadedBooksDao().getAllBooks();

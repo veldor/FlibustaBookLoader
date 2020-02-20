@@ -5,11 +5,13 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.room.Room;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -44,7 +46,7 @@ import static java.util.Calendar.MINUTE;
 public class App extends Application {
 
 
-    public static final String BACKUP_DIR_NAME = "FlibusaDownloader";
+    public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
     public static final String FB_URL = "http://flibusta.is";
     private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
@@ -132,8 +134,7 @@ public class App extends Application {
     public MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
-    public LiveData<WorkInfo> mWork = new LiveData<WorkInfo>() {
-    };
+    public LiveData<WorkInfo> TorStartWork;
     public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
     private SubscribeBooks mBooksSubscribe;
@@ -147,13 +148,7 @@ public class App extends Application {
 
         instance = this;
 
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        // запускаю tor
-        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.KEEP, startTorWork);
-        mWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
+        startTor();
 
         // читаю настройки sharedPreferences
 
@@ -175,6 +170,16 @@ public class App extends Application {
                 .build();
 
         planeBookSubscribes();
+    }
+
+    public void startTor() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        // запускаю tor
+        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
+        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
+        TorStartWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
     }
 
     private void planeBookSubscribes() {
@@ -242,16 +247,6 @@ public class App extends Application {
 
     public boolean getNightMode() {
         return (mSharedPreferences.getBoolean(PREFERENCE_NIGHT_MODE_ENABLED, false));
-    }
-
-    public void restartTor() {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        // запускаю tor
-        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
-        mWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
     }
 
     public void setLastLoadedUrl(String url) {

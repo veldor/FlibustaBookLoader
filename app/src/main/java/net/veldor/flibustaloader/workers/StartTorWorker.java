@@ -1,7 +1,9 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
+
 import android.util.Log;
 
 import androidx.work.Worker;
@@ -38,13 +40,14 @@ public class StartTorWorker extends Worker {
 
         // просто создание объекта, не запуск
         // тут- время, которое отводится на попытку запуска
-        int totalSecondsPerTorStartup = (int) TimeUnit.MINUTES.toSeconds(4);
+        int totalSecondsPerTorStartup = (int) TimeUnit.MINUTES.toSeconds(3);
         // количество попыток запуска
-        int totalTriesPerTorStartup = 5;
+        int totalTriesPerTorStartup = 1;
         try {
             boolean ok = tor.startWithRepeat(totalSecondsPerTorStartup, totalTriesPerTorStartup);
             if (!ok) {
-                Log.d("surprise", "Tor отказался запускаться");
+                // TOR не запущен, оповещу о том, что запуск не удался
+                return Result.failure();
             }
             if (tor.isRunning()) {
                 //Returns the socks port on the IPv4 localhost address that the Tor OP is listening on
@@ -53,14 +56,17 @@ public class StartTorWorker extends Worker {
                 HttpClientContext context = HttpClientContext.create();
                 context.setAttribute("socks.address", socksaddr);
                 App.getInstance().mTorManager.postValue(tor);
-            } else
-                Log.d("surprise", "looks like, we need wait here for tor start works");
+            }
+            else {
+                // TOR не запущен, оповещу о том, что запуск не удался
+                return Result.failure();
+            }
         } catch (InterruptedException e) {
             Log.d("surprise", "запуск TOR прерван");
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-            if(e.getMessage() != null && e.getMessage().contains("Permission denied")){
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
                 return Result.failure();
             }
             e.printStackTrace();

@@ -90,6 +90,18 @@
     <string name="misc_channel">misc notifications</string>
     <string name="misc_description">misc notifications</string>
     <string name="show_previews">Show books covers</string>
-    <string name="preview_image">preview_image</string>
+    <string name="preview_image" translatable="false">preview_image</string>
     <string name="cover">cover</string>
+    <string name="tor_cant_load_message">Tor not loaded</string>
+    <string name="tor_not_start_body">Tor can\'t start. You can try again or wait for good internet connection. Sorry for that.</string>
+    <string name="try_again_message">Try again!</string>
+    <string name="try_later_message">Thanks, close app, i\'ll try later</string>
+    <string name="application_version_message">Applicaton version is %s</string>
+    <string name="launch_begin_message">Launch initiated!</string>
+    <string name="tor_load_waiting_internet_message">Tor waiting stable internet connection</string>
+    <string name="tor_continue_loadig">Tor loading by %d second</string>
+    <string name="subscription_describe">Тут можно подписаться на новинки книжной индустрии. Выберите, на что вы хотите подписаться, после этого нажмите кнопку \'Подписаться\' и каждый день в полдень программа будет проверять, не появилось ли что-то новое по интересующей вас теме. Если найдётся что-то интересное- вы получите уведомление!</string>
+    <string name="title_activity_webview">WebView</string>
+    <string name="title_activity_start_tor">Prepare</string>
+    <string name="title_activity_subscribe">Subscriptions</string>
 </resources>

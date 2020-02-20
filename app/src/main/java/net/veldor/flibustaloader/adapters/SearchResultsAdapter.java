@@ -229,9 +229,11 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                 if(imageContainer != null){
                     imageContainer.setVisibility(View.VISIBLE);
                     imageContainer.setImageBitmap(foundedBook.preview);
+                    imageContainer.setOnClickListener(null);
                     imageContainer.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View view) {
+                            Log.d("surprise", "onClick: click");
                             App.getInstance().mShowCover.postValue(foundedBook);
                         }
                     });

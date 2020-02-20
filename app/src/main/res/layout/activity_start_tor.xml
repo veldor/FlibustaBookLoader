@@ -36,26 +36,13 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/hardRestartTorBtn"
-        android:layout_width="wrap_content"
-        android:padding="10dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/transparent_bg_bordered_button"
-        android:text="@string/hard_restart_tor_message"
-        app:layout_constraintBottom_toTopOf="@+id/torLoadProgressIndicator"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        />
-
-    <Button
         android:id="@+id/testStartApp"
         android:layout_width="wrap_content"
-        android:padding="10dp"
         android:layout_height="wrap_content"
         android:background="@drawable/transparent_bg_bordered_button"
+        android:padding="10dp"
         android:text="@string/force_start"
-        app:layout_constraintBottom_toTopOf="@+id/hardRestartTorBtn"
+        app:layout_constraintBottom_toTopOf="@+id/torLoadProgressIndicator"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
