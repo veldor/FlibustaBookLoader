@@ -951,6 +951,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 App.getInstance().setSaveOnlySelected(!App.getInstance().isSaveOnlySelected());
                 invalidateOptionsMenu();
                 return true;
+            case R.id.reserveSettings:
+                mMyViewModel.reserveSettings();
+                return true;
 
         }
         return super.onOptionsItemSelected(item);

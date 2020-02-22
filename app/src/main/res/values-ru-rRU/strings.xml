@@ -83,4 +83,7 @@
     <string name="tor_not_run_body">К сожалению, запуск библиотеки TOR не удался. Попробуйте снова, но, возможно, ваша версия Android несовместима с данной программой. Приношу свои извинения, попробуйте запустить программу на другом устройстве.</string>
     <string name="begin_tor_init_msg">Начинаю инициализацию</string>
     <string name="tor_not_load_message">TOR не смог…</string>
+    <string name="default_app_version">1.0</string>
+    <string name="reserve_settings_message">Сохранить настроки</string>
+    <string name="restore_settings_message">Восстановить настройки</string>
 </resources>

@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -86,6 +88,16 @@ public class StartTorActivity extends AppCompatActivity {
         });
         // стартую загрузку TOR, жду, пока загрузится
         setContentView(R.layout.activity_start_tor);
+
+        TextView versionView = findViewById(R.id.app_version);
+        String version = "1.1";
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            version = pInfo.versionName;
+            versionView.setText("Версия приложения: " + version);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
 
         Button restartBtn = findViewById(R.id.hardRestartTorBtn);
         restartBtn.setOnClickListener(new View.OnClickListener() {
