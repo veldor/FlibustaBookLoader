@@ -72,6 +72,8 @@ dependencies {
 
     implementation "com.google.firebase:firebase-crash:16.2.1"
 
+    implementation 'com.github.clans:fab:1.6.4'
+
 }
 
 allprojects {

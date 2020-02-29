@@ -83,13 +83,23 @@
             android:layout_height="0dp"
             android:orientation="vertical">
 
+            <Switch
+                android:id="@+id/showAllSwitcher"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="@string/show_all_results_switcher_text"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <TextView
                 android:id="@+id/search_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAlignment="center"
                 app:layout_constraintBottom_toTopOf="@+id/subscribe_items_list"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/showAllSwitcher" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/subscribe_items_list"
@@ -101,30 +111,30 @@
                 android:id="@+id/backward_btn"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:visibility="invisible"
                 android:background="@drawable/backward_arrow_24dp"
+                android:contentDescription="@string/backward"
+                android:visibility="invisible"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list"
-                android:contentDescription="@string/backward" />
+                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list" />
 
             <ImageButton
                 android:id="@+id/forward_btn"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:background="@drawable/forward_arrow_24dp"
-                app:layout_constraintEnd_toEndOf="parent"
+                android:contentDescription="@string/forward_button"
                 android:visibility="invisible"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list"
-                android:contentDescription="@string/forward_button" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list" />
 
             <Button
                 android:id="@+id/load_more_button"
                 style="@style/Widget.AppCompat.Button.Borderless"
-                android:visibility="invisible"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:text="@string/load_more_button"
                 android:textColor="@color/genre_text_color"
+                android:visibility="invisible"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/forward_btn"
                 app:layout_constraintStart_toEndOf="@+id/backward_btn" />
@@ -136,6 +146,16 @@
         android:layout_height="wrap_content"
         android:text="crash"
         android:onClick="crash"/>-->
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/fab"
+        android:src="@drawable/ic_downloaded_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
