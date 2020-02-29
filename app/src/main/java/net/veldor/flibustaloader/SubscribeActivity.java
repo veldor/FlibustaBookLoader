@@ -2,6 +2,8 @@ package net.veldor.flibustaloader;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
+
+import android.app.ActionBar;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,6 +42,13 @@ public class SubscribeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subscribe);
+
+
+        // переназову окно
+        ActionBar actionbar = getActionBar();
+        if(actionbar != null){
+            actionbar.setTitle("Подписки");
+        }
 
         // отслежу переключение типа подписки
         mRadioContainer = findViewById(R.id.subscribe_type);

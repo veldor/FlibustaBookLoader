@@ -44,6 +44,8 @@ import static java.util.Calendar.MINUTE;
 public class App extends Application {
 
 
+    public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
+    public static final String BACKUP_FILE_NAME = "settings_backup.zip";
     private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
     public static final int MAX_BOOK_NUMBER = 548398;
     public static final int VIEW_WEB = 1;
@@ -58,6 +60,7 @@ public class App extends Application {
     private static final String PREFERENCE_FAVORITE_MIME = "favorite_mime";
     private static final String PREFERENCE_SAVE_ONLY_SELECTED = "save only selected";
     private static final String PREFERENCE_RE_DOWNLOAD = "re download";
+    private static final String PREFERENCE_PREVIEWS = "cover_previews_show";
 
     public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
     public final ArrayList<String> mSearchHistory = new ArrayList<>();
@@ -125,10 +128,10 @@ public class App extends Application {
     public int mOtherSortOptions = -1;
     public final MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
     public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
+    public final MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
-    public LiveData<WorkInfo> mWork = new LiveData<WorkInfo>() {
-    };
+    public LiveData<WorkInfo> TorStartWork;
     public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
     private SubscribeBooks mBooksSubscribe;
@@ -142,13 +145,7 @@ public class App extends Application {
 
         instance = this;
 
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        // запускаю tor
-        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.KEEP, startTorWork);
-        mWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
+        startTor();
 
         // читаю настройки sharedPreferences
 
@@ -170,6 +167,16 @@ public class App extends Application {
                 .build();
 
         planeBookSubscribes();
+    }
+
+    public void startTor() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        // запускаю tor
+        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
+        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
+        TorStartWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
     }
 
     private void planeBookSubscribes() {
@@ -237,16 +244,6 @@ public class App extends Application {
 
     public boolean getNightMode() {
         return (mSharedPreferences.getBoolean(PREFERENCE_NIGHT_MODE_ENABLED, false));
-    }
-
-    public void restartTor() {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        // запускаю tor
-        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
-        mWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
     }
 
     public void setLastLoadedUrl(String url) {
@@ -401,4 +398,11 @@ public class App extends Application {
         return (mSharedPreferences.getBoolean(PREFERENCE_RE_DOWNLOAD, true));
     }
 
+    public boolean isPreviews() {
+        return (mSharedPreferences.getBoolean(PREFERENCE_PREVIEWS, false));
+    }
+
+    public void switchShowPreviews() {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_PREVIEWS, !isPreviews()).apply();
+    }
 }

@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rootView"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="net.veldor.flibustaloader.MainActivity">
-
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/refreshView"
+    <net.veldor.flibustaloader.MyWebView
+        android:id="@+id/myWebView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <net.veldor.flibustaloader.MyWebView
-            android:id="@+id/myWebView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        android:layout_height="match_parent" />
 
     <ProgressBar
         android:id="@+id/pageLoadedProgressBar"

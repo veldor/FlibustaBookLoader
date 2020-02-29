@@ -8,8 +8,8 @@ android {
         minSdkVersion 16
         //noinspection OldTargetApi
         targetSdkVersion 28
-        versionCode 31
-        versionName "2.0.7.1"
+        versionCode 34
+        versionName "2.0.7.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -37,8 +37,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'com.github.jehy:Tor-Onion-Proxy-Library:0.0.7'
     implementation "cz.msebera.android:httpclient:4.5.8"
-    implementation 'org.slf4j:slf4j-api:1.7.7'
-    implementation 'org.slf4j:slf4j-android:1.7.7'
+    implementation 'org.slf4j:slf4j-api:1.7.30'
+    implementation 'org.slf4j:slf4j-android:1.7.30'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'com.google.android.material:material:1.1.0'
 
@@ -49,7 +49,7 @@ dependencies {
     annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.2.0'
 
 
-    implementation 'androidx.work:work-runtime:2.3.1'
+    implementation 'androidx.work:work-runtime:2.3.2'
     implementation 'org.jetbrains:annotations-java5:15.0'
 
     implementation 'lib.kashif:folderpicker:2.4'
@@ -58,8 +58,8 @@ dependencies {
     implementation 'com.google.dagger:dagger:2.24'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.24'
 
-    implementation 'androidx.room:room-runtime:2.2.3'
-    annotationProcessor 'androidx.room:room-compiler:2.2.3'
+    implementation 'androidx.room:room-runtime:2.2.4'
+    annotationProcessor 'androidx.room:room-compiler:2.2.4'
 
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.10'
 

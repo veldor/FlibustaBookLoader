@@ -4,6 +4,8 @@ import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.annotation.NonNull;
+
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.work.Data;
@@ -25,6 +27,8 @@ import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.workers.DatabaseWorker;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
+import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
+import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -113,5 +117,19 @@ public class MainViewModel extends AndroidViewModel {
 
     public void clearHistory() {
         MyFileReader.clearAutocomplete();
+    }
+
+    public void reserveSettings(){
+        // запущу рабочего, сохраняющего базу данных прочитанного и скачанного в XML
+        OneTimeWorkRequest reserveWorker = new OneTimeWorkRequest.Builder(ReserveSettingsWorker.class).build();
+        WorkManager.getInstance(App.getInstance()).enqueue(reserveWorker);
+    }
+
+    public void restore(Uri uri) {
+        Data inputData = new Data.Builder()
+                .putString(RestoreSettingsWorker.URI, uri.toString())
+                .build();
+        OneTimeWorkRequest restoreWorker = new OneTimeWorkRequest.Builder(RestoreSettingsWorker.class).setInputData(inputData).build();
+        WorkManager.getInstance(App.getInstance()).enqueue(restoreWorker);
     }
 }

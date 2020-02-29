@@ -11,6 +11,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +20,7 @@ import net.veldor.flibustaloader.BR;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedAuthorItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedBookItemBinding;
+import net.veldor.flibustaloader.databinding.SearchedBookWithPreviewItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedGenreItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedSequenceItemBinding;
 import net.veldor.flibustaloader.selections.Author;
@@ -71,8 +73,14 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             SearchedAuthorItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_author_item, viewGroup, false);
             return new ViewHolder(binding);
         } else if (mBooks != null) {
-            SearchedBookItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_book_item, viewGroup, false);
-            return new ViewHolder(binding);
+            if(App.getInstance().isPreviews()){
+                SearchedBookWithPreviewItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_book_with_preview_item, viewGroup, false);
+                return new ViewHolder(binding);
+            }
+            else{
+                SearchedBookItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_book_item, viewGroup, false);
+                return new ViewHolder(binding);
+            }
         } else if (mGenres != null) {
             SearchedGenreItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_genre_item, viewGroup, false);
             return new ViewHolder(binding);
@@ -214,6 +222,23 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             mBinding.executePendingBindings();
             // добавлю действие при клике на кнопку скачивания
             View container = mBinding.getRoot();
+
+            // если включено отображение превью книг и превью существует
+            if(App.getInstance().isPreviews() && foundedBook.preview != null && foundedBook.preview.getByteCount() > 0){
+                ImageView imageContainer = container.findViewById(R.id.previewImage);
+                if(imageContainer != null){
+                    imageContainer.setVisibility(View.VISIBLE);
+                    imageContainer.setImageBitmap(foundedBook.preview);
+                    imageContainer.setOnClickListener(null);
+                    imageContainer.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Log.d("surprise", "onClick: click");
+                            App.getInstance().mShowCover.postValue(foundedBook);
+                        }
+                    });
+                }
+            }
 
             // проверю, если книга прочитана- покажу это
             if(foundedBook.read){

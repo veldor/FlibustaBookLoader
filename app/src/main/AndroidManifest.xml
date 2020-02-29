@@ -21,8 +21,10 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".SubscriptionsActivity"/>
-        <activity android:name=".SubscribeActivity" />
+        <activity android:name=".SubscriptionsActivity"
+            android:label="@string/title_activity_subscribe"/>
+        <activity android:name=".SubscribeActivity"
+            android:label="@string/title_activity_subscribe"/>
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboardHidden|orientation">
@@ -45,8 +47,11 @@
         <activity
             android:name=".OPDSActivity"
             android:label="@string/title_activity_opds" />
-        <activity android:name=".WebViewActivity" />
-        <activity android:name=".StartTorActivity" />
+        <activity
+            android:name=".WebViewActivity"
+            android:label="@string/title_activity_webview"/>
+        <activity android:name=".StartTorActivity"
+            android:label="@string/title_activity_start_tor"/>
 
         <receiver android:name=".receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />

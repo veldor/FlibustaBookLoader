@@ -23,6 +23,9 @@ html body a.author-link {
 html body a.book-link{
 	color: #f59214;
 }
+html body a span.h8{
+	color: #f59214;
+}
 
 html body div#divabio{
 	background-color: #000!important;
@@ -46,4 +49,26 @@ select
 
 html body a.alphabet-link{
 	color: #ada3a3;
+}
+
+
+div#navigationButtonsDiv{
+    display:inline-block;
+    position:fixed;
+    top:50%;
+    right:10px;
+}
+
+
+div#navigationButtonsDiv button{
+    display:block;
+    width:60px;
+}
+
+a.book-genre-link{
+    color:#E184CF;
+}
+
+a.book-series-link{
+    color:#5DDF67;
 }

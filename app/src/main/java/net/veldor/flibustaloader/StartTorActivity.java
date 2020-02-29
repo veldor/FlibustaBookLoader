@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader;
 
+import android.app.ActionBar;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,7 +10,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -23,23 +23,20 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.work.WorkInfo;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
-import net.veldor.flibustaloader.view_models.MainViewModel;
+import java.util.Locale;
 
+import static androidx.work.WorkInfo.State.ENQUEUED;
 import static androidx.work.WorkInfo.State.FAILED;
+import static androidx.work.WorkInfo.State.RUNNING;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 
 public class StartTorActivity extends AppCompatActivity {
 
     private static boolean active = false;
-
-    private static final String TOR_LAUNCHED_MESSAGE = "LAUNCHED";
-    private static final String TOR_BUILT_MESSAGE = "BUILT";
-    private LiveData<AndroidOnionProxyManager> mTorClient;
     private TextView mTorLoadingStatusText;
     private ProgressBar mTorLoadingProgressIndicator;
     private CountDownTimer mCdt;
@@ -53,28 +50,47 @@ public class StartTorActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.activity_start_tor);
 
-        // ещё одно отслеживание TOR
-        LiveData<WorkInfo> workStatus = App.getInstance().mWork;
-        workStatus.observe(this, new Observer<WorkInfo>() {
+
+        // переназову окно
+        ActionBar actionbar = getActionBar();
+        if(actionbar != null){
+            actionbar.setTitle("Подготовка");
+        }
+
+        // настройки интерфейса ====================================================================
+        TextView versionView = findViewById(R.id.app_version);
+        String version;
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            version = pInfo.versionName;
+            versionView.setText(String.format(Locale.ENGLISH, getString(R.string.application_version_message), version));
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        Button startBtn = findViewById(R.id.testStartApp);
+        startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onChanged(@Nullable WorkInfo workInfo) {
-                if (workInfo != null) {
-                    Log.d("surprise", "StartTorActivity onChanged tor load status is " + workInfo.getState());
-                    if (workInfo.getState() == SUCCEEDED) {
-                        Log.d("surprise", "StartTorActivity onChanged work done");
-                        if (mCdt != null) {
-                            mCdt.cancel();
-                        }
-                        torLoaded();
-                    }
-                    else if(workInfo.getState() == FAILED){
-                        // покажу диалоговое окно с предупрежением, что TOR не запускается на этой версии Android
-                        showTorNotWorkDialog();
-                    }
-                }
+            public void onClick(View v) {
+                // покажу диалог, предупреждающий о том, что это не запустит приложение
+                showForceStartDialog();
             }
         });
+
+
+        // найду строку статуса загрузки
+        mTorLoadingStatusText = findViewById(R.id.progressTorLoadStatus);
+        mTorLoadingStatusText.setText(StartTorActivity.this.getString(R.string.begin_tor_init_msg));
+
+        // =========================================================================================
+
+        observeTorStart();
+
+        // работа с индикатором прогресса ==========================================================
+        // найду индикатор прогресса
+        mTorLoadingProgressIndicator = findViewById(R.id.torLoadProgressIndicator);
+        mTorLoadingProgressIndicator.setProgress(0);
 
         // зарегистрирую отслеживание загружающегося TOR
         LiveData<AndroidOnionProxyManager> loadedTor = App.getInstance().mLoadedTor;
@@ -86,65 +102,6 @@ public class StartTorActivity extends AppCompatActivity {
                 }
             }
         });
-        // стартую загрузку TOR, жду, пока загрузится
-        setContentView(R.layout.activity_start_tor);
-
-        TextView versionView = findViewById(R.id.app_version);
-        String version = "1.1";
-        try {
-            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-            version = pInfo.versionName;
-            versionView.setText("Версия приложения: " + version);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        Button restartBtn = findViewById(R.id.hardRestartTorBtn);
-        restartBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // просто перезапущу приложение
-                new Handler().postDelayed(new ResetApp(), 100);
-            }
-        });
-        Button startBtn = findViewById(R.id.testStartApp);
-        startBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mCdt != null) {
-                    mCdt.cancel();
-                }
-                torLoaded();
-            }
-        });
-
-        // найду строку статуса загрузки
-        mTorLoadingStatusText = findViewById(R.id.progressTorLoadStatus);
-        mTorLoadingStatusText.setText(StartTorActivity.this.getString(R.string.begin_tor_init_msg));
-        // найду индикатор прогресса
-        mTorLoadingProgressIndicator = findViewById(R.id.torLoadProgressIndicator);
-
-        mTorLoadingProgressIndicator.setProgress(0);
-
-        MainViewModel myViewModel = new ViewModelProvider(this).get(MainViewModel.class);
-
-        if (mTorClient == null) {
-            // если клиент не загружен- загружаю
-            mTorClient = myViewModel.getTor();
-        }
-        // ещё одна проверка, может вернуться null
-        // подожду, пока TOR загрузится
-        mTorClient.observe(this, new Observer<AndroidOnionProxyManager>() {
-            @Override
-            public void onChanged(@Nullable AndroidOnionProxyManager androidOnionProxyManager) {
-                if (androidOnionProxyManager != null) {
-                    mTorLoadingStatusText.setText(R.string.tor_is_loaded);
-                    mTorLoadingProgressIndicator.setProgress(100);
-                }
-            }
-        });
-
-        startTimer();
 
         // зарегистрирую получатель ошибки подключения к TOR
         IntentFilter filter = new IntentFilter();
@@ -153,16 +110,86 @@ public class StartTorActivity extends AppCompatActivity {
         registerReceiver(mTorConnectErrorReceiver, filter);
     }
 
+    private void observeTorStart() {
+        stopCounter();
+        LiveData<WorkInfo> startTorWorkStatus = App.getInstance().TorStartWork;
+
+        startTorWorkStatus.observe(this, new Observer<WorkInfo>() {
+            @Override
+            public void onChanged(@Nullable WorkInfo workInfo) {
+                // стартую загрузку TOR, жду, пока загрузится
+                if (workInfo != null) {
+                    Log.d("surprise", "StartTorActivity onChanged tor load status is " + workInfo.getState());
+                    if (workInfo.getState() == SUCCEEDED) {
+                        torLoaded();
+                    } else if (workInfo.getState() == FAILED) {
+                        // покажу диалоговое окно с предупрежением, что TOR не запускается на этой версии Android
+                        showTorNotWorkDialog();
+                    } else if (workInfo.getState() == RUNNING) {
+                        startTimer();
+                        if (mTorLoadingStatusText != null) {
+                            mTorLoadingStatusText.setText(getString(R.string.launch_begin_message));
+                        }
+                    } else if (workInfo.getState() == ENQUEUED) {
+                        if (mTorLoadingStatusText != null) {
+                            mTorLoadingStatusText.setText(getString(R.string.tor_load_waiting_internet_message));
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private void stopCounter() {
+        mProgressCounter = 0;
+        if (mCdt != null) {
+            mCdt.cancel();
+        }
+    }
+
+    private void showForceStartDialog() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setMessage("Принудительный запуск приложения. Внимание, это не значит, что приложение будет работать! Данная функция сделана исключительно для тех ситуаций, когда приложение не смогло само определить, что клиент TOR успешно запустился (проблема некоторорых китайских аппаратов). Так что используйте только если точно знаете, что делаете");
+        dialogBuilder.setPositiveButton("Да, я знаю, что делаю", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                torLoaded();
+            }
+        });
+        dialogBuilder.setNegativeButton("Нет, подождать ещё", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        dialogBuilder.show();
+    }
+
     private void showTorNotWorkDialog() {
         if (active) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setTitle(StartTorActivity.this.getString(R.string.tor_not_load_message))
-                    .setMessage(StartTorActivity.this.getString(R.string.tor_not_run_body)).show();
+            dialogBuilder.setTitle(StartTorActivity.this.getString(R.string.tor_cant_load_message))
+                    .setMessage(StartTorActivity.this.getString(R.string.tor_not_start_body))
+                    .setPositiveButton(getString(R.string.try_again_message), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            App.getInstance().startTor();
+                            observeTorStart();
+
+                        }
+                    })
+                    .setNegativeButton(getString(R.string.try_later_message), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            StartTorActivity.this.finishAffinity();
+                        }
+                    })
+                    .show();
         }
     }
 
     private void startTimer() {
-        int oneMin = 100000; // 1 minute in milli seconds
+        int oneMin = 180000; // 3 minute in milli seconds
         mProgressCounter = 0;
         mCdt = new CountDownTimer(oneMin, 1000) {
             public void onTick(long millisUntilFinished) {
@@ -173,16 +200,11 @@ public class StartTorActivity extends AppCompatActivity {
                     if (last != null) {
                         if (!last.isEmpty()) {
                             mTorLoadingStatusText.setText(last);
-                            if (last.indexOf(TOR_LAUNCHED_MESSAGE) > 0 || last.indexOf(TOR_BUILT_MESSAGE) > 0) {
-                                // через 5 секунд запущу просмотр
-                                new Handler().postDelayed(new TorLoaded(), 5000);
-                            }
                         } else {
-                            mTorLoadingStatusText.setText(R.string.tor_loading);
+                            mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loading), mProgressCounter));
                         }
-                        mTorLoadingStatusText.setText(last);
                     } else {
-                        mTorLoadingStatusText.setText(R.string.tor_start_loading);
+                        mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loading), mProgressCounter));
 
                     }
                 } else {
@@ -206,8 +228,8 @@ public class StartTorActivity extends AppCompatActivity {
                     .setPositiveButton("Перезапуск", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            restartCounter();
-                            App.getInstance().restartTor();
+                            App.getInstance().startTor();
+                            observeTorStart();
                         }
                     })
                     .setNegativeButton("Подождать ещё", new DialogInterface.OnClickListener() {
@@ -228,6 +250,12 @@ public class StartTorActivity extends AppCompatActivity {
     }
 
     private void torLoaded() {
+        if (mCdt != null) {
+            mCdt.cancel();
+        }
+        if (mTorLoadingStatusText != null) {
+            mTorLoadingStatusText.setText(R.string.tor_is_loaded);
+        }
         Intent intent = new Intent();
         setResult(RESULT_OK, intent);
         finish();
@@ -242,6 +270,7 @@ public class StartTorActivity extends AppCompatActivity {
     }
 
     private void showTorRestartDialog() {
+        Log.d("surprise", "StartTorActivity showTorRestartDialog: tor require restart");
         if (mTorRestartDialog == null) {
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
@@ -250,9 +279,8 @@ public class StartTorActivity extends AppCompatActivity {
                     .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            App.getInstance().restartTor();
-                            dialog.dismiss();
-                            restartCounter();
+                            App.getInstance().startTor();
+                            observeTorStart();
                         }
                     })
                     .setCancelable(false);
@@ -282,41 +310,18 @@ public class StartTorActivity extends AppCompatActivity {
                     this.finishAffinity();
                     return true;
                 } else {
-                    Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                     mConfirmExit = System.currentTimeMillis();
                     return true;
                 }
             } else {
-                Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                 mConfirmExit = System.currentTimeMillis();
                 return true;
             }
 
         }
         return super.onKeyDown(keyCode, event);
-    }
-
-    private class ResetApp implements Runnable {
-        @Override
-        public void run() {
-            Intent intent = new Intent(StartTorActivity.this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            StartTorActivity.this.startActivity(intent);
-            Runtime.getRuntime().exit(0);
-        }
-    }
-
-    private class TorLoaded implements Runnable {
-        @Override
-        public void run() {
-            Log.d("surprise", "StartTorActivity onTick tor loaded");
-            mTorLoadingStatusText.setText(R.string.tor_is_loaded);
-            mTorLoadingProgressIndicator.setProgress(100);
-            if (mCdt != null) {
-                mCdt.cancel();
-            }
-            torLoaded();
-        }
     }
 
     @Override
@@ -328,6 +333,12 @@ public class StartTorActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        active = false;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
         active = false;
     }
 }

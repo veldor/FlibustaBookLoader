@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import androidx.work.Worker;
@@ -16,6 +17,7 @@ import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
+import net.veldor.flibustaloader.utils.ImageLoadHandler;
 import net.veldor.flibustaloader.utils.SortHandler;
 
 import org.w3c.dom.Document;
@@ -208,6 +210,8 @@ public class ParseSearchWorker extends Worker {
     }
 
     private void handleBooks(NodeList entries) throws XPathExpressionException {
+        // переключатель загрузки превью
+        boolean isLoadPreviews = App.getInstance().isPreviews();
         // обработаю найденные книги
         Node entry;
         Node someNode;
@@ -330,6 +334,16 @@ public class ParseSearchWorker extends Worker {
                     book.sequences.add(sequence);
                 }
                 innerCounter++;
+            }
+            // если назначена загрузка превью- гружу их
+            if(isLoadPreviews){
+                someNode = ((Node) mXPath.evaluate("./link[@rel='http://opds-spec.org/image']", entry, XPathConstants.NODE));
+                if(someNode != null){
+                    someString = someNode.getAttributes().getNamedItem("href").getTextContent();
+                    if(someString != null && !someString.isEmpty()){
+                        book.preview = ImageLoadHandler.loadImage(App.BASE_URL + someString);
+                    }
+                }
             }
         }
         SortHandler.sortBooks(result);

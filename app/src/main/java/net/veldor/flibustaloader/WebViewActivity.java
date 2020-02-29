@@ -31,7 +31,6 @@ import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -49,7 +48,7 @@ import lib.folderpicker.FolderPicker;
 
 import static net.veldor.flibustaloader.MainActivity.START_TOR;
 
-public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, SwipeRefreshLayout.OnRefreshListener {
+public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
 
     public static final String CALLED = "activity_called";
     private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
@@ -57,7 +56,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     private static final int REQUEST_CODE = 7;
     private MyWebView mWebView;
     private MainViewModel mMyViewModel;
-    private SwipeRefreshLayout mRefresher;
     private WebViewActivity.BookLoadingReceiver mPageLoadReceiver;
     private View mRootView;
     private ArrayList<String> autocompleteStrings;
@@ -100,10 +98,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         // добавлю viewModel
         mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
         Log.d("surprise", "WebViewActivity onCreate " + mMyViewModel);
-
-        // добавлю модный перезагрузчик страницы
-        mRefresher = findViewById(R.id.refreshView);
-        mRefresher.setOnRefreshListener(this);
 
         // зарегистрирую получатель команды возвращения на предыдущую страницу
         IntentFilter filter = new IntentFilter();
@@ -444,12 +438,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
     }
 
-    @Override
-    public void onRefresh() {
-        mWebView.reload();
-        mRefresher.setRefreshing(false);
-    }
-
     public class BookLoadingReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -483,7 +471,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                     .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            App.getInstance().restartTor();
+                            App.getInstance().startTor();
                             dialog.dismiss();
                             // вернусь в основное активити и подожду перезапуска
                             startActivityForResult(new Intent(WebViewActivity.this, StartTorActivity.class), START_TOR);

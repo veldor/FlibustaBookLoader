@@ -10,6 +10,7 @@
 html{
     height: 100%;
     background-color:#FFFFFF;
+    scroll-behavior: smooth;
 }
 
 html body{
@@ -367,4 +368,16 @@ a.book-link.searched.selected{
 a.book-link.searched.selected:active{
 	background-color: var(--light);
 	color: var(--accent);
+}
+
+div#navigationButtonsDiv{
+    display:inline-block;
+    position:fixed;
+    top:50%;
+    right:10px;
+}
+
+div#navigationButtonsDiv button{
+    display:block;
+    width:60px;
 }

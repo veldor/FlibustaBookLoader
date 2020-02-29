@@ -35,6 +35,11 @@
                 android:title="@string/hide_read"
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/showPreviews"
+                android:title="@string/show_previews"
+                android:checkable="true"
+                yourapp:showAsAction="never"/>
         </menu>
     </item>
     <item
@@ -52,6 +57,11 @@
                 android:id="@+id/doNotReDownload"
                 android:checkable="true"
                 android:title="@string/do_not_re_download"/>
+            <item
+                android:id="@+id/downloadAllData"
+                android:title="@string/download_all_message"
+                android:checkable="true"
+                yourapp:showAsAction="never"/>
         </menu>
     </item>
     <item
@@ -59,17 +69,12 @@
         android:title="@string/download_all"
         yourapp:showAsAction="never"/>
     <item
-        android:id="@+id/clearSearchHistory"
-        android:title="@string/clear_search_history_message"
-        yourapp:showAsAction="never"/>
-    <item
-        android:id="@+id/downloadAllData"
-        android:title="@string/download_all_message"
-        android:checkable="true"
-        yourapp:showAsAction="never"/>
-    <item
         android:title="@string/miscellaneous">
         <menu>
+            <item
+                android:id="@+id/clearSearchHistory"
+                android:title="@string/clear_search_history_message"
+                yourapp:showAsAction="never"/>
             <item
                 android:id="@+id/setDownloadsFolder"
                 android:title="@string/set_downloads_folder"/>
