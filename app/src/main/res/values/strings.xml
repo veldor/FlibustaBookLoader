@@ -99,4 +99,6 @@
     <string name="title_activity_webview">WebView</string>
     <string name="title_activity_start_tor">Prepare</string>
     <string name="title_activity_subscribe">Subscriptions</string>
+    <string name="use_mobile_version">Use mobile version</string>
+    <string name="fab">floating action button</string>
 </resources>

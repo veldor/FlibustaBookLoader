@@ -8,8 +8,8 @@ android {
         minSdkVersion 16
         //noinspection OldTargetApi
         targetSdkVersion 28
-        versionCode 33
-        versionName "2.0.7.3"
+        versionCode 34
+        versionName "2.0.7.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -71,6 +71,8 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
 
     implementation "com.google.firebase:firebase-crash:16.2.1"
+
+    implementation 'com.github.clans:fab:1.6.4'
 
 }
 

@@ -97,4 +97,6 @@
     <string name="title_activity_webview">WebView</string>
     <string name="title_activity_start_tor">Подготовка</string>
     <string name="title_activity_subscribe">Подписки</string>
+    <string name="use_mobile_version">Мобильная версия</string>
+    <string name="show_all_results_switcher_text">Показывать сразу все результаты</string>
 </resources>

@@ -122,6 +122,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private ImageButton mForwardBtn, mBackwardBtn;
     private AlertDialog mBookTypeDialog;
     private Dialog mCoverPreviewDialog;
+    private AlertDialog BookInfoDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -490,14 +491,14 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             @Override
             public void onChanged(@Nullable FoundedBook book) {
                 if (book != null) {
-                    if (!book.read) {
-                        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(OPDSActivity.this);
-                        dialogBuilder.setTitle(book.name)
+                    Log.d("surprise", "OPDSActivity onChanged show book info");
+                        BookInfoDialog = new AlertDialog.Builder(OPDSActivity.this)
+                                .setTitle(book.name)
                                 .setMessage(Grammar.textFromHtml(book.bookInfo))
                                 .setCancelable(true)
-                                .setPositiveButton(android.R.string.ok, null);
-                        dialogBuilder.show();
-                    }
+                                .setPositiveButton(android.R.string.ok, null)
+                                .create();
+                        BookInfoDialog.show();
                 }
             }
         });
@@ -741,7 +742,19 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     protected void onPause() {
         super.onPause();
+        App.getInstance().mContextBook.setValue(null);
+        App.getInstance().mSelectedBook.setValue(null);
+        App.getInstance().mSelectedAuthor.setValue(null);
+        App.getInstance().mSelectedAuthors.setValue(null);
+        App.getInstance().mDownloadLinksList.setValue(null);
+        App.getInstance().mSelectedGenre.setValue(null);
+        App.getInstance().mSelectedSequence.setValue(null);
+        App.getInstance().mSelectedSequences.setValue(null);
 
+        if (BookInfoDialog != null) {
+            BookInfoDialog.dismiss();
+            BookInfoDialog = null;
+        }
         if (mShowLoadDialog != null) {
             mShowLoadDialog.dismiss();
             mShowLoadDialog = null;
@@ -757,6 +770,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         if (mBookTypeDialog != null) {
             mBookTypeDialog.dismiss();
             mBookTypeDialog = null;
+        }
+        if (mCoverPreviewDialog != null) {
+            mCoverPreviewDialog.dismiss();
+            mCoverPreviewDialog = null;
         }
     }
 

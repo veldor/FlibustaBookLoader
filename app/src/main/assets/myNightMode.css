@@ -23,6 +23,9 @@ html body a.author-link {
 html body a.book-link{
 	color: #f59214;
 }
+html body a span.h8{
+	color: #f59214;
+}
 
 html body div#divabio{
 	background-color: #000!important;
