@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.util.SparseBooleanArray;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.documentfile.provider.DocumentFile;
@@ -21,6 +22,7 @@ import androidx.work.WorkManager;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
@@ -37,6 +39,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
+import java.util.jar.Attributes;
 
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
@@ -107,6 +110,7 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
     private static App instance;
+    private static Notificator sNotificator;
     public File downloadedApkFile;
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
@@ -129,6 +133,9 @@ public class App extends Application {
     public final MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
     public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
     public final MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
+    public SparseBooleanArray mDownloadSelectedBooks;
+    public MutableLiveData<ArrayList<FoundedBook>> mDownloadSchedule = new MutableLiveData<>(new ArrayList<FoundedBook>());
+    public MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
     public LiveData<WorkInfo> TorStartWork;
@@ -167,6 +174,13 @@ public class App extends Application {
                 .build();
 
         planeBookSubscribes();
+    }
+
+    public Notificator getNotificator(){
+        if(sNotificator == null){
+            sNotificator = new Notificator(this);
+        }
+        return sNotificator;
     }
 
     public void startTor() {

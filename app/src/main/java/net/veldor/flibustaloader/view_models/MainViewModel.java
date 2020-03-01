@@ -7,10 +7,14 @@ import androidx.annotation.NonNull;
 
 import android.net.Uri;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 
+import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
@@ -27,6 +31,7 @@ import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.workers.DatabaseWorker;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
+import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker;
 import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
 import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 
@@ -37,6 +42,7 @@ import java.util.Random;
 public class MainViewModel extends AndroidViewModel {
 
     private static final String MULTIPLY_DOWNLOAD = "multiply download";
+    private static final String ADD_TO_DOWNLOAD_QUEUE_ACTION = "add to download queue";
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -95,26 +101,6 @@ public class MainViewModel extends AndroidViewModel {
         WorkManager.getInstance(App.getInstance()).enqueue(getPageWorker);
     }
 
-    public void downloadMultiply(int i) {
-        Log.d("surprise", "MainViewModel downloadMultiply initiate download");
-        // добавлю список книг для загрузки
-        ArrayList<FoundedItem> foundedItems = App.getInstance().mParsedResult.getValue();
-        if(foundedItems != null)
-        App.getInstance().mBooksForDownload = (ArrayList<FoundedItem>)foundedItems.clone();
-        // установлю статус загрузки
-        ArrayList<FoundedItem> downloadSize = App.getInstance().mParsedResult.getValue();
-        if(downloadSize != null)
-        App.getInstance().mMultiplyDownloadStatus.postValue("Скачано 0 из " + downloadSize.size() + " книг.");
-        // запущу рабочего, который загрузит книги
-        Data inputData = new Data.Builder()
-                .putInt(MimeTypes.MIME_TYPE, i)
-                .build();
-        OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).setInputData(inputData).build();
-        WorkManager.getInstance(App.getInstance()).beginUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.KEEP, downloadAllWorker).enqueue();
-        App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
-        App.getInstance().mProcess = downloadAllWorker;
-    }
-
     public void clearHistory() {
         MyFileReader.clearAutocomplete();
     }
@@ -131,5 +117,32 @@ public class MainViewModel extends AndroidViewModel {
                 .build();
         OneTimeWorkRequest restoreWorker = new OneTimeWorkRequest.Builder(RestoreSettingsWorker.class).setInputData(inputData).build();
         WorkManager.getInstance(App.getInstance()).enqueue(restoreWorker);
+    }
+
+    public LiveData<WorkInfo> downloadSelected(SparseBooleanArray ids) {
+        App.getInstance().mDownloadSelectedBooks = ids;
+        OneTimeWorkRequest downloadSelected = new OneTimeWorkRequest.Builder(AddBooksToDownloadQueueWorker.class).addTag(ADD_TO_DOWNLOAD_QUEUE_ACTION).build();
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(ADD_TO_DOWNLOAD_QUEUE_ACTION, ExistingWorkPolicy.REPLACE, downloadSelected);
+        return WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadSelected.getId());
+    }
+    public LiveData<WorkInfo> downloadAll() {
+        App.getInstance().mDownloadSelectedBooks = null;
+        OneTimeWorkRequest downloadSelected = new OneTimeWorkRequest.Builder(AddBooksToDownloadQueueWorker.class).addTag(ADD_TO_DOWNLOAD_QUEUE_ACTION).build();
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(ADD_TO_DOWNLOAD_QUEUE_ACTION, ExistingWorkPolicy.REPLACE, downloadSelected);
+        return WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadSelected.getId());
+    }
+
+    public void initiateMassDownload() {
+        // проверю, не запущен ли уже рабочий, загружающий книги
+        LiveData<WorkInfo> statusContainer = App.getInstance().mDownloadAllWork;
+        if(statusContainer == null || statusContainer.getValue() == null ||  statusContainer.getValue().getState() == WorkInfo.State.SUCCEEDED){
+            // запущу рабочего, который загрузит все книги
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
+            WorkManager.getInstance(App.getInstance()).enqueue(downloadAllWorker);
+            App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
+        }
     }
 }

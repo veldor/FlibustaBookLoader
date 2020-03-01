@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/whoSearchMessage"
-        android:textAlignment="center"
+        android:gravity="center_horizontal"
         app:layout_constraintTop_toTopOf="parent" />
 
     <RadioGroup
@@ -34,7 +35,7 @@
             android:layout_weight="1"
             android:checked="true"
             android:text="@string/search_book_message"
-            android:textAlignment="center"
+            android:gravity="center_horizontal"
             android:textColor="@color/book_name_color" />
 
         <RadioButton
@@ -45,8 +46,8 @@
             android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:text="@string/search_author_message"
-            android:textAlignment="center"
-            android:textColor="@color/author_text_color" />
+            android:textColor="@color/author_text_color"
+            android:gravity="center_horizontal" />
 
         <RadioButton
             android:id="@+id/searchGenre"
@@ -56,7 +57,7 @@
             android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:text="@string/search_genre_message"
-            android:textAlignment="center"
+            android:gravity="center_horizontal"
             android:textColor="@color/genre_text_color" />
 
         <RadioButton
@@ -67,7 +68,7 @@
             android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:text="@string/search_sequence_message"
-            android:textAlignment="center"
+            android:gravity="center_horizontal"
             android:textColor="@color/sequences_text" />
     </RadioGroup>
 
@@ -97,7 +98,7 @@
                 android:id="@+id/search_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAlignment="center"
+                android:gravity="center_horizontal"
                 app:layout_constraintBottom_toTopOf="@+id/subscribe_items_list"
                 app:layout_constraintTop_toBottomOf="@id/showAllSwitcher" />
 
@@ -147,15 +148,41 @@
         android:text="crash"
         android:onClick="crash"/>-->
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_margin="16dp"
-        android:contentDescription="@string/fab"
-        android:src="@drawable/ic_downloaded_24dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/floatingMenu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        fab:menu_icon="@drawable/ic_cloud_download_white_24dp"
+        fab:menu_labels_ellipsize="end"
+        fab:menu_labels_singleLine="true"
+        fab:menu_fab_label="@string/fab_cancel_label"
+        fab:menu_backgroundColor="#ccffffff"
+        fab:menu_animationDelayPerItem="0"
+        fab:menu_colorNormal="#00C29F"
+        fab:menu_colorPressed="#00C29F"
+        fab:menu_colorRipple="#00C29F"
+        android:padding="8dp"
+        android:layout_alignParentEnd="true">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fabDownloadAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_cloud_download_white_24dp"
+            fab:fab_size="mini"
+            fab:fab_label="@string/download_all_button"/>
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fabDOwnloadSelected"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_cloud_download_white_24dp"
+            fab:fab_size="mini"
+            fab:fab_label="@string/download_selected_button"/>
+
+
+    </com.github.clans.fab.FloatingActionMenu>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
