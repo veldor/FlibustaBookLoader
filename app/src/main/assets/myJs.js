@@ -1,6 +1,5 @@
-$(window).on("load.my", function () {
-
-    var navigationButtonsDiv = document.createElement('div');
+async function handle(){
+var navigationButtonsDiv = document.createElement('div');
     navigationButtonsDiv.id = 'navigationButtonsDiv';
     navigationButtonsDiv.innerHTML = "<button id='moveUpBtn'>Вверх</button><button id='moveDownBtn'>Вниз</button>";
     document.body.appendChild(navigationButtonsDiv);
@@ -207,4 +206,8 @@ $(window).on("load.my", function () {
             }
         }
     }
+}
+
+$(window).on("load.my", function () {
+    handle();
 });

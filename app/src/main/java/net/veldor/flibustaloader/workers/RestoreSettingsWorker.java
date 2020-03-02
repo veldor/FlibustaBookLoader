@@ -1,45 +1,27 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
-import android.os.StrictMode;
-import android.provider.DocumentsContract;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.R;
-import net.veldor.flibustaloader.database.AppDatabase;
-import net.veldor.flibustaloader.database.entity.DownloadedBooks;
-import net.veldor.flibustaloader.database.entity.ReadedBooks;
-import net.veldor.flibustaloader.notificatons.Notificator;
-import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static net.veldor.flibustaloader.utils.MyFileReader.AUTHORS_SUBSCRIBE_FILE;
 import static net.veldor.flibustaloader.utils.MyFileReader.BOOKS_SUBSCRIBE_FILE;
 import static net.veldor.flibustaloader.utils.MyFileReader.SEQUENCES_SUBSCRIBE_FILE;

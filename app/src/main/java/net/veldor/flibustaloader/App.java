@@ -5,13 +5,12 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.util.Log;
+import android.util.SparseBooleanArray;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.room.Room;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -23,6 +22,7 @@ import androidx.work.WorkManager;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
@@ -39,6 +39,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
+import java.util.jar.Attributes;
 
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
@@ -48,7 +49,6 @@ public class App extends Application {
 
     public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
-    public static final String FB_URL = "http://flibusta.is";
     private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
     public static final int MAX_BOOK_NUMBER = 548398;
     public static final int VIEW_WEB = 1;
@@ -110,6 +110,7 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
     private static App instance;
+    private static Notificator sNotificator;
     public File downloadedApkFile;
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
@@ -131,7 +132,10 @@ public class App extends Application {
     public int mOtherSortOptions = -1;
     public final MutableLiveData<String> mLoadAllStatus = new MutableLiveData<>();
     public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
-    public MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
+    public final MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
+    public SparseBooleanArray mDownloadSelectedBooks;
+    public MutableLiveData<ArrayList<FoundedBook>> mDownloadSchedule = new MutableLiveData<>(new ArrayList<FoundedBook>());
+    public MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
     public LiveData<WorkInfo> TorStartWork;
@@ -170,6 +174,13 @@ public class App extends Application {
                 .build();
 
         planeBookSubscribes();
+    }
+
+    public Notificator getNotificator(){
+        if(sNotificator == null){
+            sNotificator = new Notificator(this);
+        }
+        return sNotificator;
     }
 
     public void startTor() {

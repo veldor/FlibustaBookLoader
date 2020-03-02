@@ -49,16 +49,16 @@
             android:label="@string/title_activity_opds" />
         <activity
             android:name=".WebViewActivity"
-            android:label="@string/title_activity_webview" />/>
+            android:label="@string/title_activity_webview"/>
         <activity android:name=".StartTorActivity"
-            android:label="@string/title_activity_start_tor" />/>
+            android:label="@string/title_activity_start_tor"/>
 
         <receiver android:name=".receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="net.veldor.flibustaloader.fileProvider"
+            android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

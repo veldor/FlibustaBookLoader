@@ -15,22 +15,23 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MainActivity;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.SubscriptionsActivity;
-import net.veldor.flibustaloader.receivers.BackupActionReceiver;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.receivers.BookActionReceiver;
 
 public class Notificator {
-    private static final String SHIFTS_CHANNEL_ID = "books";
+    private static final String BOOKS_CHANNEL_ID = "books";
     private static final String SUBSCRIBES_CHANNEL_ID = "subscribes";
     private static final String MISC_CHANNEL_ID = "misc";
     public static final int BOOK_LOADED_NOTIFICATION = 1;
     private static final int SUBSCRIBE_NOTIFICATION = 2;
-    public static final int BACKUP_COMPLETED_NOTIFICATION = 3;
+    private static final int BACKUP_COMPLETED_NOTIFICATION = 3;
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;
+    private static final int DOWNLOAD_PROGRESS_NOTIFICATION = 5;
     private final Context mContext;
-    private final NotificationManager mNotificationManager;
+    public final NotificationManager mNotificationManager;
+    public Notification mMassBookLoadingNotification;
 
     public Notificator(Context context) {
         mContext = context;
@@ -38,7 +39,7 @@ public class Notificator {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (mNotificationManager != null) {
                 // создам канал уведомлений о скачанных книгах
-                NotificationChannel nc = new NotificationChannel(SHIFTS_CHANNEL_ID, mContext.getString(R.string.books_loaded_channel), NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationChannel nc = new NotificationChannel(BOOKS_CHANNEL_ID, mContext.getString(R.string.books_loaded_channel), NotificationManager.IMPORTANCE_DEFAULT);
                 nc.setDescription(mContext.getString(R.string.shifts_reminder));
                 nc.enableLights(true);
                 nc.setLightColor(Color.RED);
@@ -82,7 +83,7 @@ public class Notificator {
         Intent openMainIntent = new Intent(mContext, MainActivity.class);
         PendingIntent startMainPending = PendingIntent.getActivity(mContext, START_APP_CODE, openMainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, SHIFTS_CHANNEL_ID)
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_book_black_24dp)
                 .setContentTitle("Загружена книга")
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(name + " :успешно загружено"))
@@ -117,5 +118,19 @@ public class Notificator {
                 .setAutoCancel(true);
         Notification notification = notificationBuilder.build();
         mNotificationManager.notify(BACKUP_COMPLETED_NOTIFICATION, notification);
+    }
+
+    public void createMassBookLoadNotification() {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
+                .setContentTitle("Скачивание книг")
+                .setOngoing(true)
+                .setAutoCancel(false);
+        mMassBookLoadingNotification = notificationBuilder.build();
+        mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mMassBookLoadingNotification);
+    }
+
+    public void cancelBookLoadNotification() {
+        mNotificationManager.cancel(DOWNLOAD_PROGRESS_NOTIFICATION);
     }
 }
