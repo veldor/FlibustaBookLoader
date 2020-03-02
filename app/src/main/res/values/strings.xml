@@ -100,5 +100,9 @@
     <string name="title_activity_start_tor">Prepare</string>
     <string name="title_activity_subscribe">Subscriptions</string>
     <string name="use_mobile_version">Use mobile version</string>
-    <string name="fab">floating action button</string>
+    <string name="fab" translatable="false">floating action button</string>
+    <string name="show_all_results_switcher_text">Show all result</string>
+    <string name="download_all_button">Download all</string>
+    <string name="download_selected_button">Download selected</string>
+    <string name="fab_cancel_label">Cancel</string>
 </resources>

@@ -18,6 +18,7 @@ import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.utils.Grammar;
@@ -58,7 +59,30 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        // отмечу, что процесс уже идёт
+        Log.d("surprise", "DownloadBooksWorker doWork i start!");
+        Notificator notificator = App.getInstance().getNotificator();
+        notificator.createMassBookLoadNotification();
+
+        // в бесконечном цикле буду перебирать книги, пока они не закончатся
+
+        ArrayList<FoundedBook> books = App.getInstance().mDownloadSchedule.getValue();
+
+        if(books == null || books.size() == 0){
+            // книг не найдено, думаю, что работа выполнена
+            notificator.cancelBookLoadNotification();
+            return Result.success();
+        }
+        while (true){
+            // удалю первый элемент из очереди скачивания
+            if(books.size() > 0){
+               books.remove(0);
+            }
+            else{
+                notificator.cancelBookLoadNotification();
+                return Result.success();
+            }
+        }
+/*        // отмечу, что процесс уже идёт
         Log.d("surprise", "DownloadBooksWorker doWork i start downloads");
         // получу предпочтительный тип загрузки
         Data data = getInputData();
@@ -80,8 +104,7 @@ public class DownloadBooksWorker extends Worker {
 
         }
         Log.d("surprise", "DownloadBooksWorker doWork закончил загрузку");
-        App.getInstance().mDownloadsInProgress = false;
-        return Result.success();
+        App.getInstance().mDownloadsInProgress = false;*/
     }
 
     private void downloadBook(FoundedBook book, String bookMime) {

@@ -57,17 +57,8 @@
                 android:id="@+id/doNotReDownload"
                 android:checkable="true"
                 android:title="@string/do_not_re_download"/>
-            <item
-                android:id="@+id/downloadAllData"
-                android:title="@string/download_all_message"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
         </menu>
     </item>
-    <item
-        android:id="@+id/downloadAll"
-        android:title="@string/download_all"
-        yourapp:showAsAction="never"/>
     <item
         android:title="@string/miscellaneous">
         <menu>

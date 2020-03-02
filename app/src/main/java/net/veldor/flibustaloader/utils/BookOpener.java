@@ -3,37 +3,31 @@ package net.veldor.flibustaloader.utils;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.StrictMode;
-
-import androidx.documentfile.provider.DocumentFile;
-
 import android.widget.Toast;
 
+import androidx.core.content.FileProvider;
+import androidx.documentfile.provider.DocumentFile;
+
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.BuildConfig;
 import net.veldor.flibustaloader.R;
 
 import java.io.File;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 
 public class BookOpener {
     public static void openBook(String name, String type) {
-        // грязный хак- без него не работает доступ к Kindle, та не умеет в новый метод с контентом
-        //todo По возможности- разобраться и заменить на валидное решение
-        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-        StrictMode.setVmPolicy(builder.build());
-        // ========================================================================================
         Context context = App.getInstance();
         DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
         if (downloadsDir != null) {
             DocumentFile file = downloadsDir.findFile(name);
             if (file != null) {
-                Intent openIntent = new Intent(Intent.ACTION_VIEW);
-                openIntent.setDataAndType(file.getUri(), MimeTypes.getFullMime(type));
-                openIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                Intent starter = Intent.createChooser(openIntent, context.getString(R.string.open_with_message));
-                starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(starter);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(file.getUri(), MimeTypes.getFullMime(type));
+                intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION|FLAG_ACTIVITY_NEW_TASK);
+                App.getInstance().startActivity(intent);
             } else {
                 Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
             }
@@ -41,7 +35,7 @@ public class BookOpener {
             // получу путь к файлу
             File file = new File(App.getInstance().getDownloadFolder(), name);
             if (file.exists()) {
-                // отправлю запрос на открытие файла
+                /*// отправлю запрос на открытие файла
                 Intent openIntent = new Intent(Intent.ACTION_VIEW);
                 openIntent.setDataAndType(Uri.fromFile(file), MimeTypes.getFullMime(type));
                 Intent starter = Intent.createChooser(openIntent, context.getString(R.string.open_with_message));
@@ -51,11 +45,15 @@ public class BookOpener {
                 }
                 else{
                     Toast.makeText(App.getInstance(), "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
-                }
+                }*/
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                Uri data = FileProvider.getUriForFile(App.getInstance(), BuildConfig.APPLICATION_ID +".provider",file);
+                intent.setDataAndType(data,MimeTypes.getFullMime(type));
+                intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION|FLAG_ACTIVITY_NEW_TASK);
+                App.getInstance().startActivity(intent);
             } else {
                 Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
             }
         }
-
     }
 }

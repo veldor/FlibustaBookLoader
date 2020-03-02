@@ -22,4 +22,5 @@ public class FoundedBook implements FoundedItem {
     public boolean read;
     public boolean downloaded;
     public Bitmap preview;
+    public String preferredFormat;
 }
