@@ -47,7 +47,8 @@
                 android:textColor="@color/book_name_color"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:layout_marginRight="25dp" />
+                android:layout_marginRight="25dp"
+                android:gravity="center_horizontal" />
 
             <LinearLayout
                 android:id="@+id/authorBlock"
@@ -96,7 +97,8 @@
                     android:textAlignment="center"
                     android:textColor="@drawable/genre_text_color"
                     android:textSize="10sp"
-                    tools:ignore="SmallSp" />
+                    tools:ignore="SmallSp"
+                    android:gravity="center_horizontal" />
 
                 <TextView
                     android:id="@+id/sequence"
@@ -107,7 +109,8 @@
                     android:textAlignment="center"
                     android:textColor="@drawable/sequence_text_color"
                     android:textSize="10sp"
-                    tools:ignore="SmallSp" />
+                    tools:ignore="SmallSp"
+                    android:gravity="center_horizontal" />
             </LinearLayout>
         </LinearLayout>
 

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout
+<layout xmlns:tools="http://schemas.android.com/tools"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <data>
         <import type="android.view.View" />
         <variable
-            name="subscriptions"
-            type="net.veldor.flibustaloader.selections.SubscriptionItem" />
+            name="book"
+            type="net.veldor.flibustaloader.selections.FoundedBook" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -20,8 +20,7 @@
             android:id="@+id/book_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@{subscriptions.name}"
-            android:textAlignment="center"
+            android:text="@{book.name}"
             android:textColor="@drawable/sequence_text_color"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -29,6 +28,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@drawable/genre_text_color"
+            android:text="@string/waiting_download_message"
+            app:layout_constraintTop_toBottomOf="@+id/book_name"
+            tools:layout_editor_absoluteX="10dp" />
 
         <ImageButton
             android:id="@+id/deleteItemBtn"

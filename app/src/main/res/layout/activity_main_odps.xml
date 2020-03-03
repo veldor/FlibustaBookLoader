@@ -83,7 +83,6 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:orientation="vertical">
-
             <Switch
                 android:id="@+id/showAllSwitcher"
                 android:layout_width="wrap_content"
@@ -99,11 +98,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                app:layout_constraintBottom_toTopOf="@+id/subscribe_items_list"
+                app:layout_constraintBottom_toTopOf="@+id/booksList"
                 app:layout_constraintTop_toBottomOf="@id/showAllSwitcher" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/subscribe_items_list"
+                android:id="@+id/booksList"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toTopOf="@+id/load_more_button" />
@@ -116,7 +115,7 @@
                 android:contentDescription="@string/backward"
                 android:visibility="invisible"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list" />
+                app:layout_constraintTop_toBottomOf="@+id/booksList" />
 
             <ImageButton
                 android:id="@+id/forward_btn"
@@ -126,9 +125,10 @@
                 android:contentDescription="@string/forward_button"
                 android:visibility="invisible"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_items_list" />
+                app:layout_constraintTop_toBottomOf="@+id/booksList" />
 
             <Button
+                android:layout_marginBottom="70dp"
                 android:id="@+id/load_more_button"
                 style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="0dp"

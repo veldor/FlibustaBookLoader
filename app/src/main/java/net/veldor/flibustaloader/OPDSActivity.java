@@ -60,6 +60,7 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.ui.ActivityBookDownloadSchedule;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.TransportUtils;
@@ -72,6 +73,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Locale;
 
 import lib.folderpicker.FolderPicker;
 
@@ -198,7 +200,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         });
 
-        mRecycler = findViewById(R.id.subscribe_items_list);
+        mRecycler = findViewById(R.id.booksList);
 
         // добавлю viewModel
         mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
@@ -375,7 +377,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // добавлю обсерверы
         addObservers();
-        checkUpdates();
+        //todo включить в стабильной версии
+        //checkUpdates();
 
 /*        // попробую создать user guide
         new MaterialIntroView.Builder(this)
@@ -474,17 +477,17 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             int counter = 0;
             for(FoundedItem fb : books){
                 book = (FoundedBook) fb;
-                variants[counter] = book.name;
+                variants[counter] = String.format(Locale.ENGLISH, "%s \n %s \n %s \n", book.name, book.format, (book.translate.isEmpty() ?  "": book.translate));
                 counter++;
             }
             mDownloadSelectedDialog = new AlertDialog.Builder(this)
-                    .setTitle("Выберите книги для скачивания")
+                    .setTitle(R.string.select_books_for_download_message)
                     .setMultiChoiceItems(variants, null, new DialogInterface.OnMultiChoiceClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i, boolean b) {
                         }
                     })
-                    .setPositiveButton("Скачать выбранные", new DialogInterface.OnClickListener() {
+                    .setPositiveButton(R.string.download_selected_message, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             mDownloadSelectedDialog.getListView().getCheckedItemCount();
@@ -494,7 +497,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                                 observeBookScheduleAdd(status);
                             }
                             else{
-                                Toast.makeText(OPDSActivity.this, "Не выбрано ни одной книги", Toast.LENGTH_LONG).show();
+                                Toast.makeText(OPDSActivity.this, R.string.books_not_selected_message, Toast.LENGTH_LONG).show();
                             }
                         }
                     })
@@ -502,7 +505,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             mDownloadSelectedDialog.show();
         }
         else{
-            Toast.makeText(this, "Книги не найдены", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.books_not_found_message, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -514,6 +517,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     Toast.makeText(OPDSActivity.this, "Книги добавлены в очередь скачивания", Toast.LENGTH_LONG).show();
                     // запущу скачивание
                     mMyViewModel.initiateMassDownload();
+                    startActivity(new Intent(getBaseContext(), ActivityBookDownloadSchedule.class));
                     status.removeObservers(OPDSActivity.this);
                 }
             }
@@ -1108,6 +1112,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
                 startActivity(intent);
+            case R.id.showDownloadsSchedule:
+                intent = new Intent(this, ActivityBookDownloadSchedule.class);
+                startActivity(intent);
                 return true;
             case R.id.setDownloadsFolder:
                 changeDownloadsFolder();
@@ -1552,7 +1559,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 if (mConfirmExit > System.currentTimeMillis() - 3000) {
                     // выйду из приложения
                     Log.d("surprise", "OPDSActivity onKeyDown exit");
-                    this.finishAffinity();
+                   // this.finishAffinity();
+                    Intent startMain = new Intent(Intent.ACTION_MAIN);
+                    startMain.addCategory(Intent.CATEGORY_HOME);
+                    startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(startMain);
                     return true;
                 } else {
                     Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();

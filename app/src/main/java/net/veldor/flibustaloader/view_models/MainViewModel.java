@@ -1,18 +1,14 @@
 package net.veldor.flibustaloader.view_models;
 
 import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.annotation.NonNull;
-
 import android.net.Uri;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 
-import androidx.work.Constraints;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
-import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
@@ -23,26 +19,21 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
 import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
-import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
-import net.veldor.flibustaloader.workers.DatabaseWorker;
-import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker;
+import net.veldor.flibustaloader.workers.DatabaseWorker;
 import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
 import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-@SuppressWarnings("unchecked")
 public class MainViewModel extends AndroidViewModel {
-
-    private static final String MULTIPLY_DOWNLOAD = "multiply download";
     private static final String ADD_TO_DOWNLOAD_QUEUE_ACTION = "add to download queue";
+    public static final String MULTIPLY_DOWNLOAD = "multiply download";
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -133,16 +124,10 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void initiateMassDownload() {
-        // проверю, не запущен ли уже рабочий, загружающий книги
-        LiveData<WorkInfo> statusContainer = App.getInstance().mDownloadAllWork;
-        if(statusContainer == null || statusContainer.getValue() == null ||  statusContainer.getValue().getState() == WorkInfo.State.SUCCEEDED){
-            // запущу рабочего, который загрузит все книги
-            Constraints constraints = new Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build();
-            OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
-            WorkManager.getInstance(App.getInstance()).enqueue(downloadAllWorker);
-            App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
-        }
+        App.getInstance().initializeDownload();
+    }
+
+    public void cancelMassDownload() {
+        WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(MULTIPLY_DOWNLOAD);
     }
 }

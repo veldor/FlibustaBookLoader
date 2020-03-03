@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -33,16 +34,17 @@ import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
 import net.veldor.flibustaloader.utils.SubscribeSequences;
 import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
+import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
-import java.util.jar.Attributes;
 
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
+import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
 public class App extends Application {
 
@@ -110,7 +112,7 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
     private static App instance;
-    private static Notificator sNotificator;
+    private Notificator sNotificator;
     public File downloadedApkFile;
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
@@ -134,8 +136,10 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
     public final MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
     public SparseBooleanArray mDownloadSelectedBooks;
-    public MutableLiveData<ArrayList<FoundedBook>> mDownloadSchedule = new MutableLiveData<>(new ArrayList<FoundedBook>());
-    public MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
+    public final MutableLiveData<ArrayList<FoundedBook>> mDownloadSchedule = new MutableLiveData<>(new ArrayList<FoundedBook>());
+    public final MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
+    public final MutableLiveData<Boolean> BookDownloaded = new MutableLiveData<>();
+    public final MutableLiveData<Boolean> DownloadInterrupted = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
     public LiveData<WorkInfo> TorStartWork;
@@ -418,5 +422,25 @@ public class App extends Application {
 
     public void switchShowPreviews() {
         mSharedPreferences.edit().putBoolean(PREFERENCE_PREVIEWS, !isPreviews()).apply();
+    }
+
+    public void initializeDownload() {
+
+        // проверю, не запущен ли уже рабочий, загружающий книги
+        LiveData<WorkInfo> statusContainer = App.getInstance().mDownloadAllWork;
+        if(statusContainer == null || statusContainer.getValue() == null ||  statusContainer.getValue().getState() != WorkInfo.State.RUNNING){
+            // сброшу результаты предыдущего скачивания
+            App.getInstance().BookDownloaded.setValue(false);
+            // запущу рабочего, который загрузит все книги
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
+            WorkManager.getInstance(App.getInstance()).enqueue(downloadAllWorker);
+            App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
+        }
+        else{
+            Log.d("surprise", "MainViewModel initiateMassDownload: Загрузка книг уже работает");
+        }
     }
 }

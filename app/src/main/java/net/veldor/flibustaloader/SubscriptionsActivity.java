@@ -52,7 +52,7 @@ public class SubscriptionsActivity extends AppCompatActivity {
 
         mRootView = findViewById(R.id.rootView);
 
-        RecyclerView recycler = findViewById(R.id.subscribe_items_list);
+        RecyclerView recycler = findViewById(R.id.booksList);
         recycler.setLayoutManager(new LinearLayoutManager(SubscriptionsActivity.this));
         mAdapter = new SubscribeResultsAdapter();
         recycler.setAdapter(mAdapter);

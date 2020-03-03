@@ -78,7 +78,6 @@ public class MyWebViewClient extends WebViewClient {
     private static final String MY_COMPAT_CSS_STYLE = "myCompatStyle.css";
     private static final String MY_CSS_NIGHT_STYLE = "myNightMode.css";
     private static final String MY_COMPAT_FAT_CSS_STYLE = "myCompatFatStyle.css";
-    private static final String JQUERY = "jquery.js";
     private static final String MY_JS = "myJs.js";
     private static final String HTML_TYPE = "text/html";
     private static final String AJAX_REQUEST = "http://flibustahezeous3.onion/makebooklist?";

@@ -17,6 +17,10 @@ import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.SubscriptionsActivity;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.receivers.BookActionReceiver;
+import net.veldor.flibustaloader.receivers.MiscActionsReceiver;
+import net.veldor.flibustaloader.ui.ActivityBookDownloadSchedule;
+
+import static net.veldor.flibustaloader.receivers.MiscActionsReceiver.EXTRA_ACTION_TYPE;
 
 public class Notificator {
     private static final String BOOKS_CHANNEL_ID = "books";
@@ -28,10 +32,13 @@ public class Notificator {
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;
-    private static final int DOWNLOAD_PROGRESS_NOTIFICATION = 5;
+    public static final int DOWNLOAD_PROGRESS_NOTIFICATION = 5;
+    private static final int CANCEL_CODE = 6;
+    private static final int PAUSE_CODE = 7;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
-    public Notification mMassBookLoadingNotification;
+    private Notification mMassBookLoadingNotification;
+    public NotificationCompat.Builder mDownloadScheduleBuilder;
 
     public Notificator(Context context) {
         mContext = context;
@@ -121,16 +128,64 @@ public class Notificator {
     }
 
     public void createMassBookLoadNotification() {
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+        // при нажатии на уведомление- открою экран ожидания очереди
+        Intent openWindowIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
+        PendingIntent showWindowPending = PendingIntent.getActivity(mContext, START_APP_CODE, openWindowIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // интент отмены скачивания
+        Intent cancelIntent = new Intent(mContext, MiscActionsReceiver.class);
+        cancelIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_CANCEL_MASS_DOWNLOAD);
+        PendingIntent cancelMassDownloadPendingIntent = PendingIntent.getBroadcast(mContext, CANCEL_CODE, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // интент паузы скачивания
+        Intent pauseIntent = new Intent(mContext, MiscActionsReceiver.class);
+        pauseIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_PAUSE_MASS_DOWNLOAD);
+        PendingIntent pauseMassDownloadPendingIntent = PendingIntent.getBroadcast(mContext, PAUSE_CODE, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        mDownloadScheduleBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Скачивание книг")
                 .setOngoing(true)
+                .addAction(R.drawable.ic_list_white_24dp, "Очередь", showWindowPending)
+                .addAction(R.drawable.fp_ic_action_cancel, "Отмена", cancelMassDownloadPendingIntent)
+                .addAction(R.drawable.ic_pause_white_24dp, "Пауза", pauseMassDownloadPendingIntent)
+                .setContentIntent(showWindowPending)
+                .setContentText("Подготовка скачивания")
                 .setAutoCancel(false);
-        mMassBookLoadingNotification = notificationBuilder.build();
+        mMassBookLoadingNotification = mDownloadScheduleBuilder.build();
         mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mMassBookLoadingNotification);
     }
 
     public void cancelBookLoadNotification() {
         mNotificationManager.cancel(DOWNLOAD_PROGRESS_NOTIFICATION);
+    }
+
+    public void showBooksLoadedNotification() {
+        NotificationCompat.Builder downloadCompleteBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
+                .setContentTitle("Скачивание книг")
+                .setContentText("Все книги успешно скачаны!");
+        mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, downloadCompleteBuilder.build());
+    }
+
+    public void createMassDownloadStoppedNotification() {
+        NotificationCompat.Builder downloadStoppedBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
+                .setContentTitle("Скачивание книг")
+                .setContentText("Скачивание книг остановлено!");
+        mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, downloadStoppedBuilder.build());
+    }
+
+    public void createMassDownloadPausedNotification() {
+        // интент возобновления скачивания
+        Intent pauseIntent = new Intent(mContext, MiscActionsReceiver.class);
+        pauseIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_RESUME_MASS_DOWNLOAD);
+
+        PendingIntent pauseMassDownloadPendingIntent = PendingIntent.getBroadcast(mContext, START_APP_CODE, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationCompat.Builder downloadCompleteBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_pause_white_24dp)
+                .setContentTitle("Скачивание книг")
+                .addAction(R.drawable.ic_play_arrow_white_24dp, "Возобновить", pauseMassDownloadPendingIntent)
+                .setContentText("Скачивание приостановлено!");
+        mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, downloadCompleteBuilder.build());
     }
 }

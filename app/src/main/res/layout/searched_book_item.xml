@@ -30,7 +30,8 @@
                 android:textStyle="bold"
                 app:layout_constraintEnd_toStartOf="@+id/menuButton"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                android:gravity="center_horizontal" />
 
             <ImageButton
                 android:id="@+id/menuButton"
@@ -88,7 +89,8 @@
                     android:text="@{book.genreComplex}"
                     android:textAlignment="center"
                     android:textColor="@drawable/genre_text_color"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:gravity="center_horizontal" />
 
                 <TextView
                     android:id="@+id/sequence"
@@ -98,7 +100,8 @@
                     android:text="@{book.sequenceComplex}"
                     android:textAlignment="center"
                     android:textColor="@drawable/sequence_text_color"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"
+                    android:gravity="center_horizontal" />
             </LinearLayout>
 
             <TextView

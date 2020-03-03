@@ -3,13 +3,10 @@ package net.veldor.flibustaloader.utils;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Environment;
-import android.os.StrictMode;
-import android.provider.DocumentsContract;
 
 import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
-import android.util.Log;
+
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;

@@ -50,6 +50,9 @@
                 android:id="@+id/discardFavoriteType"
                 android:title="@string/discard_favorite_type"/>
             <item
+                android:id="@+id/showDownloadsSchedule"
+                android:title="@string/show_downloads_schedule_message"/>
+            <item
                 android:id="@+id/downloadOnlySelected"
                 android:checkable="true"
                 android:title="@string/download_only_this_format"/>

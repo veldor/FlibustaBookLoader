@@ -1,13 +1,10 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.documentfile.provider.DocumentFile;
-
-import android.util.Log;
-
-import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -17,6 +14,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
+import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -32,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.client.ClientProtocolException;
@@ -45,11 +44,12 @@ import cz.msebera.android.httpclient.impl.client.HttpClients;
 import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
+import static net.veldor.flibustaloader.notificatons.Notificator.DOWNLOAD_PROGRESS_NOTIFICATION;
+
 public class DownloadBooksWorker extends Worker {
 
     private HttpClient mHttpClient;
     private HttpClientContext mContext;
-    private boolean mIsStopped;
     private String mName;
 
     public DownloadBooksWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -66,48 +66,42 @@ public class DownloadBooksWorker extends Worker {
         // в бесконечном цикле буду перебирать книги, пока они не закончатся
 
         ArrayList<FoundedBook> books = App.getInstance().mDownloadSchedule.getValue();
+        FoundedBook book;
 
-        if(books == null || books.size() == 0){
+        if (books == null || books.size() == 0) {
+            Log.d("surprise", "DownloadBooksWorker doWork: not found books in schedule");
             // книг не найдено, думаю, что работа выполнена
             notificator.cancelBookLoadNotification();
             return Result.success();
         }
-        while (true){
-            // удалю первый элемент из очереди скачивания
-            if(books.size() > 0){
-               books.remove(0);
-            }
-            else{
-                notificator.cancelBookLoadNotification();
+        int size = books.size();
+        notificator.mDownloadScheduleBuilder.setContentText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.download_progress_message), 0, size));
+        notificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, notificator.mDownloadScheduleBuilder.build());
+        int c = 1;
+        while (true) {
+            if(isStopped()){
                 return Result.success();
             }
-        }
-/*        // отмечу, что процесс уже идёт
-        Log.d("surprise", "DownloadBooksWorker doWork i start downloads");
-        // получу предпочтительный тип загрузки
-        Data data = getInputData();
-        int bookType = data.getInt(MimeTypes.MIME_TYPE, 0);
-        String bookMime = MimeTypes.MIMES_LIST[bookType];
-        // получу список книг
-        if (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0) {
-            // переберу все книги
-            FoundedBook book;
-            while (App.getInstance().mBooksForDownload != null && App.getInstance().mBooksForDownload.size() > 0 && !mIsStopped) {
-                // возьму первый элемент из списка недогруженных книг
-                book = (FoundedBook) App.getInstance().mBooksForDownload.get(0);
-                downloadBook(book, bookMime);
-                // книга загружена, удалю из списка
-                App.getInstance().mBooksForDownload.remove(0);
-                if (App.getInstance().mParsedResult.getValue() != null)
-                    App.getInstance().mMultiplyDownloadStatus.postValue("Скачано " + (App.getInstance().mParsedResult.getValue().size() - App.getInstance().mBooksForDownload.size()) + " из " + App.getInstance().mParsedResult.getValue().size() + " книг.");
+            if (books.size() > 0) {
+                notificator.mDownloadScheduleBuilder.setContentText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.download_progress_message), c,size));
+                notificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, notificator.mDownloadScheduleBuilder.build());
+                book = books.get(0);
+                downloadBook(book);
+                books.remove(0);
+                // оповещу о скачанной книге
+                App.getInstance().BookDownloaded.postValue(true);
+                c++;
+            } else {
+                Log.d("surprise", "DownloadBooksWorker doWork: books downloaded");
+                notificator.cancelBookLoadNotification();
+                break;
             }
-
         }
-        Log.d("surprise", "DownloadBooksWorker doWork закончил загрузку");
-        App.getInstance().mDownloadsInProgress = false;*/
+        notificator.showBooksLoadedNotification();
+        return Result.success();
     }
 
-    private void downloadBook(FoundedBook book, String bookMime) {
+    private void downloadBook(FoundedBook book) {
         // проверю перезагрузку уже загруженного
         if (!App.getInstance().isReDownload()) {
             AppDatabase db = App.getInstance().mDatabase;
@@ -124,7 +118,7 @@ public class DownloadBooksWorker extends Worker {
             boolean isValidFormat = false;
             DownloadLink link;
             while (counter < book.downloadLinks.size() && (link = book.downloadLinks.get(counter)) != null) {
-                if (link.mime.contains(bookMime)) {
+                if (link.mime.contains(book.preferredFormat)) {
                     isValidFormat = true;
                     break;
                 }
@@ -158,7 +152,7 @@ public class DownloadBooksWorker extends Worker {
                 link = links.get(0);
             } else {
                 // получу полный предпочтительный mime
-                String mime = MimeTypes.getFullMime(bookMime);
+                String mime = MimeTypes.getFullMime(book.preferredFormat);
                 int counter = 0;
                 while ((link = links.get(counter)) != null) {
                     if (link.mime.equals(mime)) {
@@ -186,7 +180,13 @@ public class DownloadBooksWorker extends Worker {
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
             httpGet.setHeader("X-Compress", "null");
             HttpResponse httpResponse = mHttpClient.execute(httpGet, mContext);
-            String author_last_name = link.author.substring(0, link.author.indexOf(" "));
+            int delimiter = link.author.indexOf(" ");
+            String author_last_name;
+            if(delimiter >= 0){author_last_name = link.author.substring(0, delimiter);
+            }
+            else{
+                author_last_name = link.author;
+            }
             String book_name = link.name.replaceAll(" ", "_").replaceAll("[^\\d\\w-_]", "");
             String book_mime = MimeTypes.getDownloadMime(link.mime);
             //Log.d("surprise", "DownloadBooksWorker downloadBook " + book_mime);
@@ -249,9 +249,6 @@ public class DownloadBooksWorker extends Worker {
             App.getInstance().mBooksDownloadFailed.add(book);
             App.getInstance().mDownloadsInProgress = false;
             App.getInstance().mUnloadedBook.postValue(mName);
-            //WorkManager.getInstance().cancelAllWork();
-            // отправлю оповещение об ошибке загрузки TOR
-            //TorWebClient.broadcastTorError();
             e.printStackTrace();
         }
     }
@@ -272,8 +269,6 @@ public class DownloadBooksWorker extends Worker {
     @Override
     public void onStopped() {
         super.onStopped();
-        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
-        mIsStopped = true;
-        // остановлю процесс
+        Log.d("surprise", "DownloadBooksWorker onStopped: i stopped");
     }
 }

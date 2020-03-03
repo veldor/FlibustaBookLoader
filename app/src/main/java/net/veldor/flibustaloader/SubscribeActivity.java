@@ -69,7 +69,7 @@ public class SubscribeActivity extends AppCompatActivity {
             }
         });
 
-        mRecycler = findViewById(R.id.subscribe_items_list);
+        mRecycler = findViewById(R.id.booksList);
         mRecycler.setLayoutManager(new LinearLayoutManager(this));
 
         mBooksSubscribeContainer = App.getInstance().getBooksSubscribe();
@@ -189,8 +189,8 @@ public class SubscribeActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onDestroy() {
+        super.onDestroy();
         // проверю новые поступления
         OneTimeWorkRequest worker = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).build();
         WorkManager.getInstance(this).enqueue(worker);

@@ -52,9 +52,12 @@
             android:label="@string/title_activity_webview"/>
         <activity android:name=".StartTorActivity"
             android:label="@string/title_activity_start_tor"/>
+        <activity android:name=".ui.ActivityBookDownloadSchedule"
+            android:label="@string/title_activity_download_schedule"/>
 
         <receiver android:name=".receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />
+        <receiver android:name=".receivers.MiscActionsReceiver" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

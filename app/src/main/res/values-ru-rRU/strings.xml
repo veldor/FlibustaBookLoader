@@ -6,9 +6,7 @@
     <string name="snackbar_found_update_message">Доступно обновление!</string>
     <string name="snackbar_update_action_message">Обновить</string>
     <string name="update_file_name">Флибуста.книги</string>
-    <string name="open_with_message">Открыть с помошью</string>
     <string name="file_not_found_message">Файл не найден</string>
-    <string name="share_with_message">Отправить в</string>
     <string name="go_home">Главная</string>
     <string name="use_dark_mode">Ночной режим</string>
     <string name="show_last">Новинки</string>
@@ -49,12 +47,10 @@
     <string name="showNewDialogTitle">Показать новинки</string>
     <string name="tor_is_loaded">TOR загружен!</string>
     <string name="wait_tor_loading_message">Ожидаю загрузку TOR</string>
-    <string name="download_all">Скачать все книги</string>
     <string name="load_waiting_title">В процессе</string>
     <string name="load_waiting_message">Загружаю и обрабатываю данные, потерпите несколько секунд.</string>
     <string name="download_books_title">Загрузка началась</string>
     <string name="download_books_msg">Загружаю все выбранные книги. Процесс может быть долгим, потерпите.</string>
-    <string name="download_all_message">Загружать сразу весь список</string>
     <string name="sort_list">Сортировка</string>
     <string name="force_start">Принудительный запуск</string>
     <string name="switch_to_vebview_message">Переключить на WebView</string>
@@ -97,6 +93,19 @@
     <string name="title_activity_webview">WebView</string>
     <string name="title_activity_start_tor">Подготовка</string>
     <string name="title_activity_subscribe">Подписки</string>
-    <string name="use_mobile_version">Мобильная версия</string>
     <string name="show_all_results_switcher_text">Показывать сразу все результаты</string>
+    <string name="select_books_for_download_message">Выберите книги для скачивания</string>
+    <string name="download_selected_message">Скачать выбранные</string>
+    <string name="books_not_found_message">Книги не найдены</string>
+    <string name="download_all_button">Скачать все</string>
+    <string name="download_selected_button">Скачать выбранные</string>
+    <string name="fab_cancel_label">Отмена</string>
+    <string name="title_activity_download_schedule">Очередь скачивания</string>
+    <string name="waiting_download_message">Ожидает загрузки</string>
+    <string name="stop_download_message">Остановить загрузку</string>
+    <string name="download_progress_message">Скачиваю %d из %d книг</string>
+    <string name="books_downloaded_message">Книги скачаны!</string>
+    <string name="continue_download_message">Продолжить загрузку</string>
+    <string name="show_downloads_schedule_message">Показать очередь загрузки</string>
+    <string name="books_not_selected_message">Не выбрано ни одной книги</string>
 </resources>

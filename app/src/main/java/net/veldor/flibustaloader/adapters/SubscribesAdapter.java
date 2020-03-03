@@ -50,7 +50,7 @@ public class SubscribesAdapter extends RecyclerView.Adapter<SubscribesAdapter.Vi
     }
 
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ViewDataBinding mBinding;
 

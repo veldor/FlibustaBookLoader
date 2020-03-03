@@ -13,7 +13,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:gravity="center_horizontal" />
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/save_only_selected"
@@ -24,7 +25,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/save_type_selection" />
+        app:layout_constraintTop_toBottomOf="@+id/save_type_selection"
+        android:gravity="center_horizontal" />
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/reDownload"
@@ -35,6 +37,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/save_only_selected" />
+        app:layout_constraintTop_toBottomOf="@+id/save_only_selected"
+        android:gravity="center_horizontal" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
