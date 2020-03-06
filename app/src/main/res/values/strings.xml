@@ -110,4 +110,5 @@
     <string name="select_books_for_download_message">Select books for download</string>
     <string name="download_selected_message">Download selected</string>
     <string name="books_not_found_message">Books not found</string>
+    <string name="download_unloaded_button">Download new</string>
 </resources>

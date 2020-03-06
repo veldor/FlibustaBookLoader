@@ -24,6 +24,8 @@ public class AddBooksToDownloadQueueWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        // проверю, нужно ли подгружать только незагруженные
+        boolean redownload = App.getInstance().mDownloadUnloaded;
         // получу предпочтительный формат
         String preferredFormat = App.getInstance().getFavoriteMime();
         // получу список книг
@@ -47,8 +49,10 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         }
         else{
             for (int counter = 0; counter < mBooks.size(); counter++) {
-                // если книга выбрана для скачивания- добавлю её в список для скачивания
                     book = (FoundedBook) mBooks.get(counter);
+                if(redownload && book.downloaded){
+                    continue;
+                }
                     book.preferredFormat = preferredFormat;
                     prepareForDownload.add(book);
             }

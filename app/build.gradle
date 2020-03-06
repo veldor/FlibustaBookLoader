@@ -8,8 +8,8 @@ android {
         minSdkVersion 16
         //noinspection OldTargetApi
         targetSdkVersion 28
-        versionCode 34
-        versionName "2.0.7.4"
+        versionCode 35
+        versionName "2.0.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -63,7 +63,7 @@ dependencies {
 
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.10'
 
-    implementation 'com.google.firebase:firebase-core:17.2.2'
+    implementation 'com.google.firebase:firebase-core:17.2.3'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"

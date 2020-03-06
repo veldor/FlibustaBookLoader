@@ -30,12 +30,22 @@
             android:gravity="center_horizontal" />
 
         <TextView
+            android:id="@+id/textView2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@drawable/genre_text_color"
             android:text="@string/waiting_download_message"
+            android:textColor="@drawable/genre_text_color"
             app:layout_constraintTop_toBottomOf="@+id/book_name"
             tools:layout_editor_absoluteX="10dp" />
+
+        <TextView
+            android:id="@+id/book_size"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{book.size}"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
 
         <ImageButton
             android:id="@+id/deleteItemBtn"

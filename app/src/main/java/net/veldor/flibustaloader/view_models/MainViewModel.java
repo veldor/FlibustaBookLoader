@@ -116,8 +116,9 @@ public class MainViewModel extends AndroidViewModel {
         WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(ADD_TO_DOWNLOAD_QUEUE_ACTION, ExistingWorkPolicy.REPLACE, downloadSelected);
         return WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadSelected.getId());
     }
-    public LiveData<WorkInfo> downloadAll() {
+    public LiveData<WorkInfo> downloadAll(boolean unloaded) {
         App.getInstance().mDownloadSelectedBooks = null;
+        App.getInstance().mDownloadUnloaded = unloaded;
         OneTimeWorkRequest downloadSelected = new OneTimeWorkRequest.Builder(AddBooksToDownloadQueueWorker.class).addTag(ADD_TO_DOWNLOAD_QUEUE_ACTION).build();
         WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(ADD_TO_DOWNLOAD_QUEUE_ACTION, ExistingWorkPolicy.REPLACE, downloadSelected);
         return WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadSelected.getId());

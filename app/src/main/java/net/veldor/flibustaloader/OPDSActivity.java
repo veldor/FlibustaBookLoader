@@ -377,8 +377,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // добавлю обсерверы
         addObservers();
-        //todo включить в стабильной версии
-        //checkUpdates();
+        checkUpdates();
 
 /*        // попробую создать user guide
         new MaterialIntroView.Builder(this)
@@ -438,6 +437,34 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 }
             });
         }
+        View downloadUnloadedButton = findViewById(R.id.fabDOwnloadUnloaded);
+        if(downloadUnloadedButton != null){
+            downloadUnloadedButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    String favoriteFormat = App.getInstance().getFavoriteMime();
+                    if(favoriteFormat != null){
+                        downloadUnloaded();
+                    }
+                    else{
+                        // покажу диалог выбора предпочтительнго типа скачивания
+                        // сброшу отслеживание удачного выбора типа книги
+                        App.getInstance().mTypeSelected.setValue(false);
+                        selectBookTypeDialog();
+                        LiveData<Boolean> successSelect = App.getInstance().mTypeSelected;
+                        successSelect.observe(OPDSActivity.this, new Observer<Boolean>() {
+                            @Override
+                            public void onChanged(Boolean selected) {
+                                if(selected){
+                                    downloadUnloaded();
+                                }
+                            }
+                        });
+                    }
+                    mFab.close(true);
+                }
+            });
+        }
         View downloadSelectButton = findViewById(R.id.fabDOwnloadSelected);
         if(downloadSelectButton != null){
             downloadSelectButton.setOnClickListener(new View.OnClickListener() {
@@ -466,6 +493,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 }
             });
         }
+    }
+
+    private void downloadUnloaded() {
+        LiveData<WorkInfo> status = mMyViewModel.downloadAll(true);
+        observeBookScheduleAdd(status);
     }
 
     private void showDownloadSelectedDialog() {
@@ -1207,7 +1239,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
     private void downloadAllBooks() {
         // если выбран тип загрузки книг и они существуют- предлагаю выбрать тип загрузки
-        LiveData<WorkInfo> status = mMyViewModel.downloadAll();
+        LiveData<WorkInfo> status = mMyViewModel.downloadAll(false);
         observeBookScheduleAdd(status);
     }
 

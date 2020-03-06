@@ -108,4 +108,5 @@
     <string name="continue_download_message">Продолжить загрузку</string>
     <string name="show_downloads_schedule_message">Показать очередь загрузки</string>
     <string name="books_not_selected_message">Не выбрано ни одной книги</string>
+    <string name="download_unloaded_button">Только незагруженные</string>
 </resources>

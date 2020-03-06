@@ -112,6 +112,7 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
     private static App instance;
+    public boolean mDownloadUnloaded;
     private Notificator sNotificator;
     public File downloadedApkFile;
     public Uri updateDownloadUri;

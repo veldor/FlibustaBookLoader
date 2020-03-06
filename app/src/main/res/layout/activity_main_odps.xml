@@ -180,6 +180,13 @@
             android:src="@drawable/ic_cloud_download_white_24dp"
             fab:fab_size="mini"
             fab:fab_label="@string/download_selected_button"/>
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fabDOwnloadUnloaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_cloud_download_white_24dp"
+            fab:fab_size="mini"
+            fab:fab_label="@string/download_unloaded_button"/>
 
 
     </com.github.clans.fab.FloatingActionMenu>

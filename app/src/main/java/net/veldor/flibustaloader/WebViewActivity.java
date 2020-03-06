@@ -112,8 +112,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         registerReceiver(mTorConnectErrorReceiver, filter);
         handleLoading();
 
-        // todo включить в стабильной версии
-        //checkUpdates();
+        checkUpdates();
 
         // создам тестовый массив строк для автозаполнения
         autocompleteStrings = mMyViewModel.getSearchAutocomplete();
