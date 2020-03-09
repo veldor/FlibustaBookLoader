@@ -17,8 +17,8 @@ import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
 public class DatabaseWorker extends Worker {
-    public static final int INSERT_BOOK = 1;
-    public static final String WORK_TYPE = "work type";
+    private static final int INSERT_BOOK = 1;
+    private static final String WORK_TYPE = "work type";
 
     public DatabaseWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -42,15 +42,5 @@ public class DatabaseWorker extends Worker {
         book.bookId = id;
         ReadedBooksDao bookDao = db.readedBooksDao();
         bookDao.insert(book);
-    }
-
-    static void makeBookDownloaded(String id) {
-        Log.d("surprise", "makeBookDownloaded: add " + id);
-        AppDatabase db = App.getInstance().mDatabase;
-        DownloadedBooks book = new DownloadedBooks();
-        book.bookId = id;
-        DownloadedBooksDao bookDao = db.downloadedBooksDao();
-        if (bookDao.getBookById(id) == null)
-            bookDao.insert(book);
     }
 }

@@ -10,7 +10,7 @@ import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebClient;
-import net.veldor.flibustaloader.utils.TorWebClient;
+import net.veldor.flibustaloader.http.TorWebClient;
 
 public class GetPageWorker extends Worker {
     private boolean mIsStopped;

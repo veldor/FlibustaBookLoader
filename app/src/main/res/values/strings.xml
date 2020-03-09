@@ -111,4 +111,11 @@
     <string name="download_selected_message">Download selected</string>
     <string name="books_not_found_message">Books not found</string>
     <string name="download_unloaded_button">Download new</string>
+    <string name="re_download_dialog_header_message">Have downloads queue</string>
+    <string name="re_download_dialog_body_message">Wish you continue download?</string>
+    <string name="download_continued_message">Download continued</string>
+    <string name="ok">Ok</string>
+    <string name="no">No, thanks</string>
+    <string name="book_added_to_schedule_message">Book added to schedule</string>
+    <string name="downloaded_books_title">downloaded books</string>
 </resources>

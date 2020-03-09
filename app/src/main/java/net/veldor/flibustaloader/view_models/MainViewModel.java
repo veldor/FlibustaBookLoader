@@ -18,6 +18,8 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
 import net.veldor.flibustaloader.OPDSActivity;
+import net.veldor.flibustaloader.database.entity.ReadedBooks;
+import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
@@ -83,13 +85,9 @@ public class MainViewModel extends AndroidViewModel {
 
     public void setBookRead(FoundedBook book) {
         // запущу рабочего, который отметит книгу как прочитанную
-        Data inputData = new Data.Builder()
-                .putString(OPDSActivity.BOOK_ID, book.id)
-                .putInt(DatabaseWorker.WORK_TYPE, DatabaseWorker.INSERT_BOOK)
-                .build();
-        // запущу рабочего, загружающего страницу
-        OneTimeWorkRequest getPageWorker = new OneTimeWorkRequest.Builder(DatabaseWorker.class).setInputData(inputData).build();
-        WorkManager.getInstance(App.getInstance()).enqueue(getPageWorker);
+        ReadedBooks readedBook = new ReadedBooks();
+        readedBook.bookId = book.id;
+        App.getInstance().mDatabase.readedBooksDao().insert(readedBook);
     }
 
     public void clearHistory() {
@@ -130,5 +128,14 @@ public class MainViewModel extends AndroidViewModel {
 
     public void cancelMassDownload() {
         WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(MULTIPLY_DOWNLOAD);
+    }
+
+    public Boolean checkDownloadQueue() {
+        return App.getInstance().checkDownloadQueue();
+    }
+
+    public void addToDownloadQueue(DownloadLink downloadLink) {
+        AddBooksToDownloadQueueWorker.addLink(downloadLink);
+        App.getInstance().initializeDownload();
     }
 }

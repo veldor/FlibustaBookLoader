@@ -14,16 +14,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
 import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.databinding.DownloadScheduleBookItemBinding;
-import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class DownloadScheduleAdapter extends RecyclerView.Adapter<DownloadScheduleAdapter.ViewHolder> {
-    public ArrayList mBooks;
+    public List<BooksDownloadSchedule> mBooks;
     private LayoutInflater mLayoutInflater;
 
-    public DownloadScheduleAdapter(ArrayList<FoundedBook> value) {
+    public DownloadScheduleAdapter(List<BooksDownloadSchedule> value) {
         mBooks = value;
     }
 
@@ -39,7 +40,7 @@ public class DownloadScheduleAdapter extends RecyclerView.Adapter<DownloadSchedu
 
     @Override
     public void onBindViewHolder(@NonNull DownloadScheduleAdapter.ViewHolder viewHolder, int i) {
-        viewHolder.bind((FoundedBook) mBooks.get(i));
+        viewHolder.bind(mBooks.get(i));
     }
 
     @Override
@@ -47,10 +48,10 @@ public class DownloadScheduleAdapter extends RecyclerView.Adapter<DownloadSchedu
         return mBooks.size();
     }
 
-
-    public void setContent(ArrayList<FoundedBook> arrayList) {
-        mBooks = arrayList;
+    public void setData(List<BooksDownloadSchedule> booksDownloadSchedules) {
+        mBooks = booksDownloadSchedules;
     }
+
 
     class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -61,8 +62,8 @@ public class DownloadScheduleAdapter extends RecyclerView.Adapter<DownloadSchedu
             mBinding = binding;
         }
 
-        void bind(final FoundedBook foundedBook) {
-            mBinding.setVariable(BR.book, foundedBook);
+        void bind(final BooksDownloadSchedule scheduleItem) {
+            mBinding.setVariable(BR.book, scheduleItem);
             mBinding.executePendingBindings();
             // добавлю действие при клике на кнопку скачивания
             View container = mBinding.getRoot();
@@ -72,12 +73,9 @@ public class DownloadScheduleAdapter extends RecyclerView.Adapter<DownloadSchedu
                     @Override
                     public void onClick(View view) {
                         // найду в очереди данную книгу и удалю её из очереди
-                        ArrayList<FoundedBook> books = App.getInstance().mDownloadSchedule.getValue();
-                        if(books != null && books.size() > 0){
-                            books.remove(foundedBook);
-                            DownloadScheduleAdapter.this.notifyDataSetChanged();
+                            DownloadBooksWorker.removeFromQueue(scheduleItem);
+                            //DownloadScheduleAdapter.this.notifyDataSetChanged();
                             Toast.makeText(App.getInstance(), "Книга удалена из очереди скачивания", Toast.LENGTH_LONG).show();
-                        }
                     }
                 });
             }

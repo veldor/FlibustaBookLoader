@@ -300,6 +300,7 @@ public class XMLParser {
                 downloadLink.mime = someAttributes.getNamedItem("type").getTextContent();
                 downloadLink.name = book.name;
                 downloadLink.author = book.author;
+                downloadLink.size = book.size;
                 book.downloadLinks.add(downloadLink);
                 innerCounter++;
             }

@@ -18,6 +18,8 @@ import android.widget.Toast;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
 import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
+import net.veldor.flibustaloader.database.dao.ReadedBooksDao;
 import net.veldor.flibustaloader.databinding.SearchedAuthorItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedBookItemBinding;
 import net.veldor.flibustaloader.databinding.SearchedBookWithPreviewItemBinding;
@@ -169,10 +171,14 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
     class ViewHolder extends RecyclerView.ViewHolder{
 
         private final ViewDataBinding mBinding;
+        private final DownloadedBooksDao mDao;
+        private final ReadedBooksDao mReadDao;
 
         ViewHolder(ViewDataBinding binding) {
             super(binding.getRoot());
             mBinding = binding;
+            mDao = App.getInstance().mDatabase.downloadedBooksDao();
+            mReadDao = App.getInstance().mDatabase.readedBooksDao();
         }
 
         void bind(final Author foundedAuthor) {
@@ -241,7 +247,7 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             }
 
             // проверю, если книга прочитана- покажу это
-            if(foundedBook.read){
+            if(mReadDao.getBookById(foundedBook.id) != null){
                 ImageButton readView = container.findViewById(R.id.book_read);
                 if(readView != null){
                     readView.setVisibility(View.VISIBLE);
@@ -254,7 +260,7 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                 }
             }
             // проверю, если книга прочитана- покажу это
-            if(foundedBook.downloaded){
+            if(mDao.getBookById(foundedBook.id) != null){
                 ImageButton downloadedView = container.findViewById(R.id.book_downloaded);
                 if(downloadedView != null){
                     downloadedView.setVisibility(View.VISIBLE);
@@ -281,15 +287,10 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             downloadButton.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
                     // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
-                    if (foundedBook.downloadLinks.size() == 1) {
-                        Toast.makeText(App.getInstance(), "Начинаю скачивание", Toast.LENGTH_LONG).show();
-                    }
-                    else{
+                    if (foundedBook.downloadLinks.size() > 1) {
                         String savedMime = App.getInstance().getFavoriteMime();
                         if(savedMime !=null){
-                            Log.d("surprise", "ViewHolder onClick saved mime is " + savedMime);
                             // проверю, нет ли в списке выбранного формата
                             for(DownloadLink dl:foundedBook.downloadLinks){
                                 mCurrentLink = dl;

@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -23,6 +22,8 @@ import androidx.work.WorkManager;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -113,6 +114,7 @@ public class App extends Application {
 
     private static App instance;
     public boolean mDownloadUnloaded;
+    public String mSelectedFormat;
     private Notificator sNotificator;
     public File downloadedApkFile;
     public Uri updateDownloadUri;
@@ -174,11 +176,21 @@ public class App extends Application {
         // получаю базу данных
         mDatabase = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database")
-                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
                 .allowMainThreadQueries()
                 .build();
 
         planeBookSubscribes();
+    }
+
+    public boolean checkDownloadQueue() {
+        // получу все книги в очереди скачивания
+        BooksDownloadScheduleDao dao = mDatabase.booksDownloadScheduleDao();
+        BooksDownloadSchedule queuedBook = dao.getFirstQueuedBook();
+        if(queuedBook != null){
+            return true;
+        }
+        return false;
     }
 
     public Notificator getNotificator(){
@@ -426,22 +438,13 @@ public class App extends Application {
     }
 
     public void initializeDownload() {
-
-        // проверю, не запущен ли уже рабочий, загружающий книги
-        LiveData<WorkInfo> statusContainer = App.getInstance().mDownloadAllWork;
-        if(statusContainer == null || statusContainer.getValue() == null ||  statusContainer.getValue().getState() != WorkInfo.State.RUNNING){
-            // сброшу результаты предыдущего скачивания
-            App.getInstance().BookDownloaded.setValue(false);
+            // отменю предыдущую работу
             // запущу рабочего, который загрузит все книги
             Constraints constraints = new Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build();
             OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
-            WorkManager.getInstance(App.getInstance()).enqueue(downloadAllWorker);
+            WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.REPLACE, downloadAllWorker);
             App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
-        }
-        else{
-            Log.d("surprise", "MainViewModel initiateMassDownload: Загрузка книг уже работает");
-        }
     }
 }

@@ -66,9 +66,9 @@
     <string name="discard_favorite_type">Сбросить формат загрузок</string>
     <string name="book_readed_message">Book readed</string>
     <string name="book_downloaded_message">Book downloaded</string>
-    <string name="remember_format">Запомнить формат</string>
-    <string name="download_only_this_format">Только выбранный формат</string>
-    <string name="do_not_re_download">Загружать повторно</string>
+    <string name="remember_format">Запомнить выбранный формат для дальнейших загрузок</string>
+    <string name="download_only_this_format">Загружать только в выбранном формате</string>
+    <string name="do_not_re_download">Загружать ранее сохранённые файлы</string>
     <string name="mass_download">Пакетное скачивание</string>
     <string name="go_to_test_message">Участвовать в тестировании</string>
     <string name="enter_value_message">Введите значение</string>
@@ -109,4 +109,10 @@
     <string name="show_downloads_schedule_message">Показать очередь загрузки</string>
     <string name="books_not_selected_message">Не выбрано ни одной книги</string>
     <string name="download_unloaded_button">Только незагруженные</string>
+    <string name="re_download_dialog_header_message">Найдены незавершённые закачки</string>
+    <string name="re_download_dialog_body_message">Продолжить процесс?</string>
+    <string name="download_continued_message">Скачивание возобновлено</string>
+    <string name="ok">Да</string>
+    <string name="no">Нет, спасибо</string>
+    <string name="book_added_to_schedule_message">Книга добавлена в очередь загрузок</string>
 </resources>

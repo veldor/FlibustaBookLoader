@@ -19,10 +19,11 @@ import androidx.work.WorkInfo;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.adapters.DownloadScheduleAdapter;
-import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.view_models.MainViewModel;
+import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
-import java.util.ArrayList;
+import java.util.List;
 
 
 public class ActivityBookDownloadSchedule extends AppCompatActivity {
@@ -41,58 +42,50 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
     }
 
     private void observeChanges() {
-        LiveData<Boolean> bookDownloaded = App.getInstance().BookDownloaded;
-        bookDownloaded.observe(this, new Observer<Boolean>() {
+        // получу состояние загрузки
+        LiveData<List<WorkInfo>> loadProgress = DownloadBooksWorker.getDownloadProgress();
+        loadProgress.observe(this, new Observer<List<WorkInfo>>() {
             @Override
-            public void onChanged(Boolean downloaded) {
-                if (downloaded) {
-                    BooksAdapter.notifyItemRemoved(0);
-                    // если книг в очереди не осталось- завершаю активность
-                    if (BooksAdapter.mBooks.size() == 0 ||App.getInstance().mDownloadSchedule.getValue() == null || App.getInstance().mDownloadSchedule.getValue().size() == 0) {
-                        Toast.makeText(ActivityBookDownloadSchedule.this, R.string.books_downloaded_message, Toast.LENGTH_LONG).show();
-                        finish();
+            public void onChanged(List<WorkInfo> workInfos) {
+                if(workInfos != null && workInfos.size() > 0){
+                    // получу статус закачки
+                    WorkInfo work = workInfos.get(0);
+                    if(work != null){
+                        switch (work.getState()){
+                            case CANCELLED:
+                            case SUCCEEDED:
+                            case FAILED:
+                            case BLOCKED:
+                                showContinue();
+                                break;
+                            case RUNNING:
+                            case ENQUEUED:
+                                showStop();
+                                break;
+                        }
                     }
                 }
             }
         });
-
-        LiveData<WorkInfo> workerStatus = App.getInstance().mDownloadAllWork;
-        if(workerStatus != null){
-            workerStatus.observe(this, new Observer<WorkInfo>() {
-                @Override
-                public void onChanged(WorkInfo workInfo) {
-                    if(workInfo.getState() != WorkInfo.State.RUNNING){
-                        workStopped();
-                    }
-                }
-            });
-        }
-
-        LiveData<Boolean> downloadInterrupted = App.getInstance().DownloadInterrupted;
-        downloadInterrupted.observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean interrupted) {
-                if(interrupted){
-                    // если ещё остались результаты- отмечу, что работа приостановлена, иначе- закрою Activity
-                    if(App.getInstance().mDownloadSchedule.getValue() == null || App.getInstance().mDownloadSchedule.getValue().size() == 0){
-                        finish();
-                    }
-                    else{
-                        workStopped();
-                    }
-                }
-            }
-        });
-
     }
 
-    private void workStopped() {
+    private void showContinue() {
         StopDownloadBtn.setVisibility(View.GONE);
         ContinueDownloadBtn.setVisibility(View.VISIBLE);
     }
+    private void showStop() {
+        StopDownloadBtn.setVisibility(View.VISIBLE);
+        ContinueDownloadBtn.setVisibility(View.GONE);
+    }
+
+
+
 
     private void setupUI() {
         LiveData<WorkInfo> statusContainer = App.getInstance().mDownloadAllWork;
+
+        // проверю, есть ли активный процесс загрузки
+        boolean noActiveDownload = DownloadBooksWorker.noActiveDownloadProcess();
 
         setContentView(R.layout.activity_download_schedule);
         // активирую кнопку возвращения к предыдущему окну
@@ -100,17 +93,37 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+
         // проверю, есть ли книги в очереди скачивания
-        ArrayList<FoundedBook> books = App.getInstance().mDownloadSchedule.getValue();
-        if(books == null || books.size() == 0){
-            Toast.makeText(this, "Downloads schedule empty", Toast.LENGTH_LONG).show();
+        int queueSize = App.getInstance().mDatabase.booksDownloadScheduleDao().getQueueSize();
+        if(queueSize == 0){
             finish();
         }
-        RecyclerView recycler = findViewById(R.id.booksList);
-        BooksAdapter = new DownloadScheduleAdapter(App.getInstance().mDownloadSchedule.getValue());
-        BooksAdapter.setHasStableIds(true);
-        recycler.setAdapter(BooksAdapter);
-        recycler.setLayoutManager(new LinearLayoutManager(ActivityBookDownloadSchedule.this));
+
+        // получу данные о книгах в очереди в виде liveData
+        final LiveData<List<BooksDownloadSchedule>> schedule = App.getInstance().mDatabase.booksDownloadScheduleDao().getAllBooksLive();
+        schedule.observe(this, new Observer<List<BooksDownloadSchedule>>() {
+            @Override
+            public void onChanged(List<BooksDownloadSchedule> booksDownloadSchedules) {
+                if(booksDownloadSchedules != null && booksDownloadSchedules.size() > 0){
+                    if(BooksAdapter == null){
+                        RecyclerView recycler = findViewById(R.id.booksList);
+                        BooksAdapter = new DownloadScheduleAdapter(booksDownloadSchedules);
+                        BooksAdapter.setHasStableIds(true);
+                        recycler.setAdapter(BooksAdapter);
+                        recycler.setLayoutManager(new LinearLayoutManager(ActivityBookDownloadSchedule.this));
+                    }
+                    else{
+                        BooksAdapter.setData(booksDownloadSchedules);
+                        BooksAdapter.notifyDataSetChanged();
+                    }
+                }
+                else{
+                    finish();
+                }
+            }
+        });
+
 
         // найду кнопку остановки скачивания
         StopDownloadBtn = findViewById(R.id.stopMassDownload);
@@ -136,6 +149,8 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
                 }
             });
         }
+
+
         if(ContinueDownloadBtn != null){
             ContinueDownloadBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -147,6 +162,16 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
                     }
                 }
             });
+        }
+        if(noActiveDownload){
+            assert ContinueDownloadBtn != null;
+            ContinueDownloadBtn.setVisibility(View.VISIBLE);
+            StopDownloadBtn.setVisibility(View.GONE);
+        }
+        else{
+            assert ContinueDownloadBtn != null;
+            ContinueDownloadBtn.setVisibility(View.GONE);
+            StopDownloadBtn.setVisibility(View.VISIBLE);
         }
     }
 

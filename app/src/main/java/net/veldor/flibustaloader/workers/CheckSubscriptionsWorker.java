@@ -15,7 +15,7 @@ import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
-import net.veldor.flibustaloader.utils.TorWebClient;
+import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.util.ArrayList;

@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.work.WorkManager;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
 import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
@@ -23,10 +24,9 @@ public class MiscActionsReceiver extends BroadcastReceiver {
         String action = intent.getStringExtra(EXTRA_ACTION_TYPE);
         switch (action) {
             case ACTION_CANCEL_MASS_DOWNLOAD:
-                Log.d("surprise", "MiscActionsReceiver onReceive: drop");
+                DownloadBooksWorker.dropDownloadsQueue();
                 WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(MULTIPLY_DOWNLOAD);
                 // отменяю работу и очищу очередь скачивания
-                App.getInstance().mDownloadSchedule.postValue(null);
                 App.getInstance().getNotificator().cancelBookLoadNotification();
                 App.getInstance().DownloadInterrupted.postValue(true);
                 Toast.makeText(App.getInstance(), "Скачивание книг отменено и очередь скачивания очищена!", Toast.LENGTH_LONG).show();

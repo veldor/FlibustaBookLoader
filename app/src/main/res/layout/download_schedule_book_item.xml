@@ -6,7 +6,7 @@
         <import type="android.view.View" />
         <variable
             name="book"
-            type="net.veldor.flibustaloader.selections.FoundedBook" />
+            type="net.veldor.flibustaloader.database.entity.BooksDownloadSchedule" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

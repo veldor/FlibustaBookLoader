@@ -20,6 +20,7 @@ import net.veldor.flibustaloader.receivers.BookActionReceiver;
 import net.veldor.flibustaloader.receivers.MiscActionsReceiver;
 import net.veldor.flibustaloader.ui.ActivityBookDownloadSchedule;
 
+import static android.content.Context.NOTIFICATION_SERVICE;
 import static net.veldor.flibustaloader.receivers.MiscActionsReceiver.EXTRA_ACTION_TYPE;
 
 public class Notificator {
@@ -35,14 +36,18 @@ public class Notificator {
     public static final int DOWNLOAD_PROGRESS_NOTIFICATION = 5;
     private static final int CANCEL_CODE = 6;
     private static final int PAUSE_CODE = 7;
+    private static final String DOWNLOADED_BOOKS_GROUP_KEY = "downloaded books";
+    private static final int LOADED_BOOKS_GROUP = -1;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
     private Notification mMassBookLoadingNotification;
     public NotificationCompat.Builder mDownloadScheduleBuilder;
 
+    private int BookLoadedId = 100;
+
     public Notificator(Context context) {
         mContext = context;
-        mNotificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (mNotificationManager != null) {
                 // создам канал уведомлений о скачанных книгах
@@ -71,6 +76,17 @@ public class Notificator {
     }
 
     public void sendLoadedBookNotification(String name, String type) {
+        // создам группу уведомлений
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentInfo(mContext.getString(R.string.downloaded_books_title))
+                        .setGroup(DOWNLOADED_BOOKS_GROUP_KEY)
+                        .setGroupSummary(true);
+
+        Notification notification = mBuilder.build();
+        mNotificationManager.notify(LOADED_BOOKS_GROUP, notification);
+
 
         // создам интент для функции отправки файла
         Intent shareIntent = new Intent(mContext, BookActionReceiver.class);
@@ -92,14 +108,16 @@ public class Notificator {
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_book_black_24dp)
-                .setContentTitle("Загружена книга")
+                .setContentTitle(name)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(name + " :успешно загружено"))
                 .setContentIntent(startMainPending)
+                .setGroup(DOWNLOADED_BOOKS_GROUP_KEY)
                 .setAutoCancel(true)
                 .addAction(R.drawable.ic_share_white_24dp, "Отправить", sharePendingIntent)
                 .addAction(R.drawable.ic_open_black_24dp, "Открыть", openPendingIntent);
-        Notification notification = notificationBuilder.build();
-        mNotificationManager.notify(BOOK_LOADED_NOTIFICATION, notification);
+        notification = notificationBuilder.build();
+        mNotificationManager.notify(BookLoadedId, notification);
+        ++BookLoadedId;
     }
 
     public void sendFoundSubscribesNotification() {
@@ -164,6 +182,13 @@ public class Notificator {
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Скачивание книг")
                 .setContentText("Все книги успешно скачаны!");
+        mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, downloadCompleteBuilder.build());
+    }
+    public void showBooksLoadErrorNotification() {
+        NotificationCompat.Builder downloadCompleteBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_error_black_24dp)
+                .setContentTitle("Скачивание книг")
+                .setContentText("Ошибка скачивания!");
         mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, downloadCompleteBuilder.build());
     }
 

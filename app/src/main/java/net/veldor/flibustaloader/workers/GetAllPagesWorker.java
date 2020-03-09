@@ -12,7 +12,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebClient;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.utils.SortHandler;
-import net.veldor.flibustaloader.utils.TorWebClient;
+import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.util.ArrayList;

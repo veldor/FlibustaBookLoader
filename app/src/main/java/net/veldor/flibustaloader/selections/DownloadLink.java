@@ -6,4 +6,5 @@ public class DownloadLink {
     public String mime;
     public String name;
     public String author;
+    public String size;
 }

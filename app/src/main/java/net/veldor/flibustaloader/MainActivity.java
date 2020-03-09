@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startApp() {
+        // проверю очередь скачивания. Если она не пуста- предложу продолжить закачку
         // проверю, не запущено ли приложение с помощью интента. Если да- запущу программу в webView режиме
         Intent targetActivityIntent;
         if (mLink != null) {//check if intent is not null
