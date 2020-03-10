@@ -115,4 +115,9 @@
     <string name="ok">Да</string>
     <string name="no">Нет, спасибо</string>
     <string name="book_added_to_schedule_message">Книга добавлена в очередь загрузок</string>
+    <string name="downloaded_books_title">Загруженные книги</string>
+    <string name="repeat_download_message">Повторить попытку</string>
+    <string name="skip_book_message">Пропустить книгу</string>
+    <string name="error_download_message">Ошибка скачивания</string>
+    <string name="download_error_message">\"Ошибка скачивания! Не удалось скачать \"</string>
 </resources>

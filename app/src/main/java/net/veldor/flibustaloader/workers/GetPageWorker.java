@@ -10,6 +10,7 @@ import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebClient;
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.TorWebClient;
 
 public class GetPageWorker extends Worker {
@@ -27,7 +28,13 @@ public class GetPageWorker extends Worker {
         String text = data.getString(MyWebClient.LOADED_URL);
         // попробую повтороно использовать веб-клиент
         // создам новый экземпляр веб-клиента
-        TorWebClient webClient = new TorWebClient();
+        TorWebClient webClient = null;
+        try {
+            webClient = new TorWebClient();
+        } catch (TorNotLoadedException e) {
+            e.printStackTrace();
+            return Result.failure();
+        }
         App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
         String answer = webClient.request(text);
         App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");

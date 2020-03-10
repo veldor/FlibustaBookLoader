@@ -33,9 +33,12 @@ public class Notificator {
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;
-    public static final int DOWNLOAD_PROGRESS_NOTIFICATION = 5;
     private static final int CANCEL_CODE = 6;
     private static final int PAUSE_CODE = 7;
+    private static final int OPEN_SCHEDULE_CODE = 8;
+    private static final int REPEAT_DOWNLOAD_CODE = 9;
+    private static final int SKIP_FIRST_BOOK_CODE = 10;
+    public static final int DOWNLOAD_PROGRESS_NOTIFICATION = 5;
     private static final String DOWNLOADED_BOOKS_GROUP_KEY = "downloaded books";
     private static final int LOADED_BOOKS_GROUP = -1;
     private final Context mContext;
@@ -184,11 +187,28 @@ public class Notificator {
                 .setContentText("Все книги успешно скачаны!");
         mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, downloadCompleteBuilder.build());
     }
-    public void showBooksLoadErrorNotification() {
+    public void showBooksLoadErrorNotification(String name) {
+        // добавлю интент для отображения экрана очереди скачивания
+        Intent openScheduleIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
+        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent openSchedulePendingIntent = PendingIntent.getActivity(mContext, OPEN_SCHEDULE_CODE, openScheduleIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // добавлю интент для повторной попытки скачивания
+        Intent repeatIntent = new Intent(mContext, MiscActionsReceiver.class);
+        repeatIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_REPEAT_DOWNLOAD);
+        PendingIntent repeatDownloadPendingIntent = PendingIntent.getBroadcast(mContext, REPEAT_DOWNLOAD_CODE, repeatIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // добавлю интент для пропуска книги
+        Intent skipBookIntent = new Intent(mContext, MiscActionsReceiver.class);
+        skipBookIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_SKIP_BOOK);
+        PendingIntent skipBookPendingIntent = PendingIntent.getBroadcast(mContext, SKIP_FIRST_BOOK_CODE, skipBookIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         NotificationCompat.Builder downloadCompleteBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_error_black_24dp)
-                .setContentTitle("Скачивание книг")
-                .setContentText("Ошибка скачивания!");
+                .setContentTitle(mContext.getString(R.string.error_download_message))
+                .setContentIntent(openSchedulePendingIntent)
+                .addAction(R.drawable.ic_repeat_black_24dp, mContext.getString(R.string.repeat_download_message), repeatDownloadPendingIntent)
+                .addAction(R.drawable.ic_skip_next_white_24dp, mContext.getString(R.string.skip_book_message), skipBookPendingIntent)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(mContext.getString(R.string.download_error_message) + name));
         mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, downloadCompleteBuilder.build());
     }
 

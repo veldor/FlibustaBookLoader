@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
@@ -18,6 +19,7 @@ import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
 import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 
@@ -80,6 +82,12 @@ public class DownloadBooksWorker extends Worker {
         return WorkManager.getInstance(App.getInstance()).getWorkInfosForUniqueWorkLiveData(MULTIPLY_DOWNLOAD);
     }
 
+    public static void skipFirstBook() {
+        AppDatabase db = App.getInstance().mDatabase;
+        BooksDownloadScheduleDao dao = db.booksDownloadScheduleDao();
+        dao.delete(dao.getFirstQueuedBook());
+    }
+
     @NonNull
     @Override
     public Result doWork() {
@@ -122,7 +130,9 @@ public class DownloadBooksWorker extends Worker {
             boolean downloadResult = downloadBook(queuedElement);
             if(!downloadResult){
                 // ошибка загрузки книг, выведу сообщение об ошибке
-                mNotificator.showBooksLoadErrorNotification();
+                mNotificator.showBooksLoadErrorNotification(queuedElement.name);
+                Log.d("surprise", "DownloadBooksWorker doWork: error download!!!");
+                return Result.failure();
             }
             if(!isStopped()){
                 // отмечу книгу как скачанную
@@ -152,7 +162,13 @@ public class DownloadBooksWorker extends Worker {
 
     private boolean downloadBook(BooksDownloadSchedule book) {
         // настрою клиент
-        TorWebClient client = new TorWebClient();
-        return client.downloadBook(book);
+        try{
+            TorWebClient client = new TorWebClient();
+            return client.downloadBook(book);
+        } catch (TorNotLoadedException e) {
+            // оповещу об ошибке загрузки TOR-а
+            mNotificator.showBooksLoadErrorNotification(" книгу. Не удалось установить соединение");
+            return false;
+        }
     }
 }

@@ -11,6 +11,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.OPDSActivity;
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
@@ -65,7 +66,17 @@ public class CheckSubscriptionsWorker extends Worker {
             App.sSearchType = OPDSActivity.SEARCH_BOOKS;
             // получу список книг
             // создам новый экземпляр веб-клиента
-            TorWebClient webClient = new TorWebClient();
+            TorWebClient webClient = null;
+            try {
+                webClient = new TorWebClient();
+
+            } catch (TorNotLoadedException e) {
+                e.printStackTrace();
+            }
+            if(webClient == null){
+                // верну ошибку
+                return Result.failure();
+            }
             ArrayList<FoundedItem> result = new ArrayList<>();
             String answer = webClient.request(App.BASE_URL + "/opds/new/0/new");
             // сразу же обработаю результат
@@ -76,7 +87,12 @@ public class CheckSubscriptionsWorker extends Worker {
                 String lastId = ((FoundedBook) result.get(result.size() - 1)).id;
                 while (sNextPage != null && lastId.compareTo(lastCheckedId) > 0){
                     Log.d("surprise", "CheckSubscriptionsWorker doWork load next page");
-                    webClient = new TorWebClient();
+                    try {
+                        webClient = new TorWebClient();
+                    } catch (TorNotLoadedException e) {
+                        e.printStackTrace();
+                        Log.d("surprise", "CheckSubscriptionsWorker doWork: не удалось запустить TOR");
+                    }
                     answer = webClient.request(App.BASE_URL + sNextPage);
                     XMLParser.handleSearchResults(result, answer);
                     lastId = ((FoundedBook) result.get(result.size() - 1)).id;

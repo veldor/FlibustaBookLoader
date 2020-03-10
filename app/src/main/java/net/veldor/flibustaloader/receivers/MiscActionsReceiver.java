@@ -18,6 +18,8 @@ public class MiscActionsReceiver extends BroadcastReceiver {
     public static final String ACTION_CANCEL_MASS_DOWNLOAD = "cancel download";
     public static final String ACTION_PAUSE_MASS_DOWNLOAD = "pause download";
     public static final String  ACTION_RESUME_MASS_DOWNLOAD = "resume download";
+    public static final String ACTION_REPEAT_DOWNLOAD = "repeat download";
+    public static final String ACTION_SKIP_BOOK = "skip book";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -39,7 +41,13 @@ public class MiscActionsReceiver extends BroadcastReceiver {
                 App.getInstance().getNotificator().createMassDownloadPausedNotification();
                 App.getInstance().DownloadInterrupted.postValue(true);
                 break;
+            case ACTION_SKIP_BOOK:
+                Log.d("surprise", "MiscActionsReceiver onReceive: skip first book");
+                // пропущу первую книгу в очереди и продолжу скачивание
+                DownloadBooksWorker.skipFirstBook();
             case ACTION_RESUME_MASS_DOWNLOAD:
+                Log.d("surprise", "MiscActionsReceiver onReceive: resume mass download");
+            case ACTION_REPEAT_DOWNLOAD:
                 // возобновлю скачивание
                 App.getInstance().initializeDownload();
                 break;

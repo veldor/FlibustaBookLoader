@@ -13,6 +13,8 @@ import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,11 +44,22 @@ public class TorWebClient {
     private HttpClient mHttpClient;
     private HttpClientContext mContext;
 
-    public TorWebClient() {
+    public TorWebClient() throws TorNotLoadedException {
         try {
             mHttpClient = getNewHttpClient();
             AndroidOnionProxyManager onionProxyManager = App.getInstance().mTorManager.getValue();
-            assert onionProxyManager != null;
+            if(onionProxyManager == null){
+                if(StartTorWorker.startTor()){
+                    onionProxyManager = App.getInstance().mTorManager.getValue();
+                }
+                else{
+                    Log.d("surprise", "TorWebClient TorWebClient: still can not start tor(((");
+                }
+            }
+            if(onionProxyManager == null){
+                // верну ошибочный результат
+                throw new TorNotLoadedException();
+            }
             int port = onionProxyManager.getIPv4LocalHostSocksPort();
             InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
             mContext = HttpClientContext.create();
@@ -66,7 +79,7 @@ public class TorWebClient {
         }
     }
 
-    public static void broadcastTorError() {
+    private static void broadcastTorError() {
         // остановлю все задачи
         WorkManager.getInstance(App.getInstance()).cancelAllWork();
         // отправлю оповещение об ошибке загрузки TOR
@@ -147,25 +160,32 @@ public class TorWebClient {
                 // запрошу данные
                 HttpResponse response = simpleGetRequest(App.BASE_URL + book.link);
                 if (response != null) {
-                    HttpEntity entity = response.getEntity();
-                    if (entity != null) {
-                        InputStream content = entity.getContent();
-                        if(content != null){
-                            OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
-                            if (out != null) {
-                                int read;
-                                byte[] buffer = new byte[1024];
-                                while ((read = content.read(buffer)) > 0) {
-                                    out.write(buffer, 0, read);
+                    int status = response.getStatusLine().getStatusCode();
+                    if(status == 200){
+                        HttpEntity entity = response.getEntity();
+                        if (entity != null) {
+                            InputStream content = entity.getContent();
+                            if(content != null){
+                                OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
+                                if (out != null) {
+                                    int read;
+                                    byte[] buffer = new byte[1024];
+                                    while ((read = content.read(buffer)) > 0) {
+                                        out.write(buffer, 0, read);
+                                    }
+                                    out.close();
+                                    if(newFile.isFile() && newFile.length() > 0){
+                                        return true;
+                                    }
+                                } else {
+                                    Log.d("surprise", "TorWebClient downloadBook: файл не найден");
                                 }
-                                out.close();
-                                if(newFile.isFile() && newFile.length() > 0){
-                                    return true;
-                                }
-                            } else {
-                                Log.d("surprise", "TorWebClient downloadBook: файл не найден");
                             }
                         }
+                    }
+                    else{
+                        Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
+                        return false;
                     }
                 }
             }

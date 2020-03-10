@@ -10,6 +10,7 @@ import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebClient;
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.utils.SortHandler;
 import net.veldor.flibustaloader.http.TorWebClient;
@@ -42,7 +43,12 @@ public class GetAllPagesWorker extends Worker {
         App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pagesCounter);
         String text = data.getString(MyWebClient.LOADED_URL);
         // создам новый экземпляр веб-клиента
-        TorWebClient webClient = new TorWebClient();
+        TorWebClient webClient = null;
+        try {
+            webClient = new TorWebClient();
+        } catch (TorNotLoadedException e) {
+            e.printStackTrace();
+        }
         App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
         String answer = webClient.request(text);
         App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
@@ -53,7 +59,11 @@ public class GetAllPagesWorker extends Worker {
             while (sNextPage != null && !mIsStopped){
                 ++pagesCounter;
                 App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pagesCounter);
-                webClient = new TorWebClient();
+                try {
+                    webClient = new TorWebClient();
+                } catch (TorNotLoadedException e) {
+                    e.printStackTrace();
+                }
                 Log.d("surprise", "GetAllPagesWorker doWork next page is " + App.BASE_URL + sNextPage);
                 answer = webClient.request(App.BASE_URL + sNextPage);
                 XMLParser.handleSearchResults(result, answer);

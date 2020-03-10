@@ -118,4 +118,8 @@
     <string name="no">No, thanks</string>
     <string name="book_added_to_schedule_message">Book added to schedule</string>
     <string name="downloaded_books_title">downloaded books</string>
+    <string name="repeat_download_message">Repeat download</string>
+    <string name="skip_book_message">Skip book</string>
+    <string name="error_download_message">Download error</string>
+    <string name="download_error_message">"Download error. Cant load "</string>
 </resources>
