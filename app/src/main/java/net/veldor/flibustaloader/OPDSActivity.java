@@ -471,6 +471,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             downloadAllButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    Log.d("surprise", "OPDSActivity onClick initiate download all");
                     String favoriteFormat = App.getInstance().getFavoriteMime();
                     if (favoriteFormat != null) {
                         downloadAllBooks();

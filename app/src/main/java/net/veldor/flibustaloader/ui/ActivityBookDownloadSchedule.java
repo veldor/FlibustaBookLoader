@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkInfo;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.adapters.DownloadScheduleAdapter;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
@@ -24,6 +26,8 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
 import java.util.List;
+
+import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
 
 
 public class ActivityBookDownloadSchedule extends AppCompatActivity {
@@ -178,7 +182,9 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            finish();
+            Intent intent = new Intent(this, OPDSActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }

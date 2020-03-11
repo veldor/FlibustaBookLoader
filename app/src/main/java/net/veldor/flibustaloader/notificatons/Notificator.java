@@ -21,6 +21,7 @@ import net.veldor.flibustaloader.receivers.MiscActionsReceiver;
 import net.veldor.flibustaloader.ui.ActivityBookDownloadSchedule;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
+import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
 import static net.veldor.flibustaloader.receivers.MiscActionsReceiver.EXTRA_ACTION_TYPE;
 
 public class Notificator {
@@ -151,6 +152,7 @@ public class Notificator {
     public void createMassBookLoadNotification() {
         // при нажатии на уведомление- открою экран ожидания очереди
         Intent openWindowIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
+        openWindowIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent showWindowPending = PendingIntent.getActivity(mContext, START_APP_CODE, openWindowIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // интент отмены скачивания
@@ -190,7 +192,7 @@ public class Notificator {
     public void showBooksLoadErrorNotification(String name) {
         // добавлю интент для отображения экрана очереди скачивания
         Intent openScheduleIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
-        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent openSchedulePendingIntent = PendingIntent.getActivity(mContext, OPEN_SCHEDULE_CODE, openScheduleIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // добавлю интент для повторной попытки скачивания
