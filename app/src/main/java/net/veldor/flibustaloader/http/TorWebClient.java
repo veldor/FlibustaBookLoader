@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
+import androidx.work.ListenableWorker;
 import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
@@ -13,6 +14,8 @@ import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
+import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
+import net.veldor.flibustaloader.ecxeptions.FlibustaUnreachableException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
@@ -45,18 +48,31 @@ public class TorWebClient {
     private HttpClientContext mContext;
 
     public TorWebClient() throws TorNotLoadedException {
+
+        while (App.sTorStartTry < 4) {
+            // есть три попытки, если все три неудачны- верну ошибку
+            try {
+                Log.d("surprise", "StartTorWorker doWork: start tor, try # " + App.sTorStartTry);
+                StartTorWorker.startTor();
+                Log.d("surprise", "StartTorWorker doWork: tor success start");
+                // обнулю счётчик попыток
+                App.sTorStartTry = 0;
+                break;
+            } catch (TorNotLoadedException | IOException | InterruptedException e) {
+                // попытка неудачна, плюсую счётчик попыток
+                App.sTorStartTry++;
+                Log.d("surprise", "StartTorWorker doWork: tor wrong start try");
+            }
+        }
+        // если счётчик больше 3- не удалось запустить TOR, вызову исключение
+        if (App.sTorStartTry > 3) {
+            throw new TorNotLoadedException();
+        }
+
         try {
             mHttpClient = getNewHttpClient();
             AndroidOnionProxyManager onionProxyManager = App.getInstance().mTorManager.getValue();
-            if(onionProxyManager == null){
-                if(StartTorWorker.startTor()){
-                    onionProxyManager = App.getInstance().mTorManager.getValue();
-                }
-                else{
-                    Log.d("surprise", "TorWebClient TorWebClient: still can not start tor(((");
-                }
-            }
-            if(onionProxyManager == null){
+            if (onionProxyManager == null) {
                 // верну ошибочный результат
                 throw new TorNotLoadedException();
             }
@@ -145,7 +161,7 @@ public class TorWebClient {
         return null;
     }
 
-    public boolean downloadBook(BooksDownloadSchedule book) {
+    public boolean downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, FlibustaUnreachableException {
         try {
             // получу имя файла
             DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
@@ -156,16 +172,18 @@ public class TorWebClient {
                 File file = new File(App.getInstance().getDownloadFolder(), book.name);
                 newFile = DocumentFile.fromFile(file);
             }
-            if(newFile != null){
+            if (newFile != null) {
                 // запрошу данные
+                Log.d("surprise", "TorWebClient downloadBook: request " + book.link);
                 HttpResponse response = simpleGetRequest(App.BASE_URL + book.link);
+
                 if (response != null) {
                     int status = response.getStatusLine().getStatusCode();
-                    if(status == 200){
+                    if (status == 200) {
                         HttpEntity entity = response.getEntity();
                         if (entity != null) {
                             InputStream content = entity.getContent();
-                            if(content != null){
+                            if (content != null) {
                                 OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
                                 if (out != null) {
                                     int read;
@@ -174,7 +192,7 @@ public class TorWebClient {
                                         out.write(buffer, 0, read);
                                     }
                                     out.close();
-                                    if(newFile.isFile() && newFile.length() > 0){
+                                    if (newFile.isFile() && newFile.length() > 0) {
                                         return true;
                                     }
                                 } else {
@@ -182,10 +200,12 @@ public class TorWebClient {
                                 }
                             }
                         }
-                    }
-                    else{
+                    } else if (status == 500) {
                         Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
-                        return false;
+                        throw new BookNotFoundException();
+                    } else if (status == 404) {
+                        Log.d("surprise", "TorWebClient downloadBook: flibusta not answer");
+                        throw new FlibustaUnreachableException();
                     }
                 }
             }

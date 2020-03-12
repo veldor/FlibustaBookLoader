@@ -17,7 +17,6 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
-import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
@@ -26,7 +25,6 @@ import net.veldor.flibustaloader.utils.BookSharer;
 import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker;
-import net.veldor.flibustaloader.workers.DatabaseWorker;
 import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
 import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 

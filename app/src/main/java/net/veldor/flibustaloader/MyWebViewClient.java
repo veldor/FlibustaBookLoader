@@ -4,9 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
+import androidx.work.ListenableWorker;
+
 import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -15,10 +18,13 @@ import android.webkit.WebViewClient;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
+import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,13 +50,15 @@ import cz.msebera.android.httpclient.impl.client.HttpClients;
 import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
+import static net.veldor.flibustaloader.workers.StartTorWorker.startTor;
+
 public class MyWebViewClient extends WebViewClient {
 
     public static final String TOR_NOT_RUNNING_ERROR = "Tor is not running!";
-    static final String BOOK_LOAD_ACTION = "net.veldor.flibustaloader.action.BOOK_LOAD_EVENT";
+    public static final String BOOK_LOAD_ACTION = "net.veldor.flibustaloader.action.BOOK_LOAD_EVENT";
     public static final String TOR_CONNECT_ERROR_ACTION = "net.veldor.flibustaloader.action.TOR_CONNECT_ERROR";
-    static final int START_BOOK_LOADING = 1;
-    static final int FINISH_BOOK_LOADING = 2;
+    public static final int START_BOOK_LOADING = 1;
+    public static final int FINISH_BOOK_LOADING = 2;
     private static final String ENCODING_UTF_8 = "UTF-8";
     private static final String BOOK_FORMAT = "application/octet-stream";
     private static final String FB2_FORMAT = "application/zip";
@@ -74,7 +82,7 @@ public class MyWebViewClient extends WebViewClient {
 
     private static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     private static final String FILENAME_DELIMITER = "filename=";
-    static final String BOOK_LOAD_EVENT = "book load event";
+    public static final String BOOK_LOAD_EVENT = "book load event";
     private static final String MY_COMPAT_CSS_STYLE = "myCompatStyle.css";
     private static final String MY_CSS_NIGHT_STYLE = "myNightMode.css";
     private static final String MY_COMPAT_FAT_CSS_STYLE = "myCompatFatStyle.css";
@@ -107,6 +115,19 @@ public class MyWebViewClient extends WebViewClient {
 
     private HttpClient getNewHttpClient() {
 
+        // попробую стартовать TOR
+        while (App.sTorStartTry < 4) {
+            // есть три попытки, если все три неудачны- верну ошибку
+            try {
+                startTor();
+                // обнулю счётчик попыток
+                App.sTorStartTry = 0;
+                break;
+            } catch (TorNotLoadedException | IOException | InterruptedException e) {
+                // попытка неудачна, плюсую счётчик попыток
+                App.sTorStartTry++;
+            }
+        }
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new MyConnectionSocketFactory())
                 .register("https", new MySSLConnectionSocketFactory(SSLContexts.createSystemDefault()))
@@ -225,7 +246,24 @@ public class MyWebViewClient extends WebViewClient {
             if (mime.startsWith(HTML_TYPE)) {
                 if (!url.startsWith(AJAX_REQUEST)) {
                     App.getInstance().setLastLoadedUrl(url);
-                    Log.d("surprise", "MyWebViewClient handleRequest remember " + url);
+                    // попробую найти внутри ссылки на книги
+                    // скопирую inputStream для разбора ссылок
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    // Fake code simulating the copy
+                    // You can generally do better with nio if you need...
+                    // And please, unlike me, do something about the Exceptions :D
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = input.read(buffer)) > -1) {
+                        baos.write(buffer, 0, len);
+                    }
+                    baos.flush();
+                    // Open new InputStreams using the recorded bytes
+                    // Can be repeated as many times as you wish
+                    InputStream my = new ByteArrayInputStream(baos.toByteArray());
+                    input = new ByteArrayInputStream(baos.toByteArray());
+                    // запущу рабочего, который обработает текст страницы и найдёт что-то полезное
+                    App.getInstance().handleWebPage(my);
                 }
             }
             if (mime.equals(CSS_FORMAT)) {
@@ -280,26 +318,15 @@ public class MyWebViewClient extends WebViewClient {
                         startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
                         activityContext.sendBroadcast(startLoadingIntent);
                         // сохраняю книгу в памяти устройства
-                       /* File file = new File(App.getInstance().getDownloadFolder(), name);
-                        InputStream is = httpResponse.getEntity().getContent();
-                        FileOutputStream outputStream = new FileOutputStream(file);
-                        int read;
-                        byte[] buffer = new byte[1024];
-                        while ((read = is.read(buffer)) > 0) {
-                            outputStream.write(buffer, 0, read);
-                        }
-                        outputStream.close();
-                        is.close();*/
-
                         DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
-                        if(downloadsDir != null){
+                        if (downloadsDir != null) {
                             // проверю, не сохдан ли уже файл, если создан- удалю
                             DocumentFile existentFile = downloadsDir.findFile(name);
-                            if(existentFile != null){
+                            if (existentFile != null) {
                                 existentFile.delete();
                             }
                             DocumentFile newFile = downloadsDir.createFile(mime, name);
-                            if(newFile != null){
+                            if (newFile != null) {
                                 InputStream is = httpResponse.getEntity().getContent();
                                 OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
                                 int read;
@@ -311,8 +338,7 @@ public class MyWebViewClient extends WebViewClient {
                                 assert out != null;
                                 out.close();
                             }
-                        }
-                        else{
+                        } else {
                             File file = new File(App.getInstance().getDownloadFolder(), name);
                             InputStream is = httpResponse.getEntity().getContent();
                             FileOutputStream outputStream = new FileOutputStream(file);
@@ -330,8 +356,6 @@ public class MyWebViewClient extends WebViewClient {
                         intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);
                         intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, type);
                         activityContext.sendBroadcast(intent);
-                        /*// вернусь на ранее загруженную страницу
-                        activityContext.sendBroadcast(new Intent(BOOK_LOAD_ACTION));*/
                         String message = "<H1 style='text-align:center;'>Книга закачана. Возвращаюсь на предыдущую страницу</H1>";
                         ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(encoding));
                         return new WebResourceResponse(mime, ENCODING_UTF_8, inputStream);
@@ -365,7 +389,7 @@ public class MyWebViewClient extends WebViewClient {
                     }
                 }
                 return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
-            }else{
+            } else {
                 Log.d("surprise", "MyWebViewClient handleRequest page loading error");
                 Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
                 App.getInstance().sendBroadcast(finishLoadingIntent);

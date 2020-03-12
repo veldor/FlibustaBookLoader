@@ -122,4 +122,10 @@
     <string name="skip_book_message">Skip book</string>
     <string name="error_download_message">Download error</string>
     <string name="download_error_message">"Download error. Cant load "</string>
+    <string name="tor_init_error_message">TOR init error!</string>
+    <string name="request_restart_tor_message">Restart TOR!</string>
+    <string name="download_paused_message">Downloading paused!</string>
+    <string name="book_unreachable_message">%s :book is unreachable in (%s). It will be removed from download queue. Sorry for this</string>
+    <string name="book_load_error_message">Book load error</string>
+    <string name="launch_cancelled_message">Launch cancelled</string>
 </resources>

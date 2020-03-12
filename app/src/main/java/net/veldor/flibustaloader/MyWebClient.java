@@ -13,13 +13,13 @@ public class MyWebClient {
 
     private static final String PAGE_LOAD_WORKER = "page load worker";
 
-    MyWebClient() {
+    public MyWebClient() {
     }
 
     public static final String LOADED_URL = "loaded_url";
     public static final String DOWNLOAD_ATTRIBUTES = "download attributes";
 
-    void search(String s) {
+    public void search(String s) {
         // сброшу обложку
         App.getInstance().mShowCover.postValue(null);
         // отменю остальные работы
@@ -42,7 +42,7 @@ public class MyWebClient {
         App.getInstance().mProcess = getPageWorker;
     }
 
-    void loadNextPage() {
+    public void loadNextPage() {
         // если есть ссылка на следующую страницу- гружу её
         String nextPageLink = App.getInstance().mNextPageUrl;
         if (nextPageLink != null && !nextPageLink.isEmpty()) {

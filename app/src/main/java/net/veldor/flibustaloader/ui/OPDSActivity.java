@@ -1,4 +1,4 @@
-package net.veldor.flibustaloader;
+package net.veldor.flibustaloader.ui;
 
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
@@ -36,7 +36,6 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatCheckBox;
 import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -51,6 +50,11 @@ import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.material.snackbar.Snackbar;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.MyWebClient;
+import net.veldor.flibustaloader.MyWebViewClient;
+import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.SubscribeActivity;
 import net.veldor.flibustaloader.adapters.SearchResultsAdapter;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
@@ -62,7 +66,6 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
-import net.veldor.flibustaloader.ui.ActivityBookDownloadSchedule;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.TransportUtils;
@@ -84,7 +87,7 @@ import lib.folderpicker.FolderPicker;
 import static androidx.work.WorkInfo.State.ENQUEUED;
 import static androidx.work.WorkInfo.State.RUNNING;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
-import static net.veldor.flibustaloader.MainActivity.START_TOR;
+import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 
 public class OPDSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     public static final String BOOK_ID = "book id";
@@ -144,7 +147,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             setTheme(R.style.NightTheme);
         }
 
-        setContentView(R.layout.activity_main_odps);
+        setContentView(R.layout.activity_odps);
 
         // добавлю viewModel
         mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
@@ -1275,7 +1278,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private void switchToWebView() {
         // переключу отображение на WebView, запущу webview вид и завершу активность
         App.getInstance().setView(App.VIEW_WEB);
-        startActivity(new Intent(this, WebViewActivity.class));
+        Intent intent = new Intent(this, WebViewActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
         finish();
     }
 
@@ -1572,7 +1577,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                             App.getInstance().startTor();
                             dialog.dismiss();
                             // вернусь в основное активити и подожду перезапуска
-                            startActivityForResult(new Intent(OPDSActivity.this, StartTorActivity.class), START_TOR);
+                            Intent intent = new Intent(OPDSActivity.this, MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
                         }
                     })
                     .setCancelable(false);

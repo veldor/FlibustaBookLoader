@@ -11,6 +11,7 @@ import androidx.work.WorkManager;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
+import static net.veldor.flibustaloader.notificatons.Notificator.DOWNLOAD_PAUSED_NOTIFICATION;
 import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
 public class MiscActionsReceiver extends BroadcastReceiver {
@@ -20,6 +21,7 @@ public class MiscActionsReceiver extends BroadcastReceiver {
     public static final String  ACTION_RESUME_MASS_DOWNLOAD = "resume download";
     public static final String ACTION_REPEAT_DOWNLOAD = "repeat download";
     public static final String ACTION_SKIP_BOOK = "skip book";
+    public static final String ACTION_RESTART_TOR = "restart tor";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -30,7 +32,6 @@ public class MiscActionsReceiver extends BroadcastReceiver {
                 WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(MULTIPLY_DOWNLOAD);
                 // отменяю работу и очищу очередь скачивания
                 App.getInstance().getNotificator().cancelBookLoadNotification();
-                App.getInstance().DownloadInterrupted.postValue(true);
                 Toast.makeText(App.getInstance(), "Скачивание книг отменено и очередь скачивания очищена!", Toast.LENGTH_LONG).show();
                 break;
             case ACTION_PAUSE_MASS_DOWNLOAD:
@@ -39,7 +40,6 @@ public class MiscActionsReceiver extends BroadcastReceiver {
                 Toast.makeText(App.getInstance(), "Скачивание книг приостановлено!", Toast.LENGTH_LONG).show();
                 // покажу уведомление о приостановленной загрузке
                 App.getInstance().getNotificator().createMassDownloadPausedNotification();
-                App.getInstance().DownloadInterrupted.postValue(true);
                 break;
             case ACTION_SKIP_BOOK:
                 Log.d("surprise", "MiscActionsReceiver onReceive: skip first book");
@@ -47,6 +47,7 @@ public class MiscActionsReceiver extends BroadcastReceiver {
                 DownloadBooksWorker.skipFirstBook();
             case ACTION_RESUME_MASS_DOWNLOAD:
                 Log.d("surprise", "MiscActionsReceiver onReceive: resume mass download");
+                App.getInstance().getNotificator().mNotificationManager.cancel(DOWNLOAD_PAUSED_NOTIFICATION);
             case ACTION_REPEAT_DOWNLOAD:
                 // возобновлю скачивание
                 App.getInstance().initializeDownload();

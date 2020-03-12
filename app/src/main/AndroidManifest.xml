@@ -21,12 +21,15 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".SubscriptionsActivity"
-            android:label="@string/title_activity_subscribe"/>
-        <activity android:name=".SubscribeActivity"
-            android:label="@string/title_activity_subscribe"/>
+        <activity android:name=".ui.Loader"/>
         <activity
-            android:name=".MainActivity"
+            android:name=".SubscriptionsActivity"
+            android:label="@string/title_activity_subscribe" />
+        <activity
+            android:name=".SubscribeActivity"
+            android:label="@string/title_activity_subscribe" />
+        <activity
+            android:name=".ui.MainActivity"
             android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -45,15 +48,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".OPDSActivity"
+            android:name=".ui.OPDSActivity"
             android:label="@string/title_activity_opds" />
         <activity
-            android:name=".WebViewActivity"
-            android:label="@string/title_activity_webview"/>
-        <activity android:name=".StartTorActivity"
-            android:label="@string/title_activity_start_tor"/>
-        <activity android:name=".ui.ActivityBookDownloadSchedule"
-            android:label="@string/title_activity_download_schedule"/>
+            android:name=".ui.WebViewActivity"
+            android:label="@string/title_activity_webview" />
+        <activity
+            android:name=".ui.ActivityBookDownloadSchedule"
+            android:label="@string/title_activity_download_schedule"
+            android:parentActivityName=".ui.OPDSActivity" />
 
         <receiver android:name=".receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />

@@ -9,6 +9,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 
+import net.veldor.flibustaloader.ui.WebViewActivity;
+
 public class MyWebView extends WebView {
 
     private boolean init = false;

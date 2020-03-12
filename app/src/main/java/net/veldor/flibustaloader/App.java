@@ -13,6 +13,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.room.Room;
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
@@ -31,14 +32,17 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
 import net.veldor.flibustaloader.utils.SubscribeSequences;
 import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
+import net.veldor.flibustaloader.workers.ParseWebRequestWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +53,8 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class App extends Application {
 
-
+    private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
+    public static int sTorStartTry = 0;
     public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
     private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
@@ -120,8 +125,6 @@ public class App extends Application {
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
     public final MutableLiveData<FoundedBook> mSelectedBook = new MutableLiveData<>();
-    // отслеживание загрузки книги
-    public final MutableLiveData<Boolean> mDownloadProgress = new MutableLiveData<>();
     public final MutableLiveData<FoundedBook> mContextBook = new MutableLiveData<>();
     public final MutableLiveData<AndroidOnionProxyManager> mLoadedTor = new MutableLiveData<>();
     public final MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
@@ -129,8 +132,6 @@ public class App extends Application {
     public LiveData<WorkInfo> mDownloadAllWork;
     public boolean mDownloadsInProgress;
     public OneTimeWorkRequest mProcess;
-    public final MutableLiveData<String> mUnloadedBook = new MutableLiveData<>();
-    public ArrayList<FoundedItem> mBooksForDownload;
     public final ArrayList<FoundedBook> mBooksDownloadFailed = new ArrayList<>();
     public int mBookSortOption = -1;
     public int mAuthorSortOptions = -1;
@@ -139,10 +140,7 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
     public final MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
     public SparseBooleanArray mDownloadSelectedBooks;
-    public final MutableLiveData<ArrayList<FoundedBook>> mDownloadSchedule = new MutableLiveData<>(new ArrayList<FoundedBook>());
     public final MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
-    public final MutableLiveData<Boolean> BookDownloaded = new MutableLiveData<>();
-    public final MutableLiveData<Boolean> DownloadInterrupted = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
     public LiveData<WorkInfo> TorStartWork;
@@ -151,6 +149,7 @@ public class App extends Application {
     private SubscribeBooks mBooksSubscribe;
     private SubscribeAuthors mAuthorsSubscribe;
     private SubscribeSequences mSequencesSubscribe;
+    public InputStream mRequestData;
 
 
     @Override
@@ -181,16 +180,15 @@ public class App extends Application {
                 .build();
 
         planeBookSubscribes();
+
+        // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключе
     }
 
     public boolean checkDownloadQueue() {
         // получу все книги в очереди скачивания
         BooksDownloadScheduleDao dao = mDatabase.booksDownloadScheduleDao();
         BooksDownloadSchedule queuedBook = dao.getFirstQueuedBook();
-        if(queuedBook != null){
-            return true;
-        }
-        return false;
+        return queuedBook != null;
     }
 
     public Notificator getNotificator(){
@@ -446,5 +444,11 @@ public class App extends Application {
             OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
             WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.REPLACE, downloadAllWorker);
             App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
+    }
+
+    public void handleWebPage(InputStream my) {
+        mRequestData = my;
+        OneTimeWorkRequest parseDataWorker = new OneTimeWorkRequest.Builder(ParseWebRequestWorker.class).addTag(PARSE_WEB_REQUEST_TAG).build();
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(PARSE_WEB_REQUEST_TAG, ExistingWorkPolicy.REPLACE, parseDataWorker);
     }
 }

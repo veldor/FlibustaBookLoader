@@ -14,7 +14,6 @@ import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.TorWebClient;
 
 public class GetPageWorker extends Worker {
-    private boolean mIsStopped;
 
     public GetPageWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -28,27 +27,21 @@ public class GetPageWorker extends Worker {
         String text = data.getString(MyWebClient.LOADED_URL);
         // попробую повтороно использовать веб-клиент
         // создам новый экземпляр веб-клиента
-        TorWebClient webClient = null;
+        TorWebClient webClient;
         try {
             webClient = new TorWebClient();
         } catch (TorNotLoadedException e) {
             e.printStackTrace();
             return Result.failure();
         }
-        App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
-        String answer = webClient.request(text);
-        App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
-        if(!mIsStopped){
-            App.getInstance().mSearchResult.postValue(answer);
+        if(!isStopped()){
+            App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
+            String answer = webClient.request(text);
+            if(!isStopped()){
+                App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
+                App.getInstance().mSearchResult.postValue(answer);
+            }
         }
         return Result.success();
-    }
-
-    @Override
-    public void onStopped() {
-        super.onStopped();
-        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
-        mIsStopped = true;
-        // остановлю процесс
     }
 }

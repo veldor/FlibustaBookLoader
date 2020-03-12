@@ -18,16 +18,15 @@ import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.util.ArrayList;
 
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_AUTHORS;
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_BOOKS;
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_GENRE;
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_NEW_AUTHORS;
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_SEQUENCE;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_AUTHORS;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_BOOKS;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_GENRE;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_NEW_AUTHORS;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_SEQUENCE;
 
 public class GetAllPagesWorker extends Worker {
 
     public static String sNextPage;
-    private boolean mIsStopped;
 
     public GetAllPagesWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -43,11 +42,12 @@ public class GetAllPagesWorker extends Worker {
         App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pagesCounter);
         String text = data.getString(MyWebClient.LOADED_URL);
         // создам новый экземпляр веб-клиента
-        TorWebClient webClient = null;
+        TorWebClient webClient;
         try {
             webClient = new TorWebClient();
         } catch (TorNotLoadedException e) {
             e.printStackTrace();
+            return Result.failure();
         }
         App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
         String answer = webClient.request(text);
@@ -56,7 +56,7 @@ public class GetAllPagesWorker extends Worker {
         if(answer != null && !answer.isEmpty()){
             ArrayList<FoundedItem> result = new ArrayList<>();
             XMLParser.handleSearchResults(result, answer);
-            while (sNextPage != null && !mIsStopped){
+            while (sNextPage != null && !isStopped()){
                 ++pagesCounter;
                 App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pagesCounter);
                 try {
@@ -69,7 +69,7 @@ public class GetAllPagesWorker extends Worker {
                 XMLParser.handleSearchResults(result, answer);
             }
             Log.d("surprise", "GetAllPagesWorker doWork result length is " + result.size());
-            if(!mIsStopped){
+            if(!isStopped()){
                 // отсортирую результат
                 switch (App.sSearchType) {
                     case SEARCH_BOOKS:
@@ -92,13 +92,5 @@ public class GetAllPagesWorker extends Worker {
         }
         Log.d("surprise", "GetAllPagesWorker doWork work done");
         return Result.success();
-    }
-
-    @Override
-    public void onStopped() {
-        super.onStopped();
-        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
-        mIsStopped = true;
-        // остановлю процесс
     }
 }

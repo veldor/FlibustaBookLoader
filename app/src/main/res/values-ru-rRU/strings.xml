@@ -120,4 +120,9 @@
     <string name="skip_book_message">Пропустить книгу</string>
     <string name="error_download_message">Ошибка скачивания</string>
     <string name="download_error_message">\"Ошибка скачивания! Не удалось скачать \"</string>
+    <string name="tor_init_error_message">Ошибка инициализации TOR</string>
+    <string name="request_restart_tor_message">Перезапустить TOR</string>
+    <string name="download_paused_message">Скачивание приостановлено!</string>
+    <string name="book_unreachable_message">%s :недоступно для скачивания в данном формате (%s). Книга удалена из очереди закачек.</string>
+    <string name="book_load_error_message">Книга недоступна</string>
 </resources>
