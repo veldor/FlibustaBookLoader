@@ -7,7 +7,6 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
-import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
 import java.util.List;
 

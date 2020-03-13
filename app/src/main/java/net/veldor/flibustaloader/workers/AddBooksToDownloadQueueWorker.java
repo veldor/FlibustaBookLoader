@@ -130,14 +130,20 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         newScheduleElement.link = link.url;
         newScheduleElement.format = link.mime;
         newScheduleElement.size = link.size;
-        newScheduleElement.author = link.author;
         // определю имя ссылки для скачивания =======================================
-        int delimiter = link.author.indexOf(" ");
         String author_last_name;
-        if(delimiter >= 0){author_last_name = link.author.substring(0, delimiter);
+        if(link.author != null && !link.author.isEmpty()){
+            newScheduleElement.author = link.author;
+            int delimiter = link.author.indexOf(" ");
+            if(delimiter >= 0){author_last_name = link.author.substring(0, delimiter);
+            }
+            else{
+                author_last_name = link.author;
+            }
         }
         else{
-            author_last_name = link.author;
+            author_last_name = "Автор неизвестен";
+            newScheduleElement.author = "Автор неизвестен";
         }
         String book_name = link.name.replaceAll(" ", "_").replaceAll("[^\\d\\w-_]", "");
         String book_mime = MimeTypes.getDownloadMime(link.mime);

@@ -309,6 +309,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("Перезапуск", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        App.sTorStartTry = 0;
                         App.getInstance().startTor();
                     }
                 })

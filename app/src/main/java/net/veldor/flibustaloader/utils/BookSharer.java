@@ -3,19 +3,15 @@ package net.veldor.flibustaloader.utils;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-
-import androidx.core.content.FileProvider;
-import androidx.documentfile.provider.DocumentFile;
-
-import android.os.Build;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.documentfile.provider.DocumentFile;
+
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.BuildConfig;
 import net.veldor.flibustaloader.R;
 
 import java.io.File;

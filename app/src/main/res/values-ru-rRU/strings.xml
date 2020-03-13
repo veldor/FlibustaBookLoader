@@ -45,7 +45,6 @@
     <string name="hide_read">Скрывать прочитанные</string>
     <string name="initialize_tor_message">Инициализирую TOR</string>
     <string name="showNewDialogTitle">Показать новинки</string>
-    <string name="tor_is_loaded">TOR загружен!</string>
     <string name="wait_tor_loading_message">Ожидаю загрузку TOR</string>
     <string name="load_waiting_title">В процессе</string>
     <string name="load_waiting_message">Загружаю и обрабатываю данные, потерпите несколько секунд.</string>
@@ -64,8 +63,8 @@
     <string name="download_subscribes_msg">Подождите, загружаю список книг</string>
     <string name="download_subscribes_title">Гружу книги по подписке</string>
     <string name="discard_favorite_type">Сбросить формат загрузок</string>
-    <string name="book_readed_message">Book readed</string>
-    <string name="book_downloaded_message">Book downloaded</string>
+    <string name="book_readed_message">Книга прочитана</string>
+    <string name="book_downloaded_message">Книга скачана</string>
     <string name="remember_format">Запомнить выбранный формат для дальнейших загрузок</string>
     <string name="download_only_this_format">Загружать только в выбранном формате</string>
     <string name="do_not_re_download">Загружать ранее сохранённые файлы</string>
@@ -91,24 +90,22 @@
     <string name="tor_continue_loading">Tor загружается %d сек.</string>
     <string name="subscription_describe">Тут можно подписаться на новинки книжной индустрии. Выберите, на что вы хотите подписаться, после этого нажмите кнопку \'Подписаться\' и каждый день в полдень программа будет проверять, не появилось ли что-то новое по интересующей вас теме. Если найдётся что-то интересное- вы получите уведомление!</string>
     <string name="title_activity_webview">WebView</string>
-    <string name="title_activity_start_tor">Подготовка</string>
     <string name="title_activity_subscribe">Подписки</string>
     <string name="show_all_results_switcher_text">Показывать сразу все результаты</string>
     <string name="select_books_for_download_message">Выберите книги для скачивания</string>
     <string name="download_selected_message">Скачать выбранные</string>
     <string name="books_not_found_message">Книги не найдены</string>
     <string name="download_all_button">Скачать все</string>
-    <string name="download_selected_button">Скачать выбранные</string>
+    <string name="download_selected_button">Выбрать книги для скачивания</string>
     <string name="fab_cancel_label">Отмена</string>
     <string name="title_activity_download_schedule">Очередь скачивания</string>
     <string name="waiting_download_message">Ожидает загрузки</string>
     <string name="stop_download_message">Остановить загрузку</string>
     <string name="download_progress_message">Скачиваю %d из %d книг</string>
-    <string name="books_downloaded_message">Книги скачаны!</string>
     <string name="continue_download_message">Продолжить загрузку</string>
     <string name="show_downloads_schedule_message">Показать очередь загрузки</string>
     <string name="books_not_selected_message">Не выбрано ни одной книги</string>
-    <string name="download_unloaded_button">Только незагруженные</string>
+    <string name="download_unloaded_button">Скачать ранее не загруженные</string>
     <string name="re_download_dialog_header_message">Найдены незавершённые закачки</string>
     <string name="re_download_dialog_body_message">Продолжить процесс?</string>
     <string name="download_continued_message">Скачивание возобновлено</string>
@@ -125,4 +122,9 @@
     <string name="download_paused_message">Скачивание приостановлено!</string>
     <string name="book_unreachable_message">%s :недоступно для скачивания в данном формате (%s). Книга удалена из очереди закачек.</string>
     <string name="book_load_error_message">Книга недоступна</string>
+    <string name="launch_cancelled_message">Запуск прерван</string>
+    <string name="restart_tor_from_notification_message">Повтор</string>
+    <string name="cancel_download_from_notification_message">Сброс</string>
+    <string name="later_message">Позже</string>
+    <string name="waiting_internet_message">Ожидание интернет-подключения</string>
 </resources>

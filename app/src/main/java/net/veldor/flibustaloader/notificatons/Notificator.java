@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
@@ -47,12 +48,12 @@ public class Notificator {
     private static final int TOR_LOAD_ERROR_NOTIFICATION = 6;
     public static final int DOWNLOAD_PAUSED_NOTIFICATION = 7;
     private static final int BOOKS_SUCCESS_NOTIFICATION = 8;
+    private static final int MASS_DOWNLOAD_PAUSED_NOTIFICATION = 9;
     private static final int RESTART_TOR_CODE = 11;
     private static final String DOWNLOADED_BOOKS_GROUP_KEY = "downloaded books";
     private static final int LOADED_BOOKS_GROUP = -1;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
-    private Notification mMassBookLoadingNotification;
     public NotificationCompat.Builder mDownloadScheduleBuilder;
 
     private int BookLoadedId = 100;
@@ -158,6 +159,7 @@ public class Notificator {
     }
 
     public Notification createMassBookLoadNotification() {
+        cancelTorErrorMessage();
         // при нажатии на уведомление- открою экран ожидания очереди
         Intent openWindowIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
         openWindowIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_SINGLE_TOP);
@@ -182,7 +184,7 @@ public class Notificator {
                 .setContentIntent(showWindowPending)
                 .setContentText("Подготовка скачивания")
                 .setAutoCancel(false);
-        mMassBookLoadingNotification = mDownloadScheduleBuilder.build();
+        Notification mMassBookLoadingNotification = mDownloadScheduleBuilder.build();
         return mMassBookLoadingNotification;
     }
 
@@ -223,6 +225,7 @@ public class Notificator {
     }
 
     public void createMassDownloadStoppedNotification() {
+        cancelTorErrorMessage();
         NotificationCompat.Builder downloadStoppedBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Скачивание книг")
@@ -231,6 +234,7 @@ public class Notificator {
     }
 
     public void createMassDownloadPausedNotification() {
+        cancelTorErrorMessage();
         // интент возобновления скачивания
         Intent pauseIntent = new Intent(mContext, MiscActionsReceiver.class);
         pauseIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_RESUME_MASS_DOWNLOAD);
@@ -244,6 +248,7 @@ public class Notificator {
     }
 
     public void showTorNotLoadedNotification() {
+        Log.d("surprise", "Notificator showTorNotLoadedNotification: tor can't");
         // интент возобновления скачивания
         Intent restartTorIntent = new Intent(mContext, MiscActionsReceiver.class);
         restartTorIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_RESTART_TOR);
@@ -265,5 +270,47 @@ public class Notificator {
                 .setAutoCancel(true);
         mNotificationManager.notify(BookLoadedId, notificationBuilder.build());
         ++BookLoadedId;
+    }
+
+    public void cancelTorErrorMessage() {
+        mNotificationManager.cancel(TOR_LOAD_ERROR_NOTIFICATION);
+    }
+
+    public void showMassDownloadInQueueMessage() {
+        // интент паузы скачивания
+        Intent pauseIntent = new Intent(mContext, MiscActionsReceiver.class);
+        pauseIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_PAUSE_MASS_DOWNLOAD);
+        PendingIntent pauseMassDownloadPendingIntent = PendingIntent.getBroadcast(mContext, PAUSE_CODE, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // интент отмены скачивания
+        Intent cancelIntent = new Intent(mContext, MiscActionsReceiver.class);
+        cancelIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_CANCEL_MASS_DOWNLOAD);
+        PendingIntent cancelMassDownloadPendingIntent = PendingIntent.getBroadcast(mContext, CANCEL_CODE, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // отменю уведомление об ошибке TOR
+        cancelTorErrorMessage();
+        // интент возобновления скачивания
+        Intent restartTorIntent = new Intent(mContext, MiscActionsReceiver.class);
+        restartTorIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_RESTART_TOR);
+        PendingIntent RestartTorPendingIntent = PendingIntent.getBroadcast(mContext, RESTART_TOR_CODE, restartTorIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // добавлю интент для отображения экрана очереди скачивания
+        Intent openScheduleIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
+        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent openSchedulePendingIntent = PendingIntent.getActivity(mContext, OPEN_SCHEDULE_CODE, openScheduleIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // покажу уведомление об ожидании подключения
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_pause_white_24dp)
+                .setContentIntent(openSchedulePendingIntent)
+                .setContentTitle(mContext.getString(R.string.download_paused_message))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(mContext.getString(R.string.waiting_internet_message)))
+                .setProgress(0,0, true)
+                .setOngoing(true)
+                .addAction(R.drawable.ic_play_arrow_white_24dp, mContext.getString(R.string.restart_tor_from_notification_message), RestartTorPendingIntent)
+                .addAction(R.drawable.fp_ic_action_cancel, mContext.getString(R.string.cancel_download_from_notification_message), cancelMassDownloadPendingIntent)
+                .addAction(R.drawable.ic_pause_white_24dp, mContext.getString(R.string.later_message), pauseMassDownloadPendingIntent)
+                .setAutoCancel(false);
+            mNotificationManager.notify(MASS_DOWNLOAD_PAUSED_NOTIFICATION, notificationBuilder.build());
+    }
+
+    public void hideMassDownloadInQueueMessage() {
+        mNotificationManager.cancel(MASS_DOWNLOAD_PAUSED_NOTIFICATION);
     }
 }

@@ -45,7 +45,6 @@
     <string name="hide_read">Hide read</string>
     <string name="initialize_tor_message">Initialize TOR…</string>
     <string name="showNewDialogTitle">Select new type</string>
-    <string name="tor_is_loaded">TOR is success loaded</string>
     <string name="wait_tor_loading_message">Wait for TOR load</string>
     <string name="download_books_msg">Download all selected books</string>
     <string name="download_books_title">Load started</string>
@@ -93,7 +92,6 @@
     <string name="tor_continue_loading" tools:ignore="PluralsCandidate">Tor loading by %d seconds</string>
     <string name="subscription_describe">Тут можно подписаться на новинки книжной индустрии. Выберите, на что вы хотите подписаться, после этого нажмите кнопку \'Подписаться\' и каждый день в полдень программа будет проверять, не появилось ли что-то новое по интересующей вас теме. Если найдётся что-то интересное- вы получите уведомление!</string>
     <string name="title_activity_webview">WebView</string>
-    <string name="title_activity_start_tor">Prepare</string>
     <string name="title_activity_subscribe">Subscriptions</string>
     <string name="show_all_results_switcher_text">Show all result</string>
     <string name="download_all_button">Download all</string>
@@ -103,7 +101,6 @@
     <string name="waiting_download_message">Waiting download</string>
     <string name="stop_download_message">Stop download</string>
     <string name="download_progress_message">load %d of %d book</string>
-    <string name="books_downloaded_message">Books downloaded!</string>
     <string name="continue_download_message">Continue download</string>
     <string name="show_downloads_schedule_message">Show downloads schedule</string>
     <string name="books_not_selected_message">No book selected</string>
@@ -114,18 +111,22 @@
     <string name="re_download_dialog_header_message">Have downloads queue</string>
     <string name="re_download_dialog_body_message">Wish you continue download?</string>
     <string name="download_continued_message">Download continued</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
     <string name="no">No, thanks</string>
     <string name="book_added_to_schedule_message">Book added to schedule</string>
     <string name="downloaded_books_title">downloaded books</string>
     <string name="repeat_download_message">Repeat download</string>
     <string name="skip_book_message">Skip book</string>
     <string name="error_download_message">Download error</string>
-    <string name="download_error_message">"Download error. Cant load "</string>
+    <string name="download_error_message">"Download error. Can't load "</string>
     <string name="tor_init_error_message">TOR init error!</string>
     <string name="request_restart_tor_message">Restart TOR!</string>
     <string name="download_paused_message">Downloading paused!</string>
     <string name="book_unreachable_message">%s :book is unreachable in (%s). It will be removed from download queue. Sorry for this</string>
     <string name="book_load_error_message">Book load error</string>
     <string name="launch_cancelled_message">Launch cancelled</string>
+    <string name="restart_tor_from_notification_message">Retry</string>
+    <string name="cancel_download_from_notification_message">Drop</string>
+    <string name="later_message">Later</string>
+    <string name="waiting_internet_message">waiting for internet connection</string>
 </resources>

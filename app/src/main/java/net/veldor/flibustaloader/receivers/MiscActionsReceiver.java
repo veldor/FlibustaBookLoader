@@ -28,6 +28,7 @@ public class MiscActionsReceiver extends BroadcastReceiver {
         String action = intent.getStringExtra(EXTRA_ACTION_TYPE);
         switch (action) {
             case ACTION_CANCEL_MASS_DOWNLOAD:
+                App.getInstance().getNotificator(). hideMassDownloadInQueueMessage();
                 DownloadBooksWorker.dropDownloadsQueue();
                 WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(MULTIPLY_DOWNLOAD);
                 // отменяю работу и очищу очередь скачивания
@@ -35,6 +36,7 @@ public class MiscActionsReceiver extends BroadcastReceiver {
                 Toast.makeText(App.getInstance(), "Скачивание книг отменено и очередь скачивания очищена!", Toast.LENGTH_LONG).show();
                 break;
             case ACTION_PAUSE_MASS_DOWNLOAD:
+                App.getInstance().getNotificator(). hideMassDownloadInQueueMessage();
                 Log.d("surprise", "MiscActionsReceiver onReceive: pause");
                 WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(MULTIPLY_DOWNLOAD);
                 Toast.makeText(App.getInstance(), "Скачивание книг приостановлено!", Toast.LENGTH_LONG).show();
@@ -51,6 +53,11 @@ public class MiscActionsReceiver extends BroadcastReceiver {
             case ACTION_REPEAT_DOWNLOAD:
                 // возобновлю скачивание
                 App.getInstance().initializeDownload();
+                break;
+            case ACTION_RESTART_TOR:
+                App.getInstance().getNotificator(). hideMassDownloadInQueueMessage();
+                App.sTorStartTry = 0;
+                App.getInstance().startTor();
                 break;
         }
     }

@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkInfo;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.OPDSActivity;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.adapters.DownloadScheduleAdapter;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;

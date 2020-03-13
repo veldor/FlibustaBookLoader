@@ -90,7 +90,6 @@ import static androidx.work.WorkInfo.State.SUCCEEDED;
 import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 
 public class OPDSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
-    public static final String BOOK_ID = "book id";
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
     private static final String[] bookSortOptions = new String[]{"По названию книги", "По размеру", "По количеству скачиваний", "По серии", "По жанру", "По автору"};
@@ -110,7 +109,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private SearchResultsAdapter mSearchResultsAdapter;
     private Dialog mShowLoadDialog;
     private Button mLoadMoreBtn;
-    private AlertDialog.Builder mDownloadsDialog;
     private TorConnectErrorReceiver mTorConnectErrorReceiver;
     private final String[] mAuthorViewTypes = new String[]{"Книги по сериям", "Книги вне серий", "Книги по алфавиту", "Книги по дате поступления"};
     private AlertDialog mSelectAuthorViewDialog;
@@ -389,8 +387,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // добавлю обсерверы
         addObservers();
-        // todo раскомментировать в релизной версии
-        //checkUpdates();
+        checkUpdates();
 
 /*        // попробую создать user guide
         new MaterialIntroView.Builder(this)
@@ -1670,7 +1667,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle(R.string.downloads_dialog_header);
-        mDownloadsDialog = dialogBuilder;
         // получу список типов данных
         int linksLength = downloadLinks.size();
         final String[] linksArray = new String[linksLength];
@@ -1681,7 +1677,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             linksArray[counter] = MimeTypes.getMime(mime);
             counter++;
         }
-        mDownloadsDialog.setItems(linksArray, new DialogInterface.OnClickListener() {
+        dialogBuilder.setItems(linksArray, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
 
@@ -1716,7 +1712,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         })
                 .setView(view);
-        mDownloadsDialog.show();
+        dialogBuilder.show();
     }
 
 

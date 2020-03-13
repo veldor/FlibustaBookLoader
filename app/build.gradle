@@ -8,8 +8,8 @@ android {
         minSdkVersion 16
         //noinspection OldTargetApi
         targetSdkVersion 28
-        versionCode 36
-        versionName "2.0.8.2"
+        versionCode 37
+        versionName "2.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -21,6 +21,7 @@ android {
     dataBinding {
         enabled = true
     }
+    buildToolsVersion = '28.0.3'
 }
 
 dependencies {
@@ -49,7 +50,7 @@ dependencies {
     annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.2.0'
 
 
-    implementation 'androidx.work:work-runtime:2.3.2'
+    implementation 'androidx.work:work-runtime:2.3.3'
     implementation 'org.jetbrains:annotations-java5:15.0'
 
     implementation 'lib.kashif:folderpicker:2.4'

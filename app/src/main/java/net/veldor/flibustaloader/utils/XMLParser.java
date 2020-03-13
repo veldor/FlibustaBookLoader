@@ -382,7 +382,7 @@ public class XMLParser {
                 String href;
                 Matcher result;
                 String type;
-                ArrayList<String> types = new ArrayList<String>();
+                ArrayList<String> types = new ArrayList<>();
                 HashMap<String , String > linksList = new HashMap<>();
                 for(Element link : links){
                     // проверю ссылку на соответствие формату скачивания

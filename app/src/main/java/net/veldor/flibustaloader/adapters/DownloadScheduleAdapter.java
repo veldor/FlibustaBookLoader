@@ -21,7 +21,7 @@ import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import java.util.List;
 
 public class DownloadScheduleAdapter extends RecyclerView.Adapter<DownloadScheduleAdapter.ViewHolder> {
-    public List<BooksDownloadSchedule> mBooks;
+    private List<BooksDownloadSchedule> mBooks;
     private LayoutInflater mLayoutInflater;
 
     public DownloadScheduleAdapter(List<BooksDownloadSchedule> value) {
@@ -53,7 +53,7 @@ public class DownloadScheduleAdapter extends RecyclerView.Adapter<DownloadSchedu
     }
 
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ViewDataBinding mBinding;
 

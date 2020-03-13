@@ -5,15 +5,16 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.room.Room;
 import androidx.work.Constraints;
-import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Calendar.HOUR_OF_DAY;
@@ -143,7 +145,7 @@ public class App extends Application {
     public final MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
-    public LiveData<WorkInfo> TorStartWork;
+    private LiveData<WorkInfo> TorStartWork;
     public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
     private SubscribeBooks mBooksSubscribe;
@@ -155,7 +157,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        sNotificator = new Notificator(this);
         instance = this;
 
         startTor();
@@ -181,7 +183,36 @@ public class App extends Application {
 
         planeBookSubscribes();
 
-        // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключе
+        // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
+        handleMassDownload();
+    }
+
+    private void handleMassDownload() {
+        LiveData<List<WorkInfo>> workStatus = WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(MULTIPLY_DOWNLOAD);
+        workStatus.observeForever( new Observer<List<WorkInfo>>() {
+            @Override
+            public void onChanged(List<WorkInfo> workInfos) {
+                if(workInfos != null){
+                    if(workInfos.size() > 0){
+                        // получу сведения о состоянии загрузки
+                        WorkInfo info = workInfos.get(0);
+                        if(info != null){
+                            Log.d("surprise", "App onChanged: status is " + info.getState());
+                            switch (info.getState()){
+                                case ENQUEUED:
+                                    // ожидаем запуска скачивания, покажу уведомление
+                                    sNotificator.showMassDownloadInQueueMessage();
+                                    break;
+                                case RUNNING:
+                                    sNotificator.hideMassDownloadInQueueMessage();
+                                    break;
+                                default:
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public boolean checkDownloadQueue() {

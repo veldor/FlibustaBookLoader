@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
-import androidx.work.ListenableWorker;
 import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
@@ -122,17 +121,11 @@ public class TorWebClient {
         return null;
     }
 
-    private HttpResponse simpleGetRequest(String url) {
-        try {
+    private HttpResponse simpleGetRequest(String url) throws IOException {
             HttpGet httpGet = new HttpGet(url);
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
             httpGet.setHeader("X-Compress", "null");
             return mHttpClient.execute(httpGet, mContext);
-        } catch (IOException e) {
-            broadcastTorError();
-            e.printStackTrace();
-        }
-        return null;
     }
 
 
@@ -161,7 +154,7 @@ public class TorWebClient {
         return null;
     }
 
-    public boolean downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, FlibustaUnreachableException {
+    public boolean downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, FlibustaUnreachableException, TorNotLoadedException {
         try {
             // получу имя файла
             DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
@@ -176,7 +169,6 @@ public class TorWebClient {
                 // запрошу данные
                 Log.d("surprise", "TorWebClient downloadBook: request " + book.link);
                 HttpResponse response = simpleGetRequest(App.BASE_URL + book.link);
-
                 if (response != null) {
                     int status = response.getStatusLine().getStatusCode();
                     if (status == 200) {
@@ -212,6 +204,7 @@ public class TorWebClient {
         } catch (IOException e) {
             e.printStackTrace();
             Log.d("surprise", "TorWebClient downloadBook: ошибка при сохранении");
+            throw new TorNotLoadedException();
         }
 
         return false;

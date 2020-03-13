@@ -8,7 +8,6 @@ import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
-import androidx.work.ListenableWorker;
 
 import android.util.Log;
 import android.webkit.WebResourceRequest;
@@ -20,7 +19,6 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
-import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

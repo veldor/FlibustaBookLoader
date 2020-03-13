@@ -35,7 +35,7 @@ import static net.veldor.flibustaloader.notificatons.Notificator.DOWNLOAD_PROGRE
 import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
 public class DownloadBooksWorker extends Worker {
-    private Notificator mNotificator;
+    private final Notificator mNotificator;
     private int mBooksCount;
 
     public DownloadBooksWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -124,7 +124,6 @@ public class DownloadBooksWorker extends Worker {
         while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()){
             // освежу уведомление
             updateDownloadStatusNotification(downloadCounter);
-            ++downloadCounter;
             // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
             if(!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null){
                 dao.delete(queuedElement);
@@ -133,6 +132,7 @@ public class DownloadBooksWorker extends Worker {
             // загружу книгу
             boolean downloadResult;
             try {
+                updateDownloadStatusNotification(downloadCounter);
                 downloadResult = downloadBook(queuedElement);
                 if(!downloadResult){
                     // ошибка загрузки книг, выведу сообщение об ошибке
@@ -155,6 +155,7 @@ public class DownloadBooksWorker extends Worker {
                 mNotificator.sendBookNotFoundInCurrentFormatNotification(queuedElement);
                 dao.delete(queuedElement);
             }
+            ++downloadCounter;
         }
         // цикл закончился, проверю, все ли книги загружены
         mBooksCount = dao.getQueueSize();
@@ -166,6 +167,8 @@ public class DownloadBooksWorker extends Worker {
     }
 
     private void updateDownloadStatusNotification(int i) {
+        // уберу сообщение об ошибке загрузки TOR, если оно есть
+        mNotificator.cancelTorErrorMessage();
         mNotificator.mDownloadScheduleBuilder.setContentText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.download_progress_message), i, mBooksCount));
         mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount,i, false);
         mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
@@ -182,6 +185,7 @@ public class DownloadBooksWorker extends Worker {
             return false;
         } catch (FlibustaUnreachableException e) {
             // флибуста лежит
+            Log.d("surprise", "DownloadBooksWorker downloadBook: cant find flibusta...");
             return false;
         }
     }

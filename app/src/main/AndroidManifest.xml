@@ -23,9 +23,11 @@
         tools:targetApi="q">
         <activity android:name=".ui.Loader"/>
         <activity
+            android:theme="@style/OldAppTheme"
             android:name=".SubscriptionsActivity"
             android:label="@string/title_activity_subscribe" />
         <activity
+            android:theme="@style/OldAppTheme"
             android:name=".SubscribeActivity"
             android:label="@string/title_activity_subscribe" />
         <activity
@@ -55,6 +57,7 @@
             android:label="@string/title_activity_webview" />
         <activity
             android:name=".ui.ActivityBookDownloadSchedule"
+            android:theme="@style/OldAppTheme"
             android:label="@string/title_activity_download_schedule"
             android:parentActivityName=".ui.OPDSActivity" />
 
