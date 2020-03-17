@@ -40,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
 
     public static final int START_TOR = 3;
     private static final int TOR_LOAD_MAX_TIME = 180;
-    //private LiveData<AndroidOnionProxyManager> mTorClient;
     private Uri mLink;
     private ProgressBar mTorLoadingProgressIndicator;
     private TextView mTorLoadingStatusText;
@@ -68,35 +67,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupUI() {
+        // если используем внешнй VPN- проверяю только выдачу разрешений и настройку внешнего вида
         setContentView(R.layout.activity_main);
-        // найду индикатор прогресса
-        mTorLoadingProgressIndicator = findViewById(R.id.progressBarCircle);
-        mTorLoadingProgressIndicator.setProgress(0);
-        mTorLoadingProgressIndicator.setMax(TOR_LOAD_MAX_TIME);
-        // найду строку статуса загрузки
-        mTorLoadingStatusText = findViewById(R.id.progressTorLoadStatus);
-        mTorLoadingStatusText.setText(getString(R.string.begin_tor_init_msg));
-
-        // отображу версию приложения
-        TextView versionView = findViewById(R.id.app_version);
-        String version;
-        try {
-            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-            version = pInfo.versionName;
-            versionView.setText(String.format(Locale.ENGLISH, getString(R.string.application_version_message), version));
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.d("surprise", "MainActivity setupUI: can't found version");
-            e.printStackTrace();
+        if(App.getInstance().isExternalVpn()){
+            Log.d("surprise", "MainActivity setupUI external vpn used");
         }
+        else{
+            // найду индикатор прогресса
+            mTorLoadingProgressIndicator = findViewById(R.id.progressBarCircle);
+            mTorLoadingProgressIndicator.setProgress(0);
+            mTorLoadingProgressIndicator.setMax(TOR_LOAD_MAX_TIME);
+            // найду строку статуса загрузки
+            mTorLoadingStatusText = findViewById(R.id.progressTorLoadStatus);
+            mTorLoadingStatusText.setText(getString(R.string.begin_tor_init_msg));
 
-        Button startBtn = findViewById(R.id.testStartApp);
-        startBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // покажу диалог, предупреждающий о том, что это не запустит приложение
-                showForceStartDialog();
+            // отображу версию приложения
+            TextView versionView = findViewById(R.id.app_version);
+            String version;
+            try {
+                PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+                version = pInfo.versionName;
+                versionView.setText(String.format(Locale.ENGLISH, getString(R.string.application_version_message), version));
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.d("surprise", "MainActivity setupUI: can't found version");
+                e.printStackTrace();
             }
-        });
+
+            Button startBtn = findViewById(R.id.testStartApp);
+            startBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // покажу диалог, предупреждающий о том, что это не запустит приложение
+                    showForceStartDialog();
+                }
+            });
+        }
     }
 
     private void showForceStartDialog() {
@@ -118,54 +123,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupObservers() {
-        // зарегистрирую отслеживание загружающегося TOR
-        LiveData<AndroidOnionProxyManager> loadedTor = App.getInstance().mLoadedTor;
-        loadedTor.observe(this, new Observer<AndroidOnionProxyManager>() {
-            @Override
-            public void onChanged(@Nullable AndroidOnionProxyManager tor) {
-                if (tor != null) {
-                    Log.d("surprise", "MainActivity onChanged: i have TOR");
-                    mTor = tor;
-                }
-            }
-        });
-        // получу данные о работе
-        LiveData<List<WorkInfo>> workInfoData = WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(App.START_TOR);
-        workInfoData.observe(this, new Observer<List<WorkInfo>>() {
-            @Override
-            public void onChanged(List<WorkInfo> workInfos) {
-                if (workInfos != null && workInfos.size() > 0) {
-                    // переберу статусы
-                    WorkInfo data = workInfos.get(0);
-                    switch (data.getState()) {
-                        case ENQUEUED:
-                            if (mTorLoadingStatusText != null) {
-                                mTorLoadingStatusText.setText(getString(R.string.tor_load_waiting_internet_message));
-                            }
-                            stopTimer();
-                            break;
-                        case RUNNING:
-                            // запускаю таймер
-                            startTimer();
-                            if (mTorLoadingStatusText != null) {
-                                mTorLoadingStatusText.setText(getString(R.string.launch_begin_message));
-                            }
-                            break;
-                        case CANCELLED:
-                            stopTimer();
-                            if (mTorLoadingStatusText != null) {
-                                mTorLoadingStatusText.setText(getString(R.string.launch_cancelled_message));
-                            }
-                            break;
-                        case FAILED:
-                            showTorNotWorkDialog();
-                            break;
-                        case SUCCEEDED:
-                            torLoaded();
+        if(!App.getInstance().isExternalVpn()){
+            // зарегистрирую отслеживание загружающегося TOR
+            LiveData<AndroidOnionProxyManager> loadedTor = App.getInstance().mLoadedTor;
+            loadedTor.observe(this, new Observer<AndroidOnionProxyManager>() {
+                @Override
+                public void onChanged(@Nullable AndroidOnionProxyManager tor) {
+                    if (tor != null) {
+                        Log.d("surprise", "MainActivity onChanged: i have TOR");
+                        mTor = tor;
                     }
                 }
-            }
-        });
+            });
+            // получу данные о работе
+            LiveData<List<WorkInfo>> workInfoData = WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(App.START_TOR);
+            workInfoData.observe(this, new Observer<List<WorkInfo>>() {
+                @Override
+                public void onChanged(List<WorkInfo> workInfos) {
+                    if (workInfos != null && workInfos.size() > 0) {
+                        // переберу статусы
+                        WorkInfo data = workInfos.get(0);
+                        switch (data.getState()) {
+                            case ENQUEUED:
+                                if (mTorLoadingStatusText != null) {
+                                    mTorLoadingStatusText.setText(getString(R.string.tor_load_waiting_internet_message));
+                                }
+                                stopTimer();
+                                break;
+                            case RUNNING:
+                                // запускаю таймер
+                                startTimer();
+                                if (mTorLoadingStatusText != null) {
+                                    mTorLoadingStatusText.setText(getString(R.string.launch_begin_message));
+                                }
+                                break;
+                            case CANCELLED:
+                                stopTimer();
+                                if (mTorLoadingStatusText != null) {
+                                    mTorLoadingStatusText.setText(getString(R.string.launch_cancelled_message));
+                                }
+                                break;
+                            case FAILED:
+                                showTorNotWorkDialog();
+                                break;
+                            case SUCCEEDED:
+                                torLoaded();
+                        }
+                    }
+                }
+            });
+        }
+        else{
+            torLoaded();
+        }
     }
 
     private void torLoaded() {

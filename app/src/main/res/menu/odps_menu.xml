@@ -22,6 +22,16 @@
         android:title="@string/switch_to_vebview_message"
         yourapp:showAsAction="never"/>
     <item
+        android:title="@string/connection_menu_title">
+        <menu>
+            <item
+                android:id="@+id/menuUseExternalVpn"
+                android:title="@string/use_externalVpnMessage"
+                android:checkable="true"
+                yourapp:showAsAction="never"/>
+        </menu>
+    </item>
+    <item
         android:title="@string/look"
         >
         <menu>

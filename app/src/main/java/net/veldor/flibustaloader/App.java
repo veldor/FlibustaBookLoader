@@ -41,6 +41,7 @@ import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.ParseWebRequestWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
+import net.veldor.flibustaloader.workers.TestHttpRequestWorker;
 
 import java.io.File;
 import java.io.InputStream;
@@ -56,6 +57,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 public class App extends Application {
 
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
+    private static final String EXTERNAL_VPN = "external vpn";
     public static int sTorStartTry = 0;
     public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
@@ -145,7 +147,6 @@ public class App extends Application {
     public final MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
-    private LiveData<WorkInfo> TorStartWork;
     public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
     private SubscribeBooks mBooksSubscribe;
@@ -157,14 +158,13 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        // читаю настройки sharedPreferences
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         sNotificator = new Notificator(this);
         instance = this;
 
         startTor();
 
-        // читаю настройки sharedPreferences
-
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         // определю ночной режим
         if (getNightMode()) {
             AppCompatDelegate.setDefaultNightMode(
@@ -185,6 +185,11 @@ public class App extends Application {
 
         // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
         handleMassDownload();
+    }
+
+    private void testHttpRequest() {
+        OneTimeWorkRequest testInet = new OneTimeWorkRequest.Builder(TestHttpRequestWorker.class).build();
+        WorkManager.getInstance(this).enqueue(testInet);
     }
 
     private void handleMassDownload() {
@@ -233,13 +238,15 @@ public class App extends Application {
     }
 
     public void startTor() {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        // запускаю tor
-        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
-        TorStartWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
+        // если используется внешний VPN- TOR не нужен
+        if(!isExternalVpn()){
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            // запускаю tor
+            OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
+            WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
+        }
     }
 
     private void planeBookSubscribes() {
@@ -485,5 +492,13 @@ public class App extends Application {
         mRequestData = my;
         OneTimeWorkRequest parseDataWorker = new OneTimeWorkRequest.Builder(ParseWebRequestWorker.class).addTag(PARSE_WEB_REQUEST_TAG).build();
         WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(PARSE_WEB_REQUEST_TAG, ExistingWorkPolicy.REPLACE, parseDataWorker);
+    }
+
+    public boolean isExternalVpn() {
+        return (mSharedPreferences.getBoolean(EXTERNAL_VPN, false));
+    }
+
+    public void switchExternalVpnUse() {
+        mSharedPreferences.edit().putBoolean(EXTERNAL_VPN, !isExternalVpn()).apply();
     }
 }

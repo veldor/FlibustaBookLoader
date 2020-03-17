@@ -128,4 +128,7 @@
     <string name="later_message">Позже</string>
     <string name="waiting_internet_message">Ожидание интернет-подключения</string>
     <string name="dowload_schedue_empty_message">Очередь загрузки пуста</string>
+    <string name="connection_menu_title">Соединение</string>
+    <string name="use_externalVpnMessage">Я использую внешний VPN</string>
+    <string name="confirm">Да, я понял</string>
 </resources>

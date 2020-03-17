@@ -20,7 +20,6 @@ public class MyWebClient {
     public static final String DOWNLOAD_ATTRIBUTES = "download attributes";
 
     public void search(String s) {
-        Log.d("surprise", "MyWebClient search: se");
         // сброшу обложку
         App.getInstance().mShowCover.postValue(null);
         // отменю остальные работы

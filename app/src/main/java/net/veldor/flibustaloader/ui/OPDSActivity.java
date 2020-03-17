@@ -92,6 +92,8 @@ import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 public class OPDSActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     private static final String FLIBUSTA_SEARCH_BOOK_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=books&searchTerm=";
     private static final String FLIBUSTA_SEARCH_AUTHOR_REQUEST = "http://flibustahezeous3.onion/opds/search?searchType=authors&searchTerm=";
+    private static final String FLIBUSTA_VPN_SEARCH_BOOK_REQUEST = "http://flibusta.is/opds/search?searchType=books&searchTerm=";
+    private static final String FLIBUSTA_VPN_SEARCH_AUTHOR_REQUEST = "http://flibusta.is/opds/search?searchType=authors&searchTerm=";
     private static final String[] bookSortOptions = new String[]{"По названию книги", "По размеру", "По количеству скачиваний", "По серии", "По жанру", "По автору"};
     private static final String[] authorSortOptions = new String[]{"По имени автора от А", "По имени автора от Я", "По количеству книг от большего", "По количеству книг от меньшего"};
     private static final String[] otherSortOptions = new String[]{"От А", "От Я"};
@@ -1113,6 +1115,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // переключатель превью обложек
         myItem = menu.findItem(R.id.showPreviews);
         myItem.setChecked(App.getInstance().isPreviews());
+        // переключатель внешнего VPN
+        myItem = menu.findItem(R.id.menuUseExternalVpn);
+        myItem.setChecked(App.getInstance().isExternalVpn());
         return true;
     }
 
@@ -1243,9 +1248,36 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 App.getInstance().switchShowPreviews();
                 invalidateOptionsMenu();
                 return true;
+            case R.id.menuUseExternalVpn:
+                handleUseExternalVpn();
+                return true;
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void handleUseExternalVpn() {
+        // если использовался внешний VPN- просто отключу его использование
+        if(App.getInstance().isExternalVpn()){
+            App.getInstance().switchExternalVpnUse();
+            invalidateOptionsMenu();
+        }
+        else{
+            // покажу диалог с объяснением последствий включения VPN
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder
+                    .setTitle("Использование внешнего VPN")
+                    .setMessage("Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно. Сделано для версий Android ниже 6.0, где могут быть проблемы с доступом, но может быть использовано по желанию на ваш страх и риск.")
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            App.getInstance().switchExternalVpnUse();
+                            invalidateOptionsMenu();
+                        }
+                    });
+            dialogBuilder.create().show();
+        }
     }
 
     private void restoreSettings() {
@@ -1418,26 +1450,48 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         String searchString = URLEncoder.encode(s, "utf-8").replace("+", "%20");
 
         // опознаю тип поиска
-        if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchBook) {
-            doSearch(FLIBUSTA_SEARCH_BOOK_REQUEST + searchString);
-        } else {
-            doSearch(FLIBUSTA_SEARCH_AUTHOR_REQUEST + searchString);
+        if(App.getInstance().isExternalVpn()){
+            if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchBook) {
+                doSearch(FLIBUSTA_VPN_SEARCH_BOOK_REQUEST + searchString);
+            } else {
+                doSearch(FLIBUSTA_VPN_SEARCH_AUTHOR_REQUEST + searchString);
+            }
+        }
+        else{
+            if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchBook) {
+                doSearch(FLIBUSTA_SEARCH_BOOK_REQUEST + searchString);
+            } else {
+                doSearch(FLIBUSTA_SEARCH_AUTHOR_REQUEST + searchString);
+            }
         }
     }
 
     private void doSearch(String s) {
-        if (mWebClient == null) {
-            Toast.makeText(this, "Не удалось загрузить веб-клиент, попробуйте перезапустить приложение", Toast.LENGTH_SHORT).show();
-            return;
+        if(App.getInstance().isExternalVpn()){
+            if (s != null && !s.isEmpty()) {
+                // очищу историю поиска и положу туда начальное значение
+                App.getInstance().addToHistory(s);
+                showLoadWaitingDialog();
+                .search(s);
+                // добавлю значение в историю
+            } else {
+                Toast.makeText(this, "Пустой поисковый запрос", Toast.LENGTH_SHORT).show();
+            }
         }
-        if (s != null && !s.isEmpty()) {
-            // очищу историю поиска и положу туда начальное значение
-            App.getInstance().addToHistory(s);
-            showLoadWaitingDialog();
-            mWebClient.search(s);
-            // добавлю значение в историю
-        } else {
-            Toast.makeText(this, "Пустой поисковый запрос", Toast.LENGTH_SHORT).show();
+        else{
+            if (mWebClient == null) {
+                Toast.makeText(this, "Не удалось загрузить веб-клиент, попробуйте перезапустить приложение", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (s != null && !s.isEmpty()) {
+                // очищу историю поиска и положу туда начальное значение
+                App.getInstance().addToHistory(s);
+                showLoadWaitingDialog();
+                mWebClient.search(s);
+                // добавлю значение в историю
+            } else {
+                Toast.makeText(this, "Пустой поисковый запрос", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

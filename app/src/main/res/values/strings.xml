@@ -130,4 +130,7 @@
     <string name="later_message">Later</string>
     <string name="waiting_internet_message">waiting for internet connection</string>
     <string name="dowload_schedue_empty_message">Download schedule empty</string>
+    <string name="connection_menu_title">Connection</string>
+    <string name="use_externalVpnMessage">I use eternal VPN</string>
+    <string name="confirm">Yes, confirm</string>
 </resources>
