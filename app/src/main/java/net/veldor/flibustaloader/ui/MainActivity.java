@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private AndroidOnionProxyManager mTor;
     // отмечу готовность к старту приложения
     private boolean mReadyToStart = false;
+    private boolean mActivityVisible;
+    private boolean mTorLoadTooLong;
 
 
     @Override
@@ -84,6 +88,33 @@ public class MainActivity extends AppCompatActivity {
             Log.d("surprise", "MainActivity setupUI: can't found version");
             e.printStackTrace();
         }
+
+        Button startBtn = findViewById(R.id.testStartApp);
+        startBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // покажу диалог, предупреждающий о том, что это не запустит приложение
+                showForceStartDialog();
+            }
+        });
+    }
+
+    private void showForceStartDialog() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setMessage("Принудительный запуск приложения. Внимание, это не значит, что приложение будет работать! Данная функция сделана исключительно для тех ситуаций, когда приложение не смогло само определить, что клиент TOR успешно запустился (проблема некоторорых китайских аппаратов). Так что используйте только если точно знаете, что делаете");
+        dialogBuilder.setPositiveButton("Да, я знаю, что делаю", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                torLoaded();
+            }
+        });
+        dialogBuilder.setNegativeButton("Нет, подождать ещё", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        dialogBuilder.show();
     }
 
     private void setupObservers() {
@@ -303,22 +334,27 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void torLoadTooLongDialog() {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle("Tor load too long")
-                .setMessage("Подождём ещё или перезапустим?")
-                .setPositiveButton("Перезапуск", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        App.sTorStartTry = 0;
-                        App.getInstance().startTor();
-                    }
-                })
-                .setNegativeButton("Подождать ещё", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startTimer();
-                    }
-                }).show();
+        if(mActivityVisible){
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setTitle("Tor load too long")
+                    .setMessage("Подождём ещё или перезапустим?")
+                    .setPositiveButton("Перезапуск", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            App.sTorStartTry = 0;
+                            App.getInstance().startTor();
+                        }
+                    })
+                    .setNegativeButton("Подождать ещё", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            startTimer();
+                        }
+                    }).show();
+        }
+        else{
+            mTorLoadTooLong = true;
+        }
     }
 
 
@@ -341,4 +377,20 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .show();
         }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mActivityVisible = false;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mActivityVisible = true;
+        if(mTorLoadTooLong){
+            mTorLoadTooLong = false;
+            torLoadTooLongDialog();
+        }
+    }
 }

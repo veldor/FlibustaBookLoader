@@ -129,4 +129,5 @@
     <string name="cancel_download_from_notification_message">Drop</string>
     <string name="later_message">Later</string>
     <string name="waiting_internet_message">waiting for internet connection</string>
+    <string name="dowload_schedue_empty_message">Download schedule empty</string>
 </resources>

@@ -96,12 +96,6 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        // помечу рабочего важным
-        ForegroundInfo info = createForegroundInfo();
-        setForegroundAsync(info);
-        // создам уведомление о скачивании
-        mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount,0, true);
-        mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
         // проверю, есть ли в очереди скачивания книги
         AppDatabase db = App.getInstance().mDatabase;
         BooksDownloadScheduleDao dao = db.booksDownloadScheduleDao();
@@ -109,69 +103,77 @@ public class DownloadBooksWorker extends Worker {
         Boolean reDownload = App.getInstance().isReDownload();
         // получу количество книг на начало скачивания
         mBooksCount = dao.getQueueSize();
-
-        updateDownloadStatusNotification(0);
-        BooksDownloadSchedule queuedElement;
-        // начну скачивание
-        // периодически удостовериваюсь, что работа не отменена
-        if(isStopped()){
-            // немедленно прекращаю работу
-            return Result.success();
-        }
-
-        int downloadCounter = 1;
-        // пока есть книги в очереди скачивания и работа не остановлена
-        while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()){
-            // освежу уведомление
-            updateDownloadStatusNotification(downloadCounter);
-            // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
-            if(!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null){
-                dao.delete(queuedElement);
-                continue;
+        if(mBooksCount > 0){
+            // помечу рабочего важным
+            ForegroundInfo info = createForegroundInfo();
+            setForegroundAsync(info);
+            // создам уведомление о скачивании
+            mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount,0, true);
+            mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
+            updateDownloadStatusNotification(0);
+            BooksDownloadSchedule queuedElement;
+            // начну скачивание
+            // периодически удостовериваюсь, что работа не отменена
+            if(isStopped()){
+                // немедленно прекращаю работу
+                mNotificator.cancelBookLoadNotification();
+                return Result.success();
             }
-            // загружу книгу
-            boolean downloadResult;
-            try {
+            int downloadCounter = 1;
+            // пока есть книги в очереди скачивания и работа не остановлена
+            while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()){
+                // освежу уведомление
                 updateDownloadStatusNotification(downloadCounter);
-                downloadResult = downloadBook(queuedElement);
-                if(!downloadResult){
-                    // ошибка загрузки книг, выведу сообщение об ошибке
-                    mNotificator.showBooksLoadErrorNotification(queuedElement.name);
-                    Log.d("surprise", "DownloadBooksWorker doWork: error download!!!");
-                    return Result.failure();
+                // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
+                if(!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null){
+                    dao.delete(queuedElement);
+                    continue;
                 }
-                if(!isStopped()){
-                    // отмечу книгу как скачанную
-                    DownloadedBooks downloadedBook = new DownloadedBooks();
-                    downloadedBook.bookId = queuedElement.bookId;
-                    downloadBooksDao.insert(downloadedBook);
-                    // удалю книгу из очереди скачивания
-                    // покажу уведомление о успешной загрузке
-                    mNotificator.sendLoadedBookNotification(queuedElement.name, queuedElement.format);
+                // загружу книгу
+                boolean downloadResult;
+                try {
+                    updateDownloadStatusNotification(downloadCounter);
+                    downloadResult = downloadBook(queuedElement);
+                    if(!downloadResult){
+                        // ошибка загрузки книг, выведу сообщение об ошибке
+                        mNotificator.showBooksLoadErrorNotification(queuedElement.name);
+                        Log.d("surprise", "DownloadBooksWorker doWork: error download!!!");
+                        return Result.failure();
+                    }
+                    if(!isStopped()){
+                        // отмечу книгу как скачанную
+                        DownloadedBooks downloadedBook = new DownloadedBooks();
+                        downloadedBook.bookId = queuedElement.bookId;
+                        downloadBooksDao.insert(downloadedBook);
+                        // удалю книгу из очереди скачивания
+                        // покажу уведомление о успешной загрузке
+                        mNotificator.sendLoadedBookNotification(queuedElement.name, queuedElement.format);
+                        dao.delete(queuedElement);
+                    }
+                } catch (BookNotFoundException e) {
+                    // книга недоступна для скачивания в данном формате, удалю её из очереди, выведу уведомление и продолжу загрузку
+                    mNotificator.sendBookNotFoundInCurrentFormatNotification(queuedElement);
                     dao.delete(queuedElement);
                 }
-            } catch (BookNotFoundException e) {
-                // книга недоступна для скачивания в данном формате, удалю её из очереди, выведу уведомление и продолжу загрузку
-                mNotificator.sendBookNotFoundInCurrentFormatNotification(queuedElement);
-                dao.delete(queuedElement);
+                ++downloadCounter;
             }
-            ++downloadCounter;
-        }
-        // цикл закончился, проверю, все ли книги загружены
-        mBooksCount = dao.getQueueSize();
-        if(mBooksCount == 0 && !isStopped()){
-            // ура, всё загружено, выведу сообщение об успешной загрузке
+            // цикл закончился, проверю, все ли книги загружены
+            mBooksCount = dao.getQueueSize();
+            if(mBooksCount == 0 && !isStopped()){
+                // ура, всё загружено, выведу сообщение об успешной загрузке
                 mNotificator.showBooksLoadedNotification();
+            }
         }
+        mNotificator.cancelBookLoadNotification();
         return Result.success();
     }
 
     private void updateDownloadStatusNotification(int i) {
-        // уберу сообщение об ошибке загрузки TOR, если оно есть
+       /* // уберу сообщение об ошибке загрузки TOR, если оно есть
         mNotificator.cancelTorErrorMessage();
         mNotificator.mDownloadScheduleBuilder.setContentText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.download_progress_message), i, mBooksCount));
         mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount,i, false);
-        mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
+        mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());*/
     }
 
     private boolean downloadBook(BooksDownloadSchedule book) throws BookNotFoundException {
@@ -194,7 +196,7 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     private ForegroundInfo createForegroundInfo() {
         // Build a notification
-        Notification notification = mNotificator.createMassBookLoadNotification();
+        Notification notification = mNotificator.createMassBookLoadNotification(mBooksCount);
         return new ForegroundInfo(DOWNLOAD_PROGRESS_NOTIFICATION, notification);
     }
 }

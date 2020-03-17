@@ -158,7 +158,7 @@ public class Notificator {
         mNotificationManager.notify(BACKUP_COMPLETED_NOTIFICATION, notification);
     }
 
-    public Notification createMassBookLoadNotification() {
+    public Notification createMassBookLoadNotification(int booksCount) {
         cancelTorErrorMessage();
         // при нажатии на уведомление- открою экран ожидания очереди
         Intent openWindowIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
@@ -178,14 +178,14 @@ public class Notificator {
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Скачивание книг")
                 .setOngoing(true)
+                .setContentText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.download_progress_message), 1, booksCount))
+                .setProgress(0,booksCount, false)
                 .addAction(R.drawable.ic_list_white_24dp, "Очередь", showWindowPending)
                 .addAction(R.drawable.fp_ic_action_cancel, "Отмена", cancelMassDownloadPendingIntent)
                 .addAction(R.drawable.ic_pause_white_24dp, "Пауза", pauseMassDownloadPendingIntent)
                 .setContentIntent(showWindowPending)
-                .setContentText("Подготовка скачивания")
                 .setAutoCancel(false);
-        Notification mMassBookLoadingNotification = mDownloadScheduleBuilder.build();
-        return mMassBookLoadingNotification;
+        return mDownloadScheduleBuilder.build();
     }
 
     public void cancelBookLoadNotification() {
@@ -265,8 +265,8 @@ public class Notificator {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_warning_red_24dp)
                 .setContentTitle(mContext.getString(R.string.book_load_error_message))
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, mContext.getString(R.string.book_unreachable_message), book.name, MimeTypes.getDownloadMime(book.format))))
-                .setGroup(DOWNLOADED_BOOKS_GROUP_KEY)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, mContext.getString(R.string.book_unreachable_message), book.name, MimeTypes.getDownloadMime(book.format))))
+                    .setGroup(DOWNLOADED_BOOKS_GROUP_KEY)
                 .setAutoCancel(true);
         mNotificationManager.notify(BookLoadedId, notificationBuilder.build());
         ++BookLoadedId;

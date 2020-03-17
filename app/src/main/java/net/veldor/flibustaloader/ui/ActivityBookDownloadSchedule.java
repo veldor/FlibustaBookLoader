@@ -100,6 +100,7 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
         // проверю, есть ли книги в очереди скачивания
         int queueSize = App.getInstance().mDatabase.booksDownloadScheduleDao().getQueueSize();
         if(queueSize == 0){
+            Toast.makeText(this, R.string.dowload_schedue_empty_message, Toast.LENGTH_LONG).show();
             finish();
         }
 

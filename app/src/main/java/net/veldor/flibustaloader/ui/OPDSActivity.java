@@ -1415,7 +1415,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             mSearchAdapter.notifyDataSetChanged();
         }
 
-        String searchString = URLEncoder.encode(s, "utf-8");
+        String searchString = URLEncoder.encode(s, "utf-8").replace("+", "%20");
 
         // опознаю тип поиска
         if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchBook) {

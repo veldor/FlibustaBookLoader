@@ -189,22 +189,25 @@ public class App extends Application {
 
     private void handleMassDownload() {
         LiveData<List<WorkInfo>> workStatus = WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(MULTIPLY_DOWNLOAD);
-        workStatus.observeForever( new Observer<List<WorkInfo>>() {
+        workStatus.observeForever(new Observer<List<WorkInfo>>() {
             @Override
             public void onChanged(List<WorkInfo> workInfos) {
-                if(workInfos != null){
-                    if(workInfos.size() > 0){
+                if (workInfos != null) {
+                    if (workInfos.size() > 0) {
                         // получу сведения о состоянии загрузки
                         WorkInfo info = workInfos.get(0);
-                        if(info != null){
+                        if (info != null) {
                             Log.d("surprise", "App onChanged: status is " + info.getState());
-                            switch (info.getState()){
+                            switch (info.getState()) {
                                 case ENQUEUED:
                                     // ожидаем запуска скачивания, покажу уведомление
                                     sNotificator.showMassDownloadInQueueMessage();
                                     break;
                                 case RUNNING:
                                     sNotificator.hideMassDownloadInQueueMessage();
+                                    break;
+                                case SUCCEEDED:
+                                    sNotificator.cancelBookLoadNotification();
                                     break;
                                 default:
                             }
@@ -222,8 +225,8 @@ public class App extends Application {
         return queuedBook != null;
     }
 
-    public Notificator getNotificator(){
-        if(sNotificator == null){
+    public Notificator getNotificator() {
+        if (sNotificator == null) {
             sNotificator = new Notificator(this);
         }
         return sNotificator;
@@ -414,6 +417,7 @@ public class App extends Application {
         }
         return mAuthorsSubscribe;
     }
+
     public SubscribeSequences getSequencesSubscribe() {
         if (mSequencesSubscribe == null) {
             mSequencesSubscribe = new SubscribeSequences();
@@ -467,14 +471,14 @@ public class App extends Application {
     }
 
     public void initializeDownload() {
-            // отменю предыдущую работу
-            // запущу рабочего, который загрузит все книги
-            Constraints constraints = new Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build();
-            OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
-            WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.REPLACE, downloadAllWorker);
-            App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
+        // отменю предыдущую работу
+        // запущу рабочего, который загрузит все книги
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.REPLACE, downloadAllWorker);
+        App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
     }
 
     public void handleWebPage(InputStream my) {
