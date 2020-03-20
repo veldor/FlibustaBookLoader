@@ -69,6 +69,7 @@ import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.TransportUtils;
+import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.utils.XMLParser;
 import net.veldor.flibustaloader.view_models.MainViewModel;
@@ -107,7 +108,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private ArrayList<String> autocompleteStrings;
     private ArrayAdapter<String> mSearchAdapter;
     private RadioGroup mSearchRadioContainer;
-    private MyWebClient mWebClient;
     private SearchResultsAdapter mSearchResultsAdapter;
     private Dialog mShowLoadDialog;
     private Button mLoadMoreBtn;
@@ -205,7 +205,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 String nextUrl = App.getInstance().mNextPageUrl;
                 if (nextUrl != null && !nextUrl.isEmpty()) {
                     App.getInstance().mResultsEscalate = false;
-                    mWebClient.loadNextPage();
+                    mMyViewModel.loadNextPage();
                     showLoadWaitingDialog();
                 } else {
                     Toast.makeText(OPDSActivity.this, "Результаты закончились", Toast.LENGTH_SHORT).show();
@@ -231,7 +231,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onClick(View view) {
                 // загружаю следующую страницу
                 App.getInstance().mResultsEscalate = true;
-                mWebClient.loadNextPage();
+                mMyViewModel.loadNextPage();
                 showLoadWaitingDialog();
 
             }
@@ -245,11 +245,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 mFab.setVisibility(View.GONE);
-                if (mWebClient == null) {
-                    // не загружен веб-клиент, перезапущу приложение
-                    Toast.makeText(OPDSActivity.this, "Не удалось загрузить веб-клиент, попробуйте перезапустить приложение", Toast.LENGTH_SHORT).show();
-                    return;
-                }
                 // очищу список найденного
                 if (mSearchResultsAdapter != null) {
                     mSearchResultsAdapter.nothingFound();
@@ -275,14 +270,14 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                         case R.id.searchGenre:
                             mSearchView.setVisibility(View.GONE);
                             showLoadWaitingDialog();
-                            App.getInstance().addToHistory("http://flibustahezeous3.onion/opds/genres");
-                            mWebClient.search("http://flibustahezeous3.onion/opds/genres");
+                            App.getInstance().addToHistory(URLHandler.getBaseUrl() + "/opds/genres");
+                            mMyViewModel.request(URLHandler.getBaseUrl() + "/opds/genres");
                             break;
                         case R.id.searchSequence:
                             mSearchView.setVisibility(View.GONE);
                             showLoadWaitingDialog();
-                            App.getInstance().addToHistory("http://flibustahezeous3.onion/opds/sequencesindex");
-                            mWebClient.search("http://flibustahezeous3.onion/opds/sequencesindex");
+                            App.getInstance().addToHistory(URLHandler.getBaseUrl() + "/opds/sequencesindex");
+                            mMyViewModel.request(URLHandler.getBaseUrl() + "/opds/sequencesindex");
                             break;
                     }
                 }
@@ -362,11 +357,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onChanged(@Nullable FoundedSequence foundedSequence) {
                 if (foundedSequence != null) {
                     showLoadWaitingDialog();
-                    String searching = App.BASE_URL + foundedSequence.link;
+                    String searching = URLHandler.getBaseUrl() + foundedSequence.link;
                     App.getInstance().addToHistory(searching);
                     // уточню, что происходит переход от серий к книгам
                     App.getInstance().mResultsEscalate = false;
-                    mWebClient.search(searching);
+                    mMyViewModel.request(searching);
                 }
             }
         });
@@ -377,12 +372,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             public void onChanged(@Nullable Genre foundedGenre) {
                 if (foundedGenre != null) {
                     showLoadWaitingDialog();
-
                     // уточню, что происходит переход от жанра к книгам
                     App.getInstance().mResultsEscalate = false;
-                    String searching = App.BASE_URL + foundedGenre.term;
+                    String searching = URLHandler.getBaseUrl() + foundedGenre.term;
                     App.getInstance().addToHistory(searching);
-                    mWebClient.search(searching);
+                    mMyViewModel.request(searching);
                 }
             }
         });
@@ -1396,16 +1390,16 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                         switch (which) {
                             case 0:
                                 App.sSearchType = SEARCH_BOOKS;
-                                doSearch(App.BASE_URL + "/opds/new/0/new");
+                                doSearch(URLHandler.getBaseUrl() + "/opds/new/0/new");
                                 break;
                             case 1:
-                                doSearch(App.BASE_URL + "/opds/newgenres");
+                                doSearch(URLHandler.getBaseUrl() + "/opds/newgenres");
                                 break;
                             case 2:
-                                doSearch(App.BASE_URL + "/opds/newauthors");
+                                doSearch(URLHandler.getBaseUrl() + "/opds/newauthors");
                                 break;
                             case 3:
-                                doSearch(App.BASE_URL + "/opds/newsequences");
+                                doSearch(URLHandler.getBaseUrl() + "/opds/newsequences");
                                 break;
                         }
                     }
@@ -1467,37 +1461,20 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void doSearch(String s) {
-        if(App.getInstance().isExternalVpn()){
             if (s != null && !s.isEmpty()) {
                 // очищу историю поиска и положу туда начальное значение
                 App.getInstance().addToHistory(s);
                 showLoadWaitingDialog();
-                .search(s);
+                mMyViewModel.request(s);
                 // добавлю значение в историю
             } else {
-                Toast.makeText(this, "Пустой поисковый запрос", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.empty_request_message, Toast.LENGTH_SHORT).show();
             }
-        }
-        else{
-            if (mWebClient == null) {
-                Toast.makeText(this, "Не удалось загрузить веб-клиент, попробуйте перезапустить приложение", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (s != null && !s.isEmpty()) {
-                // очищу историю поиска и положу туда начальное значение
-                App.getInstance().addToHistory(s);
-                showLoadWaitingDialog();
-                mWebClient.search(s);
-                // добавлю значение в историю
-            } else {
-                Toast.makeText(this, "Пустой поисковый запрос", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 
     private void doSearchFromHistory(String s) {
         showLoadWaitingDialog();
-        mWebClient.search(s);
+        mMyViewModel.request(s);
     }
 
     private void showLoadWaitingDialog() {
@@ -1592,9 +1569,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
         if (url != null) {
             showLoadWaitingDialog();
-            String searching = App.BASE_URL + url;
+            String searching = URLHandler.getBaseUrl() + url;
             App.getInstance().addToHistory(searching);
-            mWebClient.search(searching);
+            mMyViewModel.request(searching);
         }
     }
 
@@ -1602,10 +1579,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onQueryTextChange(String s) {
         return false;
     }
-
-/*    public void crash(View view) {
-        Crashlytics.getInstance().crash(); // Force a crash
-    }*/
 
     public class TorConnectErrorReceiver extends BroadcastReceiver {
         @Override
@@ -1663,10 +1636,12 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void startBrowsing() {
-        mWebClient = new MyWebClient();
+        if(!App.getInstance().isExternalVpn()){
+            mMyViewModel.setWebClient(new MyWebClient());
+        }
         // если нет истории поиска- гружу новинки за неделю, если есть- последнюю загруженную страницу
         if (App.getInstance().isSearchHistory()) {
-            mWebClient.search(App.getInstance().getLastHistoryElement());
+            mMyViewModel.request(App.getInstance().getLastHistoryElement());
         }
     }
 
@@ -1813,7 +1788,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             String lastUrl = App.getInstance().getLastHistoryElement();
             if (lastUrl != null && !lastUrl.isEmpty()) {
                 showLoadWaitingDialog();
-                mWebClient.search(lastUrl);
+                mMyViewModel.request(lastUrl);
             }
         } else if (requestCode == BACKUP_FILE_REQUEST_CODE) {
             // выбран файл, вероятно с бекапом

@@ -40,6 +40,7 @@ import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.SubscribeActivity;
 import net.veldor.flibustaloader.dialogs.GifDialog;
+import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
@@ -385,7 +386,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     private void makeSearch(String s) {
-        String searchString = FLIBUSTA_SEARCH_REQUEST + s.trim();
+        String searchString = App.BASE_URL + s.trim();
         mWebView.loadUrl(searchString);
         // занесу значение в список автозаполнения
         if (XMLHandler.putSearchValue(s)) {

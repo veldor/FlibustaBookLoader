@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.view_models;
 import android.app.Application;
 import android.net.Uri;
 import android.util.SparseBooleanArray;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -16,8 +17,11 @@ import androidx.work.WorkManager;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.MyWebClient;
 import net.veldor.flibustaloader.MyWebView;
+import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
+import net.veldor.flibustaloader.http.ExternalVpnClient;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.updater.Updater;
@@ -34,6 +38,7 @@ import java.util.Random;
 public class MainViewModel extends AndroidViewModel {
     private static final String ADD_TO_DOWNLOAD_QUEUE_ACTION = "add to download queue";
     public static final String MULTIPLY_DOWNLOAD = "multiply download";
+    private MyWebClient mWebClient;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -135,5 +140,32 @@ public class MainViewModel extends AndroidViewModel {
     public void addToDownloadQueue(DownloadLink downloadLink) {
         AddBooksToDownloadQueueWorker.addLink(downloadLink);
         App.getInstance().initializeDownload();
+    }
+
+    public void setWebClient(MyWebClient myWebClient) {
+        mWebClient = myWebClient;
+    }
+
+    public void request(String s) {
+        if(App.getInstance().isExternalVpn()){
+            ExternalVpnClient.search(s);
+        }
+        else{
+            if(mWebClient != null){
+                mWebClient.search(s);
+            }
+            else{
+                Toast.makeText(App.getInstance(), R.string.cant_initiate_webclient_message, Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    public void loadNextPage() {
+        if(App.getInstance().isExternalVpn()){
+            ExternalVpnClient.loadNextPage();
+        }
+        else{
+            mWebClient.loadNextPage();
+        }
     }
 }

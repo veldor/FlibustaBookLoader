@@ -9,6 +9,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
+import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,24 +28,28 @@ import cz.msebera.android.httpclient.ssl.SSLContexts;
 
 public class ImageLoadHandler {
     public static Bitmap loadImage(String s) {
-        try {
-        HttpClient httpClient = getNewHttpClient();
-        int port;
-        AndroidOnionProxyManager onionProxyManager = App.getInstance().mTorManager.getValue();
-        assert onionProxyManager != null;
-            port = onionProxyManager.getIPv4LocalHostSocksPort();
-        InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
-        HttpClientContext context = HttpClientContext.create();
-        context.setAttribute("socks.address", socksaddr);
-        HttpGet httpGet = new HttpGet(s);
-        httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
-        httpGet.setHeader("X-Compress", "null");
-        HttpResponse httpResponse = httpClient.execute(httpGet, context);
-            InputStream is = httpResponse.getEntity().getContent();
-            return BitmapFactory.decodeStream(is);
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
+        if (App.getInstance().isExternalVpn()) {
+            return ExternalVpnVewClient.loadImage(s);
+        } else {
+            try {
+                HttpClient httpClient = getNewHttpClient();
+                int port;
+                AndroidOnionProxyManager onionProxyManager = App.getInstance().mTorManager.getValue();
+                assert onionProxyManager != null;
+                port = onionProxyManager.getIPv4LocalHostSocksPort();
+                InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
+                HttpClientContext context = HttpClientContext.create();
+                context.setAttribute("socks.address", socksaddr);
+                HttpGet httpGet = new HttpGet(s);
+                httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
+                httpGet.setHeader("X-Compress", "null");
+                HttpResponse httpResponse = httpClient.execute(httpGet, context);
+                InputStream is = httpResponse.getEntity().getContent();
+                return BitmapFactory.decodeStream(is);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         return null;
     }
 

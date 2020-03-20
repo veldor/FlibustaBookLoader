@@ -15,7 +15,6 @@ import androidx.work.WorkerParameters;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
 import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
@@ -24,11 +23,11 @@ import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.FlibustaUnreachableException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
 import static net.veldor.flibustaloader.notificatons.Notificator.DOWNLOAD_PROGRESS_NOTIFICATION;
@@ -48,8 +47,8 @@ public class DownloadBooksWorker extends Worker {
         AppDatabase db = App.getInstance().mDatabase;
         BooksDownloadScheduleDao dao = db.booksDownloadScheduleDao();
         List<BooksDownloadSchedule> schedule = dao.getAllBooks();
-        if(schedule != null && schedule.size() > 0){
-            for(BooksDownloadSchedule b : schedule){
+        if (schedule != null && schedule.size() > 0) {
+            for (BooksDownloadSchedule b : schedule) {
                 dao.delete(b);
             }
         }
@@ -66,12 +65,12 @@ public class DownloadBooksWorker extends Worker {
         ListenableFuture<List<WorkInfo>> info = WorkManager.getInstance(App.getInstance()).getWorkInfosForUniqueWork(MULTIPLY_DOWNLOAD);
         try {
             List<WorkInfo> results = info.get();
-            if(results == null || results.size() == 0){
+            if (results == null || results.size() == 0) {
                 return true;
             }
-            for(WorkInfo v : results){
+            for (WorkInfo v : results) {
                 WorkInfo.State status = v.getState();
-                if(status.equals(WorkInfo.State.ENQUEUED) || status.equals(WorkInfo.State.RUNNING) ){
+                if (status.equals(WorkInfo.State.ENQUEUED) || status.equals(WorkInfo.State.RUNNING)) {
                     return false;
                 }
             }
@@ -103,29 +102,29 @@ public class DownloadBooksWorker extends Worker {
         Boolean reDownload = App.getInstance().isReDownload();
         // получу количество книг на начало скачивания
         mBooksCount = dao.getQueueSize();
-        if(mBooksCount > 0){
+        if (mBooksCount > 0) {
             // помечу рабочего важным
             ForegroundInfo info = createForegroundInfo();
             setForegroundAsync(info);
             // создам уведомление о скачивании
-            mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount,0, true);
+            mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount, 0, true);
             mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
             updateDownloadStatusNotification(0);
             BooksDownloadSchedule queuedElement;
             // начну скачивание
             // периодически удостовериваюсь, что работа не отменена
-            if(isStopped()){
+            if (isStopped()) {
                 // немедленно прекращаю работу
                 mNotificator.cancelBookLoadNotification();
                 return Result.success();
             }
             int downloadCounter = 1;
             // пока есть книги в очереди скачивания и работа не остановлена
-            while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()){
+            while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()) {
                 // освежу уведомление
                 updateDownloadStatusNotification(downloadCounter);
                 // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
-                if(!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null){
+                if (!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null) {
                     dao.delete(queuedElement);
                     continue;
                 }
@@ -134,13 +133,13 @@ public class DownloadBooksWorker extends Worker {
                 try {
                     updateDownloadStatusNotification(downloadCounter);
                     downloadResult = downloadBook(queuedElement);
-                    if(!downloadResult){
+                    if (!downloadResult) {
                         // ошибка загрузки книг, выведу сообщение об ошибке
                         mNotificator.showBooksLoadErrorNotification(queuedElement.name);
                         Log.d("surprise", "DownloadBooksWorker doWork: error download!!!");
                         return Result.failure();
                     }
-                    if(!isStopped()){
+                    if (!isStopped()) {
                         // отмечу книгу как скачанную
                         DownloadedBooks downloadedBook = new DownloadedBooks();
                         downloadedBook.bookId = queuedElement.bookId;
@@ -159,7 +158,7 @@ public class DownloadBooksWorker extends Worker {
             }
             // цикл закончился, проверю, все ли книги загружены
             mBooksCount = dao.getQueueSize();
-            if(mBooksCount == 0 && !isStopped()){
+            if (mBooksCount == 0 && !isStopped()) {
                 // ура, всё загружено, выведу сообщение об успешной загрузке
                 mNotificator.showBooksLoadedNotification();
             }
@@ -177,18 +176,22 @@ public class DownloadBooksWorker extends Worker {
     }
 
     private boolean downloadBook(BooksDownloadSchedule book) throws BookNotFoundException {
-        // настрою клиент
-        try{
-            TorWebClient client = new TorWebClient();
-            return client.downloadBook(book);
-        } catch (TorNotLoadedException e) {
-            // оповещу об ошибке загрузки TOR-а
-            mNotificator.showTorNotLoadedNotification();
-            return false;
-        } catch (FlibustaUnreachableException e) {
-            // флибуста лежит
-            Log.d("surprise", "DownloadBooksWorker downloadBook: cant find flibusta...");
-            return false;
+        if (App.getInstance().isExternalVpn()) {
+            return ExternalVpnVewClient.downloadBook(book);
+        } else {
+            // настрою клиент
+            try {
+                TorWebClient client = new TorWebClient();
+                return client.downloadBook(book);
+            } catch (TorNotLoadedException e) {
+                // оповещу об ошибке загрузки TOR-а
+                mNotificator.showTorNotLoadedNotification();
+                return false;
+            } catch (FlibustaUnreachableException e) {
+                // флибуста лежит
+                Log.d("surprise", "DownloadBooksWorker downloadBook: cant find flibusta...");
+                return false;
+            }
         }
     }
 

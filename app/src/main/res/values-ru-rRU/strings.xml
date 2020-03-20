@@ -131,4 +131,6 @@
     <string name="connection_menu_title">Соединение</string>
     <string name="use_externalVpnMessage">Я использую внешний VPN</string>
     <string name="confirm">Да, я понял</string>
+    <string name="cant_initiate_webclient_message">Не удалось инициалицировать Веб-клиент.</string>
+    <string name="empty_request_message">Пустой поисковый запрос</string>
 </resources>

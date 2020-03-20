@@ -18,6 +18,7 @@ import android.webkit.WebViewClient;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 
 import java.io.BufferedReader;
@@ -225,16 +226,29 @@ public class MyWebViewClient extends WebViewClient {
                     }
                 }
             }
+            HttpResponse httpResponse;
+            if(App.getInstance().isExternalVpn()){
+                httpResponse = ExternalVpnVewClient.rawRequest(url);
+            }
+            else{
+                HttpClient httpClient = getNewHttpClient();
+                int port = onionProxyManager.getIPv4LocalHostSocksPort();
+                InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
+                HttpClientContext context = HttpClientContext.create();
+                context.setAttribute("socks.address", socksaddr);
+                HttpGet httpGet = new HttpGet(url);
+                httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
+                httpGet.setHeader("X-Compress", "null");
+                httpResponse = httpClient.execute(httpGet, context);
+            }
 
-            HttpClient httpClient = getNewHttpClient();
-            int port = onionProxyManager.getIPv4LocalHostSocksPort();
-            InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
-            HttpClientContext context = HttpClientContext.create();
-            context.setAttribute("socks.address", socksaddr);
-            HttpGet httpGet = new HttpGet(url);
-            httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
-            httpGet.setHeader("X-Compress", "null");
-            HttpResponse httpResponse = httpClient.execute(httpGet, context);
+            if(httpResponse == null){
+                Log.d("surprise", "MyWebViewClient handleRequest: no response");
+                return super.shouldInterceptRequest(view, url);
+            }
+            else{
+                Log.d("surprise", "MyWebViewClient handleRequest: have response");
+            }
 
             InputStream input = httpResponse.getEntity().getContent();
             String encoding = ENCODING_UTF_8;

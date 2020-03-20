@@ -1,29 +1,25 @@
-package net.veldor.flibustaloader;
+package net.veldor.flibustaloader.http;
 
 import android.util.Log;
 
 import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
+import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.workers.GetAllPagesWorker;
 import net.veldor.flibustaloader.workers.GetPageWorker;
 
-public class MyWebClient {
+import static net.veldor.flibustaloader.MyWebClient.LOADED_URL;
+import static net.veldor.flibustaloader.MyWebClient.PAGE_LOAD_WORKER;
 
-    public static final String PAGE_LOAD_WORKER = "page load worker";
-
-    public MyWebClient() {
-    }
-
-    public static final String LOADED_URL = "loaded_url";
-    public static final String DOWNLOAD_ATTRIBUTES = "download attributes";
-
-    public void search(String s) {
+public class ExternalVpnClient {
+    public static void search(String s) {
         // сброшу обложку
         App.getInstance().mShowCover.postValue(null);
         // отменю остальные работы
-        Log.d("surprise", "MyWebClient search search " + s);
         Data inputData = new Data.Builder()
                 .putString(LOADED_URL, s)
                 .build();
@@ -31,10 +27,10 @@ public class MyWebClient {
         // запущу рабочего, загружающего страницу
         if (App.getInstance().isDownloadAll()) {
             getPageWorker = new OneTimeWorkRequest.Builder(GetAllPagesWorker.class).addTag(PAGE_LOAD_WORKER).setInputData(inputData).build();
-            WorkManager.getInstance(App.getInstance()).enqueue(getPageWorker);
+            WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(PAGE_LOAD_WORKER, ExistingWorkPolicy.REPLACE, getPageWorker);
         } else {
             getPageWorker = new OneTimeWorkRequest.Builder(GetPageWorker.class).addTag(PAGE_LOAD_WORKER).setInputData(inputData).build();
-            WorkManager.getInstance(App.getInstance()).enqueue(getPageWorker);
+            WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(PAGE_LOAD_WORKER, ExistingWorkPolicy.REPLACE, getPageWorker);
         }
         // отмечу, что выполняется работа по загрузке контента
         App.getInstance().mSearchWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(getPageWorker.getId());
@@ -42,12 +38,11 @@ public class MyWebClient {
         App.getInstance().mProcess = getPageWorker;
     }
 
-    public void loadNextPage() {
-        // если есть ссылка на следующую страницу- гружу её
+    public static void loadNextPage() {
         String nextPageLink = App.getInstance().mNextPageUrl;
         if (nextPageLink != null && !nextPageLink.isEmpty()) {
             Log.d("surprise", "MyWebClient loadNextPage: " + nextPageLink);
-            search(App.BASE_URL + nextPageLink);
+            search(URLHandler.getBaseUrl() + nextPageLink);
         } else {
             // видимо, какая то ошибка, делаю вид, что ничего не найдено
             App.getInstance().mSearchResult.postValue(null);
