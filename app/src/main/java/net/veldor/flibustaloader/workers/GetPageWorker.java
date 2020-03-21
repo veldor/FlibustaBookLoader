@@ -15,6 +15,11 @@ import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.http.TorWebClient;
 
+import java.io.IOException;
+
+import cz.msebera.android.httpclient.HttpResponse;
+import cz.msebera.android.httpclient.util.EntityUtils;
+
 public class GetPageWorker extends Worker {
 
     public GetPageWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -27,13 +32,16 @@ public class GetPageWorker extends Worker {
         App.getInstance().mLoadAllStatus.postValue("В процессе");
         Data data = getInputData();
         String text = data.getString(MyWebClient.LOADED_URL);
-
         // если используется внешний  VPN- просто создам сооединение
         if(App.getInstance().isExternalVpn()){
-            String answer = ExternalVpnVewClient.request(text);
-            if(!isStopped()){
+            HttpResponse response = ExternalVpnVewClient.rawRequest(text);
+            if(!isStopped() && response != null){
                 App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
-                App.getInstance().mSearchResult.postValue(answer);
+                try {
+                    App.getInstance().mSearchResult.postValue(EntityUtils.toString(response.getEntity()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
         else{

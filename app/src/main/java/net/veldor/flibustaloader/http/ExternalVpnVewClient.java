@@ -61,7 +61,7 @@ public class ExternalVpnVewClient {
                 }
             };
             // выполню запрос
-            return httpclient.execute(httpget,responseHandler);
+            return httpclient.execute(httpget,responseHandler, context);
         } catch (IOException e) {
             Log.d("surprise", "TestHttpRequestWorker doWork have error in request: " + e.getMessage());
         } finally {
@@ -102,10 +102,7 @@ public class ExternalVpnVewClient {
     }
 
     public static boolean downloadBook(BooksDownloadSchedule book) {
-        CloseableHttpClient httpclient = null;
         try {
-            httpclient = HttpClients.createSystem();
-            HttpGet httpget = new HttpGet(URLHandler.getBaseUrl() + book.link);
             // получу имя файла
             DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
             DocumentFile newFile;
@@ -117,10 +114,10 @@ public class ExternalVpnVewClient {
             }
             if (newFile != null) {
                 // запрошу данные
-                Log.d("surprise", "TorWebClient downloadBook: request " + book.link);
-                CloseableHttpResponse response = httpclient.execute(httpget);
+                HttpResponse response = rawRequest(URLHandler.getBaseUrl() + book.link);
                 if (response != null) {
                     int status = response.getStatusLine().getStatusCode();
+                    Log.d("surprise", "ExternalVpnVewClient downloadBook status is " + status);
                     if (status == 200) {
                         HttpEntity entity = response.getEntity();
                         if (entity != null) {
@@ -159,16 +156,6 @@ public class ExternalVpnVewClient {
         } catch (BookNotFoundException e) {
             e.printStackTrace();
         }
-        finally {
-            try {
-                // по-любому закрою клиент
-                if (httpclient != null) {
-                    httpclient.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
         return false;
     }
 
@@ -177,7 +164,6 @@ public class ExternalVpnVewClient {
         InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
         HttpClientContext context = HttpClientContext.create();
         context.setAttribute("socks.address", socksaddr);
-        Log.d("surprise", "ExternalVpnVewClient rawRequest: request " + url);
         CloseableHttpClient httpclient = HttpClients.createSystem();
         HttpGet httpget = new HttpGet(url);
         try {

@@ -135,4 +135,5 @@
     <string name="confirm">Yes, confirm</string>
     <string name="cant_initiate_webclient_message">Can\'t initiate Web Client</string>
     <string name="empty_request_message">Empty search request</string>
+    <string name="use_external_proxy_message">Use external VPN</string>
 </resources>

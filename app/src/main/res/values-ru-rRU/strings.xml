@@ -133,4 +133,5 @@
     <string name="confirm">Да, я понял</string>
     <string name="cant_initiate_webclient_message">Не удалось инициалицировать Веб-клиент.</string>
     <string name="empty_request_message">Пустой поисковый запрос</string>
+    <string name="use_external_proxy_message">Использовать внешний VPN</string>
 </resources>

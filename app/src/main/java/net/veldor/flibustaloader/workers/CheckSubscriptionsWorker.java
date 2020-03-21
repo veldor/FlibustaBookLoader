@@ -10,6 +10,7 @@ import androidx.work.WorkerParameters;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.notificatons.Notificator;
@@ -17,9 +18,14 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
 import net.veldor.flibustaloader.http.TorWebClient;
+import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.utils.XMLParser;
 
+import java.io.IOException;
 import java.util.ArrayList;
+
+import cz.msebera.android.httpclient.HttpResponse;
+import cz.msebera.android.httpclient.util.EntityUtils;
 
 public class CheckSubscriptionsWorker extends Worker {
 
@@ -39,46 +45,61 @@ public class CheckSubscriptionsWorker extends Worker {
 
             String lastCheckedId = App.getInstance().getLastCheckedBookId();
             Log.d("surprise", "CheckSubscriptionsWorker doWork last checked " + lastCheckedId);
-
-            // проверю, запустился ли TOR
-            AndroidOnionProxyManager tor = App.getInstance().mLoadedTor.getValue();
-            while (tor == null){
-                try {
-                    Thread.sleep(3000);
-                    Log.d("surprise", "CheckSubscriptionsWorker doWork wait tor");
-                } catch (InterruptedException e) {
-                    Log.d("surprise", "CheckSubscriptionsWorker doWork thread interrupted");
-                    e.printStackTrace();
-                }
-                tor = App.getInstance().mLoadedTor.getValue();
-            }
-            // теперь подожду, пока TOR дозагрузится
-            while (!tor.isBootstrapped()){
-                try {
-                    Thread.sleep(3000);
-                    Log.d("surprise", "CheckSubscriptionsWorker doWork wait tor boostrap");
-                } catch (InterruptedException e) {
-                    Log.d("surprise", "CheckSubscriptionsWorker doWork thread interrupted");
-                    e.printStackTrace();
-                }
-            }
+            String answer = null;
+            ArrayList<FoundedItem> result = new ArrayList<>();
             // получу список подписок
             App.sSearchType = OPDSActivity.SEARCH_BOOKS;
-            // получу список книг
-            // создам новый экземпляр веб-клиента
-            TorWebClient webClient = null;
-            try {
-                webClient = new TorWebClient();
 
-            } catch (TorNotLoadedException e) {
-                e.printStackTrace();
+            if(App.getInstance().isExternalVpn()){
+                HttpResponse response = ExternalVpnVewClient.rawRequest((App.BASE_URL + "/opds/new/0/new"));
+                if(response != null){
+                    try {
+                        answer = EntityUtils.toString(response.getEntity());
+                    } catch (IOException e) {
+                        Log.d("surprise", "CheckSubscriptionsWorker doWork error when receive subscription");
+                        e.printStackTrace();
+                    }
+                }
             }
-            if(webClient == null){
-                // верну ошибку
-                return Result.failure();
+            else{
+
+                // проверю, запустился ли TOR
+                AndroidOnionProxyManager tor = App.getInstance().mLoadedTor.getValue();
+                while (tor == null){
+                    try {
+                        Thread.sleep(3000);
+                        Log.d("surprise", "CheckSubscriptionsWorker doWork wait tor");
+                    } catch (InterruptedException e) {
+                        Log.d("surprise", "CheckSubscriptionsWorker doWork thread interrupted");
+                        e.printStackTrace();
+                    }
+                    tor = App.getInstance().mLoadedTor.getValue();
+                }
+                // теперь подожду, пока TOR дозагрузится
+                while (!tor.isBootstrapped()){
+                    try {
+                        Thread.sleep(3000);
+                        Log.d("surprise", "CheckSubscriptionsWorker doWork wait tor boostrap");
+                    } catch (InterruptedException e) {
+                        Log.d("surprise", "CheckSubscriptionsWorker doWork thread interrupted");
+                        e.printStackTrace();
+                    }
+                }
+                // получу список книг
+                // создам новый экземпляр веб-клиента
+                TorWebClient webClient = null;
+                try {
+                    webClient = new TorWebClient();
+
+                } catch (TorNotLoadedException e) {
+                    e.printStackTrace();
+                }
+                if(webClient == null){
+                    // верну ошибку
+                    return Result.failure();
+                }
+                answer = webClient.request(App.BASE_URL + "/opds/new/0/new");
             }
-            ArrayList<FoundedItem> result = new ArrayList<>();
-            String answer = webClient.request(App.BASE_URL + "/opds/new/0/new");
             // сразу же обработаю результат
             if(answer != null && !answer.isEmpty()){
                 XMLParser.handleSearchResults(result, answer);
@@ -86,14 +107,27 @@ public class CheckSubscriptionsWorker extends Worker {
                 // проверю последнюю загруженную книгу
                 String lastId = ((FoundedBook) result.get(result.size() - 1)).id;
                 while (sNextPage != null && lastId.compareTo(lastCheckedId) > 0){
-                    Log.d("surprise", "CheckSubscriptionsWorker doWork load next page");
-                    try {
-                        webClient = new TorWebClient();
-                    } catch (TorNotLoadedException e) {
-                        e.printStackTrace();
-                        Log.d("surprise", "CheckSubscriptionsWorker doWork: не удалось запустить TOR");
+                    if(App.getInstance().isExternalVpn()){
+                        HttpResponse response = ExternalVpnVewClient.rawRequest((URLHandler.getBaseUrl()) + sNextPage);
+                        if(response != null){
+                            try {
+                                answer = EntityUtils.toString(response.getEntity());
+                            } catch (IOException e) {
+                                Log.d("surprise", "CheckSubscriptionsWorker doWork error when receive subscription");
+                                e.printStackTrace();
+                            }
+                        }
                     }
-                    answer = webClient.request(App.BASE_URL + sNextPage);
+                    else{
+                        TorWebClient webClient;
+                        try {
+                            webClient = new TorWebClient();
+                            answer = webClient.request(App.BASE_URL + sNextPage);
+                        } catch (TorNotLoadedException e) {
+                            e.printStackTrace();
+                            Log.d("surprise", "CheckSubscriptionsWorker doWork: не удалось запустить TOR");
+                        }
+                    }
                     XMLParser.handleSearchResults(result, answer);
                     lastId = ((FoundedBook) result.get(result.size() - 1)).id;
                 }

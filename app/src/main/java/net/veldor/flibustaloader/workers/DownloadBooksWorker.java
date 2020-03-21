@@ -177,6 +177,7 @@ public class DownloadBooksWorker extends Worker {
 
     private boolean downloadBook(BooksDownloadSchedule book) throws BookNotFoundException {
         if (App.getInstance().isExternalVpn()) {
+            Log.d("surprise", "DownloadBooksWorker downloadBook try download trough external vpn");
             return ExternalVpnVewClient.downloadBook(book);
         } else {
             // настрою клиент

@@ -26,7 +26,6 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
-import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -43,7 +42,6 @@ import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.ParseWebRequestWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
-import net.veldor.flibustaloader.workers.TestWorker;
 
 import java.io.File;
 import java.io.InputStream;
@@ -243,9 +241,6 @@ public class App extends Application {
             // запускаю tor
             OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
             WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
-        }
-        else{
-            WorkManager.getInstance(this).enqueue(new OneTimeWorkRequest.Builder(TestWorker.class).build());
         }
     }
 

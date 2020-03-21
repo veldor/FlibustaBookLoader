@@ -69,10 +69,9 @@ public class MainActivity extends AppCompatActivity {
     private void setupUI() {
         // если используем внешнй VPN- проверяю только выдачу разрешений и настройку внешнего вида
         setContentView(R.layout.activity_main);
-        if(App.getInstance().isExternalVpn()){
+        if (App.getInstance().isExternalVpn()) {
             Log.d("surprise", "MainActivity setupUI external vpn used");
-        }
-        else{
+        } else {
             // найду индикатор прогресса
             mTorLoadingProgressIndicator = findViewById(R.id.progressBarCircle);
             mTorLoadingProgressIndicator.setProgress(0);
@@ -123,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupObservers() {
-        if(!App.getInstance().isExternalVpn()){
+        if (!App.getInstance().isExternalVpn()) {
             // зарегистрирую отслеживание загружающегося TOR
             LiveData<AndroidOnionProxyManager> loadedTor = App.getInstance().mLoadedTor;
             loadedTor.observe(this, new Observer<AndroidOnionProxyManager>() {
@@ -172,8 +171,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
-        }
-        else{
+        } else {
             torLoaded();
         }
     }
@@ -185,8 +183,7 @@ public class MainActivity extends AppCompatActivity {
         // сбрасываю таймер. Если выбран вид приложения- запущу Activity согласно виду. Иначе- отмечу, что TOR загружен и буду ждать выбора вида
         if (App.getInstance().getView() != 0) {
             startApp();
-        }
-        else{
+        } else {
             mReadyToStart = true;
         }
     }
@@ -215,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         App.getInstance().setView(App.VIEW_WEB);
-                        if(mReadyToStart){
+                        if (mReadyToStart) {
                             startApp();
                         }
                     }
@@ -224,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         App.getInstance().setView(App.VIEW_ODPS);
-                        if(mReadyToStart){
+                        if (mReadyToStart) {
                             startApp();
                         }
                     }
@@ -344,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void torLoadTooLongDialog() {
-        if(mActivityVisible){
+        if (mActivityVisible) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle("Tor load too long")
                     .setMessage("Подождём ещё или перезапустим?")
@@ -361,32 +358,55 @@ public class MainActivity extends AppCompatActivity {
                             startTimer();
                         }
                     }).show();
-        }
-        else{
+        } else {
             mTorLoadTooLong = true;
         }
     }
 
 
     private void showTorNotWorkDialog() {
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setTitle(getString(R.string.tor_cant_load_message))
-                    .setMessage(getString(R.string.tor_not_start_body))
-                    .setPositiveButton(getString(R.string.try_again_message), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            App.getInstance().startTor();
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(getString(R.string.tor_cant_load_message))
+                .setMessage(getString(R.string.tor_not_start_body))
+                .setPositiveButton(getString(R.string.try_again_message), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        App.getInstance().startTor();
 
-                        }
-                    })
-                    .setNegativeButton(getString(R.string.try_later_message), new DialogInterface.OnClickListener() {
+                    }
+                })
+                .setNegativeButton(getString(R.string.try_later_message), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finishAffinity();
+                    }
+                })
+                .setNeutralButton(getString(R.string.use_external_proxy_message), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        handleUseExternalVpn();
+                    }
+                })
+                .show();
+    }
+
+
+    private void handleUseExternalVpn() {
+            // покажу диалог с объяснением последствий включения VPN
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder
+                    .setTitle("Использование внешнего VPN")
+                    .setMessage("Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно. Сделано для версий Android ниже 6.0, где могут быть проблемы с доступом, но может быть использовано по желанию на ваш страх и риск.")
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            finishAffinity();
+                            App.getInstance().switchExternalVpnUse();
+                            torLoaded();
                         }
-                    })
-                    .show();
-        }
+                    });
+            dialogBuilder.create().show();
+    }
 
     @Override
     protected void onPause() {
@@ -398,7 +418,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mActivityVisible = true;
-        if(mTorLoadTooLong){
+        if (mTorLoadTooLong) {
             mTorLoadTooLong = false;
             torLoadTooLongDialog();
         }

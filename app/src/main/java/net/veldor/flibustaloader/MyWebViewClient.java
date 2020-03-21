@@ -213,6 +213,7 @@ public class MyWebViewClient extends WebViewClient {
 
     @SuppressWarnings("CharsetObjectCanBeUsed")
     private WebResourceResponse handleRequest(WebView view, String url) {
+        Log.d("surprise", "MyWebViewClient handleRequest request " + url);
         try {
             mViewMode = App.getInstance().getViewMode();
             mNightMode = App.getInstance().getNightMode();

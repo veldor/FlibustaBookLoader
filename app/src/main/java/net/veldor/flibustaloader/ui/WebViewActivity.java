@@ -299,6 +299,9 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             case R.id.clearSearchHistory:
                 clearHistory();
                 return true;
+            case R.id.menuUseExternalVpn:
+                handleUseExternalVpn();
+                return true;
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
             mMyViewModel.switchNightMode();
@@ -308,6 +311,30 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         return super.onOptionsItemSelected(item);
     }
 
+
+    private void handleUseExternalVpn() {
+        // если использовался внешний VPN- просто отключу его использование
+        if(App.getInstance().isExternalVpn()){
+            App.getInstance().switchExternalVpnUse();
+            invalidateOptionsMenu();
+        }
+        else{
+            // покажу диалог с объяснением последствий включения VPN
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder
+                    .setTitle("Использование внешнего VPN")
+                    .setMessage("Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно. Сделано для версий Android ниже 6.0, где могут быть проблемы с доступом, но может быть использовано по желанию на ваш страх и риск.")
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            App.getInstance().switchExternalVpnUse();
+                            invalidateOptionsMenu();
+                        }
+                    });
+            dialogBuilder.create().show();
+        }
+    }
 
     private void clearHistory() {
         mMyViewModel.clearHistory();
