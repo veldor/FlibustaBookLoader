@@ -8,7 +8,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.OPDSActivity;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -19,6 +19,7 @@ import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.ImageLoadHandler;
 import net.veldor.flibustaloader.utils.SortHandler;
+import net.veldor.flibustaloader.utils.URLHandler;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -317,6 +318,7 @@ public class ParseSearchWorker extends Worker {
                 downloadLink.mime = someAttributes.getNamedItem("type").getTextContent();
                 downloadLink.name = book.name;
                 downloadLink.author = book.author;
+                downloadLink.size = book.size;
                 book.downloadLinks.add(downloadLink);
                 innerCounter++;
             }
@@ -341,7 +343,7 @@ public class ParseSearchWorker extends Worker {
                 if(someNode != null){
                     someString = someNode.getAttributes().getNamedItem("href").getTextContent();
                     if(someString != null && !someString.isEmpty()){
-                        book.preview = ImageLoadHandler.loadImage(App.BASE_URL + someString);
+                        book.preview = ImageLoadHandler.loadImage(URLHandler.getBaseUrl() + someString);
                     }
                 }
             }

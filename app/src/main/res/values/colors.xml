@@ -12,4 +12,7 @@
     <color name="translator_text_color">#3e5f75</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="blue">#0351C1</color>
+    <color name="timerColor">#878585</color>
+    <color name="progressColor">#FBE412</color>
+    <color name="white">#FFFFFF</color>
 </resources>

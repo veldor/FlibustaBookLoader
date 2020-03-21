@@ -4,37 +4,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.appcompat.widget.AppCompatCheckBox
+    <Switch
         android:id="@+id/save_type_selection"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/remember_format"
-        android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:padding="10dp"
+        android:gravity="center_horizontal" />
 
-    <androidx.appcompat.widget.AppCompatCheckBox
+    <Switch
         android:id="@+id/save_only_selected"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/download_only_this_format"
-        android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
+        android:padding="30dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/save_type_selection" />
+        app:layout_constraintTop_toBottomOf="@+id/save_type_selection"
+        android:gravity="center_horizontal" />
 
-    <androidx.appcompat.widget.AppCompatCheckBox
+    <Switch
         android:id="@+id/reDownload"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/do_not_re_download"
-        android:textAlignment="center"
+        android:padding="30dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/save_only_selected" />
+        app:layout_constraintTop_toBottomOf="@+id/save_only_selected"
+        android:gravity="center_horizontal" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

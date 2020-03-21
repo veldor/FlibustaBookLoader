@@ -30,7 +30,8 @@
                 android:textStyle="bold"
                 app:layout_constraintEnd_toStartOf="@+id/menuButton"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                android:gravity="center_horizontal" />
 
             <ImageButton
                 android:id="@+id/menuButton"
@@ -88,7 +89,8 @@
                     android:text="@{book.genreComplex}"
                     android:textAlignment="center"
                     android:textColor="@drawable/genre_text_color"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:gravity="center_horizontal" />
 
                 <TextView
                     android:id="@+id/sequence"
@@ -98,7 +100,8 @@
                     android:text="@{book.sequenceComplex}"
                     android:textAlignment="center"
                     android:textColor="@drawable/sequence_text_color"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"
+                    android:gravity="center_horizontal" />
             </LinearLayout>
 
             <TextView
@@ -139,11 +142,14 @@
 
             <Button
                 android:id="@+id/downloadBookBtn"
-                style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:background="@drawable/transparent_bg_bordered_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/download_message"
                 app:layout_constraintEnd_toEndOf="parent"
+
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
                 android:textColor="@color/book_name_color"

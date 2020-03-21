@@ -7,7 +7,7 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.OPDSActivity;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -20,6 +20,9 @@ import net.veldor.flibustaloader.workers.GetAllPagesWorker;
 import net.veldor.flibustaloader.workers.LoadSubscriptionsWorker;
 import net.veldor.flibustaloader.workers.ParseSearchWorker;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -28,8 +31,12 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -54,6 +61,7 @@ public class XMLParser {
     private static final String NEW_SEQUENCES = "tag:search:new:sequence";
     private static final String NEW_AUTHORS = "tag:search:new:author";
     private static final String PARSE_SEARCH = "parse search";
+    private static final String READ_TYPE = "read";
 
     public static Document getDocument(String rawText) {
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -300,6 +308,7 @@ public class XMLParser {
                 downloadLink.mime = someAttributes.getNamedItem("type").getTextContent();
                 downloadLink.name = book.name;
                 downloadLink.author = book.author;
+                downloadLink.size = book.size;
                 book.downloadLinks.add(downloadLink);
                 innerCounter++;
             }
@@ -360,5 +369,44 @@ public class XMLParser {
             return null;
         }
         return result[3 - 1];
+    }
+
+    public static void searchDownloadLinks(InputStream content) {
+        try {
+        org.jsoup.nodes.Document dom;
+        String url = "http://rutracker.org";
+            dom = Jsoup.parse(content, "UTF-8", url);
+            Elements links = dom.select("a");
+            if(links != null){
+                Pattern linkPattern  = Pattern.compile("^/b/[0-9]+/([a-z0-9]+)$");
+                String href;
+                Matcher result;
+                String type;
+                ArrayList<String> types = new ArrayList<>();
+                HashMap<String , String > linksList = new HashMap<>();
+                for(Element link : links){
+                    // проверю ссылку на соответствие формату скачивания
+                    href = link.attr("href");
+                    result = linkPattern.matcher(href);
+                   if(result.matches()){
+                       type = result.group(1);
+                       if(type != null && !type.isEmpty() && !type.equals(READ_TYPE)){
+                           // добавлю тип в список типов
+                           if(!types.contains(type)){
+                               types.add(type);
+                           }
+                           linksList.put(result.group(), type);
+                       }
+
+                   }
+                }
+
+            }
+            else{
+                Log.d("surprise", "XMLParser searchDownloadLinks: not found links");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

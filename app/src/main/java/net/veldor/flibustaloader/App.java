@@ -5,12 +5,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.room.Room;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -22,6 +24,9 @@ import androidx.work.WorkManager;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
+import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -29,24 +34,33 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
 import net.veldor.flibustaloader.utils.SubscribeSequences;
+import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
+import net.veldor.flibustaloader.workers.DownloadBooksWorker;
+import net.veldor.flibustaloader.workers.ParseWebRequestWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
+import net.veldor.flibustaloader.workers.TestWorker;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.jar.Attributes;
 
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
+import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
 public class App extends Application {
 
-
+    private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
+    private static final String EXTERNAL_VPN = "external vpn";
+    public static int sTorStartTry = 0;
     public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
     private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
@@ -110,13 +124,13 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
     private static App instance;
-    private static Notificator sNotificator;
+    public boolean mDownloadUnloaded;
+    public String mSelectedFormat;
+    private Notificator sNotificator;
     public File downloadedApkFile;
     public Uri updateDownloadUri;
     public final MutableLiveData<ArrayList<DownloadLink>> mDownloadLinksList = new MutableLiveData<>();
     public final MutableLiveData<FoundedBook> mSelectedBook = new MutableLiveData<>();
-    // отслеживание загрузки книги
-    public final MutableLiveData<Boolean> mDownloadProgress = new MutableLiveData<>();
     public final MutableLiveData<FoundedBook> mContextBook = new MutableLiveData<>();
     public final MutableLiveData<AndroidOnionProxyManager> mLoadedTor = new MutableLiveData<>();
     public final MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
@@ -124,8 +138,6 @@ public class App extends Application {
     public LiveData<WorkInfo> mDownloadAllWork;
     public boolean mDownloadsInProgress;
     public OneTimeWorkRequest mProcess;
-    public final MutableLiveData<String> mUnloadedBook = new MutableLiveData<>();
-    public ArrayList<FoundedItem> mBooksForDownload;
     public final ArrayList<FoundedBook> mBooksDownloadFailed = new ArrayList<>();
     public int mBookSortOption = -1;
     public int mAuthorSortOptions = -1;
@@ -134,29 +146,27 @@ public class App extends Application {
     public final MutableLiveData<ArrayList<FoundedBook>> mSubscribeResults = new MutableLiveData<>();
     public final MutableLiveData<FoundedBook> mShowCover = new MutableLiveData<>();
     public SparseBooleanArray mDownloadSelectedBooks;
-    public MutableLiveData<ArrayList<FoundedBook>> mDownloadSchedule = new MutableLiveData<>(new ArrayList<FoundedBook>());
-    public MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
+    public final MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
-    public LiveData<WorkInfo> TorStartWork;
     public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
     private SubscribeBooks mBooksSubscribe;
     private SubscribeAuthors mAuthorsSubscribe;
     private SubscribeSequences mSequencesSubscribe;
+    public InputStream mRequestData;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
-
+        // читаю настройки sharedPreferences
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sNotificator = new Notificator(this);
         instance = this;
 
         startTor();
 
-        // читаю настройки sharedPreferences
-
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         // определю ночной режим
         if (getNightMode()) {
             AppCompatDelegate.setDefaultNightMode(
@@ -169,28 +179,74 @@ public class App extends Application {
         // получаю базу данных
         mDatabase = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database")
-                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
                 .allowMainThreadQueries()
                 .build();
 
         planeBookSubscribes();
+
+        // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
+        handleMassDownload();
     }
 
-    public Notificator getNotificator(){
-        if(sNotificator == null){
+    private void handleMassDownload() {
+        LiveData<List<WorkInfo>> workStatus = WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(MULTIPLY_DOWNLOAD);
+        workStatus.observeForever(new Observer<List<WorkInfo>>() {
+            @Override
+            public void onChanged(List<WorkInfo> workInfos) {
+                if (workInfos != null) {
+                    if (workInfos.size() > 0) {
+                        // получу сведения о состоянии загрузки
+                        WorkInfo info = workInfos.get(0);
+                        if (info != null) {
+                            Log.d("surprise", "App onChanged: status is " + info.getState());
+                            switch (info.getState()) {
+                                case ENQUEUED:
+                                    // ожидаем запуска скачивания, покажу уведомление
+                                    sNotificator.showMassDownloadInQueueMessage();
+                                    break;
+                                case RUNNING:
+                                    sNotificator.hideMassDownloadInQueueMessage();
+                                    break;
+                                case SUCCEEDED:
+                                    sNotificator.cancelBookLoadNotification();
+                                    break;
+                                default:
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    public boolean checkDownloadQueue() {
+        // получу все книги в очереди скачивания
+        BooksDownloadScheduleDao dao = mDatabase.booksDownloadScheduleDao();
+        BooksDownloadSchedule queuedBook = dao.getFirstQueuedBook();
+        return queuedBook != null;
+    }
+
+    public Notificator getNotificator() {
+        if (sNotificator == null) {
             sNotificator = new Notificator(this);
         }
         return sNotificator;
     }
 
     public void startTor() {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        // запускаю tor
-        OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-        WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
-        TorStartWork = WorkManager.getInstance(this).getWorkInfoByIdLiveData(startTorWork.getId());
+        // если используется внешний VPN- TOR не нужен
+        if(!isExternalVpn()){
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            // запускаю tor
+            OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
+            WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
+        }
+        else{
+            WorkManager.getInstance(this).enqueue(new OneTimeWorkRequest.Builder(TestWorker.class).build());
+        }
     }
 
     private void planeBookSubscribes() {
@@ -266,7 +322,7 @@ public class App extends Application {
     }
 
     public String getLastLoadedUrl() {
-        return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, BASE_BOOK_URL);
+        return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, URLHandler.getBaseUrl());
     }
 
     public File getDownloadFolder() {
@@ -368,6 +424,7 @@ public class App extends Application {
         }
         return mAuthorsSubscribe;
     }
+
     public SubscribeSequences getSequencesSubscribe() {
         if (mSequencesSubscribe == null) {
             mSequencesSubscribe = new SubscribeSequences();
@@ -418,5 +475,30 @@ public class App extends Application {
 
     public void switchShowPreviews() {
         mSharedPreferences.edit().putBoolean(PREFERENCE_PREVIEWS, !isPreviews()).apply();
+    }
+
+    public void initializeDownload() {
+        // отменю предыдущую работу
+        // запущу рабочего, который загрузит все книги
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.REPLACE, downloadAllWorker);
+        App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
+    }
+
+    public void handleWebPage(InputStream my) {
+        mRequestData = my;
+        OneTimeWorkRequest parseDataWorker = new OneTimeWorkRequest.Builder(ParseWebRequestWorker.class).addTag(PARSE_WEB_REQUEST_TAG).build();
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(PARSE_WEB_REQUEST_TAG, ExistingWorkPolicy.REPLACE, parseDataWorker);
+    }
+
+    public boolean isExternalVpn() {
+        return (mSharedPreferences.getBoolean(EXTERNAL_VPN, false));
+    }
+
+    public void switchExternalVpnUse() {
+        mSharedPreferences.edit().putBoolean(EXTERNAL_VPN, !isExternalVpn()).apply();
     }
 }

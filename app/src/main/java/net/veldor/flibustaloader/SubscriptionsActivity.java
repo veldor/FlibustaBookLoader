@@ -2,20 +2,19 @@ package net.veldor.flibustaloader;
 
 import android.app.ActionBar;
 import android.app.Dialog;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import com.google.android.material.snackbar.Snackbar;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -25,6 +24,7 @@ import net.veldor.flibustaloader.dialogs.GifDialog;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.utils.MimeTypes;
+import net.veldor.flibustaloader.view_models.MainViewModel;
 import net.veldor.flibustaloader.workers.LoadSubscriptionsWorker;
 
 import java.util.ArrayList;
@@ -36,13 +36,16 @@ public class SubscriptionsActivity extends AppCompatActivity {
     private Dialog mLoadDialog;
     private SubscribeResultsAdapter mAdapter;
     private AlertDialog.Builder mDownloadsDialog;
-    private Snackbar mBookLoadNotification;
-    private View mRootView;
+    private MainViewModel mMyViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subscribtions);
+
+
+        // добавлю viewModel
+        mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         // переназову окно
         ActionBar actionbar = getActionBar();
@@ -50,9 +53,7 @@ public class SubscriptionsActivity extends AppCompatActivity {
             actionbar.setTitle("Подписки");
         }
 
-        mRootView = findViewById(R.id.rootView);
-
-        RecyclerView recycler = findViewById(R.id.subscribe_items_list);
+        RecyclerView recycler = findViewById(R.id.booksList);
         recycler.setLayoutManager(new LinearLayoutManager(SubscriptionsActivity.this));
         mAdapter = new SubscribeResultsAdapter();
         recycler.setAdapter(mAdapter);
@@ -83,37 +84,14 @@ public class SubscriptionsActivity extends AppCompatActivity {
             public void onChanged(@Nullable ArrayList<DownloadLink> downloadLinks) {
                 if (downloadLinks != null && downloadLinks.size() > 0) {
                     if (downloadLinks.size() == 1) {
-                        MyWebClient mWebClient = new MyWebClient();
-                        mWebClient.download(downloadLinks.get(0));
-                        showBookLoadNotification();
+                        // поставлю книгу в очередь
+                        mMyViewModel.addToDownloadQueue(downloadLinks.get(0));
+                        Toast.makeText(SubscriptionsActivity.this, R.string.book_added_to_schedule_message, Toast.LENGTH_LONG).show();
+
                     } else {
                         // покажу диалог для выбора ссылки для скачивания
                         showDownloadsDialog(downloadLinks);
                     }
-                }
-            }
-        });
-
-        // добавлю отслеживание неудачно загруженной книги
-        LiveData<String> unloadedBook = App.getInstance().mUnloadedBook;
-        unloadedBook.observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-                if (s != null && !s.isEmpty()) {
-                    // не удалось загрузить книгу
-                    Toast.makeText(SubscriptionsActivity.this, "Не удалось сохранить " + s, Toast.LENGTH_LONG).show();
-                    hideBookLoadNotification();
-                }
-            }
-        });
-
-        // отслеживание прогресса загрузки книги
-        LiveData<Boolean> bookLoadStatus = App.getInstance().mDownloadProgress;
-        bookLoadStatus.observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(@Nullable Boolean aBoolean) {
-                if (aBoolean != null && !aBoolean) {
-                    hideBookLoadNotification();
                 }
             }
         });
@@ -166,11 +144,8 @@ public class SubscriptionsActivity extends AppCompatActivity {
                 while (counter < linksLength) {
                     item = downloadLinks.get(counter);
                     if (item.mime.equals(longMime)) {
-                        MyWebClient mWebClient = new MyWebClient();
-                        mWebClient.download(item);
-                        Toast.makeText(SubscriptionsActivity.this, "Загрузка началась", Toast.LENGTH_LONG).show();
-                        showBookLoadNotification();
-
+                        mMyViewModel.addToDownloadQueue(item);
+                        Toast.makeText(SubscriptionsActivity.this, R.string.book_added_to_schedule_message, Toast.LENGTH_LONG).show();
                         break;
                     }
                     counter++;
@@ -178,22 +153,5 @@ public class SubscriptionsActivity extends AppCompatActivity {
             }
         });
         mDownloadsDialog.show();
-    }
-
-    private void showBookLoadNotification() {
-        mBookLoadNotification = Snackbar.make(mRootView, "Загружаю книгу", Snackbar.LENGTH_INDEFINITE);
-        mBookLoadNotification.setAction(getString(R.string.cancel), new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                WorkManager.getInstance(SubscriptionsActivity.this).cancelAllWorkByTag(MyWebClient.DOWNLOAD_BOOK_WORKER);
-                Toast.makeText(SubscriptionsActivity.this, "Загрузка книги отменена", Toast.LENGTH_SHORT).show();
-            }
-        });
-        mBookLoadNotification.show();
-    }
-    private void hideBookLoadNotification() {
-        if (mBookLoadNotification != null) {
-            mBookLoadNotification.dismiss();
-        }
     }
 }

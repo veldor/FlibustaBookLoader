@@ -8,7 +8,8 @@ public class MimeTypes {
     public static final String[] MIMES_LIST = new String[]{"fb2", "mobi", "epub", "pdf", "djvu", "html", "txt", "rtf"};
 
     private static final HashMap<String, String> MIMES = new HashMap<String, String>() {{
-        put("WEBRip", "fb2");
+        put("application/fb2+zip", "fb2");
+        put("application/fb2", "fb2");
         put("application/x-mobipocket-ebook", "mobi");
         put("application/epub+zip", "epub");
         put("application/epub", "epub");

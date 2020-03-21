@@ -10,23 +10,25 @@ import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebClient;
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.utils.SortHandler;
-import net.veldor.flibustaloader.utils.TorWebClient;
+import net.veldor.flibustaloader.http.TorWebClient;
+import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.util.ArrayList;
 
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_AUTHORS;
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_BOOKS;
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_GENRE;
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_NEW_AUTHORS;
-import static net.veldor.flibustaloader.OPDSActivity.SEARCH_SEQUENCE;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_AUTHORS;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_BOOKS;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_GENRE;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_NEW_AUTHORS;
+import static net.veldor.flibustaloader.ui.OPDSActivity.SEARCH_SEQUENCE;
 
 public class GetAllPagesWorker extends Worker {
 
     public static String sNextPage;
-    private boolean mIsStopped;
 
     public GetAllPagesWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -41,25 +43,31 @@ public class GetAllPagesWorker extends Worker {
         Data data = getInputData();
         App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pagesCounter);
         String text = data.getString(MyWebClient.LOADED_URL);
-        // создам новый экземпляр веб-клиента
-        TorWebClient webClient = new TorWebClient();
-        App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
-        String answer = webClient.request(text);
-        App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
+        String answer;
+
+        // получу страницу
+        try {
+            answer = getPage(text);
+        } catch (TorNotLoadedException e) {
+            return Result.failure();
+        }
+
         // сразу же обработаю результат
         if(answer != null && !answer.isEmpty()){
             ArrayList<FoundedItem> result = new ArrayList<>();
             XMLParser.handleSearchResults(result, answer);
-            while (sNextPage != null && !mIsStopped){
+            while (sNextPage != null && !isStopped()){
                 ++pagesCounter;
                 App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pagesCounter);
-                webClient = new TorWebClient();
-                Log.d("surprise", "GetAllPagesWorker doWork next page is " + App.BASE_URL + sNextPage);
-                answer = webClient.request(App.BASE_URL + sNextPage);
+                try {
+                    answer = getPage(URLHandler.getBaseUrl() + sNextPage);
+                } catch (TorNotLoadedException e) {
+                    return Result.failure();
+                }
                 XMLParser.handleSearchResults(result, answer);
             }
             Log.d("surprise", "GetAllPagesWorker doWork result length is " + result.size());
-            if(!mIsStopped){
+            if(!isStopped()){
                 // отсортирую результат
                 switch (App.sSearchType) {
                     case SEARCH_BOOKS:
@@ -77,18 +85,37 @@ public class GetAllPagesWorker extends Worker {
                         SortHandler.sortSequences(result);
                         break;
                 }
-                App.getInstance().mParsedResult.postValue(result);
+                if(!isStopped()){
+                    App.getInstance().mParsedResult.postValue(result);
+                }
             }
         }
-        Log.d("surprise", "GetAllPagesWorker doWork work done");
         return Result.success();
     }
 
-    @Override
-    public void onStopped() {
-        super.onStopped();
-        Log.d("surprise", "GetAllPagesWorker onStopped i stopped");
-        mIsStopped = true;
-        // остановлю процесс
+    private String getPage(String text) throws TorNotLoadedException {
+
+        // если используется внешний  VPN- просто создам сооединение
+        String answer;
+        if(App.getInstance().isExternalVpn()){
+            answer = ExternalVpnVewClient.request(text);
+            if(!isStopped()){
+                App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
+                App.getInstance().mSearchResult.postValue(answer);
+                return answer;
+            }
+        }
+        else{
+                // создам новый экземпляр веб-клиента
+                TorWebClient webClient = new TorWebClient();
+                App.getInstance().mLoadAllStatus.postValue("Загрузка страницы начата");
+                answer = webClient.request(text);
+            if(!isStopped()){
+                App.getInstance().mLoadAllStatus.postValue("Загрузка страницы завершена");
+                App.getInstance().mSearchResult.postValue(answer);
+                return answer;
+            }
+        }
+        return null;
     }
 }

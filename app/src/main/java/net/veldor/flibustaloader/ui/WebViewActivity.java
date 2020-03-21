@@ -1,4 +1,4 @@
-package net.veldor.flibustaloader;
+package net.veldor.flibustaloader.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -34,7 +34,13 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.MyWebView;
+import net.veldor.flibustaloader.MyWebViewClient;
+import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.SubscribeActivity;
 import net.veldor.flibustaloader.dialogs.GifDialog;
+import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
@@ -46,7 +52,7 @@ import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
 
-import static net.veldor.flibustaloader.MainActivity.START_TOR;
+import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 
 public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
 
@@ -75,7 +81,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         if (App.getInstance().getNightMode()) {
             setTheme(R.style.NightTheme);
         }
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_web_view);
 
         // проверю, не запущено ли приложение с помощью интента
         if (getIntent().getData() != null) {//check if intent is not null
@@ -111,7 +117,14 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         mTorConnectErrorReceiver = new WebViewActivity.TorConnectErrorReceiver();
         registerReceiver(mTorConnectErrorReceiver, filter);
         handleLoading();
+        checkUpdates();
 
+        // создам тестовый массив строк для автозаполнения
+        autocompleteStrings = mMyViewModel.getSearchAutocomplete();
+    }
+
+
+    private void checkUpdates() {
         if (App.getInstance().isCheckUpdate()) {
             // проверю обновления
             final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
@@ -126,9 +139,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 }
             });
         }
-
-        // создам тестовый массив строк для автозаполнения
-        autocompleteStrings = mMyViewModel.getSearchAutocomplete();
     }
 
     @Override
@@ -376,7 +386,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     private void makeSearch(String s) {
-        String searchString = FLIBUSTA_SEARCH_REQUEST + s.trim();
+        String searchString = App.BASE_URL + s.trim();
         mWebView.loadUrl(searchString);
         // занесу значение в список автозаполнения
         if (XMLHandler.putSearchValue(s)) {
@@ -474,7 +484,9 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                             App.getInstance().startTor();
                             dialog.dismiss();
                             // вернусь в основное активити и подожду перезапуска
-                            startActivityForResult(new Intent(WebViewActivity.this, StartTorActivity.class), START_TOR);
+                            Intent intent = new Intent(WebViewActivity.this, MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
                         }
                     })
                     .setCancelable(false);

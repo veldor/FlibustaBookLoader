@@ -10,11 +10,12 @@ import androidx.work.WorkerParameters;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.OPDSActivity;
+import net.veldor.flibustaloader.ui.OPDSActivity;
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
-import net.veldor.flibustaloader.utils.TorWebClient;
+import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.utils.XMLParser;
 
 import java.util.ArrayList;
@@ -65,7 +66,15 @@ public class LoadSubscriptionsWorker extends Worker {
             App.sSearchType = OPDSActivity.SEARCH_BOOKS;
             // получу список книг
             // создам новый экземпляр веб-клиента
-            TorWebClient webClient = new TorWebClient();
+            TorWebClient webClient = null;
+            try {
+                webClient = new TorWebClient();
+            } catch (TorNotLoadedException e) {
+                e.printStackTrace();
+            }
+            if(webClient == null){
+                return Result.failure();
+            }
             ArrayList<FoundedItem> result = new ArrayList<>();
             String answer = webClient.request(App.BASE_URL + "/opds/new/0/new");
             // сразу же обработаю результат
@@ -79,7 +88,11 @@ public class LoadSubscriptionsWorker extends Worker {
                 }
                 while (sNextPage != null) {
                     Log.d("surprise", "LoadSubscriptionsWorker doWork load next results page");
-                    webClient = new TorWebClient();
+                    try {
+                        webClient = new TorWebClient();
+                    } catch (TorNotLoadedException e) {
+                        e.printStackTrace();
+                    }
                     answer = webClient.request(App.BASE_URL + sNextPage);
                     XMLParser.handleSearchResults(result, answer);
                 }

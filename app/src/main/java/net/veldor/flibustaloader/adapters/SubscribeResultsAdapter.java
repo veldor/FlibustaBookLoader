@@ -52,7 +52,7 @@ public class SubscribeResultsAdapter extends RecyclerView.Adapter<SubscribeResul
         mBooks = arrayList;
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ViewDataBinding mBinding;
 

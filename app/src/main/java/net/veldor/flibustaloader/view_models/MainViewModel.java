@@ -1,18 +1,15 @@
 package net.veldor.flibustaloader.view_models;
 
 import android.app.Application;
+import android.net.Uri;
+import android.util.SparseBooleanArray;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.annotation.NonNull;
-
-import android.net.Uri;
-import android.util.Log;
-import android.util.SparseBooleanArray;
-
-import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
-import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
@@ -20,17 +17,17 @@ import androidx.work.WorkManager;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.MyWebClient;
 import net.veldor.flibustaloader.MyWebView;
-import net.veldor.flibustaloader.OPDSActivity;
+import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.database.entity.ReadedBooks;
+import net.veldor.flibustaloader.http.ExternalVpnClient;
+import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
-import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.MyFileReader;
 import net.veldor.flibustaloader.utils.XMLHandler;
-import net.veldor.flibustaloader.workers.DatabaseWorker;
-import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker;
 import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
 import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
@@ -38,11 +35,10 @@ import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 import java.util.ArrayList;
 import java.util.Random;
 
-@SuppressWarnings("unchecked")
 public class MainViewModel extends AndroidViewModel {
-
-    private static final String MULTIPLY_DOWNLOAD = "multiply download";
     private static final String ADD_TO_DOWNLOAD_QUEUE_ACTION = "add to download queue";
+    public static final String MULTIPLY_DOWNLOAD = "multiply download";
+    private MyWebClient mWebClient;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -92,13 +88,9 @@ public class MainViewModel extends AndroidViewModel {
 
     public void setBookRead(FoundedBook book) {
         // запущу рабочего, который отметит книгу как прочитанную
-        Data inputData = new Data.Builder()
-                .putString(OPDSActivity.BOOK_ID, book.id)
-                .putInt(DatabaseWorker.WORK_TYPE, DatabaseWorker.INSERT_BOOK)
-                .build();
-        // запущу рабочего, загружающего страницу
-        OneTimeWorkRequest getPageWorker = new OneTimeWorkRequest.Builder(DatabaseWorker.class).setInputData(inputData).build();
-        WorkManager.getInstance(App.getInstance()).enqueue(getPageWorker);
+        ReadedBooks readedBook = new ReadedBooks();
+        readedBook.bookId = book.id;
+        App.getInstance().mDatabase.readedBooksDao().insert(readedBook);
     }
 
     public void clearHistory() {
@@ -125,24 +117,55 @@ public class MainViewModel extends AndroidViewModel {
         WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(ADD_TO_DOWNLOAD_QUEUE_ACTION, ExistingWorkPolicy.REPLACE, downloadSelected);
         return WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadSelected.getId());
     }
-    public LiveData<WorkInfo> downloadAll() {
+    public LiveData<WorkInfo> downloadAll(boolean unloaded) {
         App.getInstance().mDownloadSelectedBooks = null;
+        App.getInstance().mDownloadUnloaded = unloaded;
         OneTimeWorkRequest downloadSelected = new OneTimeWorkRequest.Builder(AddBooksToDownloadQueueWorker.class).addTag(ADD_TO_DOWNLOAD_QUEUE_ACTION).build();
         WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(ADD_TO_DOWNLOAD_QUEUE_ACTION, ExistingWorkPolicy.REPLACE, downloadSelected);
         return WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadSelected.getId());
     }
 
     public void initiateMassDownload() {
-        // проверю, не запущен ли уже рабочий, загружающий книги
-        LiveData<WorkInfo> statusContainer = App.getInstance().mDownloadAllWork;
-        if(statusContainer == null || statusContainer.getValue() == null ||  statusContainer.getValue().getState() == WorkInfo.State.SUCCEEDED){
-            // запущу рабочего, который загрузит все книги
-            Constraints constraints = new Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build();
-            OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
-            WorkManager.getInstance(App.getInstance()).enqueue(downloadAllWorker);
-            App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
+        App.getInstance().initializeDownload();
+    }
+
+    public void cancelMassDownload() {
+        WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(MULTIPLY_DOWNLOAD);
+    }
+
+    public Boolean checkDownloadQueue() {
+        return App.getInstance().checkDownloadQueue();
+    }
+
+    public void addToDownloadQueue(DownloadLink downloadLink) {
+        AddBooksToDownloadQueueWorker.addLink(downloadLink);
+        App.getInstance().initializeDownload();
+    }
+
+    public void setWebClient(MyWebClient myWebClient) {
+        mWebClient = myWebClient;
+    }
+
+    public void request(String s) {
+        if(App.getInstance().isExternalVpn()){
+            ExternalVpnClient.search(s);
+        }
+        else{
+            if(mWebClient != null){
+                mWebClient.search(s);
+            }
+            else{
+                Toast.makeText(App.getInstance(), R.string.cant_initiate_webclient_message, Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    public void loadNextPage() {
+        if(App.getInstance().isExternalVpn()){
+            ExternalVpnClient.loadNextPage();
+        }
+        else{
+            mWebClient.loadNextPage();
         }
     }
 }
