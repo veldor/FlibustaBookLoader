@@ -40,7 +40,6 @@ import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.SubscribeActivity;
 import net.veldor.flibustaloader.dialogs.GifDialog;
-import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
@@ -57,7 +56,6 @@ import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
 
     public static final String CALLED = "activity_called";
-    private static final String FLIBUSTA_SEARCH_REQUEST = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final int READ_REQUEST_CODE = 5;
     private static final int REQUEST_CODE = 7;
     private MyWebView mWebView;

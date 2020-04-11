@@ -62,10 +62,10 @@ public class SortHandler {
                             return fb1.sequenceComplex.compareTo(fb2.sequenceComplex) > 0 ? 1 : -1;
                         case 4:
                             // сортировка по серии
-                            if (fb1.genreComplex.isEmpty()) {
+                            if (fb1.genreComplex == null || fb1.genreComplex.isEmpty()) {
                                 return 1;
                             }
-                            if (fb2.genreComplex.isEmpty()) {
+                            if (fb2.genreComplex == null || fb2.genreComplex.isEmpty()) {
                                 return -1;
                             }
                             if(fb1.genreComplex.equals(fb2.genreComplex))

@@ -17,6 +17,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.BuildConfig;
 import net.veldor.flibustaloader.updater.Updater;
 
 import java.io.File;
@@ -63,7 +64,7 @@ public class UpdateWaitService extends Service {
                             Uri downloadUri = App.getInstance().updateDownloadUri;
                             if (Build.VERSION.SDK_INT >= 24) {
                                 downloadUri = FileProvider.getUriForFile(context,
-                                        "net.veldor.flibustaloader.fileProvider",
+                                        BuildConfig.APPLICATION_ID +".provider",
                                         App.getInstance().downloadedApkFile);
                             }
                             install.setDataAndType(downloadUri,

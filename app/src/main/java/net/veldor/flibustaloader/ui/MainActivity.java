@@ -341,6 +341,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void torLoadTooLongDialog() {
+        Log.d("surprise", "MainActivity torLoadTooLongDialog: tor load too long err");
         if (mActivityVisible) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle("Tor load too long")
