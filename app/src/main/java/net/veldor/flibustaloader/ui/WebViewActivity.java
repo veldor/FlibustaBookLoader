@@ -244,7 +244,9 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         // обработаю переключатель проверки обновлений
         MenuItem checkUpdatesSwitcher = menu.findItem(R.id.setUpdateCheck);
         checkUpdatesSwitcher.setChecked(App.getInstance().isCheckUpdate());
-
+        // переключатель внешнего VPN
+        MenuItem myItem = menu.findItem(R.id.menuUseExternalVpn);
+        myItem.setChecked(App.getInstance().isExternalVpn());
         return true;
     }
 
@@ -411,7 +413,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     private void makeSearch(String s) {
-        String searchString = App.BASE_URL + s.trim();
+        String searchString = App.SEARCH_URL + s.trim();
         mWebView.loadUrl(searchString);
         // занесу значение в список автозаполнения
         if (XMLHandler.putSearchValue(s)) {

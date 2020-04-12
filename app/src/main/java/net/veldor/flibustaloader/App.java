@@ -55,7 +55,7 @@ import static java.util.Calendar.MINUTE;
 import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
 public class App extends Application {
-
+    public static final String SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
     private static final String EXTERNAL_VPN = "external vpn";
     public static int sTorStartTry = 0;

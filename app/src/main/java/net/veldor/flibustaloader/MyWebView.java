@@ -19,6 +19,7 @@ public class MyWebView extends WebView {
         super(context, attrs);
     }
 
+
     @SuppressLint("SetJavaScriptEnabled")
     public void setup() {
         if (!this.isInEditMode()) {

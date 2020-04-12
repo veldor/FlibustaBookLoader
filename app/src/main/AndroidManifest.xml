@@ -54,6 +54,7 @@
             android:label="@string/title_activity_opds" />
         <activity
             android:name=".ui.WebViewActivity"
+            android:configChanges="uiMode"
             android:label="@string/title_activity_webview" />
         <activity
             android:name=".ui.ActivityBookDownloadSchedule"
