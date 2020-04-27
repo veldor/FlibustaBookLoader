@@ -41,6 +41,10 @@
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
             <item
+                android:id="@+id/switchLayout"
+                android:title="@string/switch_layout_message"
+                yourapp:showAsAction="never"/>
+            <item
                 android:id="@+id/hideReadSwitcher"
                 android:title="@string/hide_read"
                 android:checkable="true"

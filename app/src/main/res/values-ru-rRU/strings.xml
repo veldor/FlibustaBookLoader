@@ -134,4 +134,6 @@
     <string name="cant_initiate_webclient_message">Не удалось инициалицировать Веб-клиент.</string>
     <string name="empty_request_message">Пустой поисковый запрос</string>
     <string name="use_external_proxy_message">Использовать внешний VPN</string>
+    <string name="layout_type_message">layout type</string>
+    <string name="switch_layout_message">Переключить сетку</string>
 </resources>

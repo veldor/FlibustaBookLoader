@@ -29,6 +29,7 @@ public class GetPageWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        Log.d("surprise", "GetPageWorker doWork: start single page load");
         App.getInstance().mLoadAllStatus.postValue("В процессе");
         Data data = getInputData();
         String text = data.getString(MyWebClient.LOADED_URL);

@@ -22,6 +22,7 @@
             <TextView
                 android:id="@+id/book_name"
                 android:layout_width="0dp"
+                android:foreground="?android:attr/selectableItemBackground"
                 android:layout_height="wrap_content"
                 android:text="@{book.name}"
                 android:textAlignment="center"
@@ -36,6 +37,7 @@
             <ImageButton
                 android:id="@+id/menuButton"
                 android:layout_width="25dp"
+                android:foreground="?android:attr/selectableItemBackground"
                 android:layout_height="25dp"
                 android:contentDescription="@string/book_menu"
                 android:src="@drawable/ic_more_vert_black_24dp"
@@ -52,6 +54,7 @@
 
                 <TextView
                     android:id="@+id/author_name"
+                    android:foreground="?android:attr/selectableItemBackground"
                     android:layout_width="0dp"
                     android:gravity="center"
                     android:layout_height="wrap_content"
@@ -94,6 +97,7 @@
 
                 <TextView
                     android:id="@+id/sequence"
+                    android:foreground="?android:attr/selectableItemBackground"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -117,7 +121,6 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="11dp"
-                android:layout_marginLeft="11dp"
                 android:text="@{book.size}"
                 app:layout_constraintStart_toEndOf="@+id/downloads_count"
                 app:layout_constraintTop_toBottomOf="@+id/detailsBlock" />
@@ -127,7 +130,6 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="11dp"
-                android:layout_marginLeft="11dp"
                 android:text="@{book.format}"
                 app:layout_constraintStart_toEndOf="@+id/book_size"
                 app:layout_constraintTop_toBottomOf="@+id/detailsBlock" />

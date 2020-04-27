@@ -58,6 +58,7 @@ public class App extends Application {
     public static final String SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
     private static final String EXTERNAL_VPN = "external vpn";
+    private static final String PREFERENCE_LINEAR_LAYOUT = "linear layout";
     public static int sTorStartTry = 0;
     public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
@@ -495,5 +496,13 @@ public class App extends Application {
 
     public void switchExternalVpnUse() {
         mSharedPreferences.edit().putBoolean(EXTERNAL_VPN, !isExternalVpn()).apply();
+    }
+
+    public void switchLayout() {
+        mSharedPreferences.edit().putBoolean(PREFERENCE_LINEAR_LAYOUT, !isLinearLayout()).apply();
+    }
+
+    public boolean isLinearLayout() {
+        return (mSharedPreferences.getBoolean(PREFERENCE_LINEAR_LAYOUT, true));
     }
 }

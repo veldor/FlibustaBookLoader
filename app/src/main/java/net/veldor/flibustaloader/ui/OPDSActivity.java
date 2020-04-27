@@ -41,6 +41,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkInfo;
@@ -456,6 +457,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                     App.getInstance().switchDownloadAll();
+                    Log.d("surprise", "OPDSActivity onCheckedChanged: switch by " + App.getInstance().isDownloadAll());
                 }
             });
         }
@@ -702,7 +704,12 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     } else {
                         mSearchResultsAdapter = new SearchResultsAdapter(arrayList);
                         mRecycler.setAdapter(mSearchResultsAdapter);
-                        mRecycler.setLayoutManager(new LinearLayoutManager(OPDSActivity.this));
+                        if(App.getInstance().isLinearLayout()){
+                            mRecycler.setLayoutManager(new LinearLayoutManager(OPDSActivity.this));
+                        }
+                        else{
+                            mRecycler.setLayoutManager(new GridLayoutManager(OPDSActivity.this, 2));
+                        }
                         scrollToTop();
                     }
                 } else {
@@ -1244,6 +1251,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 return true;
             case R.id.menuUseExternalVpn:
                 handleUseExternalVpn();
+                return true;
+            case R.id.switchLayout:
+                App.getInstance().switchLayout();
+                recreate();
                 return true;
 
         }
