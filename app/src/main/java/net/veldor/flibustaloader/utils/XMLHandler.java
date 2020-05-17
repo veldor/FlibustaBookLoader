@@ -55,19 +55,19 @@ public class XMLHandler {
         return searchValues;
     }
 
-    private static ArrayList<String> getSearchAutocomplete(Document searchList) {
+        private static ArrayList<String> getSearchAutocomplete(Document searchList) {
 
-        ArrayList<String> searchValues = new ArrayList<>();
-        // найду значения строк
-        NodeList values = searchList.getElementsByTagName(SEARCH_VALUE_NAME);
-        int counter = 0;
+            ArrayList<String> searchValues = new ArrayList<>();
+            // найду значения строк
+            NodeList values = searchList.getElementsByTagName(SEARCH_VALUE_NAME);
+            int counter = 0;
 
-        while (values.item(counter) != null) {
-            searchValues.add(values.item(counter).getFirstChild().getNodeValue());
-            ++counter;
+            while (values.item(counter) != null) {
+                searchValues.add(values.item(counter).getFirstChild().getNodeValue());
+                ++counter;
+            }
+            return searchValues;
         }
-        return searchValues;
-    }
 
     public static boolean putSearchValue(String s) {
         // получу содержимое файла

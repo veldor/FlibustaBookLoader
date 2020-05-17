@@ -4,16 +4,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.documentfile.provider.DocumentFile;
-
 import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
@@ -24,8 +23,6 @@ import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -331,7 +328,7 @@ public class MyWebViewClient extends WebViewClient {
                         startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
                         activityContext.sendBroadcast(startLoadingIntent);
                         // сохраняю книгу в памяти устройства
-                        DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
+                        DocumentFile downloadsDir = App.getInstance().getDownloadDir();
                         if (downloadsDir != null) {
                             // проверю, не сохдан ли уже файл, если создан- удалю
                             DocumentFile existentFile = downloadsDir.findFile(name);
@@ -351,19 +348,7 @@ public class MyWebViewClient extends WebViewClient {
                                 assert out != null;
                                 out.close();
                             }
-                        } else {
-                            File file = new File(App.getInstance().getDownloadFolder(), name);
-                            InputStream is = httpResponse.getEntity().getContent();
-                            FileOutputStream outputStream = new FileOutputStream(file);
-                            int read;
-                            byte[] buffer = new byte[1024];
-                            while ((read = is.read(buffer)) > 0) {
-                                outputStream.write(buffer, 0, read);
-                            }
-                            outputStream.close();
-                            is.close();
                         }
-
                         // отправлю сообщение о скачанном файле через broadcastReceiver
                         Intent intent = new Intent(activityContext, BookLoadedReceiver.class);
                         intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);

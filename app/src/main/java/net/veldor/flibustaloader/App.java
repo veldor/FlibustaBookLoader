@@ -3,7 +3,6 @@ package net.veldor.flibustaloader;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -71,7 +70,6 @@ public class App extends Application {
     public static final String START_TOR = "start_tor";
     private static final String PREFERENCE_LOAD_ALL = "load all";
     private static final String PREFERENCE_VIEW = "view";
-    private static final String PREFERENCE_NEW_DOWNLOAD_LOCATION = "new_download_folder";
     private static final String PREFERENCE_LAST_CHECKED_BOOK = "last_checked_book";
     private static final String PREFERENCE_FAVORITE_MIME = "favorite_mime";
     private static final String PREFERENCE_SAVE_ONLY_SELECTED = "save only selected";
@@ -93,9 +91,6 @@ public class App extends Application {
     public String mNextPageUrl;
     // добавление результатов к уже имеющимся
     public boolean mResultsEscalate = false;
-
-
-    private static final File DOWNLOAD_FOLDER_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
     public static final String NEW_BOOKS = "http://flibustahezeous3.onion/new";
     private static final String PREFERENCE_VIEW_MODE = "view mode";
@@ -161,9 +156,9 @@ public class App extends Application {
         super.onCreate();
         // читаю настройки sharedPreferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        sNotificator = new Notificator(this);
         instance = this;
 
+        sNotificator = Notificator.getInstance();
         startTor();
 
         // определю ночной режим
@@ -228,7 +223,7 @@ public class App extends Application {
 
     public Notificator getNotificator() {
         if (sNotificator == null) {
-            sNotificator = new Notificator(this);
+            sNotificator = Notificator.getInstance();
         }
         return sNotificator;
     }
@@ -321,21 +316,6 @@ public class App extends Application {
         return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, URLHandler.getBaseUrl());
     }
 
-    public File getDownloadFolder() {
-        // возвращу папку для закачек
-        String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, DOWNLOAD_FOLDER_LOCATION.toString());
-        File dl = new File(download_location);
-        if (dl.isDirectory()) {
-            return dl;
-        } else {
-            return DOWNLOAD_FOLDER_LOCATION;
-        }
-    }
-
-    public void setDownloadFolder(Uri uri) {
-        mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.getPath()).apply();
-    }
-
 
     public void addToHistory(String s) {
         mSearchHistory.add(s);
@@ -400,18 +380,6 @@ public class App extends Application {
             mBooksSubscribe = new SubscribeBooks();
         }
         return mBooksSubscribe;
-    }
-
-    public void setNewDownloadFolder(Uri uri) {
-        mSharedPreferences.edit().putString(PREFERENCE_NEW_DOWNLOAD_LOCATION, uri.toString()).apply();
-    }
-
-    public DocumentFile getNewDownloadDir() {
-        String download_location = mSharedPreferences.getString(PREFERENCE_NEW_DOWNLOAD_LOCATION, null);
-        if (download_location != null) {
-            return DocumentFile.fromTreeUri(this, Uri.parse(download_location));
-        }
-        return null;
     }
 
     public SubscribeAuthors getAuthorsSubscribe() {
@@ -504,5 +472,29 @@ public class App extends Application {
 
     public boolean isLinearLayout() {
         return (mSharedPreferences.getBoolean(PREFERENCE_LINEAR_LAYOUT, true));
+    }
+
+
+
+    public void setDownloadDir(Uri uri) {
+        Log.d("surprise", "App setDownloadFolder: save file location");
+        mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.toString()).apply();
+    }
+
+    public DocumentFile getDownloadDir() {
+        // возвращу папку для закачек
+        String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, null);
+        if(download_location != null){
+            Log.d("surprise", "App getDownloadDir: found download location");
+            DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), Uri.parse(download_location));
+            if(dl != null){
+                if(dl.isDirectory()){
+                    Log.d("surprise", "Preferences getDownloadFolder: have custom location");
+                    return dl;
+                }
+            }
+        }
+        // верну путь к папке загрузок
+        return null;
     }
 }

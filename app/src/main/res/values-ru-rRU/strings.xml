@@ -136,4 +136,18 @@
     <string name="use_external_proxy_message">Использовать внешний VPN</string>
     <string name="layout_type_message">layout type</string>
     <string name="switch_layout_message">Переключить сетку</string>
+    <string name="subscribes">Подписки</string>
+    <string name="check_subscribes_label">Проверить сейчас</string>
+    <string name="subscribes_not_found_message">Подписки не найдены</string>
+    <string name="not_found_subscribes_message">Подписки не найдены</string>
+    <string name="subscribes_check_channel">проверка подписок</string>
+    <string name="subscribes_check_channel_description">Проверка подписок</string>
+    <string name="check_flibusta_subscritions_message">Флибуста проверяет подписки</string>
+    <string name="show_subscriptions_list_label">Найденные новинки</string>
+    <string name="check_full_subscribes_label">Полная проверка подписок</string>
+    <string name="subscriptions_auto_check_label">Автоматическая проверка</string>
+    <string name="autocheck_enabled_message">Автоматическая проверка подписок активирована. Следующая проверка через 24 часа</string>
+    <string name="autocheck_disabled_message">Автоматическая проверка подписок отключена</string>
+    <string name="books_download_channel">Books download channel</string>
+    <string name="books_download_channel_description">Уведомление процесса загрузки книг</string>
 </resources>

@@ -4,6 +4,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
@@ -48,18 +51,18 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
 
     public SearchResultsAdapter(ArrayList<FoundedItem> arrayList) {
         nothingFound();
-        if(arrayList != null && arrayList.size() > 0){
+        if (arrayList != null && arrayList.size() > 0) {
             FoundedItem firstItem = arrayList.get(0);
-            if(firstItem instanceof FoundedBook){
+            if (firstItem instanceof FoundedBook) {
                 mBooks = arrayList;
             }
-            if(firstItem instanceof Author){
+            if (firstItem instanceof Author) {
                 mAuthors = arrayList;
             }
-            if(firstItem instanceof FoundedSequence){
+            if (firstItem instanceof FoundedSequence) {
                 mSequences = arrayList;
             }
-            if(firstItem instanceof Genre){
+            if (firstItem instanceof Genre) {
                 mGenres = arrayList;
             }
         }
@@ -75,11 +78,10 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             SearchedAuthorItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_author_item, viewGroup, false);
             return new ViewHolder(binding);
         } else if (mBooks != null) {
-            if(App.getInstance().isPreviews()){
+            if (App.getInstance().isPreviews()) {
                 SearchedBookWithPreviewItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_book_with_preview_item, viewGroup, false);
                 return new ViewHolder(binding);
-            }
-            else{
+            } else {
                 SearchedBookItemBinding binding = DataBindingUtil.inflate(mLayoutInflater, R.layout.searched_book_item, viewGroup, false);
                 return new ViewHolder(binding);
             }
@@ -130,18 +132,18 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
 
     public void setContent(ArrayList<FoundedItem> arrayList) {
         nothingFound();
-        if(arrayList != null && arrayList.size() > 0){
+        if (arrayList != null && arrayList.size() > 0) {
             FoundedItem firstItem = arrayList.get(0);
-            if(firstItem instanceof FoundedBook){
+            if (firstItem instanceof FoundedBook) {
                 mBooks = arrayList;
             }
-            if(firstItem instanceof Author){
+            if (firstItem instanceof Author) {
                 mAuthors = arrayList;
             }
-            if(firstItem instanceof FoundedSequence){
+            if (firstItem instanceof FoundedSequence) {
                 mSequences = arrayList;
             }
-            if(firstItem instanceof Genre){
+            if (firstItem instanceof Genre) {
                 mGenres = arrayList;
             }
         }
@@ -168,7 +170,7 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
         notifyDataSetChanged();
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder{
+    class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ViewDataBinding mBinding;
         private final DownloadedBooksDao mDao;
@@ -188,10 +190,9 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(foundedAuthor.uri != null){
+                    if (foundedAuthor.uri != null) {
                         App.getInstance().mSelectedAuthor.postValue(foundedAuthor);
-                    }
-                    else{
+                    } else {
                         // поиск новых книг автора
                         App.getInstance().mAuthorNewBooks.postValue(foundedAuthor);
                     }
@@ -229,12 +230,16 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             // добавлю действие при клике на кнопку скачивания
             View container = mBinding.getRoot();
 
-            // если включено отображение превью книг и превью существует
-            if(App.getInstance().isPreviews() && foundedBook.preview != null && foundedBook.preview.getByteCount() > 0){
-                ImageView imageContainer = container.findViewById(R.id.previewImage);
-                if(imageContainer != null){
+            ImageView imageContainer = container.findViewById(R.id.previewImage);
+            if (imageContainer != null) {
+                // если включено отображение превью книг и превью существует
+                if (App.getInstance().isPreviews() && foundedBook.previewUrl != null) {
+                    // загружу изображение с помощью GLIDE
+                    Glide
+                            .with(imageContainer)
+                            .load("https://flibusta.appspot.com" + foundedBook.previewUrl)
+                            .into(imageContainer);
                     imageContainer.setVisibility(View.VISIBLE);
-                    imageContainer.setImageBitmap(foundedBook.preview);
                     imageContainer.setOnClickListener(null);
                     imageContainer.setOnClickListener(new OnClickListener() {
                         @Override
@@ -243,13 +248,15 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                             App.getInstance().mShowCover.postValue(foundedBook);
                         }
                     });
+                } else {
+                    imageContainer.setVisibility(View.GONE);
                 }
             }
 
             // проверю, если книга прочитана- покажу это
-            if(mReadDao.getBookById(foundedBook.id) != null){
+            if (mReadDao.getBookById(foundedBook.id) != null) {
                 ImageButton readView = container.findViewById(R.id.book_read);
-                if(readView != null){
+                if (readView != null) {
                     readView.setVisibility(View.VISIBLE);
                     readView.setOnClickListener(new OnClickListener() {
                         @Override
@@ -260,9 +267,9 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                 }
             }
             // проверю, если книга прочитана- покажу это
-            if(mDao.getBookById(foundedBook.id) != null){
+            if (mDao.getBookById(foundedBook.id) != null) {
                 ImageButton downloadedView = container.findViewById(R.id.book_downloaded);
-                if(downloadedView != null){
+                if (downloadedView != null) {
                     downloadedView.setVisibility(View.VISIBLE);
                     downloadedView.setOnClickListener(new OnClickListener() {
                         @Override
@@ -290,11 +297,11 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                     // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
                     if (foundedBook.downloadLinks.size() > 1) {
                         String savedMime = App.getInstance().getFavoriteMime();
-                        if(savedMime !=null){
+                        if (savedMime != null) {
                             // проверю, нет ли в списке выбранного формата
-                            for(DownloadLink dl:foundedBook.downloadLinks){
+                            for (DownloadLink dl : foundedBook.downloadLinks) {
                                 mCurrentLink = dl;
-                                if(dl.mime.equals(savedMime)){
+                                if (dl.mime.equals(savedMime)) {
                                     ArrayList<DownloadLink> result = new ArrayList<>();
                                     result.add(mCurrentLink);
                                     App.getInstance().mDownloadLinksList.postValue(result);

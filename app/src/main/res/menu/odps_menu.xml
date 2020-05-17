@@ -77,6 +77,32 @@
         </menu>
     </item>
     <item
+        android:title="@string/subscribes">
+        <menu>
+            <item
+                android:id="@+id/subscribeForNew"
+                android:title="@string/subscribe_message"
+                yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/checkSubscribesNow"
+                android:title="@string/check_subscribes_label"
+                yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/fullCheckSubscribes"
+                android:title="@string/check_full_subscribes_label"
+                yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/showSubscriptionsList"
+                android:title="@string/show_subscriptions_list_label"
+                yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/autoCheck"
+                android:title="@string/subscriptions_auto_check_label"
+                android:checkable="true"
+                yourapp:showAsAction="never"/>
+        </menu>
+    </item>
+    <item
         android:title="@string/miscellaneous">
         <menu>
             <item
@@ -99,10 +125,6 @@
                 yourapp:showAsAction="never"/>
         </menu>
     </item>
-    <item
-        android:id="@+id/subscribeForNew"
-        android:title="@string/subscribe_message"
-        yourapp:showAsAction="never"/>
     <item
         android:id="@+id/goToTest"
         android:title="@string/go_to_test_message"

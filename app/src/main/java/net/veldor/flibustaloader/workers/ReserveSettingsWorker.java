@@ -142,7 +142,7 @@ public class ReserveSettingsWorker extends Worker {
             e.printStackTrace();
         }
 
-        new Notificator(App.getInstance()).sendBackupSuccessNotification();
+         Notificator.getInstance().sendBackupSuccessNotification();
         return Result.success();
     }
 

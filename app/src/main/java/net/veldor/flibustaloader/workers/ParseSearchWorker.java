@@ -17,9 +17,7 @@ import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
-import net.veldor.flibustaloader.utils.ImageLoadHandler;
 import net.veldor.flibustaloader.utils.SortHandler;
-import net.veldor.flibustaloader.utils.URLHandler;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -343,7 +341,7 @@ public class ParseSearchWorker extends Worker {
                 if(someNode != null){
                     someString = someNode.getAttributes().getNamedItem("href").getTextContent();
                     if(someString != null && !someString.isEmpty()){
-                        book.preview = ImageLoadHandler.loadImage(URLHandler.getBaseUrl() + someString);
+                        book.previewUrl = someString;
                     }
                 }
             }

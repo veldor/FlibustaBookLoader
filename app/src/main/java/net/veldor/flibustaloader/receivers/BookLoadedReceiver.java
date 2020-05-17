@@ -23,7 +23,7 @@ public class BookLoadedReceiver extends BroadcastReceiver {
         String name = intent.getStringExtra(EXTRA_BOOK_NAME);
         String type = intent.getStringExtra(EXTRA_BOOK_TYPE);
         Log.d("surprise", "BookLoadedReceiver onReceive " + type);
-        new Notificator(context).sendLoadedBookNotification(name, type);
+        Notificator.getInstance().sendLoadedBookNotification(name, type);
         Toast.makeText(context, name + " - загружено!", Toast.LENGTH_LONG).show();
     }
 }

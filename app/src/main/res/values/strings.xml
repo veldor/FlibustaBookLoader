@@ -138,4 +138,18 @@
     <string name="use_external_proxy_message">Use external VPN</string>
     <string name="layout_type_message">layout type</string>
     <string name="switch_layout_message">Switch layout</string>
+    <string name="subscribes">Subscribes</string>
+    <string name="check_subscribes_label">Check now</string>
+    <string name="subscribes_not_found_message">1</string>
+    <string name="not_found_subscribes_message">Subscribes not found</string>
+    <string name="subscribes_check_channel">subscribes check</string>
+    <string name="subscribes_check_channel_description">Subscribes check notification</string>
+    <string name="check_flibusta_subscritions_message">Check flibusta subscriptions</string>
+    <string name="show_subscriptions_list_label">Show subscriptions list</string>
+    <string name="check_full_subscribes_label">Total check subscribes</string>
+    <string name="subscriptions_auto_check_label">Auto-check</string>
+    <string name="autocheck_enabled_message">Subscriptions autocheck enabled. Next check after 24 hours</string>
+    <string name="autocheck_disabled_message">Subscriptions autocheck disabled</string>
+    <string name="books_download_channel">Books download channel</string>
+    <string name="books_download_channel_description">Books download progress message</string>
 </resources>

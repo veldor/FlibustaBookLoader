@@ -17,7 +17,6 @@ public class MyWebClient {
     }
 
     public static final String LOADED_URL = "loaded_url";
-    public static final String DOWNLOAD_ATTRIBUTES = "download attributes";
 
     public void search(String s) {
         // сброшу обложку

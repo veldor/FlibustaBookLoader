@@ -33,6 +33,8 @@ public class Notificator {
     private static final String BOOKS_CHANNEL_ID = "books";
     private static final String SUBSCRIBES_CHANNEL_ID = "subscribes";
     private static final String MISC_CHANNEL_ID = "misc";
+    private static final String SUBSCRIBE_CHECK_SERVICE_CHANNEL_ID = "subscribes check";
+    private static final String BOOK_DOWNLOADS_CHANNEL_ID = "book downloads";
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;
@@ -49,29 +51,29 @@ public class Notificator {
     public static final int DOWNLOAD_PAUSED_NOTIFICATION = 7;
     private static final int BOOKS_SUCCESS_NOTIFICATION = 8;
     private static final int MASS_DOWNLOAD_PAUSED_NOTIFICATION = 9;
+    public static final int CHECK_SUBSCRIBES_WORKER_NOTIFICATION = 10;
     private static final int RESTART_TOR_CODE = 11;
-    private static final String DOWNLOADED_BOOKS_GROUP_KEY = "downloaded books";
-    private static final int LOADED_BOOKS_GROUP = -1;
+    private static Notificator instance;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
     public NotificationCompat.Builder mDownloadScheduleBuilder;
 
     private int BookLoadedId = 100;
 
-    public Notificator(Context context) {
+    private Notificator(Context context) {
         mContext = context;
         mNotificationManager = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (mNotificationManager != null) {
                 // создам канал уведомлений о скачанных книгах
-                NotificationChannel nc = new NotificationChannel(BOOKS_CHANNEL_ID, mContext.getString(R.string.books_loaded_channel), NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationChannel nc = new NotificationChannel(BOOKS_CHANNEL_ID, mContext.getString(R.string.books_loaded_channel), NotificationManager.IMPORTANCE_HIGH);
                 nc.setDescription(mContext.getString(R.string.shifts_reminder));
                 nc.enableLights(true);
                 nc.setLightColor(Color.RED);
                 nc.enableVibration(true);
                 mNotificationManager.createNotificationChannel(nc);
                 // создам канал уведомлений о скачанных книгах
-                NotificationChannel nc1 = new NotificationChannel(SUBSCRIBES_CHANNEL_ID, mContext.getString(R.string.subscribes_channel), NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationChannel nc1 = new NotificationChannel(SUBSCRIBES_CHANNEL_ID, mContext.getString(R.string.subscribes_channel), NotificationManager.IMPORTANCE_HIGH);
                 nc1.setDescription(mContext.getString(R.string.subscribe_description));
                 nc1.enableLights(true);
                 nc1.setLightColor(Color.BLUE);
@@ -84,27 +86,39 @@ public class Notificator {
                 nc1.setLightColor(Color.BLUE);
                 nc1.enableVibration(true);
                 mNotificationManager.createNotificationChannel(nc1);
+                // создам канал уведомления о проверке подписок
+                nc = new NotificationChannel(SUBSCRIBE_CHECK_SERVICE_CHANNEL_ID, mContext.getString(R.string.subscribes_check_channel), NotificationManager.IMPORTANCE_DEFAULT);
+                nc.enableVibration(false);
+                nc.enableLights(false);
+                nc.setSound(null, null);
+                nc.setDescription(mContext.getString(R.string.subscribes_check_channel_description));
+                mNotificationManager.createNotificationChannel(nc);
+                // создам канал уведомления со скачиванием книг
+                nc = new NotificationChannel(BOOK_DOWNLOADS_CHANNEL_ID, mContext.getString(R.string.books_download_channel), NotificationManager.IMPORTANCE_LOW);
+                nc.enableVibration(false);
+                nc.enableLights(false);
+                nc.setSound(null, null);
+                nc.setDescription(mContext.getString(R.string.books_download_channel_description));
+                mNotificationManager.createNotificationChannel(nc);
             }
         }
     }
 
-    public void sendLoadedBookNotification(String name, String type) {
-        // создам группу уведомлений
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContentInfo(mContext.getString(R.string.downloaded_books_title))
-                        .setGroup(DOWNLOADED_BOOKS_GROUP_KEY)
-                        .setGroupSummary(true);
+    public static Notificator getInstance() {
+        if (instance == null) {
+            instance = new Notificator(App.getInstance());
+        }
+        return instance;
+    }
 
-        Notification notification = mBuilder.build();
-        mNotificationManager.notify(LOADED_BOOKS_GROUP, notification);
+    public void sendLoadedBookNotification(String name, String type) {
 
 
         // создам интент для функции отправки файла
         Intent shareIntent = new Intent(mContext, BookActionReceiver.class);
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_ACTION_TYPE, BookLoadedReceiver.ACTION_TYPE_SHARE);
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, type);
+        shareIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, BookLoadedId);
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);
         PendingIntent sharePendingIntent = PendingIntent.getBroadcast(mContext, START_SHARING_REQUEST_CODE, shareIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -113,6 +127,7 @@ public class Notificator {
         Intent openIntent = new Intent(mContext, BookActionReceiver.class);
         openIntent.putExtra(BookLoadedReceiver.EXTRA_ACTION_TYPE, BookLoadedReceiver.ACTION_TYPE_OPEN);
         openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, type);
+        openIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, BookLoadedId);
         openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, name);
         PendingIntent openPendingIntent = PendingIntent.getBroadcast(mContext, START_OPEN_REQUEST_CODE, openIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -124,17 +139,17 @@ public class Notificator {
                 .setContentTitle(name)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(name + " :успешно загружено"))
                 .setContentIntent(startMainPending)
-                .setGroup(DOWNLOADED_BOOKS_GROUP_KEY)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .addAction(R.drawable.ic_share_white_24dp, "Отправить", sharePendingIntent)
                 .addAction(R.drawable.ic_open_black_24dp, "Открыть", openPendingIntent);
-        notification = notificationBuilder.build();
+        Notification notification = notificationBuilder.build();
         mNotificationManager.notify(BookLoadedId, notification);
         ++BookLoadedId;
     }
 
     public void sendFoundSubscribesNotification() {
-
         Intent openSubscriptionsIntent = new Intent(mContext, SubscriptionsActivity.class);
         PendingIntent startMainPending = PendingIntent.getActivity(mContext, START_APP_CODE, openSubscriptionsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -162,7 +177,7 @@ public class Notificator {
         cancelTorErrorMessage();
         // при нажатии на уведомление- открою экран ожидания очереди
         Intent openWindowIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
-        openWindowIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_SINGLE_TOP);
+        openWindowIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent showWindowPending = PendingIntent.getActivity(mContext, START_APP_CODE, openWindowIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // интент отмены скачивания
@@ -174,12 +189,12 @@ public class Notificator {
         pauseIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_PAUSE_MASS_DOWNLOAD);
         PendingIntent pauseMassDownloadPendingIntent = PendingIntent.getBroadcast(mContext, PAUSE_CODE, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        mDownloadScheduleBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+        mDownloadScheduleBuilder = new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Скачивание книг")
                 .setOngoing(true)
                 .setContentText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.download_progress_message), 1, booksCount))
-                .setProgress(0,booksCount, false)
+                .setProgress(0, booksCount, false)
                 .addAction(R.drawable.ic_list_white_24dp, "Очередь", showWindowPending)
                 .addAction(R.drawable.fp_ic_action_cancel, "Отмена", cancelMassDownloadPendingIntent)
                 .addAction(R.drawable.ic_pause_white_24dp, "Пауза", pauseMassDownloadPendingIntent)
@@ -193,16 +208,17 @@ public class Notificator {
     }
 
     public void showBooksLoadedNotification() {
-        NotificationCompat.Builder downloadCompleteBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+        NotificationCompat.Builder downloadCompleteBuilder = new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Скачивание книг")
                 .setContentText("Все книги успешно скачаны!");
         mNotificationManager.notify(BOOKS_SUCCESS_NOTIFICATION, downloadCompleteBuilder.build());
     }
+
     public void showBooksLoadErrorNotification(String name) {
         // добавлю интент для отображения экрана очереди скачивания
         Intent openScheduleIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
-        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_SINGLE_TOP);
+        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent openSchedulePendingIntent = PendingIntent.getActivity(mContext, OPEN_SCHEDULE_CODE, openScheduleIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // добавлю интент для повторной попытки скачивания
@@ -244,7 +260,7 @@ public class Notificator {
                 .setContentTitle("Скачивание книг")
                 .addAction(R.drawable.ic_play_arrow_white_24dp, "Возобновить", pauseMassDownloadPendingIntent)
                 .setContentText("Скачивание приостановлено!");
-            mNotificationManager.notify(DOWNLOAD_PAUSED_NOTIFICATION, downloadCompleteBuilder.build());
+        mNotificationManager.notify(DOWNLOAD_PAUSED_NOTIFICATION, downloadCompleteBuilder.build());
     }
 
     public void showTorNotLoadedNotification() {
@@ -265,14 +281,13 @@ public class Notificator {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_warning_red_24dp)
                 .setContentTitle(mContext.getString(R.string.book_load_error_message))
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, mContext.getString(R.string.book_unreachable_message), book.name, MimeTypes.getDownloadMime(book.format))))
-                    .setGroup(DOWNLOADED_BOOKS_GROUP_KEY)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, mContext.getString(R.string.book_unreachable_message), book.name, MimeTypes.getDownloadMime(book.format))))
                 .setAutoCancel(true);
         mNotificationManager.notify(BookLoadedId, notificationBuilder.build());
         ++BookLoadedId;
     }
 
-    public void cancelTorErrorMessage() {
+    private void cancelTorErrorMessage() {
         mNotificationManager.cancel(TOR_LOAD_ERROR_NOTIFICATION);
     }
 
@@ -293,7 +308,7 @@ public class Notificator {
         PendingIntent RestartTorPendingIntent = PendingIntent.getBroadcast(mContext, RESTART_TOR_CODE, restartTorIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // добавлю интент для отображения экрана очереди скачивания
         Intent openScheduleIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
-        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|FLAG_ACTIVITY_SINGLE_TOP);
+        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent openSchedulePendingIntent = PendingIntent.getActivity(mContext, OPEN_SCHEDULE_CODE, openScheduleIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // покажу уведомление об ожидании подключения
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
@@ -301,16 +316,35 @@ public class Notificator {
                 .setContentIntent(openSchedulePendingIntent)
                 .setContentTitle(mContext.getString(R.string.download_paused_message))
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(mContext.getString(R.string.waiting_internet_message)))
-                .setProgress(0,0, true)
+                .setProgress(0, 0, true)
                 .setOngoing(true)
                 .addAction(R.drawable.ic_play_arrow_white_24dp, mContext.getString(R.string.restart_tor_from_notification_message), RestartTorPendingIntent)
                 .addAction(R.drawable.fp_ic_action_cancel, mContext.getString(R.string.cancel_download_from_notification_message), cancelMassDownloadPendingIntent)
                 .addAction(R.drawable.ic_pause_white_24dp, mContext.getString(R.string.later_message), pauseMassDownloadPendingIntent)
                 .setAutoCancel(false);
-            mNotificationManager.notify(MASS_DOWNLOAD_PAUSED_NOTIFICATION, notificationBuilder.build());
+        mNotificationManager.notify(MASS_DOWNLOAD_PAUSED_NOTIFICATION, notificationBuilder.build());
     }
 
     public void hideMassDownloadInQueueMessage() {
         mNotificationManager.cancel(MASS_DOWNLOAD_PAUSED_NOTIFICATION);
+    }
+
+    public Notification getCheckSubscribesNotification() {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, SUBSCRIBE_CHECK_SERVICE_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_book_black_24dp)
+                .setContentTitle(App.getInstance().getString(R.string.check_flibusta_subscritions_message))
+                .setProgress(0, 0, true)
+                .setOngoing(true);
+        return notificationBuilder.build();
+    }
+
+    public void sendNotFoundSubscribesNotification() {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, SUBSCRIBES_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_book_black_24dp)
+                .setContentTitle("Новых книг не найдено")
+                .setStyle(new NotificationCompat.BigTextStyle().bigText("Ничего интересного в этот раз не нашлось"))
+                .setAutoCancel(true);
+        Notification notification = notificationBuilder.build();
+        mNotificationManager.notify(SUBSCRIBE_NOTIFICATION, notification);
     }
 }

@@ -10,10 +10,8 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.FlibustaUnreachableException;
-import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.utils.URLHandler;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -61,7 +59,7 @@ public class ExternalVpnVewClient {
                 }
             };
             // выполню запрос
-            return httpclient.execute(httpget,responseHandler, context);
+            return httpclient.execute(httpget, responseHandler, context);
         } catch (IOException e) {
             Log.d("surprise", "TestHttpRequestWorker doWork have error in request: " + e.getMessage());
         } finally {
@@ -104,14 +102,9 @@ public class ExternalVpnVewClient {
     public static boolean downloadBook(BooksDownloadSchedule book) {
         try {
             // получу имя файла
-            DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
+            DocumentFile downloadsDir = App.getInstance().getDownloadDir();
             DocumentFile newFile;
-            if (downloadsDir != null) {
-                newFile = downloadsDir.createFile(book.format, book.name);
-            } else {
-                File file = new File(App.getInstance().getDownloadFolder(), book.name);
-                newFile = DocumentFile.fromFile(file);
-            }
+            newFile = downloadsDir.createFile(book.format, book.name);
             if (newFile != null) {
                 // запрошу данные
                 HttpResponse response = rawRequest(URLHandler.getBaseUrl() + book.link);

@@ -1,6 +1,8 @@
 package net.veldor.flibustaloader.selections;
 
-public class Author implements FoundedItem{
+import java.io.Serializable;
+
+public class Author implements FoundedItem, Serializable {
     public String name;
     public String uri;
     public String content;

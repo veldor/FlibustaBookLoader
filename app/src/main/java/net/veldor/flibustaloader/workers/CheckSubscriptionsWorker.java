@@ -1,35 +1,54 @@
 package net.veldor.flibustaloader.workers;
 
+import android.app.Notification;
 import android.content.Context;
-import androidx.annotation.NonNull;
+import android.content.res.XmlResourceParser;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.work.Data;
+import androidx.work.ForegroundInfo;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
-
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.http.ExternalVpnVewClient;
-import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
-import net.veldor.flibustaloader.notificatons.Notificator;
-import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.FoundedItem;
-import net.veldor.flibustaloader.selections.SubscriptionItem;
+import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.http.TorWebClient;
-import net.veldor.flibustaloader.utils.URLHandler;
-import net.veldor.flibustaloader.utils.XMLParser;
+import net.veldor.flibustaloader.notificatons.Notificator;
+import net.veldor.flibustaloader.parsers.SubscriptionsParser;
+import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.selections.SubscriptionItem;
+import net.veldor.flibustaloader.utils.SubscribesHandler;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.util.EntityUtils;
 
+import static net.veldor.flibustaloader.utils.MyFileReader.SUBSCRIPTIONS_FILE;
+
 public class CheckSubscriptionsWorker extends Worker {
 
+    public static final String CHECK_SUBSCRIBES = "check subscribes";
+    public static final String FULL_CHECK = "full check";
+    public static final String PERIODIC_CHECK_TAG = "periodic check subscriptions";
     public static String sNextPage;
+    private Notificator mNotifier;
+    private String mNextPageLink;
+    private ArrayList<SubscriptionItem> mSubscribes;
+    private ArrayList<FoundedBook> result = new ArrayList<>();
+    private String mLastCheckedBookId;
+    private String mCheckFor;
+    private boolean mStopCheck;
 
     public CheckSubscriptionsWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -38,78 +57,33 @@ public class CheckSubscriptionsWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        ArrayList<SubscriptionItem> subscribes = App.getInstance().getBooksSubscribe().getSubscribes();
-        ArrayList<SubscriptionItem> authorSubscribes = App.getInstance().getAuthorsSubscribe().getSubscribes();
-        ArrayList<SubscriptionItem> sequenceSubscribes = App.getInstance().getSequencesSubscribe().getSubscribes();
-        if(subscribes.size() > 0 || authorSubscribes.size() > 0 ||sequenceSubscribes.size() > 0){
+        // список подписок
+        mSubscribes = SubscribesHandler.getAllSubscribes();
+        if (mSubscribes.size() > 0) {
+            // проверю, полная ли проверка или частичная
+            Data data = getInputData();
+            boolean fullCheck = data.getBoolean(FULL_CHECK, false);
+            if (!fullCheck) {
+                // получу последнюю проверенную книгу
+                mCheckFor = App.getInstance().getLastCheckedBookId();
+            }
 
-            String lastCheckedId = App.getInstance().getLastCheckedBookId();
-            Log.d("surprise", "CheckSubscriptionsWorker doWork last checked " + lastCheckedId);
+            // буду загружать страницы с новинками
+
+            TorWebClient webClient;
+            mNextPageLink = "/opds/new/0/new";
+            mNotifier = Notificator.getInstance();
+            // помечу рабочего важным
+            ForegroundInfo info = createForegroundInfo();
+            setForegroundAsync(info);
+
             String answer = null;
-            ArrayList<FoundedItem> result = new ArrayList<>();
-            // получу список подписок
-            App.sSearchType = OPDSActivity.SEARCH_BOOKS;
-
-            if(App.getInstance().isExternalVpn()){
-                HttpResponse response = ExternalVpnVewClient.rawRequest((App.BASE_URL + "/opds/new/0/new"));
-                if(response != null){
-                    try {
-                        answer = EntityUtils.toString(response.getEntity());
-                    } catch (IOException e) {
-                        Log.d("surprise", "CheckSubscriptionsWorker doWork error when receive subscription");
-                        e.printStackTrace();
-                    }
-                }
-            }
-            else{
-
-                // проверю, запустился ли TOR
-                AndroidOnionProxyManager tor = App.getInstance().mLoadedTor.getValue();
-                while (tor == null){
-                    try {
-                        Thread.sleep(3000);
-                        Log.d("surprise", "CheckSubscriptionsWorker doWork wait tor");
-                    } catch (InterruptedException e) {
-                        Log.d("surprise", "CheckSubscriptionsWorker doWork thread interrupted");
-                        e.printStackTrace();
-                    }
-                    tor = App.getInstance().mLoadedTor.getValue();
-                }
-                // теперь подожду, пока TOR дозагрузится
-                while (!tor.isBootstrapped()){
-                    try {
-                        Thread.sleep(3000);
-                        Log.d("surprise", "CheckSubscriptionsWorker doWork wait tor boostrap");
-                    } catch (InterruptedException e) {
-                        Log.d("surprise", "CheckSubscriptionsWorker doWork thread interrupted");
-                        e.printStackTrace();
-                    }
-                }
-                // получу список книг
-                // создам новый экземпляр веб-клиента
-                TorWebClient webClient = null;
-                try {
-                    webClient = new TorWebClient();
-
-                } catch (TorNotLoadedException e) {
-                    e.printStackTrace();
-                }
-                if(webClient == null){
-                    // верну ошибку
-                    return Result.failure();
-                }
-                answer = webClient.request(App.BASE_URL + "/opds/new/0/new");
-            }
-            // сразу же обработаю результат
-            if(answer != null && !answer.isEmpty()){
-                XMLParser.handleSearchResults(result, answer);
-
-                // проверю последнюю загруженную книгу
-                String lastId = ((FoundedBook) result.get(result.size() - 1)).id;
-                while (sNextPage != null && lastId.compareTo(lastCheckedId) > 0){
-                    if(App.getInstance().isExternalVpn()){
-                        HttpResponse response = ExternalVpnVewClient.rawRequest((URLHandler.getBaseUrl()) + sNextPage);
-                        if(response != null){
+            do {
+                if (!isStopped()) {
+                    // пока буду загружать все страницы, которые есть
+                    if (App.getInstance().isExternalVpn()) {
+                        HttpResponse response = ExternalVpnVewClient.rawRequest((App.BASE_URL + mNextPageLink));
+                        if (response != null) {
                             try {
                                 answer = EntityUtils.toString(response.getEntity());
                             } catch (IOException e) {
@@ -117,65 +91,124 @@ public class CheckSubscriptionsWorker extends Worker {
                                 e.printStackTrace();
                             }
                         }
-                    }
-                    else{
-                        TorWebClient webClient;
+                    } else {
+                        // создам новый экземпляр веб-клиента
                         try {
                             webClient = new TorWebClient();
-                            answer = webClient.request(App.BASE_URL + sNextPage);
                         } catch (TorNotLoadedException e) {
                             e.printStackTrace();
-                            Log.d("surprise", "CheckSubscriptionsWorker doWork: не удалось запустить TOR");
+                            return Result.failure();
+                        }
+                        if (!isStopped()) {
+                            answer = webClient.request(App.BASE_URL + mNextPageLink);
                         }
                     }
-                    XMLParser.handleSearchResults(result, answer);
-                    lastId = ((FoundedBook) result.get(result.size() - 1)).id;
-                }
-            }
-            // теперь каждую сущность нужно проверить на соответствие поисковому шаблону
-            if(result.size() > 0){
-                FoundedBook realBook;
-                for (FoundedItem book : result){
-                    realBook = (FoundedBook) book;
-                    // сравню название книги со всеми подписками
-                    for (SubscriptionItem needle : subscribes){
-                        if(realBook.name.toLowerCase().contains(needle.name.toLowerCase())){
-                            // найдено совпадение
-                            // отправлю нотификацию
-
-                            new Notificator(App.getInstance()).sendFoundSubscribesNotification();
-                            return Result.success();
-                        }
-                    }
-                    // сравню автора книги со всеми подписками
-                    for (SubscriptionItem needle : authorSubscribes){
-                        if(realBook.author.toLowerCase().contains(needle.name.toLowerCase())){
-                            // найдено совпадение
-                            // отправлю нотификацию
-                            new Notificator(App.getInstance()).sendFoundSubscribesNotification();
-                            return Result.success();
-                        }
-                    }
-                    // сравню серии книги со всеми подписками
-
-                    for (SubscriptionItem needle : sequenceSubscribes){
-                        if(realBook.sequenceComplex != null && realBook.sequenceComplex.toLowerCase().contains(needle.name.toLowerCase())){
-                            // найдено совпадение
-                            // отправлю нотификацию
-                            new Notificator(App.getInstance()).sendFoundSubscribesNotification();
-                            return Result.success();
+                    mNextPageLink = null;
+                    if (answer != null) {
+                        try {
+                            handleAnswer(answer);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 }
             }
-            else{
-                Log.d("surprise", "CheckSubscriptionsWorker doWork книги не найдены");
-            }
+            while (mNextPageLink != null && !mStopCheck);
+        }
 
+        if (result.size() > 0) {
+            // найдены книги
+            Notificator.getInstance().sendFoundSubscribesNotification();
+            serializeResult();
         }
         else{
-            Log.d("surprise", "CheckSubscriptionsWorker doWork подписки не найдены!");
+            Notificator.getInstance().sendNotFoundSubscribesNotification();
+        }
+        if (mLastCheckedBookId != null) {
+            // сохраню последнюю проверенную книгу
+            App.getInstance().setLastCheckedBook(mLastCheckedBookId);
         }
         return Result.success();
+    }
+
+    private void serializeResult() {
+        try {
+            Log.d("surprise", "CheckSubscriptionsWorker serializeResult: serialize " + result.size() + " books");
+            File autocompleteFile = new File(App.getInstance().getFilesDir(), SUBSCRIPTIONS_FILE);
+            FileOutputStream fos = new FileOutputStream(autocompleteFile);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(result);
+            oos.close();
+            fos.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    private void handleAnswer(String answer) throws Exception {
+
+        // найду id последней книги на странице
+        String lastId = answer.substring(answer.lastIndexOf("tag:book:"), answer.indexOf("<", answer.lastIndexOf("tag:book:")));
+        if (mCheckFor != null && mCheckFor.compareTo(lastId) > 0) {
+            mStopCheck = true;
+        }
+
+        mNextPageLink = null;
+        boolean foundKeyWords = false;
+        // проверю, есть ли в тексте упоминания слов, входящих в подписки. Если их нет- проверяю только ссылку на следующую страницу
+        for (SubscriptionItem si :
+                mSubscribes) {
+            if (answer.toLowerCase().contains(si.name.toLowerCase())) {
+                foundKeyWords = true;
+                break;
+            }
+        }
+
+        // если найдены слова, входящие в подписки- проверю страницу
+        if (foundKeyWords) {
+            SubscriptionsParser.handleSearchResults(result, answer, mSubscribes);
+        }
+        String value;
+        String value1;
+        boolean foundFirstBook = false;
+        boolean nextPageLinkFound = false;
+        // прогоню строку через парсер
+        XmlPullParserFactory factory = XmlPullParserFactory
+                .newInstance();
+        factory.setNamespaceAware(true);
+        XmlPullParser xrp = factory.newPullParser();
+        xrp.setInput(new StringReader(answer));
+        xrp.next();
+        int eventType = xrp.getEventType();
+        while (eventType != XmlResourceParser.END_DOCUMENT) {
+            if (eventType == XmlResourceParser.START_TAG) {
+                value = xrp.getName();
+                if (value != null) {
+                    if (!nextPageLinkFound && value.equals("link")) {
+                        // проверю, возможно, это ссылка на следующую страницу
+                        value1 = xrp.getAttributeValue(null, "rel");
+                        if (value1 != null && value1.equals("next")) {
+                            // найдена ссылка на следующую страницу
+                            mNextPageLink = xrp.getAttributeValue(null, "href");
+                            nextPageLinkFound = true;
+                        }
+                    }
+                    if (mLastCheckedBookId == null && value.equals("entry")) {
+                        // найдена книга, если это первая проверенная- запишу её id
+                        foundFirstBook = true;
+                    } else if (foundFirstBook && mLastCheckedBookId == null && value.equals("id")) {
+                        mLastCheckedBookId = xrp.nextText();
+                        return;
+                    }
+                }
+            }
+            eventType = xrp.next();
+        }
+    }
+
+    @NonNull
+    private ForegroundInfo createForegroundInfo() {
+        Notification notification = mNotifier.getCheckSubscribesNotification();
+        return new ForegroundInfo(Notificator.CHECK_SUBSCRIBES_WORKER_NOTIFICATION, notification);
     }
 }

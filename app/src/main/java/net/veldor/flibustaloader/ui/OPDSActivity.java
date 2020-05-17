@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader.ui;
 
 import android.annotation.SuppressLint;
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
@@ -37,6 +36,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
@@ -47,6 +47,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
+import com.bumptech.glide.Glide;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.material.snackbar.Snackbar;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
@@ -56,6 +57,7 @@ import net.veldor.flibustaloader.MyWebClient;
 import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.SubscribeActivity;
+import net.veldor.flibustaloader.SubscriptionsActivity;
 import net.veldor.flibustaloader.adapters.SearchResultsAdapter;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
@@ -69,6 +71,7 @@ import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MimeTypes;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.TransportUtils;
 import net.veldor.flibustaloader.utils.URLHandler;
 import net.veldor.flibustaloader.utils.XMLHandler;
@@ -157,12 +160,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         // проверю очередь загрузки
         checkDownloadQueue();
-
-        // переназову окно
-        ActionBar actionbar = getActionBar();
-        if (actionbar != null) {
-            actionbar.setTitle("OPDS");
-        }
 
         mSearchTitle = findViewById(R.id.search_title);
 
@@ -653,11 +650,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 }
 
                 // отслеживание отображения обложки книги
-                MutableLiveData<FoundedBook> bookWithCover = App.getInstance().mShowCover;
+                LiveData<FoundedBook> bookWithCover = App.getInstance().mShowCover;
                 bookWithCover.observe(OPDSActivity.this, new Observer<FoundedBook>() {
                     @Override
                     public void onChanged(FoundedBook foundedBook) {
-                        if (foundedBook != null && foundedBook.preview != null && foundedBook.preview.getByteCount() > 0) {
+                        if (foundedBook != null && foundedBook.previewUrl != null) {
                             Log.d("surprise", "onChanged: show again");
                             showPreview(foundedBook);
                         }
@@ -704,10 +701,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     } else {
                         mSearchResultsAdapter = new SearchResultsAdapter(arrayList);
                         mRecycler.setAdapter(mSearchResultsAdapter);
-                        if(App.getInstance().isLinearLayout()){
+                        if (App.getInstance().isLinearLayout()) {
                             mRecycler.setLayoutManager(new LinearLayoutManager(OPDSActivity.this));
-                        }
-                        else{
+                        } else {
                             mRecycler.setLayoutManager(new GridLayoutManager(OPDSActivity.this, 2));
                         }
                         scrollToTop();
@@ -862,22 +858,23 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void showPreview(FoundedBook foundedBook) {
-        if (mCoverPreviewDialog == null) {
-            mCoverPreviewDialog = new Dialog(OPDSActivity.this, android.R.style.Theme_Light);
-            mCoverPreviewDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        }
+        Log.d("surprise", "OPDSActivity showPreview: preview url is " + foundedBook.previewUrl);
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         @SuppressLint("InflateParams") View dialogLayout = inflater.inflate(R.layout.book_cover, null);
         ImageView imageContainer = dialogLayout.findViewById(R.id.cover_view);
-        imageContainer.setImageBitmap(foundedBook.preview);
-        mCoverPreviewDialog.setContentView(dialogLayout);
-        mCoverPreviewDialog.show();
-        mCoverPreviewDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialogInterface) {
-                mCoverPreviewDialog = null;
-            }
-        });
+
+        Glide
+                .with(imageContainer)
+                .load("https://flibusta.appspot.com" + foundedBook.previewUrl)
+                .into(imageContainer);
+
+        dialogBuilder
+                .setView(dialogLayout)
+                .setCancelable(true)
+                .setPositiveButton("Ок", null)
+                .create()
+                .show();
     }
 
     private void showPage(FoundedBook book) {
@@ -1119,6 +1116,9 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // переключатель внешнего VPN
         myItem = menu.findItem(R.id.menuUseExternalVpn);
         myItem.setChecked(App.getInstance().isExternalVpn());
+
+        myItem = menu.findItem(R.id.autoCheck);
+        myItem.setChecked(MyPreferences.getInstance().isSubscriptionsAutoCheck());
         return true;
     }
 
@@ -1255,6 +1255,18 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.switchLayout:
                 App.getInstance().switchLayout();
                 recreate();
+            case R.id.checkSubscribesNow:
+                mMyViewModel.checkSubscribes();
+                return true;
+            case R.id.fullCheckSubscribes:
+                mMyViewModel.fullCheckSubscribes();
+                return true;
+            case R.id.showSubscriptionsList:
+                startActivity(new Intent(this, SubscriptionsActivity.class));
+                return true;
+            case R.id.autoCheck:
+                mMyViewModel.switchSubscriptionsAutoCheck();
+                invalidateOptionsMenu();
                 return true;
 
         }
@@ -1263,11 +1275,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
     private void handleUseExternalVpn() {
         // если использовался внешний VPN- просто отключу его использование
-        if(App.getInstance().isExternalVpn()){
+        if (App.getInstance().isExternalVpn()) {
             App.getInstance().switchExternalVpnUse();
             invalidateOptionsMenu();
-        }
-        else{
+        } else {
             // покажу диалог с объяснением последствий включения VPN
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder
@@ -1455,14 +1466,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         String searchString = URLEncoder.encode(s, "utf-8").replace("+", "%20");
 
         // опознаю тип поиска
-        if(App.getInstance().isExternalVpn()){
+        if (App.getInstance().isExternalVpn()) {
             if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchBook) {
                 doSearch(FLIBUSTA_VPN_SEARCH_BOOK_REQUEST + searchString);
             } else {
                 doSearch(FLIBUSTA_VPN_SEARCH_AUTHOR_REQUEST + searchString);
             }
-        }
-        else{
+        } else {
             if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchBook) {
                 doSearch(FLIBUSTA_SEARCH_BOOK_REQUEST + searchString);
             } else {
@@ -1472,15 +1482,15 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void doSearch(String s) {
-            if (s != null && !s.isEmpty()) {
-                // очищу историю поиска и положу туда начальное значение
-                App.getInstance().addToHistory(s);
-                showLoadWaitingDialog();
-                mMyViewModel.request(s);
-                // добавлю значение в историю
-            } else {
-                Toast.makeText(this, R.string.empty_request_message, Toast.LENGTH_SHORT).show();
-            }
+        if (s != null && !s.isEmpty()) {
+            // очищу историю поиска и положу туда начальное значение
+            App.getInstance().addToHistory(s);
+            showLoadWaitingDialog();
+            mMyViewModel.request(s);
+            // добавлю значение в историю
+        } else {
+            Toast.makeText(this, R.string.empty_request_message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void doSearchFromHistory(String s) {
@@ -1647,7 +1657,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void startBrowsing() {
-        if(!App.getInstance().isExternalVpn()){
+        if (!App.getInstance().isExternalVpn()) {
             mMyViewModel.setWebClient(new MyWebClient());
         }
         // если нет истории поиска- гружу новинки за неделю, если есть- последнюю загруженную страницу
@@ -1769,16 +1779,21 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE) {
-            Log.d("surprise", "OPDSActivity onActivityResult here");
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
                     Uri treeUri = data.getData();
                     if (treeUri != null) {
-                        App.getInstance().setNewDownloadFolder(treeUri);
-                        Toast.makeText(this, getText(R.string.download_folder_changed_message_new), Toast.LENGTH_LONG).show();
+                        // проверю наличие файла
+                        DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
+                        if (dl != null && dl.isDirectory()) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            }
+                            App.getInstance().setDownloadDir(treeUri);
+                            Toast.makeText(this, getText(R.string.download_folder_changed_message_new), Toast.LENGTH_LONG).show();
+                        }
                     }
-
-
                 }
             }
         } else if (requestCode == READ_REQUEST_CODE) {
@@ -1788,7 +1803,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     if (folderLocation != null) {
                         File destination = new File(folderLocation);
                         if (destination.exists()) {
-                            App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
+                            App.getInstance().setDownloadDir(Uri.parse(folderLocation));
                             Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
                         }
                     }

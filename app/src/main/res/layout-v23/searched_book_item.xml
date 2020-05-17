@@ -37,7 +37,6 @@
             <ImageButton
                 android:id="@+id/menuButton"
                 android:layout_width="25dp"
-                android:foreground="?android:attr/selectableItemBackground"
                 android:layout_height="25dp"
                 android:contentDescription="@string/book_menu"
                 android:src="@drawable/ic_more_vert_black_24dp"

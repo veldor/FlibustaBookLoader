@@ -12,6 +12,7 @@ import java.io.IOException;
 
 public class MyFileReader {
     public static final String SEARCH_AUTOCOMPLETE_FILE = "searchAutocomplete.xml";
+    public static final String SUBSCRIPTIONS_FILE = "subscriptions.list";
     private static final String SEARCH_AUTOCOMPLETE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><search> </search>";
     private static final String SUBSCRIBE_NEW = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><subscribe> </subscribe>";
     public static final String BOOKS_SUBSCRIBE_FILE = "booksSubscribe.xml";

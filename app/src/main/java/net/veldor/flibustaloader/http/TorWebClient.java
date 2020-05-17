@@ -19,7 +19,6 @@ import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,7 +50,7 @@ public class TorWebClient {
         while (App.sTorStartTry < 4) {
             // есть три попытки, если все три неудачны- верну ошибку
             try {
-                Log.d("surprise", "StartTorWorker doWork: start tor, try # " + App.sTorStartTry);
+                //Log.d("surprise", "StartTorWorker doWork: start tor, try # " + App.sTorStartTry);
                 StartTorWorker.startTor();
                 Log.d("surprise", "StartTorWorker doWork: tor success start");
                 // обнулю счётчик попыток
@@ -122,10 +121,10 @@ public class TorWebClient {
     }
 
     private HttpResponse simpleGetRequest(String url) throws IOException {
-            HttpGet httpGet = new HttpGet(url);
-            httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
-            httpGet.setHeader("X-Compress", "null");
-            return mHttpClient.execute(httpGet, mContext);
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
+        httpGet.setHeader("X-Compress", "null");
+        return mHttpClient.execute(httpGet, mContext);
     }
 
 
@@ -157,14 +156,9 @@ public class TorWebClient {
     public boolean downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, FlibustaUnreachableException, TorNotLoadedException {
         try {
             // получу имя файла
-            DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
-            DocumentFile newFile;
-            if (downloadsDir != null) {
-                newFile = downloadsDir.createFile(book.format, book.name);
-            } else {
-                File file = new File(App.getInstance().getDownloadFolder(), book.name);
-                newFile = DocumentFile.fromFile(file);
-            }
+            DocumentFile downloadsDir = App.getInstance().getDownloadDir();
+            DocumentFile newFile = downloadsDir.createFile(book.format, book.name);
+
             if (newFile != null) {
                 // запрошу данные
                 Log.d("surprise", "TorWebClient downloadBook: request " + book.link);

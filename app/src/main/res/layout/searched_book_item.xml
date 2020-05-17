@@ -142,7 +142,6 @@
 
             <Button
                 android:id="@+id/downloadBookBtn"
-                android:foreground="?android:attr/selectableItemBackground"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
                 android:background="@drawable/transparent_bg_bordered_button"

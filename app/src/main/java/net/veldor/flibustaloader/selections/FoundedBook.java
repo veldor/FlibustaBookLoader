@@ -2,9 +2,12 @@ package net.veldor.flibustaloader.selections;
 
 import android.graphics.Bitmap;
 
+import androidx.annotation.NonNull;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class FoundedBook implements FoundedItem {
+public class FoundedBook implements FoundedItem, Serializable {
     public String name;
     public String author;
     public String downloadsCount;
@@ -21,6 +24,6 @@ public class FoundedBook implements FoundedItem {
     public String id;
     public boolean read;
     public boolean downloaded;
-    public Bitmap preview;
+    public String previewUrl;
     public String preferredFormat;
 }

@@ -28,6 +28,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -368,16 +369,21 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE) {
-            Log.d("surprise", "OPDSActivity onActivityResult here");
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
                     Uri treeUri = data.getData();
                     if (treeUri != null) {
-                        App.getInstance().setNewDownloadFolder(treeUri);
-                        Toast.makeText(this, getText(R.string.download_folder_changed_message_new), Toast.LENGTH_LONG).show();
+                        // проверю наличие файла
+                        DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
+                        if(dl != null && dl.isDirectory()){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            }
+                            App.getInstance().setDownloadDir(treeUri);
+                            Toast.makeText(this, getText(R.string.download_folder_changed_message_new), Toast.LENGTH_LONG).show();
+                        }
                     }
-
-
                 }
             }
         } else if (requestCode == READ_REQUEST_CODE) {
@@ -387,7 +393,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                     if (folderLocation != null) {
                         File destination = new File(folderLocation);
                         if (destination.exists()) {
-                            App.getInstance().setDownloadFolder(Uri.parse(folderLocation));
+                            App.getInstance().setDownloadDir(Uri.parse(folderLocation));
                             Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
                         }
                     }

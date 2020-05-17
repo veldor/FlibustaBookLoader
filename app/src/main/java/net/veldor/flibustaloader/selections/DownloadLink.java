@@ -1,6 +1,8 @@
 package net.veldor.flibustaloader.selections;
 
-public class DownloadLink {
+import java.io.Serializable;
+
+public class DownloadLink implements Serializable {
     public String url;
     public String id;
     public String mime;

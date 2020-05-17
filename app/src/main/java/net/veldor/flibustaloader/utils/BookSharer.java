@@ -18,6 +18,7 @@ import java.io.File;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
+import static net.veldor.flibustaloader.utils.BookOpener.intentCanBeHandled;
 
 public class BookSharer {
 
@@ -27,7 +28,7 @@ public class BookSharer {
         // ========================================================================================
         Context context = App.getInstance();
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-            DocumentFile downloadsDir = App.getInstance().getNewDownloadDir();
+            DocumentFile downloadsDir = App.getInstance().getDownloadDir();
             if (downloadsDir != null) {
                 DocumentFile downloadFile = downloadsDir.findFile(name);
                 if (downloadFile != null) {
@@ -52,60 +53,18 @@ public class BookSharer {
                         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
                         shareIntent.setType(MimeTypes.getFullMime(type));
                         shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION|FLAG_ACTIVITY_NEW_TASK);
-                        App.getInstance().startActivity(shareIntent);
+                        if(intentCanBeHandled(shareIntent)){
+                            App.getInstance().startActivity(shareIntent);
+                        }
+                        else{
+                            Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл",Toast.LENGTH_SHORT).show();
+                        }
                     } else {
                         Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
                     }
                 } else {
                     Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
                 }
-            }
-            else {
-                // получу путь к файлу
-                file = new File(App.getInstance().getDownloadFolder(), name);
-                if (file.exists()) {
-                    // грязный хак- без него не работает доступ к Kindle, та не умеет в новый метод с контентом
-                    //todo По возможности- разобраться и заменить на валидное решение
-                    StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-                    StrictMode.setVmPolicy(builder.build());
-                    // отправлю запрос на открытие файла
-                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-                    shareIntent.setType(MimeTypes.getFullMime(type));
-                    Intent starter = Intent.createChooser(shareIntent, context.getString(R.string.project_id));
-                    starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                    if (TransportUtils.intentCanBeHandled(starter)) {
-                        context.startActivity(starter);
-                    }
-                    else{
-                        Toast.makeText(context, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
-                    }
-                } else {
-                    Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
-                }
-            }
-        } else {
-            // получу путь к файлу
-            file = new File(App.getInstance().getDownloadFolder(), name);
-            if (file.exists()) {
-                // грязный хак- без него не работает доступ к Kindle, та не умеет в новый метод с контентом
-                //todo По возможности- разобраться и заменить на валидное решение
-                StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-                StrictMode.setVmPolicy(builder.build());
-                // отправлю запрос на открытие файла
-                Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-                shareIntent.setType(MimeTypes.getFullMime(type));
-                Intent starter = Intent.createChooser(shareIntent, context.getString(R.string.project_id));
-                starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
-                if (TransportUtils.intentCanBeHandled(starter)) {
-                    context.startActivity(starter);
-                }
-                else{
-                    Toast.makeText(context, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
-                }
-            } else {
-                Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
             }
         }
     }

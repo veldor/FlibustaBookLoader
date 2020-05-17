@@ -1,16 +1,16 @@
 package net.veldor.flibustaloader.adapters;
 
-import androidx.databinding.DataBindingUtil;
-import androidx.databinding.ViewDataBinding;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.recyclerview.widget.RecyclerView;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
@@ -50,6 +50,7 @@ public class SubscribeResultsAdapter extends RecyclerView.Adapter<SubscribeResul
 
     public void setContent(ArrayList<FoundedBook> arrayList) {
         mBooks = arrayList;
+        notifyDataSetChanged();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -66,16 +67,6 @@ public class SubscribeResultsAdapter extends RecyclerView.Adapter<SubscribeResul
             mBinding.executePendingBindings();
             // добавлю действие при клике на кнопку скачивания
             View container = mBinding.getRoot();
-
-            // обработаю нажатие на кнопку меню
-            ImageButton menuButton = container.findViewById(R.id.menuButton);
-            menuButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    // отправлю событие контекстного меню для книги
-                    App.getInstance().mContextBook.postValue(foundedBook);
-                }
-            });
 
             Button downloadButton = container.findViewById(R.id.downloadBookBtn);
             downloadButton.setOnClickListener(new OnClickListener() {

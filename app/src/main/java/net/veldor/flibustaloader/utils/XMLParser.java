@@ -213,6 +213,7 @@ public class XMLParser {
     }
 
     private static void handleBooks(NodeList entries, ArrayList<FoundedItem> result, XPath xPath) throws XPathExpressionException {
+        boolean isLoadPreviews = App.getInstance().isPreviews();
         // обработаю найденные книги
         Node entry;
         Node someNode;
@@ -326,6 +327,17 @@ public class XMLParser {
                     book.sequences.add(sequence);
                 }
                 innerCounter++;
+            }
+
+            // если назначена загрузка превью- гружу их
+            if(isLoadPreviews){
+                someNode = ((Node) xPath.evaluate("./link[@rel='http://opds-spec.org/image']", entry, XPathConstants.NODE));
+                if(someNode != null){
+                    someString = someNode.getAttributes().getNamedItem("href").getTextContent();
+                    if(someString != null && !someString.isEmpty()){
+                        book.previewUrl = someString;
+                    }
+                }
             }
         }
     }
