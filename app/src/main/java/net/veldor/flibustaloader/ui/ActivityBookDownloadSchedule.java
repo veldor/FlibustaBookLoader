@@ -111,7 +111,7 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
             public void onChanged(List<BooksDownloadSchedule> booksDownloadSchedules) {
                 if(booksDownloadSchedules != null && booksDownloadSchedules.size() > 0){
                     if(BooksAdapter == null){
-                        RecyclerView recycler = findViewById(R.id.booksList);
+                        RecyclerView recycler = findViewById(R.id.resultsList);
                         BooksAdapter = new DownloadScheduleAdapter(booksDownloadSchedules);
                         BooksAdapter.setHasStableIds(true);
                         recycler.setAdapter(BooksAdapter);

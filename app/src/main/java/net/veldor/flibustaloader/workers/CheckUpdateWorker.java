@@ -4,6 +4,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
+import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BuildConfig;
 import net.veldor.flibustaloader.updater.Updater;
 
@@ -31,6 +32,9 @@ public class CheckUpdateWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        if(App.isTestVersion){
+            return Result.success();
+        }
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(Updater.GITHUB_RELEASES_URL);
         try {
@@ -50,7 +54,6 @@ public class CheckUpdateWorker extends Worker {
                         if(!lastVersion.equals(currentVersion)){
                             // версии отличаются
                             Updater.newVersion.postValue(true);
-                            Log.d("surprise", "CheckUpdateWorker handleResponse: founded new version!");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

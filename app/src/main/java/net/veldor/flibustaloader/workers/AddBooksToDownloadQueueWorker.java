@@ -13,7 +13,7 @@ import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.FoundedItem;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MimeTypes;
 
@@ -27,7 +27,7 @@ public class AddBooksToDownloadQueueWorker extends Worker {
     }
 
     public static void addLink(DownloadLink downloadLink) {
-       addDownloadLink(App.getInstance().mDatabase.booksDownloadScheduleDao(), downloadLink);
+        addDownloadLink(App.getInstance().mDatabase.booksDownloadScheduleDao(), downloadLink);
     }
 
     @NonNull
@@ -44,9 +44,9 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         // если выбраны книги для загрузки- получу их ID
         SparseBooleanArray selectedBooksList = App.getInstance().mDownloadSelectedBooks;
         // получу весь список книг
-        ArrayList<FoundedItem> mBooks = App.getInstance().mParsedResult.getValue();
+        ArrayList<FoundedBook> mBooks = OPDSActivity.sLiveBooksFound.getValue();
         // проверю, что книги есть и готовы к загрузке
-        if (mBooks == null || mBooks.size() == 0 || !(mBooks.get(0) instanceof FoundedBook)) {
+        if (mBooks == null || mBooks.size() == 0) {
             return Result.success();
         }
 
@@ -57,7 +57,7 @@ public class AddBooksToDownloadQueueWorker extends Worker {
             for (int counter = 0; counter < mBooks.size(); counter++) {
                 // если книга выбрана для скачивания- добавлю её в список для скачивания
                 if (selectedBooksList.get(counter)) {
-                    book = (FoundedBook) mBooks.get(counter);
+                    book = mBooks.get(counter);
                     book.preferredFormat = preferredFormat;
                     prepareForDownload.add(book);
                 }
@@ -66,7 +66,7 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         // иначе- добавлю все книги в список для загрузки
         else {
             for (int counter = 0; counter < mBooks.size(); counter++) {
-                book = (FoundedBook) mBooks.get(counter);
+                book = mBooks.get(counter);
                 // тут проверю, если запрещено загружать ранее загруженные книги повторно- пропущу ранее загруженные
                 if (redownload && book.downloaded) {
                     continue;
@@ -95,8 +95,8 @@ public class AddBooksToDownloadQueueWorker extends Worker {
                             link = links.get(counter);
                             break;
                         }
-                        if(links.get(counter).mime.equals(MimeTypes.getFullMime("fb2"))){
-                           fb2Link =  links.get(counter);
+                        if (links.get(counter).mime.equals(MimeTypes.getFullMime("fb2"))) {
+                            fb2Link = links.get(counter);
                         }
                         counter++;
                     }
@@ -104,16 +104,15 @@ public class AddBooksToDownloadQueueWorker extends Worker {
                 // если не найдена предпочтительная ссылка на книгу и разрешено загружать книги вне выбранного формата
                 if (link == null && !loadOnlySelectedFormat) {
                     // попробую скачать книгу в fb2, как в самом распространённом формате
-                    if(fb2Link != null){
+                    if (fb2Link != null) {
                         link = fb2Link;
-                    }
-                    else{
+                    } else {
                         // просто возьму первую ссылку
                         link = links.get(0);
                     }
                 }
                 // если ссылка всё-же не найдена- перехожу к следующей книге
-                if(link == null){
+                if (link == null) {
                     continue;
                 }
                 addDownloadLink(dao, link);
@@ -132,16 +131,15 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         newScheduleElement.size = link.size;
         // определю имя ссылки для скачивания =======================================
         String author_last_name;
-        if(link.author != null && !link.author.isEmpty()){
+        if (link.author != null && !link.author.isEmpty()) {
             newScheduleElement.author = link.author;
             int delimiter = link.author.indexOf(" ");
-            if(delimiter >= 0){author_last_name = link.author.substring(0, delimiter);
-            }
-            else{
+            if (delimiter >= 0) {
+                author_last_name = link.author.substring(0, delimiter);
+            } else {
                 author_last_name = link.author;
             }
-        }
-        else{
+        } else {
             author_last_name = "Автор неизвестен";
             newScheduleElement.author = "Автор неизвестен";
         }

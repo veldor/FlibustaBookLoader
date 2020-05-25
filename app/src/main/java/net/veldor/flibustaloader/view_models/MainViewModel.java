@@ -18,11 +18,9 @@ import androidx.work.WorkManager;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.MyWebClient;
 import net.veldor.flibustaloader.MyWebView;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
-import net.veldor.flibustaloader.http.ExternalVpnClient;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
@@ -36,9 +34,11 @@ import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker;
 import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
 import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
+import net.veldor.flibustaloader.workers.SearchWorker;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static net.veldor.flibustaloader.workers.CheckSubscriptionsWorker.PERIODIC_CHECK_TAG;
@@ -46,7 +46,6 @@ import static net.veldor.flibustaloader.workers.CheckSubscriptionsWorker.PERIODI
 public class MainViewModel extends AndroidViewModel {
     private static final String ADD_TO_DOWNLOAD_QUEUE_ACTION = "add to download queue";
     public static final String MULTIPLY_DOWNLOAD = "multiply download";
-    private MyWebClient mWebClient;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -150,31 +149,14 @@ public class MainViewModel extends AndroidViewModel {
         App.getInstance().initializeDownload();
     }
 
-    public void setWebClient(MyWebClient myWebClient) {
-        mWebClient = myWebClient;
-    }
-
-    public void request(String s) {
-        if(App.getInstance().isExternalVpn()){
-            ExternalVpnClient.search(s);
-        }
-        else{
-            if(mWebClient != null){
-                mWebClient.search(s);
-            }
-            else{
-                Toast.makeText(App.getInstance(), R.string.cant_initiate_webclient_message, Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-
-    public void loadNextPage() {
-        if(App.getInstance().isExternalVpn()){
-            ExternalVpnClient.loadNextPage();
-        }
-        else{
-            mWebClient.loadNextPage();
-        }
+    public UUID request(String s) {
+        Data inputData = new Data.Builder()
+                .putString(SearchWorker.REQUEST, s)
+                .build();
+        // запущу рабочего, который выполнит запрос
+        OneTimeWorkRequest searchWorkRequest = new OneTimeWorkRequest.Builder(SearchWorker.class).addTag(SearchWorker.WORK_TAG).setInputData(inputData).build();
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(SearchWorker.WORK_TAG, ExistingWorkPolicy.REPLACE, searchWorkRequest);
+        return searchWorkRequest.getId();
     }
 
     public void checkSubscribes() {

@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.utils;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.DocumentsContract;
@@ -27,7 +28,7 @@ public class BookSharer {
         File file;
         // ========================================================================================
         Context context = App.getInstance();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();
             if (downloadsDir != null) {
                 DocumentFile downloadFile = downloadsDir.findFile(name);
@@ -41,7 +42,7 @@ public class BookSharer {
                     file = new File(path);
                     Log.d("surprise", "BookSharer shareBook " + file);
                     // костыли, проверю существование файла с условием, что он находится на основной флешке
-                    if(!file.exists()){
+                    if (!file.exists()) {
                         file = new File(Environment.getExternalStorageDirectory() + "/" + split[1]);
                     }
                     if (file.exists()) {
@@ -52,12 +53,11 @@ public class BookSharer {
                         Intent shareIntent = new Intent(Intent.ACTION_SEND);
                         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
                         shareIntent.setType(MimeTypes.getFullMime(type));
-                        shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION|FLAG_ACTIVITY_NEW_TASK);
-                        if(intentCanBeHandled(shareIntent)){
+                        shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
+                        if (intentCanBeHandled(shareIntent)) {
                             App.getInstance().startActivity(shareIntent);
-                        }
-                        else{
-                            Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл",Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
@@ -65,6 +65,26 @@ public class BookSharer {
                 } else {
                     Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
                 }
+            }
+        } else {
+            File dd = MyPreferences.getInstance().getDownloadDir();
+            File bookFile = new File(dd, name);
+            if (bookFile.isFile()) {
+                //todo По возможности- разобраться и заменить на валидное решение
+                StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+                StrictMode.setVmPolicy(builder.build());
+                // отправлю запрос на открытие файла
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(bookFile));
+                shareIntent.setType(MimeTypes.getFullMime(type));
+                shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
+                if (intentCanBeHandled(shareIntent)) {
+                    App.getInstance().startActivity(shareIntent);
+                } else {
+                    Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -79,8 +99,7 @@ public class BookSharer {
         starter.addFlags(FLAG_ACTIVITY_NEW_TASK);
         if (TransportUtils.intentCanBeHandled(starter)) {
             context.startActivity(starter);
-        }
-        else{
+        } else {
             Toast.makeText(context, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
         }
     }

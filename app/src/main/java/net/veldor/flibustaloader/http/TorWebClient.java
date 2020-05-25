@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.http;
 
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
@@ -16,9 +17,12 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.FlibustaUnreachableException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -155,23 +159,62 @@ public class TorWebClient {
 
     public boolean downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, FlibustaUnreachableException, TorNotLoadedException {
         try {
-            // получу имя файла
-            DocumentFile downloadsDir = App.getInstance().getDownloadDir();
-            DocumentFile newFile = downloadsDir.createFile(book.format, book.name);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                // получу имя файла
+                DocumentFile downloadsDir = App.getInstance().getDownloadDir();
+                DocumentFile newFile = downloadsDir.createFile(book.format, book.name);
 
-            if (newFile != null) {
-                // запрошу данные
-                Log.d("surprise", "TorWebClient downloadBook: request " + book.link);
-                HttpResponse response = simpleGetRequest(App.BASE_URL + book.link);
-                if (response != null) {
-                    int status = response.getStatusLine().getStatusCode();
-                    if (status == 200) {
-                        HttpEntity entity = response.getEntity();
-                        if (entity != null) {
-                            InputStream content = entity.getContent();
-                            if (content != null) {
-                                OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
-                                if (out != null) {
+                if (newFile != null) {
+                    // запрошу данные
+                    Log.d("surprise", "TorWebClient downloadBook: request " + book.link);
+                    HttpResponse response = simpleGetRequest(App.BASE_URL + book.link);
+                    if (response != null) {
+                        int status = response.getStatusLine().getStatusCode();
+                        if (status == 200) {
+                            HttpEntity entity = response.getEntity();
+                            if (entity != null) {
+                                InputStream content = entity.getContent();
+                                if (content != null) {
+                                    OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
+                                    if (out != null) {
+                                        int read;
+                                        byte[] buffer = new byte[1024];
+                                        while ((read = content.read(buffer)) > 0) {
+                                            out.write(buffer, 0, read);
+                                        }
+                                        out.close();
+                                        if (newFile.isFile() && newFile.length() > 0) {
+                                            return true;
+                                        }
+                                    } else {
+                                        Log.d("surprise", "TorWebClient downloadBook: файл не найден");
+                                    }
+                                }
+                            }
+                        } else if (status == 500) {
+                            Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
+                            throw new BookNotFoundException();
+                        } else if (status == 404) {
+                            Log.d("surprise", "TorWebClient downloadBook: flibusta not answer");
+                            throw new FlibustaUnreachableException();
+                        }
+                    }
+                }
+            } else {
+                File file = MyPreferences.getInstance().getDownloadDir();
+                if (file != null) {
+                    File newFile = new File(file, book.name);
+                    // запрошу данные
+                    Log.d("surprise", "TorWebClient downloadBook: request " + book.link);
+                    HttpResponse response = simpleGetRequest(App.BASE_URL + book.link);
+                    if (response != null) {
+                        int status = response.getStatusLine().getStatusCode();
+                        if (status == 200) {
+                            HttpEntity entity = response.getEntity();
+                            if (entity != null) {
+                                InputStream content = entity.getContent();
+                                if (content != null) {
+                                    OutputStream out = new FileOutputStream(newFile);
                                     int read;
                                     byte[] buffer = new byte[1024];
                                     while ((read = content.read(buffer)) > 0) {
@@ -181,17 +224,15 @@ public class TorWebClient {
                                     if (newFile.isFile() && newFile.length() > 0) {
                                         return true;
                                     }
-                                } else {
-                                    Log.d("surprise", "TorWebClient downloadBook: файл не найден");
                                 }
                             }
+                        } else if (status == 500) {
+                            Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
+                            throw new BookNotFoundException();
+                        } else if (status == 404) {
+                            Log.d("surprise", "TorWebClient downloadBook: flibusta not answer");
+                            throw new FlibustaUnreachableException();
                         }
-                    } else if (status == 500) {
-                        Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
-                        throw new BookNotFoundException();
-                    } else if (status == 404) {
-                        Log.d("surprise", "TorWebClient downloadBook: flibusta not answer");
-                        throw new FlibustaUnreachableException();
                     }
                 }
             }

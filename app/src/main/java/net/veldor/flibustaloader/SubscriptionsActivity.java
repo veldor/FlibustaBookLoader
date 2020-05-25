@@ -31,7 +31,7 @@ public class SubscriptionsActivity extends AppCompatActivity {
         // добавлю viewModel
         mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
-        RecyclerView recycler = findViewById(R.id.booksList);
+        RecyclerView recycler = findViewById(R.id.resultsList);
         recycler.setLayoutManager(new LinearLayoutManager(SubscriptionsActivity.this));
         mAdapter = new SubscribeResultsAdapter();
         recycler.setAdapter(mAdapter);

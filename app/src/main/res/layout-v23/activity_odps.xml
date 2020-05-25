@@ -95,11 +95,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                app:layout_constraintBottom_toTopOf="@+id/booksList"
+                app:layout_constraintBottom_toTopOf="@+id/resultsList"
                 app:layout_constraintTop_toBottomOf="@id/showAllSwitcher" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/booksList"
+                android:id="@+id/resultsList"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toTopOf="@+id/load_more_button" />
@@ -113,7 +113,7 @@
                 android:foreground="?android:attr/selectableItemBackground"
                 android:visibility="invisible"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/booksList" />
+                app:layout_constraintTop_toBottomOf="@+id/resultsList" />
 
             <ImageButton
                 android:id="@+id/forward_btn"
@@ -124,7 +124,7 @@
                 android:foreground="?android:attr/selectableItemBackground"
                 android:visibility="invisible"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/booksList" />
+                app:layout_constraintTop_toBottomOf="@+id/resultsList" />
 
             <Button
                 android:id="@+id/load_more_button"

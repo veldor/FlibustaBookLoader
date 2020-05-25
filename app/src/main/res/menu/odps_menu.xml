@@ -57,15 +57,14 @@
         </menu>
     </item>
     <item
-        android:title="@string/mass_download">
+        android:title="@string/download_settings">
         <menu>
-
-            <item
-                android:id="@+id/discardFavoriteType"
-                android:title="@string/discard_favorite_type"/>
             <item
                 android:id="@+id/showDownloadsSchedule"
                 android:title="@string/show_downloads_schedule_message"/>
+            <item
+                android:id="@+id/discardFavoriteType"
+                android:title="@string/discard_favorite_type"/>
             <item
                 android:id="@+id/downloadOnlySelected"
                 android:checkable="true"

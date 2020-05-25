@@ -19,10 +19,13 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
+import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,6 +37,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 
 import cz.msebera.android.httpclient.Header;
+import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.client.HttpClient;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
@@ -225,10 +229,9 @@ public class MyWebViewClient extends WebViewClient {
                 }
             }
             HttpResponse httpResponse;
-            if(App.getInstance().isExternalVpn()){
+            if (App.getInstance().isExternalVpn()) {
                 httpResponse = ExternalVpnVewClient.rawRequest(url);
-            }
-            else{
+            } else {
                 HttpClient httpClient = getNewHttpClient();
                 int port = onionProxyManager.getIPv4LocalHostSocksPort();
                 InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
@@ -240,11 +243,10 @@ public class MyWebViewClient extends WebViewClient {
                 httpResponse = httpClient.execute(httpGet, context);
             }
 
-            if(httpResponse == null){
+            if (httpResponse == null) {
                 Log.d("surprise", "MyWebViewClient handleRequest: no response");
                 return super.shouldInterceptRequest(view, url);
-            }
-            else{
+            } else {
                 Log.d("surprise", "MyWebViewClient handleRequest: have response");
             }
 
@@ -328,25 +330,48 @@ public class MyWebViewClient extends WebViewClient {
                         startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
                         activityContext.sendBroadcast(startLoadingIntent);
                         // сохраняю книгу в памяти устройства
-                        DocumentFile downloadsDir = App.getInstance().getDownloadDir();
-                        if (downloadsDir != null) {
-                            // проверю, не сохдан ли уже файл, если создан- удалю
-                            DocumentFile existentFile = downloadsDir.findFile(name);
-                            if (existentFile != null) {
-                                existentFile.delete();
-                            }
-                            DocumentFile newFile = downloadsDir.createFile(mime, name);
-                            if (newFile != null) {
-                                InputStream is = httpResponse.getEntity().getContent();
-                                OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
-                                int read;
-                                byte[] buffer = new byte[1024];
-                                while ((read = is.read(buffer)) > 0) {
-                                    assert out != null;
-                                    out.write(buffer, 0, read);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            DocumentFile downloadsDir = App.getInstance().getDownloadDir();
+                            if (downloadsDir != null) {
+                                // проверю, не сохдан ли уже файл, если создан- удалю
+                                DocumentFile existentFile = downloadsDir.findFile(name);
+                                if (existentFile != null) {
+                                    existentFile.delete();
                                 }
-                                assert out != null;
-                                out.close();
+                                DocumentFile newFile = downloadsDir.createFile(mime, name);
+                                if (newFile != null) {
+                                    InputStream is = httpResponse.getEntity().getContent();
+                                    OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
+                                    int read;
+                                    byte[] buffer = new byte[1024];
+                                    while ((read = is.read(buffer)) > 0) {
+                                        assert out != null;
+                                        out.write(buffer, 0, read);
+                                    }
+                                    assert out != null;
+                                    out.close();
+                                }
+                            }
+                        } else {
+                            File file = MyPreferences.getInstance().getDownloadDir();
+                            if (file != null) {
+                                File newFile = new File(file, name);
+                                int status = httpResponse.getStatusLine().getStatusCode();
+                                if (status == 200) {
+                                    HttpEntity entity = httpResponse.getEntity();
+                                    if (entity != null) {
+                                        InputStream content = entity.getContent();
+                                        if (content != null) {
+                                            OutputStream out = new FileOutputStream(newFile);
+                                            int read;
+                                            byte[] buffer = new byte[1024];
+                                            while ((read = content.read(buffer)) > 0) {
+                                                out.write(buffer, 0, read);
+                                            }
+                                            out.close();
+                                        }
+                                    }
+                                }
                             }
                         }
                         // отправлю сообщение о скачанном файле через broadcastReceiver

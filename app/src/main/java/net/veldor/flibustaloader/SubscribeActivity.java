@@ -69,7 +69,7 @@ public class SubscribeActivity extends AppCompatActivity {
             }
         });
 
-        mRecycler = findViewById(R.id.booksList);
+        mRecycler = findViewById(R.id.resultsList);
         mRecycler.setLayoutManager(new LinearLayoutManager(this));
 
         mBooksSubscribeContainer = App.getInstance().getBooksSubscribe();

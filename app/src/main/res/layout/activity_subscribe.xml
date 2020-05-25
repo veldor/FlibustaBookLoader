@@ -101,12 +101,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAlignment="center"
-                app:layout_constraintBottom_toTopOf="@+id/booksList"
+                app:layout_constraintBottom_toTopOf="@+id/resultsList"
                 app:layout_constraintTop_toTopOf="parent"
                 android:gravity="center_horizontal" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/booksList"
+                android:id="@+id/resultsList"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"

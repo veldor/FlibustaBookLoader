@@ -69,7 +69,7 @@
     <string name="download_only_this_format">Download only this format</string>
     <string name="remember_format">Remember type</string>
     <string name="do_not_re_download">Download again</string>
-    <string name="mass_download">Mass Download</string>
+    <string name="download_settings">Mass Download</string>
     <string name="go_to_test_message">Test app</string>
     <string name="backward">backward</string>
     <string name="enter_value_message">Enter value</string>

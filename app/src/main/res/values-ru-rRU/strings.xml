@@ -68,7 +68,7 @@
     <string name="remember_format">Запомнить выбранный формат для дальнейших загрузок</string>
     <string name="download_only_this_format">Загружать только в выбранном формате</string>
     <string name="do_not_re_download">Загружать ранее сохранённые файлы</string>
-    <string name="mass_download">Пакетное скачивание</string>
+    <string name="download_settings">Скачивание</string>
     <string name="go_to_test_message">Участвовать в тестировании</string>
     <string name="enter_value_message">Введите значение</string>
     <string name="backward">Назад</string>

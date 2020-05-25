@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
@@ -30,7 +29,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -41,6 +39,7 @@ import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.SubscribeActivity;
 import net.veldor.flibustaloader.dialogs.GifDialog;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
@@ -48,7 +47,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
 
@@ -127,15 +125,12 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         if (App.getInstance().isCheckUpdate()) {
             // проверю обновления
             final LiveData<Boolean> version = mMyViewModel.startCheckUpdate();
-            version.observe(this, new Observer<Boolean>() {
-                @Override
-                public void onChanged(@Nullable Boolean aBoolean) {
-                    if (aBoolean != null && aBoolean) {
-                        // показываю Snackbar с уведомлением
-                        makeUpdateSnackbar();
-                    }
-                    version.removeObservers(WebViewActivity.this);
+            version.observe(this, aBoolean -> {
+                if (aBoolean != null && aBoolean) {
+                    // показываю Snackbar с уведомлением
+                    makeUpdateSnackbar();
                 }
+                version.removeObservers(WebViewActivity.this);
             });
         }
     }
@@ -173,12 +168,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
 
     private void makeUpdateSnackbar() {
         Snackbar updateSnackbar = Snackbar.make(mRootView, getString(R.string.snackbar_found_update_message), Snackbar.LENGTH_INDEFINITE);
-        updateSnackbar.setAction(getString(R.string.snackbar_update_action_message), new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mMyViewModel.initializeUpdate();
-            }
-        });
+        updateSnackbar.setAction(getString(R.string.snackbar_update_action_message), v -> mMyViewModel.initializeUpdate());
         updateSnackbar.setActionTextColor(getResources().getColor(android.R.color.white));
         updateSnackbar.show();
     }
@@ -326,12 +316,9 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                     .setTitle("Использование внешнего VPN")
                     .setMessage("Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно. Сделано для версий Android ниже 6.0, где могут быть проблемы с доступом, но может быть использовано по желанию на ваш страх и риск.")
                     .setNegativeButton(R.string.cancel, null)
-                    .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            App.getInstance().switchExternalVpnUse();
-                            invalidateOptionsMenu();
-                        }
+                    .setPositiveButton(R.string.confirm, (dialogInterface, i) -> {
+                        App.getInstance().switchExternalVpnUse();
+                        invalidateOptionsMenu();
                     });
             dialogBuilder.create().show();
         }
@@ -375,31 +362,31 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                     if (treeUri != null) {
                         // проверю наличие файла
                         DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
-                        if(dl != null && dl.isDirectory()){
+                        if (dl != null && dl.isDirectory()) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                                 App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                 App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                             }
                             App.getInstance().setDownloadDir(treeUri);
-                            Toast.makeText(this, getText(R.string.download_folder_changed_message_new), Toast.LENGTH_LONG).show();
                         }
                     }
                 }
             }
         } else if (requestCode == READ_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
-                    String folderLocation = Objects.requireNonNull(data.getExtras()).getString("data");
-                    if (folderLocation != null) {
-                        File destination = new File(folderLocation);
-                        if (destination.exists()) {
-                            App.getInstance().setDownloadDir(Uri.parse(folderLocation));
-                            Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
-                        }
+                if (data != null && data.getExtras() != null) {
+                    String folderLocation = data.getExtras().getString("data");
+                    File file = new File(folderLocation);
+                    if(file.isDirectory() && MyPreferences.getInstance().saveDownloadFolder(folderLocation)){
+                        Toast.makeText(this, "Папка сохранена!", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(this, "Не удалось сохранить папку, попробуйте ещё раз!", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
-        } else if (requestCode == START_TOR) {
+        }
+        else if (requestCode == START_TOR) {
             // перезагружу страницу
             mWebView.setup();
             mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
@@ -511,16 +498,13 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.tor_is_stopped)
                     .setMessage(R.string.tor_restart_dialog_message)
-                    .setPositiveButton(R.string.restart_tor_message, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            App.getInstance().startTor();
-                            dialog.dismiss();
-                            // вернусь в основное активити и подожду перезапуска
-                            Intent intent = new Intent(WebViewActivity.this, MainActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            startActivity(intent);
-                        }
+                    .setPositiveButton(R.string.restart_tor_message, (dialog, which) -> {
+                        App.getInstance().startTor();
+                        dialog.dismiss();
+                        // вернусь в основное активити и подожду перезапуска
+                        Intent intent = new Intent(WebViewActivity.this, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
                     })
                     .setCancelable(false);
             mTorRestartDialog = dialogBuilder.create();

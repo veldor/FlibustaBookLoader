@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.selections;
 import android.graphics.Bitmap;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,4 +27,9 @@ public class FoundedBook implements FoundedItem, Serializable {
     public boolean downloaded;
     public String previewUrl;
     public String preferredFormat;
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        return super.equals(obj);
+    }
 }

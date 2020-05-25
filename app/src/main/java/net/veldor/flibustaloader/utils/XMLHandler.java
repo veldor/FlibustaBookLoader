@@ -83,6 +83,22 @@ public class XMLHandler {
             MyFileReader.saveSearchAutocomplete(getStringFromDocument(dom));
             return true;
         }
+        else{
+            // перенесу значение на верх списка
+            NodeList existentValues = dom.getElementsByTagName(SEARCH_VALUE_NAME);
+            if(existentValues != null && existentValues.getLength() > 0){
+                int count = values.size();
+                while (count > 1){
+                    --count;
+                    Node node = existentValues.item(count);
+                    if(node.getTextContent().equals(s)){
+                        dom.getDocumentElement().insertBefore(node, dom.getDocumentElement().getFirstChild());
+                        MyFileReader.saveSearchAutocomplete(getStringFromDocument(dom));
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 

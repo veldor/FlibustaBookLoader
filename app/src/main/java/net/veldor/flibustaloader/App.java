@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.room.Room;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
@@ -31,13 +30,11 @@ import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
-import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
 import net.veldor.flibustaloader.utils.SubscribeSequences;
-import net.veldor.flibustaloader.utils.URLHandler;
-import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
+import net.veldor.flibustaloader.utils.URLHelper;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.ParseWebRequestWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
@@ -45,15 +42,14 @@ import net.veldor.flibustaloader.workers.StartTorWorker;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static java.util.Calendar.HOUR_OF_DAY;
-import static java.util.Calendar.MINUTE;
 import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
 public class App extends Application {
+    //todo switch to false on release
+    public static boolean isTestVersion = true;
+
     public static final String SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
     private static final String EXTERNAL_VPN = "external vpn";
@@ -61,7 +57,6 @@ public class App extends Application {
     public static int sTorStartTry = 0;
     public static final String BACKUP_DIR_NAME = "FlibustaDownloaderBackup";
     public static final String BACKUP_FILE_NAME = "settings_backup.zip";
-    private static final String CHECK_SUBSCRIPTIONS = "check_subscriptions";
     public static final int MAX_BOOK_NUMBER = 548398;
     public static final int VIEW_WEB = 1;
     public static final int VIEW_ODPS = 2;
@@ -80,15 +75,11 @@ public class App extends Application {
     public final ArrayList<String> mSearchHistory = new ArrayList<>();
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();
-    public String mResponse;
     public final MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
     // место для хранения выбранной серии
     public final MutableLiveData<FoundedSequence> mSelectedSequence = new MutableLiveData<>();
-    // место для хранения выбранного жанра
-    public final MutableLiveData<Genre> mSelectedGenre = new MutableLiveData<>();
     // место для хранения результатов парсинга ответа
     public final MutableLiveData<ArrayList<FoundedItem>> mParsedResult = new MutableLiveData<>();
-    public String mNextPageUrl;
     // добавление результатов к уже имеющимся
     public boolean mResultsEscalate = false;
 
@@ -105,15 +96,14 @@ public class App extends Application {
     public static final String TOR_FILES_LOCATION = "torfiles";
     private static final String PREFERENCE_NIGHT_MODE_ENABLED = "night mode";
     private static final String PREFERENCE_LAST_LOADED_URL = "last_loaded_url";
-    private static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";
+    public static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";
 
     // место для хранения TOR клиента
     public final MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
 
-    // место для хранения текста ответа поиска
-    public final MutableLiveData<String> mSearchResult = new MutableLiveData<>();
     // место для хранения выбранного писателя
     public final MutableLiveData<Author> mSelectedAuthor = new MutableLiveData<>();
+
     // место для хранения выбора писателей
     public final MutableLiveData<ArrayList<Author>> mSelectedAuthors = new MutableLiveData<>();
 
@@ -129,6 +119,7 @@ public class App extends Application {
     public final MutableLiveData<AndroidOnionProxyManager> mLoadedTor = new MutableLiveData<>();
     public final MutableLiveData<Author> mAuthorNewBooks = new MutableLiveData<>();
     public final MutableLiveData<String> mMultiplyDownloadStatus = new MutableLiveData<>();
+    public final MutableLiveData<String> mLiveDownloadedBookId = new MutableLiveData<>();
     public LiveData<WorkInfo> mDownloadAllWork;
     public boolean mDownloadsInProgress;
     public OneTimeWorkRequest mProcess;
@@ -159,6 +150,7 @@ public class App extends Application {
         instance = this;
 
         sNotificator = Notificator.getInstance();
+
         startTor();
 
         // определю ночной режим
@@ -177,36 +169,31 @@ public class App extends Application {
                 .allowMainThreadQueries()
                 .build();
 
-        planeBookSubscribes();
-
         // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
         handleMassDownload();
     }
 
     private void handleMassDownload() {
         LiveData<List<WorkInfo>> workStatus = WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(MULTIPLY_DOWNLOAD);
-        workStatus.observeForever(new Observer<List<WorkInfo>>() {
-            @Override
-            public void onChanged(List<WorkInfo> workInfos) {
-                if (workInfos != null) {
-                    if (workInfos.size() > 0) {
-                        // получу сведения о состоянии загрузки
-                        WorkInfo info = workInfos.get(0);
-                        if (info != null) {
-                            Log.d("surprise", "App onChanged: status is " + info.getState());
-                            switch (info.getState()) {
-                                case ENQUEUED:
-                                    // ожидаем запуска скачивания, покажу уведомление
-                                    sNotificator.showMassDownloadInQueueMessage();
-                                    break;
-                                case RUNNING:
-                                    sNotificator.hideMassDownloadInQueueMessage();
-                                    break;
-                                case SUCCEEDED:
-                                    sNotificator.cancelBookLoadNotification();
-                                    break;
-                                default:
-                            }
+        workStatus.observeForever(workInfos -> {
+            if (workInfos != null) {
+                if (workInfos.size() > 0) {
+                    // получу сведения о состоянии загрузки
+                    WorkInfo info = workInfos.get(0);
+                    if (info != null) {
+                        Log.d("surprise", "App onChanged: status is " + info.getState());
+                        switch (info.getState()) {
+                            case ENQUEUED:
+                                // ожидаем запуска скачивания, покажу уведомление
+                                sNotificator.showMassDownloadInQueueMessage();
+                                break;
+                            case RUNNING:
+                                sNotificator.hideMassDownloadInQueueMessage();
+                                break;
+                            case SUCCEEDED:
+                                sNotificator.cancelBookLoadNotification();
+                                break;
+                            default:
                         }
                     }
                 }
@@ -237,30 +224,6 @@ public class App extends Application {
             // запускаю tor
             OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
             WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
-        }
-    }
-
-    private void planeBookSubscribes() {
-        Calendar cal = Calendar.getInstance();
-        // буду проверять обновления в полдень
-        int now_hour = cal.get(HOUR_OF_DAY);
-        // проверю, нужно ли планировать проверку расписания
-        if (now_hour < 12) {
-            long currentTime = cal.getTimeInMillis();
-            cal.set(HOUR_OF_DAY, 12);
-            cal.set(MINUTE, 0);
-            long plannedTime = cal.getTimeInMillis();
-            OneTimeWorkRequest checkSubs = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).addTag(CHECK_SUBSCRIPTIONS).setInitialDelay(plannedTime - currentTime, TimeUnit.MILLISECONDS).build();
-            WorkManager.getInstance(this).enqueueUniqueWork(CHECK_SUBSCRIPTIONS, ExistingWorkPolicy.REPLACE, checkSubs);
-        } else {
-            // запланирую проверку на следующий день
-            long currentTime = cal.getTimeInMillis();
-            cal.set(HOUR_OF_DAY, 12);
-            cal.set(MINUTE, 0);
-            cal.add(Calendar.HOUR_OF_DAY, 24);
-            long plannedTime = cal.getTimeInMillis();
-            OneTimeWorkRequest checkSubs = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).addTag(CHECK_SUBSCRIPTIONS).setInitialDelay(plannedTime - currentTime, TimeUnit.MILLISECONDS).build();
-            WorkManager.getInstance(this).enqueueUniqueWork(CHECK_SUBSCRIPTIONS, ExistingWorkPolicy.REPLACE, checkSubs);
         }
     }
 
@@ -313,12 +276,7 @@ public class App extends Application {
     }
 
     public String getLastLoadedUrl() {
-        return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, URLHandler.getBaseUrl());
-    }
-
-
-    public void addToHistory(String s) {
-        mSearchHistory.add(s);
+        return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, URLHelper.getBaseUrl());
     }
 
     public boolean isSearchHistory() {
@@ -330,16 +288,6 @@ public class App extends Application {
             return mSearchHistory.get(mSearchHistory.size() - 1);
         }
         return null;
-    }
-
-    public boolean havePreviousPage() {
-        return mSearchHistory.size() > 1;
-    }
-
-    public String getPreviousPageUrl() {
-        // удалю последнее значение из истории и верну предпоследнее
-        mSearchHistory.remove(mSearchHistory.size() - 1);
-        return mSearchHistory.get(mSearchHistory.size() - 1);
     }
 
     public boolean isCheckUpdate() {
@@ -434,7 +382,7 @@ public class App extends Application {
     }
 
     public boolean isPreviews() {
-        return (mSharedPreferences.getBoolean(PREFERENCE_PREVIEWS, false));
+        return (mSharedPreferences.getBoolean(PREFERENCE_PREVIEWS, true));
     }
 
     public void switchShowPreviews() {
@@ -477,7 +425,6 @@ public class App extends Application {
 
 
     public void setDownloadDir(Uri uri) {
-        Log.d("surprise", "App setDownloadFolder: save file location");
         mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.toString()).apply();
     }
 
@@ -485,14 +432,10 @@ public class App extends Application {
         // возвращу папку для закачек
         String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, null);
         if(download_location != null){
-            Log.d("surprise", "App getDownloadDir: found download location");
-            DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), Uri.parse(download_location));
-            if(dl != null){
-                if(dl.isDirectory()){
-                    Log.d("surprise", "Preferences getDownloadFolder: have custom location");
-                    return dl;
+                DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), Uri.parse(download_location));
+                if(dl != null && dl.isDirectory()){
+                        return dl;
                 }
-            }
         }
         // верну путь к папке загрузок
         return null;

@@ -148,6 +148,8 @@ public class DownloadBooksWorker extends Worker {
                         // покажу уведомление о успешной загрузке
                         mNotificator.sendLoadedBookNotification(queuedElement.name, queuedElement.format);
                         dao.delete(queuedElement);
+                        // оповещу о скачанной книге
+                        App.getInstance().mLiveDownloadedBookId.postValue(queuedElement.bookId);
                     }
                 } catch (BookNotFoundException e) {
                     // книга недоступна для скачивания в данном формате, удалю её из очереди, выведу уведомление и продолжу загрузку
@@ -200,7 +202,7 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     private ForegroundInfo createForegroundInfo() {
         // Build a notification
-        Notification notification = mNotificator.createMassBookLoadNotification(mBooksCount);
+        Notification notification = mNotificator.createMassBookLoadNotification();
         return new ForegroundInfo(DOWNLOAD_PROGRESS_NOTIFICATION, notification);
     }
 }

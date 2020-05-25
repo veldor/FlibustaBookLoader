@@ -19,6 +19,22 @@
         android:background="@color/sequences_background"
         android:padding="5dp">
 
+        <TextView
+            android:id="@+id/book_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="5dp"
+            android:text="@{book.name}"
+            android:textAlignment="center"
+            android:textColor="@color/book_name_color"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <ImageView
             android:id="@+id/previewImage"
             android:layout_width="100dp"
@@ -26,7 +42,7 @@
             android:contentDescription="@string/preview_image"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/book_name"/>
 
         <LinearLayout
             android:id="@+id/linearLayout2"
@@ -35,20 +51,7 @@
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/previewImage"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/book_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="25dp"
-                android:text="@{book.name}"
-                android:textAlignment="center"
-                android:textColor="@color/book_name_color"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:layout_marginRight="25dp"
-                android:gravity="center_horizontal" />
+            app:layout_constraintTop_toBottomOf="@+id/book_name">
 
             <LinearLayout
                 android:id="@+id/authorBlock"
@@ -93,24 +96,24 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:gravity="center_horizontal"
                     android:text="@{book.genreComplex}"
                     android:textAlignment="center"
                     android:textColor="@drawable/genre_text_color"
                     android:textSize="10sp"
-                    tools:ignore="SmallSp"
-                    android:gravity="center_horizontal" />
+                    tools:ignore="SmallSp" />
 
                 <TextView
                     android:id="@+id/sequence"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:gravity="center_horizontal"
                     android:text="@{book.sequenceComplex}"
                     android:textAlignment="center"
                     android:textColor="@drawable/sequence_text_color"
                     android:textSize="10sp"
-                    tools:ignore="SmallSp"
-                    android:gravity="center_horizontal" />
+                    tools:ignore="SmallSp" />
             </LinearLayout>
         </LinearLayout>
 

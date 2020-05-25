@@ -3,9 +3,6 @@ package net.veldor.flibustaloader.utils;
 import android.content.Intent;
 import android.util.Log;
 
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
-
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
@@ -16,9 +13,7 @@ import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
-import net.veldor.flibustaloader.workers.GetAllPagesWorker;
 import net.veldor.flibustaloader.workers.LoadSubscriptionsWorker;
-import net.veldor.flibustaloader.workers.ParseSearchWorker;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
@@ -60,10 +55,9 @@ public class XMLParser {
     private static final String NEW_GENRES = "tag:search:new:genres";
     private static final String NEW_SEQUENCES = "tag:search:new:sequence";
     private static final String NEW_AUTHORS = "tag:search:new:author";
-    private static final String PARSE_SEARCH = "parse search";
     private static final String READ_TYPE = "read";
 
-    public static Document getDocument(String rawText) {
+    private static Document getDocument(String rawText) {
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder;
         try {
@@ -80,15 +74,6 @@ public class XMLParser {
         return null;
     }
 
-    public static void handleResults() {
-        // запущу рабочего, который обработает результаты запроса
-        OneTimeWorkRequest ParseSearchWorker = new OneTimeWorkRequest.Builder(ParseSearchWorker.class).addTag(PARSE_SEARCH).build();
-        WorkManager.getInstance(App.getInstance()).enqueue(ParseSearchWorker);
-        App.getInstance().mSearchWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(ParseSearchWorker.getId());
-        App.getInstance().mProcess = ParseSearchWorker;
-    }
-
-
     public static void handleSearchResults(ArrayList<FoundedItem> result, String answer) {
         // получу документ
         Document document = getDocument(answer);
@@ -99,7 +84,6 @@ public class XMLParser {
         Node entry;
         try {
             entry = (Node) xPath.evaluate("/feed/link[@rel='next']", document, XPathConstants.NODE);
-            GetAllPagesWorker.sNextPage = entry == null ? null : entry.getAttributes().getNamedItem("href").getNodeValue();
             CheckSubscriptionsWorker.sNextPage = entry == null ? null : entry.getAttributes().getNamedItem("href").getNodeValue();
             LoadSubscriptionsWorker.sNextPage = entry == null ? null : entry.getAttributes().getNamedItem("href").getNodeValue();
             // получу сущности
