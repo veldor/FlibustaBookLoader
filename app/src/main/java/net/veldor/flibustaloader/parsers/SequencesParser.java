@@ -1,10 +1,7 @@
 package net.veldor.flibustaloader.parsers;
 
-import android.util.Log;
-
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.FoundedSequence;
-import net.veldor.flibustaloader.selections.Genre;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -15,7 +12,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
-public class SequencesParser {
+class SequencesParser {
     public static ArrayList parse(NodeList entries, XPath xPath) throws XPathExpressionException {
         ArrayList<FoundedSequence> result = new ArrayList<>();
         Node entry;

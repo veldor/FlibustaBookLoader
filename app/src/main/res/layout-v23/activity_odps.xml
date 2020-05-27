@@ -33,7 +33,6 @@
             android:layout_marginStart="5dp"
             android:layout_weight="1"
             android:checked="true"
-            android:gravity="center_horizontal"
             android:text="@string/search_book_message"
             android:textColor="@color/book_name_color" />
 
@@ -43,7 +42,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:layout_weight="1"
-            android:gravity="center_horizontal"
             android:text="@string/search_author_message"
             android:textColor="@color/author_text_color" />
 
@@ -53,7 +51,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:layout_weight="1"
-            android:gravity="center_horizontal"
             android:text="@string/search_genre_message"
             android:textColor="@color/genre_text_color" />
 
@@ -63,7 +60,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:layout_weight="1"
-            android:gravity="center_horizontal"
             android:text="@string/search_sequence_message"
             android:textColor="@color/sequences_text" />
     </RadioGroup>

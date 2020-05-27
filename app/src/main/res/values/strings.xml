@@ -61,8 +61,6 @@
     <string name="download_folder_changed_message_new">Download folder changed</string>
     <string name="subscribes_channel">subscribes</string>
     <string name="subscribe_description">Subscribe notifications</string>
-    <string name="download_subscribes_title">Download subscribes</string>
-    <string name="download_subscribes_msg">Wait for subscribes list getting</string>
     <string name="discard_favorite_type">Сбросить формат загрузок</string>
     <string name="book_readed_message">Book readed</string>
     <string name="book_downloaded_message">Book downloaded</string>
@@ -100,7 +98,6 @@
     <string name="title_activity_download_schedule">Download schedule</string>
     <string name="waiting_download_message">Waiting download</string>
     <string name="stop_download_message">Stop download</string>
-    <string name="download_progress_message">load %d of %d book</string>
     <string name="continue_download_message">Continue download</string>
     <string name="show_downloads_schedule_message">Show downloads schedule</string>
     <string name="books_not_selected_message">No book selected</string>
@@ -114,7 +111,6 @@
     <string name="ok">OK</string>
     <string name="no">No, thanks</string>
     <string name="book_added_to_schedule_message">Book added to schedule</string>
-    <string name="downloaded_books_title">downloaded books</string>
     <string name="repeat_download_message">Repeat download</string>
     <string name="skip_book_message">Skip book</string>
     <string name="error_download_message">Download error</string>
@@ -129,18 +125,14 @@
     <string name="cancel_download_from_notification_message">Drop</string>
     <string name="later_message">Later</string>
     <string name="waiting_internet_message">waiting for internet connection</string>
-    <string name="dowload_schedue_empty_message">Download schedule empty</string>
+    <string name="download_schedue_empty_message">Download schedule empty</string>
     <string name="connection_menu_title">Connection</string>
     <string name="use_externalVpnMessage">I use eternal VPN</string>
     <string name="confirm">Yes, confirm</string>
-    <string name="cant_initiate_webclient_message">Can\'t initiate Web Client</string>
-    <string name="empty_request_message">Empty search request</string>
     <string name="use_external_proxy_message">Use external VPN</string>
-    <string name="layout_type_message">layout type</string>
     <string name="switch_layout_message">Switch layout</string>
     <string name="subscribes">Subscribes</string>
     <string name="check_subscribes_label">Check now</string>
-    <string name="subscribes_not_found_message">1</string>
     <string name="not_found_subscribes_message">Subscribes not found</string>
     <string name="subscribes_check_channel">subscribes check</string>
     <string name="subscribes_check_channel_description">Subscribes check notification</string>
@@ -152,4 +144,6 @@
     <string name="autocheck_disabled_message">Subscriptions autocheck disabled</string>
     <string name="books_download_channel">Books download channel</string>
     <string name="books_download_channel_description">Books download progress message</string>
+    <string name="use_hardware_acceleration_title">Use hardware acceleration</string>
+    <string name="hide_digest_title">Hide digests</string>
 </resources>

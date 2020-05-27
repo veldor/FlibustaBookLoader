@@ -54,6 +54,11 @@
                 android:title="@string/show_previews"
                 android:checkable="true"
                 yourapp:showAsAction="never"/>
+            <item
+                android:id="@+id/hideDigests"
+                android:title="@string/hide_digest_title"
+                android:checkable="true"
+                yourapp:showAsAction="never"/>
         </menu>
     </item>
     <item

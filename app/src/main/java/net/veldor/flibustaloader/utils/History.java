@@ -23,13 +23,13 @@ public class History {
     }
 
     public boolean isEmpty() {
-        return mHistory.isEmpty();
+        return !mHistory.isEmpty();
     }
 
 
     public String getLastPage() {
         mHistory.pop();
-        if(!isEmpty()){
+        if(isEmpty()){
             return mHistory.pop();
         }
         return null;

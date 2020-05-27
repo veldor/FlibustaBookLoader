@@ -14,6 +14,8 @@ public class MyPreferences {
 
     private static final String SUBSCRIPTIONS_AUTO_CHECK_PREF = "subscriptions auto check";
     private static final String LAST_SEARCH_URL_PREF = "last load url";
+    private static final String HW_ACCELERATION_PREF = "hardware acceleration";
+    private static final String HIDE_DIGESTS_PREF = "hide digests";
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
@@ -68,10 +70,26 @@ public class MyPreferences {
 
     public boolean isDownloadDir() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return App.getInstance().getDownloadDir() != null;
+            return App.getInstance().getDownloadDir() == null;
         }
         else{
-            return getDownloadDir() != null;
+            return getDownloadDir() == null;
         }
+    }
+
+    public boolean isHardwareAcceleration() {
+        return mSharedPreferences.getBoolean(HW_ACCELERATION_PREF, true);
+    }
+
+    public void switchHardwareAcceleration(){
+        mSharedPreferences.edit().putBoolean(HW_ACCELERATION_PREF, !isHardwareAcceleration()).apply();
+    }
+
+    public boolean isDigestsHide() {
+        return mSharedPreferences.getBoolean(HIDE_DIGESTS_PREF, false);
+    }
+
+    public void switchDigestsHide(){
+        mSharedPreferences.edit().putBoolean(HIDE_DIGESTS_PREF, !isDigestsHide()).apply();
     }
 }

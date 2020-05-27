@@ -1,13 +1,11 @@
 package net.veldor.flibustaloader.parsers;
 
 import android.content.Intent;
-import android.util.Log;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.selections.SubscriptionItem;

@@ -8,7 +8,7 @@ import androidx.annotation.RequiresApi;
 
 import java.io.File;
 
-public class UriConverter {
+class UriConverter {
     /**
      * Ing.N.Nyerges 2019 V2.0
      *

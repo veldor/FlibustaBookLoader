@@ -60,8 +60,6 @@
     <string name="download_folder_changed_message_new">Папка загрузок изменена</string>
     <string name="subscribe_description">Уведомления о подписках</string>
     <string name="subscribes_channel">Подписки</string>
-    <string name="download_subscribes_msg">Подождите, загружаю список книг</string>
-    <string name="download_subscribes_title">Гружу книги по подписке</string>
     <string name="discard_favorite_type">Сбросить формат загрузок</string>
     <string name="book_readed_message">Книга прочитана</string>
     <string name="book_downloaded_message">Книга скачана</string>
@@ -101,7 +99,6 @@
     <string name="title_activity_download_schedule">Очередь скачивания</string>
     <string name="waiting_download_message">Ожидает загрузки</string>
     <string name="stop_download_message">Остановить загрузку</string>
-    <string name="download_progress_message">Скачиваю %d из %d книг</string>
     <string name="continue_download_message">Продолжить загрузку</string>
     <string name="show_downloads_schedule_message">Показать очередь загрузки</string>
     <string name="books_not_selected_message">Не выбрано ни одной книги</string>
@@ -112,7 +109,6 @@
     <string name="ok">Да</string>
     <string name="no">Нет, спасибо</string>
     <string name="book_added_to_schedule_message">Книга добавлена в очередь загрузок</string>
-    <string name="downloaded_books_title">Загруженные книги</string>
     <string name="repeat_download_message">Повторить попытку</string>
     <string name="skip_book_message">Пропустить книгу</string>
     <string name="error_download_message">Ошибка скачивания</string>
@@ -127,18 +123,14 @@
     <string name="cancel_download_from_notification_message">Сброс</string>
     <string name="later_message">Позже</string>
     <string name="waiting_internet_message">Ожидание интернет-подключения</string>
-    <string name="dowload_schedue_empty_message">Очередь загрузки пуста</string>
+    <string name="download_schedue_empty_message">Очередь загрузки пуста</string>
     <string name="connection_menu_title">Соединение</string>
     <string name="use_externalVpnMessage">Я использую внешний VPN</string>
     <string name="confirm">Да, я понял</string>
-    <string name="cant_initiate_webclient_message">Не удалось инициалицировать Веб-клиент.</string>
-    <string name="empty_request_message">Пустой поисковый запрос</string>
     <string name="use_external_proxy_message">Использовать внешний VPN</string>
-    <string name="layout_type_message">layout type</string>
     <string name="switch_layout_message">Переключить сетку</string>
     <string name="subscribes">Подписки</string>
     <string name="check_subscribes_label">Проверить сейчас</string>
-    <string name="subscribes_not_found_message">Подписки не найдены</string>
     <string name="not_found_subscribes_message">Подписки не найдены</string>
     <string name="subscribes_check_channel">проверка подписок</string>
     <string name="subscribes_check_channel_description">Проверка подписок</string>
@@ -150,4 +142,6 @@
     <string name="autocheck_disabled_message">Автоматическая проверка подписок отключена</string>
     <string name="books_download_channel">Books download channel</string>
     <string name="books_download_channel_description">Уведомление процесса загрузки книг</string>
+    <string name="use_hardware_acceleration_title">Использовать аппаратное ускорение</string>
+    <string name="hide_digest_title">Скрывать сборники</string>
 </resources>

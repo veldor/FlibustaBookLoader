@@ -7,7 +7,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="actionBarTheme">@style/ThemeOverlay.AppTheme.ActionBar</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:windowBackground">@color/background_color</item>
+        <item name="android:windowBackground">@drawable/background_splash</item>
     </style>
     <style name="OldAppTheme" parent="Theme.AppCompat.DayNight">
         <!-- Customize your theme here. -->

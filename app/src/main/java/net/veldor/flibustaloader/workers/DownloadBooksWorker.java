@@ -35,7 +35,6 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class DownloadBooksWorker extends Worker {
     private final Notificator mNotificator;
-    private int mBooksCount;
 
     public DownloadBooksWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -101,7 +100,7 @@ public class DownloadBooksWorker extends Worker {
         DownloadedBooksDao downloadBooksDao = db.downloadedBooksDao();
         Boolean reDownload = App.getInstance().isReDownload();
         // получу количество книг на начало скачивания
-        mBooksCount = dao.getQueueSize();
+        int mBooksCount = dao.getQueueSize();
         if (mBooksCount > 0) {
             // помечу рабочего важным
             ForegroundInfo info = createForegroundInfo();

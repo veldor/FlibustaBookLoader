@@ -22,14 +22,13 @@ import static net.veldor.flibustaloader.utils.MyFileReader.SUBSCRIPTIONS_FILE;
 
 public class SubscriptionsActivity extends AppCompatActivity {
     private SubscribeResultsAdapter mAdapter;
-    private MainViewModel mMyViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_subscribtions);
         // добавлю viewModel
-        mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        MainViewModel mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         RecyclerView recycler = findViewById(R.id.resultsList);
         recycler.setLayoutManager(new LinearLayoutManager(SubscriptionsActivity.this));

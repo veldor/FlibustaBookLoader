@@ -61,6 +61,12 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
     }
 
     @Override
+    public void onViewDetachedFromWindow(@NonNull ViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        holder.cancelImageLoad();
+    }
+
+    @Override
     public int getItemCount() {
         if (mBooks != null) {
             return mBooks.size();
@@ -68,10 +74,10 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
         return 0;
     }
 
-    public void sort(){
+    public void sort() {
         SortHandler.sortBooks(mBooks);
         notifyDataSetChanged();
-        Toast.makeText(App.getInstance(), "Книги отсортированы!",Toast.LENGTH_SHORT).show();
+        Toast.makeText(App.getInstance(), "Книги отсортированы!", Toast.LENGTH_SHORT).show();
     }
 
     public void setContent(ArrayList<FoundedBook> newData, boolean addToLoaded) {
@@ -96,13 +102,13 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
         }
     }
 
-    public void bookDownloaded(String bookId){
+    public void bookDownloaded(String bookId) {
         int counter = 0;
         int booksCount = mBooks.size();
         FoundedBook fb;
-        while (counter < booksCount){
+        while (counter < booksCount) {
             fb = mBooks.get(counter);
-            if(fb != null && fb.id.equals(bookId)){
+            if (fb != null && fb.id.equals(bookId)) {
                 fb.downloaded = true;
                 notifyItemChanged(counter);
                 break;
@@ -111,15 +117,14 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
         }
     }
 
-    public void setBookReaded(FoundedBook book){
-        if(mBooks.contains(book)){
+    public void setBookReaded(FoundedBook book) {
+        if (mBooks.contains(book)) {
             int bookIndex = mBooks.lastIndexOf(book);
             // если выбрано скрытие прочитанных книг- удалю её
-            if(App.getInstance().isHideRead()){
+            if (App.getInstance().isHideRead()) {
                 mBooks.remove(bookIndex);
                 notifyItemRemoved(bookIndex);
-            }
-            else{
+            } else {
                 notifyItemChanged(bookIndex);
             }
         }
@@ -140,14 +145,14 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
 
             // добавлю отображение информации о книге при клике на название книги
             TextView bookNameView = mRoot.findViewById(R.id.book_name);
-            if(bookNameView != null){
+            if (bookNameView != null) {
                 bookNameView.setOnClickListener(v -> App.getInstance().mSelectedBook.postValue(mBook));
             }
 
 
             // обработаю нажатие на кнопку меню
             ImageButton menuButton = mRoot.findViewById(R.id.menuButton);
-            if(menuButton != null){
+            if (menuButton != null) {
                 menuButton.setOnClickListener(view -> {
                     // отправлю событие контекстного меню для книги
                     App.getInstance().mContextBook.postValue(mBook);
@@ -155,7 +160,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             }
 
             Button downloadButton = mRoot.findViewById(R.id.downloadBookBtn);
-            if(downloadButton != null){
+            if (downloadButton != null) {
                 downloadButton.setOnClickListener(view -> {
                     // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
                     if (mBook.downloadLinks.size() > 1) {
@@ -183,7 +188,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             }
             // добавлю действие на нажатие на автора
             TextView authorsView = mRoot.findViewById(R.id.author_name);
-            if(authorsView != null){
+            if (authorsView != null) {
                 authorsView.setOnClickListener(v -> {
                     // если автор один- вывожу диалог выбора отображения, если несколько- вывожу диалог выбора автора
                     if (mBook.authors.size() > 1) {
@@ -195,7 +200,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             }
             // добавлю действие поиска по серии
             TextView sequenceView = mRoot.findViewById(R.id.sequence);
-            if(sequenceView != null){
+            if (sequenceView != null) {
                 sequenceView.setOnClickListener(v -> {
                     if (mBook.sequences.size() > 0) {
                         if (mBook.sequences.size() > 1) {
@@ -208,7 +213,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             }
 
             ImageView imageContainer = mRoot.findViewById(R.id.previewImage);
-            if(imageContainer != null){
+            if (imageContainer != null) {
                 imageContainer.setOnClickListener(view -> App.getInstance().mShowCover.postValue(mBook));
             }
         }
@@ -219,7 +224,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             mBinding.executePendingBindings();
 
             ImageView imageContainer = mRoot.findViewById(R.id.previewImage);
-            if(imageContainer != null){
+            if (imageContainer != null) {
                 // если включено отображение превью книг и превью существует
                 if (App.getInstance().isPreviews() && foundedBook.previewUrl != null) {
                     imageContainer.setVisibility(View.VISIBLE);
@@ -251,6 +256,16 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
                     }
                 }
             });
+        }
+
+        void cancelImageLoad() {
+            if (App.getInstance().isPreviews() && mBook.previewUrl != null) {
+                ImageView imageContainer = mRoot.findViewById(R.id.previewImage);
+                if (imageContainer != null) {
+                    Glide.with(imageContainer)
+                            .clear(imageContainer);
+                }
+            }
         }
     }
 }

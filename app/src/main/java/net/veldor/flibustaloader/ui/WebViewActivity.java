@@ -18,6 +18,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
@@ -47,6 +48,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
 
@@ -74,6 +76,14 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        if(MyPreferences.getInstance().isHardwareAcceleration()){
+            // проверю аппаратное ускорение
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        }
 
         if (App.getInstance().getNightMode()) {
             setTheme(R.style.NightTheme);
@@ -406,6 +416,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     }
 
     private void makeSearch(String s) {
+        changeTitle("Поиск: " + s);
         String searchString = App.SEARCH_URL + s.trim();
         mWebView.loadUrl(searchString);
         // занесу значение в список автозаполнения
@@ -558,5 +569,10 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             WebViewActivity.this.startActivity(intent);
             Runtime.getRuntime().exit(0);
         }
+    }
+
+
+    private void changeTitle(String s) {
+            Objects.requireNonNull(getSupportActionBar()).setTitle(s);
     }
 }

@@ -72,7 +72,7 @@ public class App extends Application {
     private static final String PREFERENCE_PREVIEWS = "cover_previews_show";
 
     public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
-    public final ArrayList<String> mSearchHistory = new ArrayList<>();
+    private final ArrayList<String> mSearchHistory = new ArrayList<>();
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();
     public final MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
@@ -279,7 +279,7 @@ public class App extends Application {
         return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, URLHelper.getBaseUrl());
     }
 
-    public boolean isSearchHistory() {
+    private boolean isSearchHistory() {
         return mSearchHistory.size() > 0;
     }
 
@@ -432,10 +432,15 @@ public class App extends Application {
         // возвращу папку для закачек
         String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, null);
         if(download_location != null){
+            try{
                 DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), Uri.parse(download_location));
                 if(dl != null && dl.isDirectory()){
-                        return dl;
+                    return dl;
                 }
+            }
+            catch (Exception e){
+                return null;
+            }
         }
         // верну путь к папке загрузок
         return null;

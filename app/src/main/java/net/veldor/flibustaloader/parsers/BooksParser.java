@@ -8,6 +8,7 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.utils.Grammar;
+import net.veldor.flibustaloader.utils.MyPreferences;
 
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -19,7 +20,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
-public class BooksParser {
+class BooksParser {
     public static ArrayList parse(NodeList entries, XPath xPath) throws XPathExpressionException {
         ArrayList<FoundedBook> result = new ArrayList<>();
         boolean isLoadPreviews = App.getInstance().isPreviews();
@@ -40,6 +41,7 @@ public class BooksParser {
         FoundedSequence sequence;
 
         boolean hideRead = App.getInstance().isHideRead();
+        boolean hideDigests = MyPreferences.getInstance().isDigestsHide();
 
         int entriesLength = entries.getLength();
         int handledEntryCounter = 0;
@@ -59,7 +61,6 @@ public class BooksParser {
             }
             book.name = ((Node) xPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             counter++;
-            result.add(book);
             xpathResult = (NodeList) xPath.evaluate("./author", entry, XPathConstants.NODESET);
             if (xpathResult.getLength() > 0) {
                 stringBuilder.setLength(0);
@@ -75,6 +76,9 @@ public class BooksParser {
                     book.authors.add(author);
                     ++innerCounter;
 
+                }
+                if(hideDigests && book.authors.size() > 3){
+                    continue;
                 }
                 book.author = stringBuilder.toString();
             }
@@ -148,6 +152,7 @@ public class BooksParser {
                     }
                 }
             }
+            result.add(book);
         }
         return result;
     }

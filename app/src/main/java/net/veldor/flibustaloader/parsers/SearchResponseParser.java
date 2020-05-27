@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.parsers;
 
+import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 
 import org.w3c.dom.Document;
@@ -34,6 +35,7 @@ public class SearchResponseParser {
     public SearchResponseParser(String answer) throws XPathExpressionException {
         Document document = getDocument(answer);
         mXpath = XPathFactory.newInstance().newXPath();
+        App.getInstance().mSearchTitle.postValue(((Node) mXpath.evaluate("/feed/title", document, XPathConstants.NODE)).getTextContent());
         mEntries = (NodeList) mXpath.evaluate("/feed/entry", document, XPathConstants.NODESET);
     }
 

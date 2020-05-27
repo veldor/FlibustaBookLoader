@@ -12,3 +12,4 @@
 app/lint.xml
 app/release/
 app/src/main/java/net/veldor/flibustaloader/database/migration/
+/.idea/

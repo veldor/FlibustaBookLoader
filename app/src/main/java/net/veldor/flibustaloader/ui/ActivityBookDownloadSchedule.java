@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -21,6 +22,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.adapters.DownloadScheduleAdapter;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
@@ -38,6 +40,14 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        if(MyPreferences.getInstance().isHardwareAcceleration()){
+            // проверю аппаратное ускорение
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        }
         MyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
         setupUI();
 
@@ -100,7 +110,7 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
         // проверю, есть ли книги в очереди скачивания
         int queueSize = App.getInstance().mDatabase.booksDownloadScheduleDao().getQueueSize();
         if(queueSize == 0){
-            Toast.makeText(this, R.string.dowload_schedue_empty_message, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.download_schedue_empty_message, Toast.LENGTH_LONG).show();
             finish();
         }
 

@@ -84,7 +84,6 @@ public class XMLParser {
         Node entry;
         try {
             entry = (Node) xPath.evaluate("/feed/link[@rel='next']", document, XPathConstants.NODE);
-            CheckSubscriptionsWorker.sNextPage = entry == null ? null : entry.getAttributes().getNamedItem("href").getNodeValue();
             LoadSubscriptionsWorker.sNextPage = entry == null ? null : entry.getAttributes().getNamedItem("href").getNodeValue();
             // получу сущности
             NodeList entries = (NodeList) xPath.evaluate("/feed/entry", document, XPathConstants.NODESET);

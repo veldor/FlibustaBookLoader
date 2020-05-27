@@ -32,6 +32,8 @@ public class SearchWorker extends Worker {
     @Override
     public Result doWork() {
         try {
+            OPDSActivity.sLiveAuthorsFound.postValue(null);
+            
             // сброшу указатель на следующую страницу
             OPDSActivity.sNextPage = null;
             // получу данные поиска
@@ -49,6 +51,10 @@ public class SearchWorker extends Worker {
                     int resultType = parser.getType();
                     result = parser.parseResponse();
                     if (!isStopped()) {
+                        if(result == null || result.size() == 0){
+                            // Ничего не найдено, уведомлю об этом
+                            OPDSActivity.sNothingFound.postValue(true);
+                        }
                         switch (resultType) {
                             case OPDSActivity.SEARCH_GENRE:
                                 //noinspection unchecked
@@ -60,10 +66,11 @@ public class SearchWorker extends Worker {
                                 break;
                             case OPDSActivity.SEARCH_AUTHORS:
                                 // сброшу предыдущие значения
-                                OPDSActivity.sLiveAuthorsFound.postValue(null);
+                                Log.d("surprise", "SearchWorker doWork 65: post new authors");
                                 //noinspection unchecked
                                 OPDSActivity.sLiveAuthorsFound.postValue((ArrayList<Author>) result);
                                 do {
+                                    App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
                                     // запрошу следующую страницу, если она есть
                                     if (answer != null) {
                                         request = getNextPageLink(answer);
@@ -92,6 +99,7 @@ public class SearchWorker extends Worker {
                                 // если выбрана загрузка сразу всего- гружу все результаты
                                 if (App.getInstance().isDownloadAll()) {
                                     do {
+                                        App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
                                         // запрошу следующую страницу, если она есть
                                         if (answer != null) {
                                             request = getNextPageLink(answer);
@@ -112,7 +120,6 @@ public class SearchWorker extends Worker {
                                     }
                                     while (request != null && !isStopped());
                                 } else {
-                                    Log.d("surprise", "SearchWorker doWork 113: next page link is " + getNextPageLink(answer));
                                     OPDSActivity.sNextPage = getNextPageLink(answer);
                                 }
                                 break;
@@ -122,7 +129,7 @@ public class SearchWorker extends Worker {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d("surprise", "SearchWorker doWork 77: i failed(");
+            Log.d("surprise", "SearchWorker doWork 77: i failed( " + e.getMessage() + ")");
             return Result.failure();
         }
         return Result.success();
@@ -136,11 +143,5 @@ public class SearchWorker extends Worker {
             return URLHelper.getBaseOPDSUrl() + s.substring(s.lastIndexOf("\"") + 1).replace("&amp;", "&");
         }
         return null;
-    }
-
-    @Override
-    public void onStopped() {
-        super.onStopped();
-        Log.d("surprise", "SearchWorker onStopped 142: wow, i stopped");
     }
 }

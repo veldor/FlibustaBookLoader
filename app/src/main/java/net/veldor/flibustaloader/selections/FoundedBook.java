@@ -1,8 +1,5 @@
 package net.veldor.flibustaloader.selections;
 
-import android.graphics.Bitmap;
-
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.Serializable;

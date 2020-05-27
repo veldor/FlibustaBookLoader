@@ -1,10 +1,7 @@
 package net.veldor.flibustaloader.parsers;
 
-import android.util.Log;
-
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.Author;
-import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 
 import org.w3c.dom.Node;
@@ -16,7 +13,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
-public class AuthorsParser {
+class AuthorsParser {
     public static ArrayList parse(NodeList entries, XPath xPath) throws XPathExpressionException {
         ArrayList<Author> result = new ArrayList<Author>();
         int counter = 0;

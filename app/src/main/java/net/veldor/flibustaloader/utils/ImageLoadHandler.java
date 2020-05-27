@@ -26,7 +26,7 @@ import cz.msebera.android.httpclient.impl.client.HttpClients;
 import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
-public class ImageLoadHandler {
+class ImageLoadHandler {
     public static Bitmap loadImage(String s) {
         if (App.getInstance().isExternalVpn()) {
             return ExternalVpnVewClient.loadImage(s);
