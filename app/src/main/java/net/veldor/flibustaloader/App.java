@@ -48,7 +48,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class App extends Application {
     //todo switch to false on release
-    public static boolean isTestVersion = true;
+    public static boolean isTestVersion = false;
 
     public static final String SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
