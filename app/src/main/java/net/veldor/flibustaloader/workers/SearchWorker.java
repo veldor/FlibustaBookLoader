@@ -49,6 +49,7 @@ public class SearchWorker extends Worker {
                     // получу DOM
                     SearchResponseParser parser = new SearchResponseParser(answer);
                     int resultType = parser.getType();
+                    Log.d("surprise", "SearchWorker doWork 52: result type is " + resultType);
                     result = parser.parseResponse();
                     if (!isStopped()) {
                         if(result == null || result.size() == 0){
@@ -59,17 +60,62 @@ public class SearchWorker extends Worker {
                             case OPDSActivity.SEARCH_GENRE:
                                 //noinspection unchecked
                                 OPDSActivity.sLiveGenresFound.postValue((ArrayList<Genre>) result);
+                                do {
+                                    App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
+                                    // запрошу следующую страницу, если она есть
+                                    if (answer != null) {
+                                        request = getNextPageLink(answer);
+                                    } else {
+                                        request = null;
+                                    }
+                                    if (request != null) {
+                                        answer = GlobalWebClient.request(request);
+                                        if (answer != null && !isStopped()) {
+                                            parser = new SearchResponseParser(answer);
+                                            result = parser.parseResponse();
+                                            if (result.size() > 0 && !isStopped()) {
+                                                //noinspection unchecked
+                                                OPDSActivity.sLiveGenresFound.postValue((ArrayList<Genre>) result);
+                                            }
+                                        }
+                                    }
+                                }
+                                while (request != null && !isStopped());
                                 break;
                             case OPDSActivity.SEARCH_SEQUENCE:
                                 //noinspection unchecked
                                 OPDSActivity.sLiveSequencesFound.postValue((ArrayList<FoundedSequence>) result);
+                                do {
+                                    App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
+                                    // запрошу следующую страницу, если она есть
+                                    if (answer != null) {
+                                        request = getNextPageLink(answer);
+                                    } else {
+                                        request = null;
+                                    }
+                                    if (request != null) {
+                                        answer = GlobalWebClient.request(request);
+                                        if (answer != null && !isStopped()) {
+                                            parser = new SearchResponseParser(answer);
+                                            result = parser.parseResponse();
+                                            if (result.size() > 0 && !isStopped()) {
+                                                //noinspection unchecked
+                                                OPDSActivity.sLiveSequencesFound.postValue((ArrayList<FoundedSequence>) result);
+                                            }
+                                        }
+                                    }
+                                }
+                                while (request != null && !isStopped());
                                 break;
                             case OPDSActivity.SEARCH_AUTHORS:
+                            case OPDSActivity.SEARCH_NEW_AUTHORS:
+                                Log.d("surprise", "SearchWorker doWork 110: load authors");
                                 // сброшу предыдущие значения
                                 Log.d("surprise", "SearchWorker doWork 65: post new authors");
                                 //noinspection unchecked
                                 OPDSActivity.sLiveAuthorsFound.postValue((ArrayList<Author>) result);
                                 do {
+                                    Log.d("surprise", "SearchWorker doWork 110: load authors");
                                     App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
                                     // запрошу следующую страницу, если она есть
                                     if (answer != null) {

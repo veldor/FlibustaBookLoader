@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.parsers;
 
+import android.util.Log;
+
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 
@@ -79,6 +81,7 @@ public class SearchResponseParser {
     private int identificationSearchType(Node item, XPath xPath) throws XPathExpressionException {
         // получу идентификатор
         String id = ((Node) xPath.evaluate("./id", item, XPathConstants.NODE)).getTextContent();
+        Log.d("surprise", "SearchResponseParser identificationSearchType 82: identification id is " + id);
         if (id.startsWith(BOOK_TYPE)) {
             return OPDSActivity.SEARCH_BOOKS;
         } else if (id.startsWith(GENRE_TYPE)) {

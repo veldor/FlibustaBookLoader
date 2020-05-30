@@ -54,9 +54,20 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
         return 0;
     }
 
-    public void setContent(ArrayList<FoundedSequence> arrayList) {
-        mSequences = arrayList;
-        notifyDataSetChanged();
+    public void setContent(ArrayList<FoundedSequence> newData) {
+        if(newData == null){
+            mSequences = new ArrayList<>();
+            notifyDataSetChanged();
+        }
+        else if(newData.size() == 0 && mSequences.size() == 0){
+            Toast.makeText(App.getInstance(), "Жанры не найдены",Toast.LENGTH_SHORT).show();
+            notifyDataSetChanged();
+        }
+        else{
+            int previousArrayLen = mSequences.size();
+            mSequences.addAll(newData);
+            notifyItemRangeInserted(previousArrayLen, newData.size());
+        }
     }
 
     public void sort() {
@@ -75,12 +86,7 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
             mBinding = binding;
 
             View container = mBinding.getRoot();
-            container.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    App.getInstance().mSelectedSequence.postValue(mSequence);
-                }
-            });
+            container.setOnClickListener(v -> App.getInstance().mSelectedSequence.postValue(mSequence));
 
         }
         void bind(final FoundedSequence sequence) {

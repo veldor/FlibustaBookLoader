@@ -57,9 +57,20 @@ public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdap
         return 0;
     }
 
-    public void setContent(ArrayList<Genre> arrayList) {
-        mGenres = arrayList;
-        notifyDataSetChanged();
+    public void setContent(ArrayList<Genre> newData) {
+        if(newData == null){
+            mGenres = new ArrayList<>();
+            notifyDataSetChanged();
+        }
+        else if(newData.size() == 0 && mGenres.size() == 0){
+            Toast.makeText(App.getInstance(), "Жанры не найдены",Toast.LENGTH_SHORT).show();
+            notifyDataSetChanged();
+        }
+        else{
+            int previousArrayLen = mGenres.size();
+            mGenres.addAll(newData);
+            notifyItemRangeInserted(previousArrayLen, newData.size());
+        }
     }
 
     public void sort() {

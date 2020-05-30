@@ -108,7 +108,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish());
-        dialogBuilder.create().show();
+        if(!MainActivity.this.isFinishing()) {
+            dialogBuilder.create().show();
+        }
     }
 
     private void setupUI() {
@@ -165,11 +167,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showForceStartDialog() {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setMessage("Принудительный запуск приложения. Внимание, это не значит, что приложение будет работать! Данная функция сделана исключительно для тех ситуаций, когда приложение не смогло само определить, что клиент TOR успешно запустился (проблема некоторорых китайских аппаратов). Так что используйте только если точно знаете, что делаете");
-        dialogBuilder.setPositiveButton("Да, я знаю, что делаю", (dialogInterface, i) -> torLoaded());
-        dialogBuilder.setNegativeButton("Нет, подождать ещё", (dialogInterface, i) -> dialogInterface.dismiss());
-        dialogBuilder.show();
+        if(!MainActivity.this.isFinishing()) {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setMessage("Принудительный запуск приложения. Внимание, это не значит, что приложение будет работать! Данная функция сделана исключительно для тех ситуаций, когда приложение не смогло само определить, что клиент TOR успешно запустился (проблема некоторорых китайских аппаратов). Так что используйте только если точно знаете, что делаете");
+            dialogBuilder.setPositiveButton("Да, я знаю, что делаю", (dialogInterface, i) -> torLoaded());
+            dialogBuilder.setNegativeButton("Нет, подождать ещё", (dialogInterface, i) -> dialogInterface.dismiss());
+            dialogBuilder.show();
+        }
     }
 
     private void setupObservers() {
@@ -248,34 +252,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectView() {
-        // покажу диалог выбора вида приложения
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle("Выберите внешний вид")
-                .setMessage("Выберите вид приложения. В будущем вы можете переключить вид в меню приложения (Меню => внешний вид). В режиме WebView информация берётся непосредственно с сайта Флибусты и выглядит как страница сайта. В режиме OPDS информация получается из электронного каталога Флибусты. Рекомендую попробовать оба режима, у каждого из них свои плюсы. Приятного поиска.")
-                .setCancelable(false)
-                .setPositiveButton("Режим WebView", (dialog, which) -> {
-                    App.getInstance().setView(App.VIEW_WEB);
-                    if (mReadyToStart) {
-                        startApp();
-                    }
-                })
-                .setNegativeButton("Режим OPDS", (dialog, which) -> {
-                    App.getInstance().setView(App.VIEW_ODPS);
-                    if (mReadyToStart) {
-                        startApp();
-                    }
-                });
-        dialogBuilder.create().show();
+        if(!MainActivity.this.isFinishing()) {
+            // покажу диалог выбора вида приложения
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setTitle("Выберите внешний вид")
+                    .setMessage("Выберите вид приложения. В будущем вы можете переключить вид в меню приложения (Меню => внешний вид). В режиме WebView информация берётся непосредственно с сайта Флибусты и выглядит как страница сайта. В режиме OPDS информация получается из электронного каталога Флибусты. Рекомендую попробовать оба режима, у каждого из них свои плюсы. Приятного поиска.")
+                    .setCancelable(false)
+                    .setPositiveButton("Режим WebView", (dialog, which) -> {
+                        App.getInstance().setView(App.VIEW_WEB);
+                        if (mReadyToStart) {
+                            startApp();
+                        }
+                    })
+                    .setNegativeButton("Режим OPDS", (dialog, which) -> {
+                        App.getInstance().setView(App.VIEW_ODPS);
+                        if (mReadyToStart) {
+                            startApp();
+                        }
+                    });
+            dialogBuilder.create().show();
+        }
     }
 
     private void showPermissionDialog() {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle("Необходимо предоставить разрешения")
-                .setMessage("Для загрузки книг необходимо предоставить доступ к памяти устройства")
-                .setCancelable(false)
-                .setPositiveButton("Предоставить разрешение", (dialog, which) -> ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_WRITE_READ))
-                .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish());
-        dialogBuilder.create().show();
+        if(!MainActivity.this.isFinishing()) {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setTitle("Необходимо предоставить разрешения")
+                    .setMessage("Для загрузки книг необходимо предоставить доступ к памяти устройства")
+                    .setCancelable(false)
+                    .setPositiveButton("Предоставить разрешение", (dialog, which) -> ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_WRITE_READ))
+                    .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish());
+            dialogBuilder.create().show();
+        }
     }
 
     private void startApp() {
@@ -375,45 +383,51 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void torLoadTooLongDialog() {
-        Log.d("surprise", "MainActivity torLoadTooLongDialog: tor load too long err");
-        if (mActivityVisible) {
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setTitle("Tor load too long")
-                    .setMessage("Подождём ещё или перезапустим?")
-                    .setPositiveButton("Перезапуск", (dialog, which) -> {
-                        App.sTorStartTry = 0;
-                        App.getInstance().startTor();
-                    })
-                    .setNegativeButton("Подождать ещё", (dialog, which) -> startTimer()).show();
-        } else {
-            mTorLoadTooLong = true;
+        if(!MainActivity.this.isFinishing()) {
+            Log.d("surprise", "MainActivity torLoadTooLongDialog: tor load too long err");
+            if (mActivityVisible) {
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+                dialogBuilder.setTitle("Tor load too long")
+                        .setMessage("Подождём ещё или перезапустим?")
+                        .setPositiveButton("Перезапуск", (dialog, which) -> {
+                            App.sTorStartTry = 0;
+                            App.getInstance().startTor();
+                        })
+                        .setNegativeButton("Подождать ещё", (dialog, which) -> startTimer()).show();
+            } else {
+                mTorLoadTooLong = true;
+            }
         }
     }
 
 
     private void showTorNotWorkDialog() {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        AlertDialog show = dialogBuilder.setTitle(getString(R.string.tor_cant_load_message))
-                .setMessage(getString(R.string.tor_not_start_body))
-                .setPositiveButton(getString(R.string.try_again_message), (dialogInterface, i) -> App.getInstance().startTor())
-                .setNegativeButton(getString(R.string.try_later_message), (dialogInterface, i) -> finishAffinity())
-                .setNeutralButton(getString(R.string.use_external_proxy_message), (dialog, which) -> handleUseExternalVpn())
-                .show();
+        if(!MainActivity.this.isFinishing()) {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            AlertDialog show = dialogBuilder.setTitle(getString(R.string.tor_cant_load_message))
+                    .setMessage(getString(R.string.tor_not_start_body))
+                    .setPositiveButton(getString(R.string.try_again_message), (dialogInterface, i) -> App.getInstance().startTor())
+                    .setNegativeButton(getString(R.string.try_later_message), (dialogInterface, i) -> finishAffinity())
+                    .setNeutralButton(getString(R.string.use_external_proxy_message), (dialog, which) -> handleUseExternalVpn())
+                    .show();
+        }
     }
 
 
     private void handleUseExternalVpn() {
-        // покажу диалог с объяснением последствий включения VPN
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder
-                .setTitle("Использование внешнего VPN")
-                .setMessage("Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно. Сделано для версий Android ниже 6.0, где могут быть проблемы с доступом, но может быть использовано по желанию на ваш страх и риск.")
-                .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.confirm, (dialogInterface, i) -> {
-                    App.getInstance().switchExternalVpnUse();
-                    torLoaded();
-                });
-        dialogBuilder.create().show();
+        if(!MainActivity.this.isFinishing()) {
+            // покажу диалог с объяснением последствий включения VPN
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder
+                    .setTitle("Использование внешнего VPN")
+                    .setMessage("Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно. Сделано для версий Android ниже 6.0, где могут быть проблемы с доступом, но может быть использовано по желанию на ваш страх и риск.")
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.confirm, (dialogInterface, i) -> {
+                        App.getInstance().switchExternalVpnUse();
+                        torLoaded();
+                    });
+            dialogBuilder.create().show();
+        }
     }
 
     @Override
