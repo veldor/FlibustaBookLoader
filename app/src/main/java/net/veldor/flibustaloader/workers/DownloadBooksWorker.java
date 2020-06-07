@@ -27,6 +27,7 @@ import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -94,6 +95,7 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        ArrayList<BooksDownloadSchedule> downloadErrors = new ArrayList<>();
         // проверю, есть ли в очереди скачивания книги
         AppDatabase db = App.getInstance().mDatabase;
         BooksDownloadScheduleDao dao = db.booksDownloadScheduleDao();
@@ -101,6 +103,7 @@ public class DownloadBooksWorker extends Worker {
         Boolean reDownload = App.getInstance().isReDownload();
         // получу количество книг на начало скачивания
         int mBooksCount = dao.getQueueSize();
+        int bookDownloadsWithErrors = 0;
         if (mBooksCount > 0) {
             // помечу рабочего важным
             ForegroundInfo info = createForegroundInfo();
@@ -120,8 +123,9 @@ public class DownloadBooksWorker extends Worker {
             int downloadCounter = 1;
             // пока есть книги в очереди скачивания и работа не остановлена
             while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()) {
+                mNotificator.updateDownloadProgress(dao.getQueueSize() + downloadCounter -1, downloadCounter);
                 // освежу уведомление
-                updateDownloadStatusNotification(downloadCounter);
+                //updateDownloadStatusNotification(downloadCounter);
                 // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
                 if (!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null) {
                     dao.delete(queuedElement);
@@ -130,13 +134,14 @@ public class DownloadBooksWorker extends Worker {
                 // загружу книгу
                 boolean downloadResult;
                 try {
-                    updateDownloadStatusNotification(downloadCounter);
+                    //updateDownloadStatusNotification(downloadCounter);
                     downloadResult = downloadBook(queuedElement);
                     if (!downloadResult) {
                         // ошибка загрузки книг, выведу сообщение об ошибке
                         mNotificator.showBooksLoadErrorNotification(queuedElement.name);
-                        Log.d("surprise", "DownloadBooksWorker doWork: error download!!!");
-                        return Result.failure();
+                        bookDownloadsWithErrors++;
+                        downloadErrors.add(queuedElement);
+                        dao.delete(queuedElement);
                     }
                     if (!isStopped()) {
                         // отмечу книгу как скачанную
@@ -153,6 +158,8 @@ public class DownloadBooksWorker extends Worker {
                 } catch (BookNotFoundException e) {
                     // книга недоступна для скачивания в данном формате, удалю её из очереди, выведу уведомление и продолжу загрузку
                     mNotificator.sendBookNotFoundInCurrentFormatNotification(queuedElement);
+                    bookDownloadsWithErrors++;
+                    downloadErrors.add(queuedElement);
                     dao.delete(queuedElement);
                 }
                 ++downloadCounter;
@@ -161,7 +168,12 @@ public class DownloadBooksWorker extends Worker {
             mBooksCount = dao.getQueueSize();
             if (mBooksCount == 0 && !isStopped()) {
                 // ура, всё загружено, выведу сообщение об успешной загрузке
-                mNotificator.showBooksLoadedNotification();
+                mNotificator.showBooksLoadedNotification(bookDownloadsWithErrors);
+                // Добавлю все книги с ошибками обратно в список загрузки
+                for (BooksDownloadSchedule b :
+                        downloadErrors) {
+                    dao.insert(b);
+                }
             }
         }
         mNotificator.cancelBookLoadNotification();

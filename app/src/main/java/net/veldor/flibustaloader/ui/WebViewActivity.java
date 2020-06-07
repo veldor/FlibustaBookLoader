@@ -277,12 +277,10 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 mMyViewModel.shareLink(mWebView);
                 return true;
             case R.id.buyCoffee:
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
-                startActivity(intent);
+                makeDonate();
                 return true;
             case R.id.goToTest:
-                intent = new Intent(Intent.ACTION_VIEW);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
                 startActivity(intent);
                 return true;
@@ -310,6 +308,30 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void makeDonate() {
+        String[] donateOptions = new String[]{"PayPal", "Yandex"};
+        // покажу диалог с выбором способа доната
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder
+                .setItems(
+                        donateOptions,
+                        (dialog, which) -> {
+                            if(which == 0){
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
+                                startActivity(intent);
+                            }
+                            else{
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setData(Uri.parse("https://money.yandex.ru/to/41001269882689"));
+                                startActivity(intent);
+                            }
+                        }
+                )
+                .setTitle("Поддержка разработки");
+        builder.create().show();
     }
 
 

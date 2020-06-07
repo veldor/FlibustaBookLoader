@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 
 import androidx.annotation.NonNull;
@@ -44,7 +45,7 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         // если выбраны книги для загрузки- получу их ID
         SparseBooleanArray selectedBooksList = App.getInstance().mDownloadSelectedBooks;
         // получу весь список книг
-        ArrayList<FoundedBook> mBooks = OPDSActivity.sLiveBooksFound.getValue();
+        ArrayList<FoundedBook> mBooks = OPDSActivity.sBooksForDownload;
         // проверю, что книги есть и готовы к загрузке
         if (mBooks == null || mBooks.size() == 0) {
             return Result.success();

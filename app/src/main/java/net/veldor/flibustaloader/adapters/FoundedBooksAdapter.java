@@ -23,13 +23,15 @@ import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
 import net.veldor.flibustaloader.database.dao.ReadedBooksDao;
 import net.veldor.flibustaloader.databinding.SearchedBookWithPreviewItemBindingImpl;
+import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
 
-public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapter.ViewHolder> {
+public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapter.ViewHolder> implements MyAdapterInterface {
     private ArrayList<FoundedBook> mBooks = new ArrayList<>();
     private LayoutInflater mLayoutInflater;
     private final DownloadedBooksDao mDao;
@@ -40,6 +42,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
     public FoundedBooksAdapter(ArrayList<FoundedBook> arrayList) {
         if (arrayList != null && arrayList.size() > 0) {
             mBooks = arrayList;
+            OPDSActivity.sBooksForDownload = mBooks;
         }
         mDao = App.getInstance().mDatabase.downloadedBooksDao();
         mReadDao = App.getInstance().mDatabase.readedBooksDao();
@@ -84,6 +87,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
         if (newData == null) {
             if (!addToLoaded) {
                 mBooks = new ArrayList<>();
+                OPDSActivity.sBooksForDownload = mBooks;
                 notifyDataSetChanged();
             }
         } else if (newData.size() == 0 && mBooks.size() == 0) {
@@ -94,26 +98,24 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             if (App.getInstance().isDownloadAll() || addToLoaded) {
                 int previousArrayLen = mBooks.size();
                 mBooks.addAll(newData);
+                OPDSActivity.sBooksForDownload = mBooks;
                 notifyItemRangeInserted(previousArrayLen, newData.size());
             } else {
                 mBooks = newData;
+                OPDSActivity.sBooksForDownload = mBooks;
                 notifyDataSetChanged();
             }
         }
     }
 
     public void bookDownloaded(String bookId) {
-        int counter = 0;
-        int booksCount = mBooks.size();
-        FoundedBook fb;
-        while (counter < booksCount) {
-            fb = mBooks.get(counter);
-            if (fb != null && fb.id.equals(bookId)) {
-                fb.downloaded = true;
-                notifyItemChanged(counter);
+        for (FoundedBook f :
+                mBooks) {
+            if (f != null && f.id.equals(bookId)) {
+                f.downloaded = true;
+                notifyItemChanged(mBooks.lastIndexOf(f));
                 break;
             }
-            counter++;
         }
     }
 
@@ -127,6 +129,19 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             } else {
                 notifyItemChanged(bookIndex);
             }
+        }
+    }
+
+    public ArrayList<FoundedBook> getItems() {
+        return mBooks;
+    }
+
+    @Override
+    public void clearList() {
+        // удалю книги, если не было подгрузки результатов
+        if(App.getInstance().isDownloadAll()){
+            mBooks = new ArrayList<>();
+            notifyDataSetChanged();
         }
     }
 
@@ -215,6 +230,16 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             ImageView imageContainer = mRoot.findViewById(R.id.previewImage);
             if (imageContainer != null) {
                 imageContainer.setOnClickListener(view -> App.getInstance().mShowCover.postValue(mBook));
+            }
+
+            ImageButton downloadedView = mRoot.findViewById(R.id.book_downloaded);
+            if(downloadedView != null){
+                downloadedView.setVisibility(View.INVISIBLE);
+            }
+
+            ImageButton readView = mRoot.findViewById(R.id.book_read);
+            if (readView != null) {
+                readView.setVisibility(View.INVISIBLE);
             }
         }
 

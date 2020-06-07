@@ -14,6 +14,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedGenreItemBinding;
+import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.ui.OPDSActivity;
@@ -21,7 +22,7 @@ import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
 
-public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdapter.ViewHolder> {
+public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdapter.ViewHolder> implements MyAdapterInterface {
     private ArrayList<Genre> mGenres;
     private LayoutInflater mLayoutInflater;
 
@@ -77,6 +78,12 @@ public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdap
         SortHandler.sortGenres(mGenres);
         notifyDataSetChanged();
         Toast.makeText(App.getInstance(), "Серии отсортированы!",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void clearList() {
+        mGenres = new ArrayList<>();
+        notifyDataSetChanged();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

@@ -32,16 +32,16 @@ public class SearchWorker extends Worker {
     @Override
     public Result doWork() {
         try {
-            OPDSActivity.sLiveAuthorsFound.postValue(null);
-            
+            // оповещу о начале нового поиска
+            OPDSActivity.sNewSearch.postValue(true);
             // сброшу указатель на следующую страницу
             OPDSActivity.sNextPage = null;
+            int pageCounter = 1;
             // получу данные поиска
             Data data = getInputData();
             String request = data.getString(REQUEST);
             if (request != null) {
-                App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
-                Log.d("surprise", "SearchWorker doWork 40: load " + request);
+                App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                 // сделаю первый запрос по-любому
                 String answer = GlobalWebClient.request(request);
                 if (answer != null && !isStopped()) {
@@ -61,9 +61,10 @@ public class SearchWorker extends Worker {
                                 //noinspection unchecked
                                 OPDSActivity.sLiveGenresFound.postValue((ArrayList<Genre>) result);
                                 do {
-                                    App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
+                                    ++pageCounter;
                                     // запрошу следующую страницу, если она есть
                                     if (answer != null) {
+                                        App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                                         request = getNextPageLink(answer);
                                     } else {
                                         request = null;
@@ -86,9 +87,10 @@ public class SearchWorker extends Worker {
                                 //noinspection unchecked
                                 OPDSActivity.sLiveSequencesFound.postValue((ArrayList<FoundedSequence>) result);
                                 do {
-                                    App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
+                                    ++pageCounter;
                                     // запрошу следующую страницу, если она есть
                                     if (answer != null) {
+                                        App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                                         request = getNextPageLink(answer);
                                     } else {
                                         request = null;
@@ -115,10 +117,11 @@ public class SearchWorker extends Worker {
                                 //noinspection unchecked
                                 OPDSActivity.sLiveAuthorsFound.postValue((ArrayList<Author>) result);
                                 do {
+                                    ++pageCounter;
                                     Log.d("surprise", "SearchWorker doWork 110: load authors");
-                                    App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
                                     // запрошу следующую страницу, если она есть
                                     if (answer != null) {
+                                        App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                                         request = getNextPageLink(answer);
                                     } else {
                                         request = null;
@@ -145,10 +148,11 @@ public class SearchWorker extends Worker {
                                 // если выбрана загрузка сразу всего- гружу все результаты
                                 if (App.getInstance().isDownloadAll()) {
                                     do {
-                                        App.getInstance().mLoadAllStatus.postValue("Загружаю страницу");
+                                        ++pageCounter;
                                         // запрошу следующую страницу, если она есть
                                         if (answer != null) {
                                             request = getNextPageLink(answer);
+                                            App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                                         } else {
                                             request = null;
                                         }
@@ -178,6 +182,7 @@ public class SearchWorker extends Worker {
             Log.d("surprise", "SearchWorker doWork 77: i failed( " + e.getMessage() + ")");
             return Result.failure();
         }
+        OPDSActivity.sNewSearch.postValue(false);
         return Result.success();
     }
 

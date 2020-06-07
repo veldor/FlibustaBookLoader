@@ -15,12 +15,13 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedAuthorItemBinding;
+import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
 
-public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAdapter.ViewHolder> {
+public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAdapter.ViewHolder> implements MyAdapterInterface {
     private ArrayList<Author> mAuthors = new ArrayList<>();
     private LayoutInflater mLayoutInflater;
 
@@ -73,6 +74,12 @@ public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAd
         SortHandler.sortAuthors(mAuthors);
         notifyDataSetChanged();
         Toast.makeText(App.getInstance(), "Авторы отсортированы!",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void clearList() {
+        mAuthors = new ArrayList<>();
+        notifyDataSetChanged();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

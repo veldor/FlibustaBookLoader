@@ -10,9 +10,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -121,19 +121,31 @@ public class MainActivity extends AppCompatActivity {
                     WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         }
 
+
         // если используем внешнй VPN- проверяю только выдачу разрешений и настройку внешнего вида
         setContentView(R.layout.activity_main);
+
+        View rootView = findViewById(R.id.rootView);
+        if(rootView != null){
+            try{
+                // назначу фон
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    rootView.setBackground(getDrawable(R.drawable.back_3));
+                }
+                else{
+                    rootView.setBackground(getResources().getDrawable(R.drawable.back_3));
+                }
+            }
+            catch (Exception e){
+                Log.d("surprise", "MainActivity setupUI 137: can't set drawable");
+            }
+        }
 
         // переключатель аппаратного ускорения
         Switch switcher = findViewById(R.id.useHardwareAccelerationSwitcher);
         if(switcher != null){
             switcher.setChecked(MyPreferences.getInstance().isHardwareAcceleration());
-            switcher.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    MyPreferences.getInstance().switchHardwareAcceleration();
-                }
-            });
+            switcher.setOnCheckedChangeListener((buttonView, isChecked) -> MyPreferences.getInstance().switchHardwareAcceleration());
         }
         if (App.getInstance().isExternalVpn()) {
             Log.d("surprise", "MainActivity setupUI external vpn used");

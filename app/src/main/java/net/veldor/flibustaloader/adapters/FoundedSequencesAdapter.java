@@ -14,12 +14,13 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.BR;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedSequenceItemBinding;
+import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
 
-public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequencesAdapter.ViewHolder> {
+public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequencesAdapter.ViewHolder> implements MyAdapterInterface {
     private ArrayList<FoundedSequence> mSequences;
     private LayoutInflater mLayoutInflater;
 
@@ -74,6 +75,12 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
         SortHandler.sortSequences(mSequences);
         notifyDataSetChanged();
         Toast.makeText(App.getInstance(), "Серии отсортированы!",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void clearList() {
+        mSequences = new ArrayList<>();
+        notifyDataSetChanged();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
