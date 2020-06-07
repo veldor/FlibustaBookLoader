@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -20,6 +21,7 @@ import androidx.work.WorkManager;
 
 import net.veldor.flibustaloader.adapters.SubscribesAdapter;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
 import net.veldor.flibustaloader.utils.SubscribeSequences;
@@ -41,6 +43,14 @@ public class SubscribeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (MyPreferences.getInstance().isHardwareAcceleration()) {
+            // проверю аппаратное ускорение
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        }
+
         setContentView(R.layout.activity_subscribe);
 
 

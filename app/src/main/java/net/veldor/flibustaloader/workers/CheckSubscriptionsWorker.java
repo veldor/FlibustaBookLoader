@@ -160,6 +160,7 @@ public class CheckSubscriptionsWorker extends Worker {
                 mSubscribes) {
             if (answer.toLowerCase().contains(si.name.toLowerCase())) {
                 foundKeyWords = true;
+                Log.d("surprise", "CheckSubscriptionsWorker handleAnswer 163: found subscription results");
                 break;
             }
         }

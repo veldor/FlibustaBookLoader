@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.parsers;
 
 import android.content.Intent;
+import android.util.Log;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.Author;
@@ -76,6 +77,7 @@ public class SubscriptionsParser {
 
     private static void foundAuthor(Document document, XPath xpath, String name, ArrayList<FoundedBook> result) throws XPathExpressionException {
         name = name.toLowerCase();
+        Log.d("surprise", "SubscriptionsParser foundAuthor 80: search author " + name);
         String value;
         // Найду автора по данным
         NodeList authors = (NodeList) xpath.evaluate("/feed/entry/author/name", document, XPathConstants.NODESET);
@@ -84,6 +86,7 @@ public class SubscriptionsParser {
             Node author;
             while ((author = authors.item(counter)) != null) {
                 value = author.getTextContent().toLowerCase();
+                Log.d("surprise", "SubscriptionsParser foundAuthor 88: found author " + value);
                 if(value.contains(name)){
                     // добавлю найденный результат
                     addBookToResult(author.getParentNode().getParentNode(), result, xpath);

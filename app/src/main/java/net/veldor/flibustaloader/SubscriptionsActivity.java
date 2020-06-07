@@ -2,6 +2,7 @@ package net.veldor.flibustaloader;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.WindowManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -10,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import net.veldor.flibustaloader.adapters.SubscribeResultsAdapter;
 import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
 import java.io.File;
@@ -26,6 +28,14 @@ public class SubscriptionsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (MyPreferences.getInstance().isHardwareAcceleration()) {
+            // проверю аппаратное ускорение
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        }
+
         setContentView(R.layout.activity_subscribtions);
         // добавлю viewModel
         MainViewModel mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);

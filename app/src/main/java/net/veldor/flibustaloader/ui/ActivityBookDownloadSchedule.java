@@ -57,25 +57,22 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
     private void observeChanges() {
         // получу состояние загрузки
         LiveData<List<WorkInfo>> loadProgress = DownloadBooksWorker.getDownloadProgress();
-        loadProgress.observe(this, new Observer<List<WorkInfo>>() {
-            @Override
-            public void onChanged(List<WorkInfo> workInfos) {
-                if(workInfos != null && workInfos.size() > 0){
-                    // получу статус закачки
-                    WorkInfo work = workInfos.get(0);
-                    if(work != null){
-                        switch (work.getState()){
-                            case CANCELLED:
-                            case SUCCEEDED:
-                            case FAILED:
-                            case BLOCKED:
-                                showContinue();
-                                break;
-                            case RUNNING:
-                            case ENQUEUED:
-                                showStop();
-                                break;
-                        }
+        loadProgress.observe(this, workInfos -> {
+            if(workInfos != null && workInfos.size() > 0){
+                // получу статус закачки
+                WorkInfo work = workInfos.get(0);
+                if(work != null){
+                    switch (work.getState()){
+                        case CANCELLED:
+                        case SUCCEEDED:
+                        case FAILED:
+                        case BLOCKED:
+                            showContinue();
+                            break;
+                        case RUNNING:
+                        case ENQUEUED:
+                            showStop();
+                            break;
                     }
                 }
             }
@@ -116,25 +113,22 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
 
         // получу данные о книгах в очереди в виде liveData
         final LiveData<List<BooksDownloadSchedule>> schedule = App.getInstance().mDatabase.booksDownloadScheduleDao().getAllBooksLive();
-        schedule.observe(this, new Observer<List<BooksDownloadSchedule>>() {
-            @Override
-            public void onChanged(List<BooksDownloadSchedule> booksDownloadSchedules) {
-                if(booksDownloadSchedules != null && booksDownloadSchedules.size() > 0){
-                    if(BooksAdapter == null){
-                        RecyclerView recycler = findViewById(R.id.resultsList);
-                        BooksAdapter = new DownloadScheduleAdapter(booksDownloadSchedules);
-                        BooksAdapter.setHasStableIds(true);
-                        recycler.setAdapter(BooksAdapter);
-                        recycler.setLayoutManager(new LinearLayoutManager(ActivityBookDownloadSchedule.this));
-                    }
-                    else{
-                        BooksAdapter.setData(booksDownloadSchedules);
-                        BooksAdapter.notifyDataSetChanged();
-                    }
+        schedule.observe(this, booksDownloadSchedules -> {
+            if(booksDownloadSchedules != null && booksDownloadSchedules.size() > 0){
+                if(BooksAdapter == null){
+                    RecyclerView recycler = findViewById(R.id.resultsList);
+                    BooksAdapter = new DownloadScheduleAdapter(booksDownloadSchedules);
+                    BooksAdapter.setHasStableIds(true);
+                    recycler.setAdapter(BooksAdapter);
+                    recycler.setLayoutManager(new LinearLayoutManager(ActivityBookDownloadSchedule.this));
                 }
                 else{
-                    finish();
+                    BooksAdapter.setData(booksDownloadSchedules);
+                    BooksAdapter.notifyDataSetChanged();
                 }
+            }
+            else{
+                finish();
             }
         });
 
@@ -148,42 +142,35 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
 
         }
         if (StopDownloadBtn != null) {
-            StopDownloadBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Log.d("surprise", "ActivityBookDownloadSchedule onClick: work cancelled");
-                    MyViewModel.cancelMassDownload();
-                    App.getInstance().getNotificator().cancelBookLoadNotification();
-                    App.getInstance().getNotificator().createMassDownloadStoppedNotification();
-                    StopDownloadBtn.setVisibility(View.GONE);
-                    Toast.makeText(ActivityBookDownloadSchedule.this, "Загрузка книг остановлена", Toast.LENGTH_LONG).show();
-                    if(ContinueDownloadBtn != null){
-                        ContinueDownloadBtn.setVisibility(View.VISIBLE);
-                    }
+            StopDownloadBtn.setOnClickListener(view -> {
+                Log.d("surprise", "ActivityBookDownloadSchedule onClick: work cancelled");
+                MyViewModel.cancelMassDownload();
+                App.getInstance().getNotificator().cancelBookLoadNotification();
+                App.getInstance().getNotificator().createMassDownloadStoppedNotification();
+                StopDownloadBtn.setVisibility(View.GONE);
+                Toast.makeText(ActivityBookDownloadSchedule.this, "Загрузка книг остановлена", Toast.LENGTH_LONG).show();
+                if(ContinueDownloadBtn != null){
+                    ContinueDownloadBtn.setVisibility(View.VISIBLE);
                 }
             });
         }
 
 
         if(ContinueDownloadBtn != null){
-            ContinueDownloadBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    MyViewModel.initiateMassDownload();
-                    ContinueDownloadBtn.setVisibility(View.GONE);
-                    if(StopDownloadBtn != null){
-                        StopDownloadBtn.setVisibility(View.VISIBLE);
-                    }
+            ContinueDownloadBtn.setOnClickListener(view -> {
+                MyViewModel.initiateMassDownload();
+                ContinueDownloadBtn.setVisibility(View.GONE);
+                if(StopDownloadBtn != null){
+                    StopDownloadBtn.setVisibility(View.VISIBLE);
                 }
             });
         }
+        assert ContinueDownloadBtn != null;
         if(noActiveDownload){
-            assert ContinueDownloadBtn != null;
             ContinueDownloadBtn.setVisibility(View.VISIBLE);
             StopDownloadBtn.setVisibility(View.GONE);
         }
         else{
-            assert ContinueDownloadBtn != null;
             ContinueDownloadBtn.setVisibility(View.GONE);
             StopDownloadBtn.setVisibility(View.VISIBLE);
         }
