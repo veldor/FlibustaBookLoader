@@ -1,12 +1,12 @@
 package net.veldor.flibustaloader.ui;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,11 +33,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.core.widget.NestedScrollView;
-import androidx.documentfile.provider.DocumentFile;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -49,18 +53,18 @@ import androidx.work.WorkManager;
 
 import com.bumptech.glide.Glide;
 import com.github.clans.fab.FloatingActionMenu;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
-import net.veldor.flibustaloader.SubscribeActivity;
-import net.veldor.flibustaloader.SubscriptionsActivity;
 import net.veldor.flibustaloader.adapters.FoundedAuthorsAdapter;
 import net.veldor.flibustaloader.adapters.FoundedBooksAdapter;
 import net.veldor.flibustaloader.adapters.FoundedGenresAdapter;
 import net.veldor.flibustaloader.adapters.FoundedSequencesAdapter;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
+import net.veldor.flibustaloader.dialogs.ChangelogDialog;
 import net.veldor.flibustaloader.dialogs.GifDialog;
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.Author;
@@ -72,14 +76,12 @@ import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.History;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.MyPreferences;
-import net.veldor.flibustaloader.utils.TransportUtils;
 import net.veldor.flibustaloader.utils.URLHelper;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.SearchWorker;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -88,8 +90,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
-
-import lib.folderpicker.FolderPicker;
 
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static androidx.work.WorkInfo.State.ENQUEUED;
@@ -101,9 +101,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private static final String[] bookSortOptions = new String[]{"По названию книги", "По размеру", "По количеству скачиваний", "По серии", "По жанру", "По автору"};
     private static final String[] authorSortOptions = new String[]{"По имени автора от А", "По имени автора от Я", "По количеству книг от большего", "По количеству книг от меньшего"};
     private static final String[] otherSortOptions = new String[]{"От А", "От Я"};
-    private static final int READ_REQUEST_CODE = 5;
-    private static final int REQUEST_CODE = 7;
-    private static final int BACKUP_FILE_REQUEST_CODE = 8;
     public static final String SEARCH_TYPE_BOOKS = "search books";
     public static final String SEARCH_TYPE_AUTHORS = "search authors";
     public static final String SEARCH_TYPE_SEQUENCES = "search sequences";
@@ -170,28 +167,17 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private NestedScrollView mScrollView;
     private RadioButton mSearchBooksButton;
     private RadioButton mSearchAuthorsButton;
+    private Switch mMassLoadSwitcher;
+    private boolean mActivityVisible = true;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (MyPreferences.getInstance().isHardwareAcceleration()) {
-            // проверю аппаратное ускорение
-            getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
-        }
-
-        if (App.getInstance().getNightMode()) {
-            setTheme(R.style.NightTheme);
-        }
-
-        setContentView(R.layout.activity_odps);
+        setupUI();
 
         // добавлю viewModel
         mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
-
-        setupUI();
 
         checkSearchType();
 
@@ -258,9 +244,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         mSearchBooksButton = findViewById(R.id.searchBook);
         if (mSearchBooksButton != null) {
             mSearchBooksButton.setOnClickListener(v -> {
+                mMassLoadSwitcher.setVisibility(View.VISIBLE);
                 Toast.makeText(OPDSActivity.this, "Ищем книги", Toast.LENGTH_SHORT).show();
                 sSearchType = SEARCH_TYPE_BOOKS;
-                if(mSearchView != null){
+                if (mSearchView != null) {
                     mSearchView.setVisibility(View.VISIBLE);
                     mSearchView.setIconified(false);
                     mSearchView.requestFocusFromTouch();
@@ -270,9 +257,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         mSearchAuthorsButton = findViewById(R.id.searchAuthor);
         mSearchAuthorsButton.setOnClickListener(v -> {
+            mMassLoadSwitcher.setVisibility(View.GONE);
             Toast.makeText(OPDSActivity.this, "Ищем авторов", Toast.LENGTH_SHORT).show();
             sSearchType = SEARCH_TYPE_AUTHORS;
-            if(mSearchView != null){
+            if (mSearchView != null) {
                 mSearchView.setVisibility(View.VISIBLE);
                 mSearchView.setIconified(false);
                 mSearchView.requestFocusFromTouch();
@@ -281,9 +269,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         RadioButton searchGenresButton = findViewById(R.id.searchGenre);
         searchGenresButton.setOnClickListener(v -> {
+            mMassLoadSwitcher.setVisibility(View.GONE);
             Toast.makeText(OPDSActivity.this, "Ищу жанры", Toast.LENGTH_SHORT).show();
             sSearchType = SEARCH_TYPE_GENRE;
-            if(mSearchView != null){
+            if (mSearchView != null) {
                 mSearchView.setVisibility(View.GONE);
             }
             showLoadWaitingDialog();
@@ -294,9 +283,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         RadioButton searchSequencesButton = findViewById(R.id.searchSequence);
         searchSequencesButton.setOnClickListener(v -> {
+            mMassLoadSwitcher.setVisibility(View.GONE);
             Toast.makeText(OPDSActivity.this, "Ищу серии", Toast.LENGTH_SHORT).show();
             sSearchType = SEARCH_TYPE_SEQUENCES;
-            if(mSearchView != null){
+            if (mSearchView != null) {
                 mSearchView.setVisibility(View.GONE);
             }
             showLoadWaitingDialog();
@@ -320,7 +310,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // добавлю отслеживание получения списка ссылок на скачивание
         LiveData<ArrayList<DownloadLink>> downloadLinks = App.getInstance().mDownloadLinksList;
         downloadLinks.observe(this, downloadLinks1 -> {
-            if (downloadLinks1 != null && downloadLinks1.size() > 0) {
+            if (downloadLinks1 != null && downloadLinks1.size() > 0 && mActivityVisible) {
                 if (downloadLinks1.size() == 1) {
                     // добавлю книгу в очередь скачивания
                     mMyViewModel.addToDownloadQueue(downloadLinks1.get(0));
@@ -420,7 +410,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void showReDownloadDialog() {
-        if(!OPDSActivity.this.isFinishing()){
+        if (!OPDSActivity.this.isFinishing()) {
             new AlertDialog.Builder(OPDSActivity.this)
                     .setTitle(R.string.re_download_dialog_header_message)
                     .setMessage(R.string.re_download_dialog_body_message)
@@ -435,6 +425,32 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void setupUI() {
+        if (MyPreferences.getInstance().isHardwareAcceleration()) {
+            // включу аппаратное ускорение
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        }
+
+        setContentView(R.layout.new_opds_activity);
+
+        // включу поддержку тулбара
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        // покажу гамбургер :)
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.setDrawerIndicatorEnabled(true);
+        toggle.syncState();
+
+        // скрою переход на OPDS
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(new NavigatorSelectHandler(this));
+        Menu menuNav = navigationView.getMenu();
+        MenuItem item = menuNav.findItem(R.id.goToOPDS);
+        item.setEnabled(false);
+        item.setChecked(true);
 
         // Обёртка просмотра
         mScrollView = findViewById(R.id.subscriptions_layout);
@@ -453,20 +469,19 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
         mRootView = findViewById(R.id.rootView);
 
-        if(mRootView != null){
+        if (mRootView != null) {
             // назначу фон
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mRootView.setBackground(getDrawable(R.drawable.back_2));
-            }
-            else{
+            } else {
                 mRootView.setBackground(getResources().getDrawable(R.drawable.back_2));
             }
         }
 
-        Switch massLoadSwitcher = findViewById(R.id.showAllSwitcher);
-        if (massLoadSwitcher != null) {
-            massLoadSwitcher.setChecked(App.getInstance().isDownloadAll());
-            massLoadSwitcher.setOnCheckedChangeListener((compoundButton, b) -> App.getInstance().switchDownloadAll());
+        mMassLoadSwitcher = findViewById(R.id.showAllSwitcher);
+        if (mMassLoadSwitcher != null) {
+            mMassLoadSwitcher.setChecked(App.getInstance().isDownloadAll());
+            mMassLoadSwitcher.setOnCheckedChangeListener((compoundButton, b) -> App.getInstance().switchDownloadAll());
         }
         mFab = findViewById(R.id.floatingMenu);
         mFab.setVisibility(View.GONE);
@@ -476,7 +491,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             downloadAllButton.setOnClickListener(view -> {
                 Log.d("surprise", "OPDSActivity onClick initiate download all");
                 String favoriteFormat = App.getInstance().getFavoriteMime();
-                if (favoriteFormat != null) {
+                if (favoriteFormat != null && !favoriteFormat.isEmpty()) {
                     downloadAllBooks();
                 } else {
                     // покажу диалог выбора предпочтительнго типа скачивания
@@ -497,7 +512,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         if (downloadUnloadedButton != null) {
             downloadUnloadedButton.setOnClickListener(view -> {
                 String favoriteFormat = App.getInstance().getFavoriteMime();
-                if (favoriteFormat != null) {
+                if (favoriteFormat != null && !favoriteFormat.isEmpty()) {
                     downloadUnloaded();
                 } else {
                     // покажу диалог выбора предпочтительнго типа скачивания
@@ -518,7 +533,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         if (downloadSelectButton != null) {
             downloadSelectButton.setOnClickListener(view -> {
                 String favoriteFormat = App.getInstance().getFavoriteMime();
-                if (favoriteFormat != null) {
+                if (favoriteFormat != null && !favoriteFormat.isEmpty()) {
                     showDownloadSelectedDialog();
                 } else {
                     // покажу диалог выбора предпочтительнго типа скачивания
@@ -536,6 +551,15 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 mFab.close(true);
             });
         }
+        showChangesList();
+    }
+
+    private void showChangesList() {
+        // покажу список изменений, если он ещё не показан для этой версии
+        if(MyPreferences.getInstance().isShowChanges()){
+            new ChangelogDialog.Builder(this).build().show();
+            MyPreferences.getInstance().setChangesViewed();
+        }
     }
 
     private void downloadUnloaded() {
@@ -545,7 +569,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
     private void showDownloadSelectedDialog() {
         // добавлю книги в список для загрузки
-        if(mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter){
+        if (mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
             // получу названия книг
             ArrayList<FoundedBook> books = ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).getItems();
             if (books != null && books.size() > 0) {
@@ -570,10 +594,10 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                             }
                         })
                         .create();
-                if(!OPDSActivity.this.isFinishing()) {
+                if (!OPDSActivity.this.isFinishing()) {
                     mDownloadSelectedDialog.show();
                 }
-        }
+            }
         } else {
             Toast.makeText(this, R.string.books_not_found_message, Toast.LENGTH_SHORT).show();
         }
@@ -617,7 +641,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         // отслеживание нового поиска
         sNewSearch.observe(this, aBoolean -> {
             // если есть адаптер и это не адаптер с книгами- сброшу его значение
-            if(aBoolean && mResultsRecycler.getAdapter() instanceof MyAdapterInterface){
+            if (aBoolean && mResultsRecycler.getAdapter() instanceof MyAdapterInterface) {
                 ((MyAdapterInterface) mResultsRecycler.getAdapter()).clearList();
             }
         });
@@ -644,6 +668,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             if (downloadedBookId != null && mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
                 ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).bookDownloaded(downloadedBookId);
             }
+            // отмечу в книгах для закачки, что книга закачана
+
         });
 
         // отслеживание отображения обложки книги
@@ -756,13 +782,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         });
 
-/*        FoundedBooksListAdapter adapter = new FoundedBooksListAdapter();
-        sLiveBooksFound.observe(this, list -> {
-            adapter.submitList(list);
-            mResultsRecycler.setAdapter(adapter);
-        });*/
-
-
         // добавлю отслеживание показа информации о книге
         LiveData<FoundedBook> selectedBook = App.getInstance().mSelectedBook;
         selectedBook.observe(this, book -> {
@@ -774,7 +793,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                         .setCancelable(true)
                         .setPositiveButton(android.R.string.ok, null)
                         .create();
-                if(!OPDSActivity.this.isFinishing()) {
+                if (!OPDSActivity.this.isFinishing()) {
                     BookInfoDialog.show();
                 }
             }
@@ -805,7 +824,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     }
                 });
                 mBookTypeDialog = dialogBuilder.create();
-                if(!OPDSActivity.this.isFinishing()) {
+                if (!OPDSActivity.this.isFinishing()) {
                     mBookTypeDialog.show();
                 }
             }
@@ -883,7 +902,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void showPreview(FoundedBook foundedBook) {
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             Log.d("surprise", "OPDSActivity showPreview: preview url is " + foundedBook.previewUrl);
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             LayoutInflater inflater = getLayoutInflater();
@@ -957,7 +976,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
         // покажу список выбора серии
         mSelectSequencesDialog.setItems(sequencesList.toArray(new String[0]), (dialogInterface, i) -> App.getInstance().mSelectedSequence.postValue(sequences.get(i)));
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             mSelectSequencesDialog.show();
         }
     }
@@ -997,14 +1016,16 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             mCoverPreviewDialog.dismiss();
             mCoverPreviewDialog = null;
         }
+        mActivityVisible = false;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(mResultsRecycler != null && mResultsRecycler.getAdapter() instanceof MyAdapterInterface){
+        if (mResultsRecycler != null && mResultsRecycler.getAdapter() instanceof MyAdapterInterface) {
             mResultsRecycler.getAdapter().notifyDataSetChanged();
         }
+        mActivityVisible = true;
     }
 
     @Override
@@ -1055,6 +1076,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.odps_menu, menu);
 
+        // включу отображение иконок в раскрывающемся меню
+        if (menu instanceof MenuBuilder) {
+            MenuBuilder m = (MenuBuilder) menu;
+            //noinspection RestrictedApi
+            m.setOptionalIconsVisible(true);
+        }
+
         // добавлю обработку поиска
         MenuItem searchMenuItem = menu.findItem(R.id.action_search);
         mSearchView = (SearchView) searchMenuItem.getActionView();
@@ -1077,11 +1105,11 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             });
 
             mSearchAutoComplete = mSearchView.findViewById(R.id.search_src_text);
+            mSearchAutoComplete.setTextColor(Color.WHITE);
             mSearchAutoComplete.setDropDownBackgroundResource(R.color.background_color);
             //mSearchAutoComplete.setDropDownAnchor(R.id.action_search);
             mSearchAutoComplete.setThreshold(0);
             mSearchAutoComplete.setDropDownHeight(WRAP_CONTENT);
-            mSearchAutoComplete.setDropDownVerticalOffset(5);
 
             mSearchAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, autocompleteStrings);
 
@@ -1091,36 +1119,25 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         MenuItem nightModeSwitcher = menu.findItem(R.id.menuUseDarkMode);
         nightModeSwitcher.setChecked(mMyViewModel.getNightModeEnabled());
 
-        // обработаю переключатель проверки обновлений
-        MenuItem checkUpdatesSwitcher = menu.findItem(R.id.setUpdateCheck);
-        checkUpdatesSwitcher.setChecked(App.getInstance().isCheckUpdate());
+
+        // обработаю переключатель быстрой загрузки
+        MenuItem discardFavorite = menu.findItem(R.id.discardFavoriteType);
+        discardFavorite.setEnabled(App.getInstance().getFavoriteMime() != null);
+
+        // переключатель превью обложек
+        MenuItem myItem = menu.findItem(R.id.showPreviews);
+        myItem.setChecked(App.getInstance().isPreviews());
 
         // обработаю переключатель скрытия прочтённых книг
         MenuItem hideReadSwitcher = menu.findItem(R.id.hideReadSwitcher);
         hideReadSwitcher.setChecked(App.getInstance().isHideRead());
 
-        // обработаю переключатель быстрой загрузки
-        MenuItem discardFavorite = menu.findItem(R.id.discardFavoriteType);
-        discardFavorite.setEnabled(App.getInstance().getFavoriteMime() != null);
-        // обработаю переключатель загрузки в приоритетном формате
-        MenuItem myItem = menu.findItem(R.id.downloadOnlySelected);
-        myItem.setChecked(App.getInstance().isSaveOnlySelected());
-
-        // переключатель повторной загрузки
-        myItem = menu.findItem(R.id.doNotReDownload);
-        myItem.setChecked(App.getInstance().isReDownload());
-        // переключатель превью обложек
-        myItem = menu.findItem(R.id.showPreviews);
-        myItem.setChecked(App.getInstance().isPreviews());
-        // переключатель внешнего VPN
-        myItem = menu.findItem(R.id.menuUseExternalVpn);
-        myItem.setChecked(App.getInstance().isExternalVpn());
-
-        myItem = menu.findItem(R.id.autoCheck);
-        myItem.setChecked(MyPreferences.getInstance().isSubscriptionsAutoCheck());
-
         myItem = menu.findItem(R.id.hideDigests);
         myItem.setChecked(MyPreferences.getInstance().isDigestsHide());
+
+        myItem = menu.findItem(R.id.hideDownloadedSwitcher);
+        myItem.setChecked(MyPreferences.getInstance().isDownloadedHide());
+
         return true;
     }
 
@@ -1143,7 +1160,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             dialog.setTitle("Выберите тип сортировки")
                     .setItems(sortingOptions, (dialog1, which) -> sortList(which));
             // покажу список типов сортировки
-            if(!OPDSActivity.this.isFinishing()) {
+            if (!OPDSActivity.this.isFinishing()) {
                 dialog.show();
             }
         }
@@ -1184,25 +1201,8 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.buyCoffee:
-                makeDonate();
-                return true;
-            case R.id.goToTest:
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
-                startActivity(intent);
-            case R.id.showDownloadsSchedule:
-                intent = new Intent(this, ActivityBookDownloadSchedule.class);
-                startActivity(intent);
-                return true;
-            case R.id.setDownloadsFolder:
-                changeDownloadsFolder();
-                return true;
             case R.id.action_new:
                 showNewDialog();
-                return true;
-            case R.id.switchToWebView:
-                switchToWebView();
                 return true;
             case R.id.clearSearchHistory:
                 clearHistory();
@@ -1210,62 +1210,34 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.menuUseDarkMode:
                 mMyViewModel.switchNightMode();
                 new Handler().postDelayed(new ResetApp(), 100);
-            case R.id.setUpdateCheck:
-                App.getInstance().switchCheckUpdate();
-                invalidateOptionsMenu();
                 return true;
             case R.id.hideReadSwitcher:
                 App.getInstance().switchHideRead();
+                // скрою книги, если они есть
+                if (App.getInstance().isHideRead()) {
+                    Toast.makeText(OPDSActivity.this, "Скрываю прочитанные книги", Toast.LENGTH_SHORT).show();
+                    hideReadedBooks();
+                }
+                else{
+                    Toast.makeText(OPDSActivity.this, "Отображаю прочитанные книги", Toast.LENGTH_SHORT).show();
+                    showReadedBooks();
+                }
                 invalidateOptionsMenu();
                 return true;
             case R.id.action_sort_by:
                 selectSorting();
                 return true;
-            case R.id.subscribeForNew:
-                subscribe();
-                return true;
             case R.id.discardFavoriteType:
                 App.getInstance().discardFavoriteType();
                 Toast.makeText(this, "Выбранный тип загрузок сброшен", Toast.LENGTH_SHORT).show();
-                return true;
-            case R.id.reserveSettings:
-                Toast.makeText(this, "Начато резервирование настрек, после завершения вы получите уведомление.", Toast.LENGTH_LONG).show();
-                mMyViewModel.reserveSettings();
-                return true;
-            case R.id.restoreSettings:
-                restoreSettings();
-                return true;
-            case R.id.doNotReDownload:
-                App.getInstance().setReDownload(!App.getInstance().isReDownload());
-                invalidateOptionsMenu();
-                return true;
-            case R.id.downloadOnlySelected:
-                App.getInstance().setSaveOnlySelected(!App.getInstance().isSaveOnlySelected());
-                invalidateOptionsMenu();
                 return true;
             case R.id.showPreviews:
                 App.getInstance().switchShowPreviews();
                 invalidateOptionsMenu();
                 return true;
-            case R.id.menuUseExternalVpn:
-                handleUseExternalVpn();
-                return true;
             case R.id.switchLayout:
                 App.getInstance().switchLayout();
                 recreate();
-            case R.id.checkSubscribesNow:
-                mMyViewModel.checkSubscribes();
-                return true;
-            case R.id.fullCheckSubscribes:
-                mMyViewModel.fullCheckSubscribes();
-                return true;
-            case R.id.showSubscriptionsList:
-                startActivity(new Intent(this, SubscriptionsActivity.class));
-                return true;
-            case R.id.autoCheck:
-                mMyViewModel.switchSubscriptionsAutoCheck();
-                invalidateOptionsMenu();
-                return true;
             case R.id.hideDigests:
                 MyPreferences.getInstance().switchDigestsHide();
                 invalidateOptionsMenu();
@@ -1273,72 +1245,46 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     Toast.makeText(OPDSActivity.this, "Скрываю книги, у которых больше 3 авторов", Toast.LENGTH_SHORT).show();
                 }
                 return true;
+            case R.id.hideDownloadedSwitcher:
+                MyPreferences.getInstance().switchDownloadedHide();
+                invalidateOptionsMenu();
+                if (MyPreferences.getInstance().isDownloadedHide()) {
+                    Toast.makeText(OPDSActivity.this, "Скрываю ранее скачанные книги", Toast.LENGTH_SHORT).show();
+                    hideDownloadedBooks();
+                }
+                else{
+                    Toast.makeText(OPDSActivity.this, "Показываю ранее скачанные книги", Toast.LENGTH_SHORT).show();
+                    showDownloadedBooks();
+                }
+                return true;
 
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void makeDonate() {
-        String[] donateOptions = new String[]{"PayPal", "Yandex"};
-        // покажу диалог с выбором способа доната
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder
-                .setItems(
-                        donateOptions,
-                        (dialog, which) -> {
-                            if(which == 0){
-                                Intent intent = new Intent(Intent.ACTION_VIEW);
-                                intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
-                                startActivity(intent);
-                            }
-                            else{
-                                Intent intent = new Intent(Intent.ACTION_VIEW);
-                                intent.setData(Uri.parse("https://money.yandex.ru/to/41001269882689"));
-                                startActivity(intent);
-                            }
-                        }
-                )
-                .setTitle("Поддержка разработки");
-        builder.create().show();
+    private void showReadedBooks() {
+        if (mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
+            ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).showReaded(sBooksForDownload);
+        }
     }
-
-    private void handleUseExternalVpn() {
-        // если использовался внешний VPN- просто отключу его использование
-        if (App.getInstance().isExternalVpn()) {
-            App.getInstance().switchExternalVpnUse();
-            invalidateOptionsMenu();
-        } else {
-            // покажу диалог с объяснением последствий включения VPN
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder
-                    .setTitle("Использование внешнего VPN")
-                    .setMessage("Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно. Сделано для версий Android ниже 6.0, где могут быть проблемы с доступом, но может быть использовано по желанию на ваш страх и риск.")
-                    .setNegativeButton(R.string.cancel, null)
-                    .setPositiveButton(R.string.confirm, (dialogInterface, i) -> {
-                        App.getInstance().switchExternalVpnUse();
-                        invalidateOptionsMenu();
-                    });
-            if(!OPDSActivity.this.isFinishing()) {
-                dialogBuilder.create().show();
-            }
+    private void showDownloadedBooks() {
+        if (mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
+            ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).showDownloaded(sBooksForDownload);
         }
     }
 
-    private void restoreSettings() {
-        Toast.makeText(this, "Выберите сохранённый ранее файл с настройками.", Toast.LENGTH_LONG).show();
-        // открою окно выбота файла для восстановления
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("application/zip");
-        if (TransportUtils.intentCanBeHandled(intent)) {
-            startActivityForResult(intent, BACKUP_FILE_REQUEST_CODE);
-        } else {
-            Toast.makeText(this, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
+    private void hideReadedBooks() {
+        if (mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
+            ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).hideReaded();
         }
     }
 
-    private void subscribe() {
-        startActivity(new Intent(this, SubscribeActivity.class));
+    private void hideDownloadedBooks() {
+        if (mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
+            ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).hideDownloaded();
+        }
     }
+
 
     private void clearHistory() {
         mMyViewModel.clearHistory();
@@ -1346,15 +1292,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         mSearchAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, autocompleteStrings);
         mSearchAutoComplete.setAdapter(mSearchAdapter);
         Toast.makeText(this, "Автозаполнение сброшено", Toast.LENGTH_SHORT).show();
-    }
-
-    private void switchToWebView() {
-        // переключу отображение на WebView, запущу webview вид и завершу активность
-        App.getInstance().setView(App.VIEW_WEB);
-        Intent intent = new Intent(this, WebViewActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
-        finish();
     }
 
     private void downloadAllBooks() {
@@ -1395,7 +1332,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 .setView(view);
         mSelectBookTypeDialog = dialogBuilder.create();
         // покажу диалог с выбором предпочтительного формата
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             mSelectBookTypeDialog.show();
         }
     }
@@ -1423,13 +1360,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     .build();
         }
         //mMultiplyDownloadDialog.setMessage("Считаю количество книг для скачивания");
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             mMultiplyDownloadDialog.show();
         }
     }
 
     private void showNewDialog() {
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             String[] newCategory = new String[]{"Все новинки", "Новые книги по жанрам", "Новые книги по авторам", "Новые книги по сериям"};
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.showNewDialogTitle)
@@ -1456,14 +1393,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
     }
 
-    private void changeDownloadsFolder() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_CODE);
-        } else {
-            Intent intent = new Intent(this, FolderPicker.class);
-            startActivityForResult(intent, READ_REQUEST_CODE);
-        }
-    }
 
     @Override
     public boolean onQueryTextSubmit(String s) {
@@ -1500,6 +1429,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
     private void doSearch(String s) {
         mFab.setVisibility(View.GONE);
         if (s != null && !s.isEmpty()) {
+            mSearchView.onActionViewCollapsed();
             // сохраню последнюю загруженную страницу
             MyPreferences.getInstance().saveLastLoadedPage(s);
             // очищу историю поиска и положу туда начальное значение
@@ -1537,7 +1467,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     })
                     .build();
         }
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             mShowLoadDialog.show();
         }
 
@@ -1554,7 +1484,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             ;
             mSelectAuthorViewDialog = dialogBuilder.create();
         }
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             mSelectAuthorViewDialog.show();
         }
     }
@@ -1580,7 +1510,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
             mSelectedAuthor = authors.get(i);
             showAuthorViewSelect();
         });
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             mSelectAuthorsDialog.show();
         }
     }
@@ -1638,7 +1568,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                     .setCancelable(false);
             mTorRestartDialog = dialogBuilder.create();
         }
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             mTorRestartDialog.show();
         }
     }
@@ -1728,7 +1658,6 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
                 // запомню выбор формата
                 Toast.makeText(OPDSActivity.this, "Предпочтительный формат для скачивания сохранён (" + MimeTypes.getFullMime(linksArray[i]) + "). Вы можете сбросить его в настройки +> разное.", Toast.LENGTH_LONG).show();
                 App.getInstance().saveFavoriteMime(MimeTypes.getFullMime(linksArray[i]));
-                Log.d("surprise", "OPDSActivity onClick: saved format is " + App.getInstance().getFavoriteMime());
             }
             switcher = dialog.findViewById(R.id.save_only_selected);
             App.getInstance().setSaveOnlySelected(switcher.isChecked());
@@ -1753,7 +1682,7 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         })
                 .setView(view);
         AlertDialog dialog = dialogBuilder.create();
-        if(!OPDSActivity.this.isFinishing()) {
+        if (!OPDSActivity.this.isFinishing()) {
             dialog.show();
         }
     }
@@ -1771,54 +1700,12 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
-                    Uri treeUri = data.getData();
-                    if (treeUri != null) {
-                        // проверю наличие файла
-                        DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
-                        if (dl != null && dl.isDirectory()) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                            }
-                            App.getInstance().setDownloadDir(treeUri);
-                            Toast.makeText(this, getText(R.string.download_folder_changed_message_new), Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }
-            }
-        } else if (requestCode == READ_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (data != null && data.getExtras() != null) {
-                    String folderLocation = data.getExtras().getString("data");
-                    if (folderLocation != null) {
-                        File destination = new File(folderLocation);
-                        if (destination.exists()) {
-                            App.getInstance().setDownloadDir(Uri.parse(folderLocation));
-                            Toast.makeText(this, getText(R.string.download_folder_changed_message) + folderLocation, Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }
-            }
-        } else if (requestCode == START_TOR) {
+        if (requestCode == START_TOR) {
             // перезагружу страницу
             String lastUrl = App.getInstance().getLastHistoryElement();
             if (lastUrl != null && !lastUrl.isEmpty()) {
                 showLoadWaitingDialog();
                 mMyViewModel.request(lastUrl);
-            }
-        } else if (requestCode == BACKUP_FILE_REQUEST_CODE) {
-            // выбран файл, вероятно с бекапом
-            if (resultCode == Activity.RESULT_OK) {
-                Uri uri;
-                if (data != null) {
-                    uri = data.getData();
-                    if (uri != null)
-                        mMyViewModel.restore(uri);
-                    Toast.makeText(OPDSActivity.this, "Настройки приложения восстановлены", Toast.LENGTH_SHORT).show();
-                }
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -1840,4 +1727,13 @@ public class OPDSActivity extends AppCompatActivity implements SearchView.OnQuer
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
 }

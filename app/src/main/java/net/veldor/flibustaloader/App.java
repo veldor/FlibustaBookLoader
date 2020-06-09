@@ -66,7 +66,7 @@ public class App extends Application {
     private static final String PREFERENCE_LOAD_ALL = "load all";
     private static final String PREFERENCE_VIEW = "view";
     private static final String PREFERENCE_LAST_CHECKED_BOOK = "last_checked_book";
-    private static final String PREFERENCE_FAVORITE_MIME = "favorite_mime";
+    private static final String PREFERENCE_FAVORITE_MIME = "favorite format";
     private static final String PREFERENCE_SAVE_ONLY_SELECTED = "save only selected";
     private static final String PREFERENCE_RE_DOWNLOAD = "re download";
     private static final String PREFERENCE_PREVIEWS = "cover_previews_show";
@@ -294,10 +294,6 @@ public class App extends Application {
         return mSharedPreferences.getBoolean(PREFERENCE_CHECK_UPDATES, true);
     }
 
-    public void switchCheckUpdate() {
-        mSharedPreferences.edit().putBoolean(PREFERENCE_CHECK_UPDATES, !isCheckUpdate()).apply();
-    }
-
     public boolean isHideRead() {
         return mSharedPreferences.getBoolean(PREFERENCE_HIDE_READ, false);
     }
@@ -362,7 +358,11 @@ public class App extends Application {
     }
 
     public String getFavoriteMime() {
-        return (mSharedPreferences.getString(PREFERENCE_FAVORITE_MIME, null));
+        String favoriteFormat = mSharedPreferences.getString(PREFERENCE_FAVORITE_MIME, null);
+        if(favoriteFormat == null || favoriteFormat.isEmpty()){
+            return null;
+        }
+        return favoriteFormat;
     }
 
     public void setSaveOnlySelected(boolean checked) {

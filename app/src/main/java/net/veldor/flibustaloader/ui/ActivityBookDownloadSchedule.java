@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -10,13 +11,18 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkInfo;
+
+import com.google.android.material.navigation.NavigationView;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
@@ -41,15 +47,9 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        if(MyPreferences.getInstance().isHardwareAcceleration()){
-            // проверю аппаратное ускорение
-            getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
-        }
-        MyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
         setupUI();
+
+        MyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         observeChanges();
     }
@@ -92,12 +92,39 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
 
 
     private void setupUI() {
+
+        if (MyPreferences.getInstance().isHardwareAcceleration()) {
+            // включу аппаратное ускорение
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        }
+
+        setContentView(R.layout.new_download_schedule_activity);
+
+        // включу поддержку тулбара
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        // покажу гамбургер :)
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.setDrawerIndicatorEnabled(true);
+        toggle.syncState();
+
+        // скрою переход на данное активити
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(new NavigatorSelectHandler(this));
+        Menu menuNav = navigationView.getMenu();
+        MenuItem item = menuNav.findItem(R.id.goToDownloadsList);
+        item.setEnabled(false);
+        item.setChecked(true);
+
         LiveData<WorkInfo> statusContainer = App.getInstance().mDownloadAllWork;
 
         // проверю, есть ли активный процесс загрузки
         boolean noActiveDownload = DownloadBooksWorker.noActiveDownloadProcess();
 
-        setContentView(R.layout.activity_download_schedule);
         // активирую кнопку возвращения к предыдущему окну
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -184,5 +211,15 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
             startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 }

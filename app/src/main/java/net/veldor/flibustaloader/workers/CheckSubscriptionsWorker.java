@@ -20,6 +20,7 @@ import net.veldor.flibustaloader.parsers.SubscriptionsParser;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
 import net.veldor.flibustaloader.utils.SubscribesHandler;
+import net.veldor.flibustaloader.view_models.SubscriptionsViewModel;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -41,7 +42,6 @@ public class CheckSubscriptionsWorker extends Worker {
     public static final String CHECK_SUBSCRIBES = "check subscribes";
     public static final String FULL_CHECK = "full check";
     public static final String PERIODIC_CHECK_TAG = "periodic check subscriptions";
-    public static String sNextPage;
     private Notificator mNotifier;
     private String mNextPageLink;
     private ArrayList<SubscriptionItem> mSubscribes;
@@ -128,6 +128,8 @@ public class CheckSubscriptionsWorker extends Worker {
             // сохраню последнюю проверенную книгу
             App.getInstance().setLastCheckedBook(mLastCheckedBookId);
         }
+        // оповещу об окончании процесса загрузки подписок
+        SubscriptionsViewModel.sSubscriptionsChecked.postValue(true);
         return Result.success();
     }
 

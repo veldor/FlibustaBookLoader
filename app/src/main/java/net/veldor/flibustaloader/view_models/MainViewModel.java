@@ -1,9 +1,7 @@
 package net.veldor.flibustaloader.view_models;
 
 import android.app.Application;
-import android.net.Uri;
 import android.util.SparseBooleanArray;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -11,7 +9,6 @@ import androidx.lifecycle.LiveData;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
@@ -19,29 +16,19 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
-import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.SubscriptionItem;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
 import net.veldor.flibustaloader.utils.MyFileReader;
-import net.veldor.flibustaloader.utils.MyPreferences;
-import net.veldor.flibustaloader.utils.SubscribesHandler;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker;
-import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
-import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
-import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 import net.veldor.flibustaloader.workers.SearchWorker;
 
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import static net.veldor.flibustaloader.workers.CheckSubscriptionsWorker.PERIODIC_CHECK_TAG;
 
 public class MainViewModel extends AndroidViewModel {
     private static final String ADD_TO_DOWNLOAD_QUEUE_ACTION = "add to download queue";
@@ -104,20 +91,6 @@ public class MainViewModel extends AndroidViewModel {
         MyFileReader.clearAutocomplete();
     }
 
-    public void reserveSettings(){
-        // запущу рабочего, сохраняющего базу данных прочитанного и скачанного в XML
-        OneTimeWorkRequest reserveWorker = new OneTimeWorkRequest.Builder(ReserveSettingsWorker.class).build();
-        WorkManager.getInstance(App.getInstance()).enqueue(reserveWorker);
-    }
-
-    public void restore(Uri uri) {
-        Data inputData = new Data.Builder()
-                .putString(RestoreSettingsWorker.URI, uri.toString())
-                .build();
-        OneTimeWorkRequest restoreWorker = new OneTimeWorkRequest.Builder(RestoreSettingsWorker.class).setInputData(inputData).build();
-        WorkManager.getInstance(App.getInstance()).enqueue(restoreWorker);
-    }
-
     public LiveData<WorkInfo> downloadSelected(SparseBooleanArray ids) {
         App.getInstance().mDownloadSelectedBooks = ids;
         OneTimeWorkRequest downloadSelected = new OneTimeWorkRequest.Builder(AddBooksToDownloadQueueWorker.class).addTag(ADD_TO_DOWNLOAD_QUEUE_ACTION).build();
@@ -157,50 +130,5 @@ public class MainViewModel extends AndroidViewModel {
         OneTimeWorkRequest searchWorkRequest = new OneTimeWorkRequest.Builder(SearchWorker.class).addTag(SearchWorker.WORK_TAG).setInputData(inputData).build();
         WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(SearchWorker.WORK_TAG, ExistingWorkPolicy.REPLACE, searchWorkRequest);
         return searchWorkRequest.getId();
-    }
-
-    public void checkSubscribes() {
-        // проверю, подписан ли я на новинки
-        ArrayList<SubscriptionItem> subscribes = SubscribesHandler.getAllSubscribes();
-        if(subscribes.size() > 0){
-            // запущу рабочего, который проверит все новинки
-            OneTimeWorkRequest checkSubscribes = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).addTag(CheckSubscriptionsWorker.CHECK_SUBSCRIBES).build();
-            WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(CheckSubscriptionsWorker.CHECK_SUBSCRIBES, ExistingWorkPolicy.REPLACE, checkSubscribes);
-        }
-        else {
-            Toast.makeText(App.getInstance(), App.getInstance().getString(R.string.not_found_subscribes_message), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public void fullCheckSubscribes() {
-        ArrayList<SubscriptionItem> subscribes = SubscribesHandler.getAllSubscribes();
-        if(subscribes.size() > 0){
-            Data inputData = new Data.Builder()
-                    .putBoolean(CheckSubscriptionsWorker.FULL_CHECK, true)
-                    .build();
-            // запущу рабочего, который проверит все новинки
-            OneTimeWorkRequest checkSubscribes = new OneTimeWorkRequest.Builder(CheckSubscriptionsWorker.class).setInputData(inputData).addTag(CheckSubscriptionsWorker.CHECK_SUBSCRIBES).build();
-            WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(CheckSubscriptionsWorker.CHECK_SUBSCRIBES, ExistingWorkPolicy.REPLACE, checkSubscribes);
-        }
-        else {
-            Toast.makeText(App.getInstance(), App.getInstance().getString(R.string.not_found_subscribes_message), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public void switchSubscriptionsAutoCheck() {
-        MyPreferences.getInstance().switchSubscriptionsAutoCheck();
-        if(MyPreferences.getInstance().isSubscriptionsAutoCheck()){
-            Toast.makeText(App.getInstance(), App.getInstance().getString(R.string.autocheck_enabled_message),Toast.LENGTH_SHORT).show();
-            // Запланирую проверку подписок
-            PeriodicWorkRequest.Builder startPeriodicalPlanner = new PeriodicWorkRequest.Builder(CheckSubscriptionsWorker.class, 24, TimeUnit.HOURS).addTag(PERIODIC_CHECK_TAG);
-            WorkManager wm = WorkManager.getInstance(App.getInstance());
-            wm.cancelAllWorkByTag(PERIODIC_CHECK_TAG);
-            wm.enqueue(startPeriodicalPlanner.build());
-        }
-        else{
-            Toast.makeText(App.getInstance(), App.getInstance().getString(R.string.autocheck_disabled_message),Toast.LENGTH_SHORT).show();
-            WorkManager wm = WorkManager.getInstance(App.getInstance());
-            wm.cancelAllWorkByTag(PERIODIC_CHECK_TAG);
-        }
     }
 }

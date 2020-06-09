@@ -54,6 +54,7 @@ public class CheckUpdateWorker extends Worker {
                         if(!lastVersion.equals(currentVersion)){
                             // версии отличаются
                             Updater.newVersion.postValue(true);
+                            Log.d("surprise", "CheckUpdateWorker handleResponse 57: have new version");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

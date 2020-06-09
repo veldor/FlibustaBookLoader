@@ -21,7 +21,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 class BooksParser {
-    public static ArrayList parse(NodeList entries, XPath xPath) throws XPathExpressionException {
+    public static ArrayList<FoundedBook> parse(NodeList entries, XPath xPath) throws XPathExpressionException {
         ArrayList<FoundedBook> result = new ArrayList<>();
         boolean isLoadPreviews = App.getInstance().isPreviews();
         // обработаю найденные книги
@@ -41,6 +41,7 @@ class BooksParser {
         FoundedSequence sequence;
 
         boolean hideRead = App.getInstance().isHideRead();
+        boolean hideDownloaded = MyPreferences.getInstance().isDownloadedHide();
         boolean hideDigests = MyPreferences.getInstance().isDigestsHide();
 
         int entriesLength = entries.getLength();
@@ -55,7 +56,7 @@ class BooksParser {
             AppDatabase db = App.getInstance().mDatabase;
             book.read = db.readedBooksDao().getBookById(book.id) != null;
             book.downloaded = db.downloadedBooksDao().getBookById(book.id) != null;
-            if (book.read && hideRead) {
+            if ((book.read && hideRead) || (book.downloaded && hideDownloaded)) {
                 counter++;
                 continue;
             }

@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader.ui;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,20 +24,25 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.SearchView;
-import androidx.documentfile.provider.DocumentFile;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
 import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
-import net.veldor.flibustaloader.SubscribeActivity;
+import net.veldor.flibustaloader.dialogs.ChangelogDialog;
 import net.veldor.flibustaloader.dialogs.GifDialog;
 import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.XMLHandler;
@@ -46,19 +50,14 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
-
-import lib.folderpicker.FolderPicker;
 
 import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 
 public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
 
     public static final String CALLED = "activity_called";
-    private static final int READ_REQUEST_CODE = 5;
-    private static final int REQUEST_CODE = 7;
     private MyWebView mWebView;
     private MainViewModel mMyViewModel;
     private WebViewActivity.BookLoadingReceiver mPageLoadReceiver;
@@ -77,18 +76,7 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        if(MyPreferences.getInstance().isHardwareAcceleration()){
-            // проверю аппаратное ускорение
-            getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
-        }
-
-        if (App.getInstance().getNightMode()) {
-            setTheme(R.style.NightTheme);
-        }
-        setContentView(R.layout.activity_web_view);
+        setupUI();
 
         // проверю, не запущено ли приложение с помощью интента
         if (getIntent().getData() != null) {//check if intent is not null
@@ -128,6 +116,44 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
 
         // создам тестовый массив строк для автозаполнения
         autocompleteStrings = mMyViewModel.getSearchAutocomplete();
+    }
+
+    private void setupUI() {
+        if (MyPreferences.getInstance().isHardwareAcceleration()) {
+            // включу аппаратное ускорение
+            getWindow().setFlags(
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+        }
+
+        setContentView(R.layout.new_webview_activity);
+
+        // включу поддержку тулбара
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        // покажу гамбургер :)
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.setDrawerIndicatorEnabled(true);
+        toggle.syncState();
+
+        // скрою переход на WebView
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(new NavigatorSelectHandler(this));
+        Menu menuNav=navigationView.getMenu();
+        MenuItem item = menuNav.findItem(R.id.goToWebView);
+        item.setEnabled(false);
+        item.setChecked(true);
+        showChangesList();
+    }
+
+    private void showChangesList() {
+        // покажу список изменений, если он ещё не показан для этой версии
+        if(MyPreferences.getInstance().isShowChanges()){
+            new ChangelogDialog.Builder(this).build().show();
+            MyPreferences.getInstance().setChangesViewed();
+        }
     }
 
 
@@ -190,6 +216,12 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
 
         getMenuInflater().inflate(R.menu.main_menu, menu);
 
+        if(menu instanceof MenuBuilder){
+            MenuBuilder m = (MenuBuilder) menu;
+            //noinspection RestrictedApi
+            m.setOptionalIconsVisible(true);
+        }
+
         // добавлю обработку поиска
         MenuItem searchMenuItem = menu.findItem(R.id.action_search);
         mSearchView = (SearchView) searchMenuItem.getActionView();
@@ -239,15 +271,8 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                 menu.findItem(R.id.menuUseFatFastStyle).setChecked(true);
                 break;
         }
-        MenuItem nightModeSwitcher = menu.findItem(R.id.menuUseDarkMode);
-        nightModeSwitcher.setChecked(mMyViewModel.getNightModeEnabled());
-
-        // обработаю переключатель проверки обновлений
-        MenuItem checkUpdatesSwitcher = menu.findItem(R.id.setUpdateCheck);
-        checkUpdatesSwitcher.setChecked(App.getInstance().isCheckUpdate());
-        // переключатель внешнего VPN
-        MenuItem myItem = menu.findItem(R.id.menuUseExternalVpn);
-        myItem.setChecked(App.getInstance().isExternalVpn());
+        MenuItem menuItem = menu.findItem(R.id.menuUseDarkMode);
+        menuItem.setChecked(mMyViewModel.getNightModeEnabled());
         return true;
     }
 
@@ -276,30 +301,8 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             case R.id.shareLink:
                 mMyViewModel.shareLink(mWebView);
                 return true;
-            case R.id.buyCoffee:
-                makeDonate();
-                return true;
-            case R.id.goToTest:
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
-                startActivity(intent);
-                return true;
-            case R.id.setDownloadsFolder:
-                changeDownloadsFolder();
-                return true;
-            case R.id.switchToODPS:
-                switchToODPS();
-            case R.id.setUpdateCheck:
-                App.getInstance().switchCheckUpdate();
-                return true;
-            case R.id.subscribeForNew:
-                subscribe();
-                return true;
             case R.id.clearSearchHistory:
                 clearHistory();
-                return true;
-            case R.id.menuUseExternalVpn:
-                handleUseExternalVpn();
                 return true;
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
@@ -310,52 +313,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         return super.onOptionsItemSelected(item);
     }
 
-    private void makeDonate() {
-        String[] donateOptions = new String[]{"PayPal", "Yandex"};
-        // покажу диалог с выбором способа доната
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder
-                .setItems(
-                        donateOptions,
-                        (dialog, which) -> {
-                            if(which == 0){
-                                Intent intent = new Intent(Intent.ACTION_VIEW);
-                                intent.setData(Uri.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUGUWUF99QYG4&source=url"));
-                                startActivity(intent);
-                            }
-                            else{
-                                Intent intent = new Intent(Intent.ACTION_VIEW);
-                                intent.setData(Uri.parse("https://money.yandex.ru/to/41001269882689"));
-                                startActivity(intent);
-                            }
-                        }
-                )
-                .setTitle("Поддержка разработки");
-        builder.create().show();
-    }
-
-
-    private void handleUseExternalVpn() {
-        // если использовался внешний VPN- просто отключу его использование
-        if(App.getInstance().isExternalVpn()){
-            App.getInstance().switchExternalVpnUse();
-            invalidateOptionsMenu();
-        }
-        else{
-            // покажу диалог с объяснением последствий включения VPN
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder
-                    .setTitle("Использование внешнего VPN")
-                    .setMessage("Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно. Сделано для версий Android ниже 6.0, где могут быть проблемы с доступом, но может быть использовано по желанию на ваш страх и риск.")
-                    .setNegativeButton(R.string.cancel, null)
-                    .setPositiveButton(R.string.confirm, (dialogInterface, i) -> {
-                        App.getInstance().switchExternalVpnUse();
-                        invalidateOptionsMenu();
-                    });
-            dialogBuilder.create().show();
-        }
-    }
-
     private void clearHistory() {
         mMyViewModel.clearHistory();
         autocompleteStrings = new ArrayList<>();
@@ -364,61 +321,11 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         Toast.makeText(this, "Автозаполнение сброшено", Toast.LENGTH_SHORT).show();
     }
 
-    private void subscribe() {
-        startActivity(new Intent(this, SubscribeActivity.class));
-    }
-
-    private void switchToODPS() {
-        App.getInstance().setView(App.VIEW_ODPS);
-        startActivity(new Intent(this, OPDSActivity.class));
-        finish();
-    }
-
-    private void changeDownloadsFolder() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_CODE);
-        } else {
-            Intent intent = new Intent(this, FolderPicker.class);
-            startActivityForResult(intent, READ_REQUEST_CODE);
-        }
-    }
-
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
-                    Uri treeUri = data.getData();
-                    if (treeUri != null) {
-                        // проверю наличие файла
-                        DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
-                        if (dl != null && dl.isDirectory()) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                            }
-                            App.getInstance().setDownloadDir(treeUri);
-                        }
-                    }
-                }
-            }
-        } else if (requestCode == READ_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (data != null && data.getExtras() != null) {
-                    String folderLocation = data.getExtras().getString("data");
-                    File file = new File(folderLocation);
-                    if(file.isDirectory() && MyPreferences.getInstance().saveDownloadFolder(folderLocation)){
-                        Toast.makeText(this, "Папка сохранена!", Toast.LENGTH_SHORT).show();
-                    }
-                    else{
-                        Toast.makeText(this, "Не удалось сохранить папку, попробуйте ещё раз!", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-        }
-        else if (requestCode == START_TOR) {
+        if (requestCode == START_TOR) {
             // перезагружу страницу
             mWebView.setup();
             mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
@@ -426,7 +333,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
-
 
     @Override
     public boolean onQueryTextSubmit(String s) {
@@ -473,17 +379,15 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
                             // выйду из приложения
                             Log.d("surprise", "OPDSActivity onKeyDown exit");
                             this.finishAffinity();
-                            return true;
                         } else {
                             Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                             mConfirmExit = System.currentTimeMillis();
-                            return true;
                         }
                     } else {
                         Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                         mConfirmExit = System.currentTimeMillis();
-                        return true;
                     }
+                    return true;
                 }
                 return true;
             }
@@ -596,5 +500,15 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
 
     private void changeTitle(String s) {
             Objects.requireNonNull(getSupportActionBar()).setTitle(s);
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 }

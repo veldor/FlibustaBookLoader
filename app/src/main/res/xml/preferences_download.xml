@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <Preference
+        app:key="@string/pref_download_location"
+        app:title="@string/title_change_download_folder" />
+
+    <PreferenceCategory android:title="Настройки для OPDS">
+
+        <SwitchPreference
+            app:key="re download"
+            android:defaultValue="true"
+            android:summary="Если отключено- файлы, которые были загружены раньше не будут загружены повторно."
+            android:title="Повторная загрузка файлов" />
+
+        <SwitchPreference
+            app:key="save only selected"
+            android:defaultValue="false"
+            android:summary="Файлы будут скачаны в выбранном формате или пропущены"
+            android:summaryOff="Если файл недоступен в выбранном формате- он будет скачан в доступном"
+            android:title="Скачивать файлы только в выбранном формате" />
+
+        <DropDownPreference
+            app:key="favorite format"
+            android:title="@string/title_favorite_format_preference"
+            android:entries="@array/favorite_mime_names"
+            app:useSimpleSummaryProvider="true"
+            android:summary="Книги будут по возможности скачиваться в выбранном формате без запроса"
+            android:entryValues="@array/favorite_mime_types"/>
+
+    </PreferenceCategory>
+</PreferenceScreen>

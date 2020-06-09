@@ -15,12 +15,12 @@ import androidx.core.app.NotificationCompat;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ui.MainActivity;
 import net.veldor.flibustaloader.R;
-import net.veldor.flibustaloader.SubscriptionsActivity;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.receivers.BookActionReceiver;
 import net.veldor.flibustaloader.receivers.MiscActionsReceiver;
 import net.veldor.flibustaloader.ui.ActivityBookDownloadSchedule;
+import net.veldor.flibustaloader.ui.SubscriptionsActivity;
 import net.veldor.flibustaloader.utils.MimeTypes;
 
 import java.util.Locale;
@@ -163,6 +163,7 @@ public class Notificator {
 
     public void sendFoundSubscribesNotification() {
         Intent openSubscriptionsIntent = new Intent(mContext, SubscriptionsActivity.class);
+        openSubscriptionsIntent.putExtra(SubscriptionsActivity.START_FRAGMENT, SubscriptionsActivity.START_RESULTS);
         PendingIntent startMainPending = PendingIntent.getActivity(mContext, START_APP_CODE, openSubscriptionsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, SUBSCRIBES_CHANNEL_ID)

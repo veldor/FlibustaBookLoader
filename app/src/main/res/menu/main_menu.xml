@@ -13,19 +13,10 @@
         android:title="@string/go_home"
         yourapp:showAsAction="ifRoom"/>
     <item
-        android:id="@+id/switchToODPS"
-        android:title="@string/switch_to_opds_message"
-        yourapp:showAsAction="never"/>
-    <item
-        android:title="@string/connection_menu_title">
-        <menu>
-            <item
-                android:id="@+id/menuUseExternalVpn"
-                android:title="@string/use_externalVpnMessage"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-        </menu>
-    </item>
+        android:id="@+id/shareLink"
+        android:icon="@drawable/ic_share_white_24dp"
+        android:title="@string/share_link_message"
+        yourapp:showAsAction="ifRoom"/>
     <item
         android:title="@string/navigation"
         >
@@ -74,37 +65,7 @@
         </menu>
     </item>
     <item
-        android:id="@+id/shareLink"
-        android:icon="@drawable/ic_share_white_24dp"
-        android:title="@string/share_link_message"
-        yourapp:showAsAction="never"/>
-    <item
-        android:title="@string/miscellaneous">
-        <menu>
-            <item
-                android:id="@+id/setDownloadsFolder"
-                android:title="@string/set_downloads_folder"/>
-            <item
-                android:id="@+id/setUpdateCheck"
-                android:title="@string/set_update_check_message"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-        </menu>
-    </item>
-    <item
         android:id="@+id/clearSearchHistory"
         android:title="@string/clear_search_history_message"
-        yourapp:showAsAction="never"/>
-    <item
-        android:id="@+id/subscribeForNew"
-        android:title="@string/subscribe_message"
-        yourapp:showAsAction="never"/>
-    <item
-        android:id="@+id/goToTest"
-        android:title="@string/go_to_test_message"
-        yourapp:showAsAction="never"/>
-    <item
-        android:id="@+id/buyCoffee"
-        android:title="@string/buy_me_coffee"
         yourapp:showAsAction="never"/>
 </menu>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <Preference
+        app:key="@string/backup_settings"
+        app:title="@string/title_backup_settings"
+        app:icon="@drawable/ic_backup_black_24dp"
+        android:summary="@string/summary_backup_settings"/>
+    <Preference
+        app:key="@string/restore_settings"
+        app:title="@string/restore_settings_message"
+        android:summary="@string/summary_restore_settings"
+        app:icon="@drawable/ic_baseline_restore_black_24"/>
+</PreferenceScreen>

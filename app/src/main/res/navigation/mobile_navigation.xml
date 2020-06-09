@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@+id/navigation_subscribe">
+
+    <fragment
+        android:id="@+id/navigation_subscribe"
+        android:name="net.veldor.flibustaloader.ui.fragments.SubscriptionsFragment"
+        android:label="@string/title_subscribe"
+        tools:layout="@layout/fragment_subscribe" />
+
+    <fragment
+        android:id="@+id/navigation_subscribe_results"
+        android:name="net.veldor.flibustaloader.ui.fragments.SubscriptionsResultFragment"
+        android:label="@string/title_subscribe_results"
+        tools:layout="@layout/fragment_subscribe_results" />
+
+</navigation>

@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.adapters;
 
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.ui.OPDSActivity;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
@@ -112,14 +114,21 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
         for (FoundedBook f :
                 mBooks) {
             if (f != null && f.id.equals(bookId)) {
-                f.downloaded = true;
-                notifyItemChanged(mBooks.lastIndexOf(f));
+                if(MyPreferences.getInstance().isDownloadedHide()){
+                    mBooks.remove(f);
+                    notifyItemRemoved(mBooks.lastIndexOf(f));
+                }
+                else{
+                    f.downloaded = true;
+                    notifyItemChanged(mBooks.lastIndexOf(f));
+                }
                 break;
             }
         }
     }
 
     public void setBookReaded(FoundedBook book) {
+        book.read = true;
         if (mBooks.contains(book)) {
             int bookIndex = mBooks.lastIndexOf(book);
             // если выбрано скрытие прочитанных книг- удалю её
@@ -132,6 +141,35 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
         }
     }
 
+    public void hideReaded() {
+        ArrayList<FoundedBook> newList = new ArrayList<>();
+        // пройдусь по списку и удалю все прочитанные книги
+        if (mBooks.size() > 0) {
+            for (FoundedBook book : mBooks) {
+                if (!book.read) {
+                    newList.add(book);
+                }
+            }
+            mBooks = newList;
+            notifyDataSetChanged();
+        }
+    }
+
+
+    public void hideDownloaded() {
+        ArrayList<FoundedBook> newList = new ArrayList<>();
+        // пройдусь по списку и удалю все прочитанные книги
+        if (mBooks.size() > 0) {
+            for (FoundedBook book : mBooks) {
+                if (!book.downloaded) {
+                    newList.add(book);
+                }
+            }
+            mBooks = newList;
+            notifyDataSetChanged();
+        }
+    }
+
     public ArrayList<FoundedBook> getItems() {
         return mBooks;
     }
@@ -139,10 +177,20 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
     @Override
     public void clearList() {
         // удалю книги, если не было подгрузки результатов
-        if(App.getInstance().isDownloadAll()){
+        if (App.getInstance().isDownloadAll()) {
             mBooks = new ArrayList<>();
             notifyDataSetChanged();
         }
+    }
+
+    public void showReaded(ArrayList<FoundedBook> booksList) {
+        mBooks = booksList;
+        notifyDataSetChanged();
+    }
+
+    public void showDownloaded(ArrayList<FoundedBook> booksList) {
+        mBooks = booksList;
+        notifyDataSetChanged();
     }
 
 
@@ -180,11 +228,11 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
                     // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
                     if (mBook.downloadLinks.size() > 1) {
                         String savedMime = App.getInstance().getFavoriteMime();
-                        if (savedMime != null) {
+                        if (savedMime != null && !savedMime.isEmpty()) {
                             // проверю, нет ли в списке выбранного формата
                             for (DownloadLink dl : mBook.downloadLinks) {
                                 mCurrentLink = dl;
-                                if (dl.mime.equals(savedMime)) {
+                                if (dl.mime.contains(savedMime)) {
                                     ArrayList<DownloadLink> result = new ArrayList<>();
                                     result.add(mCurrentLink);
                                     App.getInstance().mDownloadLinksList.postValue(result);
@@ -233,7 +281,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             }
 
             ImageButton downloadedView = mRoot.findViewById(R.id.book_downloaded);
-            if(downloadedView != null){
+            if (downloadedView != null) {
                 downloadedView.setVisibility(View.INVISIBLE);
             }
 

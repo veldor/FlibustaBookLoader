@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/goToWebView"
+            android:icon="@drawable/ic_desktop_black_24"
+            android:title="@string/navigation_go_webview"/>
+        <item
+            android:id="@+id/goToOPDS"
+            android:icon="@drawable/ic_list_black_24"
+            android:title="@string/navigation_go_opds" />
+        <item
+            android:id="@+id/goToDownloadsList"
+            android:icon="@drawable/ic_cloud_download_black_24dp"
+            android:title="@string/navigation_go_downloads" />
+        <item
+            android:id="@+id/goToSubscriptions"
+            android:icon="@drawable/ic_baseline_fiber_new_black_24"
+            android:title="@string/navigation_go_subscriptions" />
+        <item
+            android:id="@+id/goToSettings"
+            android:icon="@drawable/ic_baseline_settings_black_24"
+            android:title="@string/navigation_go_settings" />
+    </group>
+
+    <item android:title="@string/actions">
+        <menu>
+            <item
+                android:id="@+id/testAppInvite"
+                android:icon="@drawable/ic_test_black_24"
+                android:title="@string/go_to_test_message" />
+            <item
+                android:id="@+id/buyCoffee"
+                android:icon="@drawable/ic_donate_black_24"
+                android:title="@string/buy_me_coffee" />
+        </menu>
+    </item>
+
+
+
+</menu>

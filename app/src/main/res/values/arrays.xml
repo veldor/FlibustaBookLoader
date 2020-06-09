@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="favorite_mime_names">
+        <item>Отсутствует</item>
+        <item>fb2</item>
+        <item>epub</item>
+        <item>mobi</item>
+        <item>rtf</item>
+        <item>txt</item>
+        <item>html</item>
+        <item>pdf</item>
+        <item>djvu</item>
+    </string-array>
+    <string-array name="favorite_mime_types">
+        <item/>
+        <item>fb2</item>
+        <item>epub</item>
+        <item>mobi</item>
+        <item>rtf</item>
+        <item>txt</item>
+        <item>html</item>
+        <item>pdf</item>
+        <item>djvu</item>
+    </string-array>
+</resources>

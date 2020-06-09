@@ -87,12 +87,12 @@ public class AddBooksToDownloadQueueWorker extends Worker {
             if (links.size() > 0) {
                 DownloadLink link = null;
                 DownloadLink fb2Link = null;
-                if (links.size() == 1 && links.get(0).mime.equals(preferredFormat)) {
+                if (links.size() == 1 && links.get(0).mime.contains(preferredFormat)) {
                     link = links.get(0);
                 } else {
                     int counter = 0;
                     while (counter < links.size()) {
-                        if (links.get(counter).mime.equals(preferredFormat)) {
+                        if (links.get(counter).mime.contains(preferredFormat)) {
                             link = links.get(counter);
                             break;
                         }

@@ -17,124 +17,42 @@
         android:icon="@drawable/ic_new_white_24dp"
         android:title="@string/show_last"
         yourapp:showAsAction="ifRoom" />
+
+        <item
+            android:id="@+id/menuUseDarkMode"
+            android:checkable="true"
+            android:title="@string/use_dark_mode"
+            yourapp:showAsAction="never" />
+        <item
+            android:id="@+id/switchLayout"
+            android:title="@string/switch_layout_message"
+            yourapp:showAsAction="never" />
+        <item
+            android:id="@+id/showPreviews"
+            android:checkable="true"
+            android:title="@string/show_previews"
+            yourapp:showAsAction="never" />
+        <item
+            android:id="@+id/hideDigests"
+            android:checkable="true"
+            android:title="@string/hide_digest_title"
+            yourapp:showAsAction="never" />
     <item
-        android:id="@+id/switchToWebView"
-        android:title="@string/switch_to_vebview_message"
-        yourapp:showAsAction="never"/>
+        android:id="@+id/hideReadSwitcher"
+        android:checkable="true"
+        android:title="@string/hide_read"
+        yourapp:showAsAction="never" />
     <item
-        android:title="@string/connection_menu_title">
-        <menu>
-            <item
-                android:id="@+id/menuUseExternalVpn"
-                android:title="@string/use_externalVpnMessage"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-        </menu>
-    </item>
+        android:id="@+id/hideDownloadedSwitcher"
+        android:checkable="true"
+        android:title="@string/hide_downloaded"
+        yourapp:showAsAction="never" />
+
     <item
-        android:title="@string/look"
-        >
-        <menu>
-            <item
-                android:id="@+id/menuUseDarkMode"
-                android:title="@string/use_dark_mode"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/switchLayout"
-                android:title="@string/switch_layout_message"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/hideReadSwitcher"
-                android:title="@string/hide_read"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/showPreviews"
-                android:title="@string/show_previews"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/hideDigests"
-                android:title="@string/hide_digest_title"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-        </menu>
-    </item>
+        android:id="@+id/discardFavoriteType"
+        android:title="@string/discard_favorite_type" />
     <item
-        android:title="@string/download_settings">
-        <menu>
-            <item
-                android:id="@+id/showDownloadsSchedule"
-                android:title="@string/show_downloads_schedule_message"/>
-            <item
-                android:id="@+id/discardFavoriteType"
-                android:title="@string/discard_favorite_type"/>
-            <item
-                android:id="@+id/downloadOnlySelected"
-                android:checkable="true"
-                android:title="@string/download_only_this_format"/>
-            <item
-                android:id="@+id/doNotReDownload"
-                android:checkable="true"
-                android:title="@string/do_not_re_download"/>
-        </menu>
-    </item>
-    <item
-        android:title="@string/subscribes">
-        <menu>
-            <item
-                android:id="@+id/subscribeForNew"
-                android:title="@string/subscribe_message"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/checkSubscribesNow"
-                android:title="@string/check_subscribes_label"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/fullCheckSubscribes"
-                android:title="@string/check_full_subscribes_label"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/showSubscriptionsList"
-                android:title="@string/show_subscriptions_list_label"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/autoCheck"
-                android:title="@string/subscriptions_auto_check_label"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-        </menu>
-    </item>
-    <item
-        android:title="@string/miscellaneous">
-        <menu>
-            <item
-                android:id="@+id/clearSearchHistory"
-                android:title="@string/clear_search_history_message"
-                yourapp:showAsAction="never"/>
-            <item
-                android:id="@+id/setDownloadsFolder"
-                android:title="@string/set_downloads_folder"/>
-            <item
-                android:id="@+id/reserveSettings"
-                android:title="@string/reserve_settings_message"/>
-            <item
-                android:id="@+id/restoreSettings"
-                android:title="@string/restore_settings_message"/>
-            <item
-                android:id="@+id/setUpdateCheck"
-                android:title="@string/set_update_check_message"
-                android:checkable="true"
-                yourapp:showAsAction="never"/>
-        </menu>
-    </item>
-    <item
-        android:id="@+id/goToTest"
-        android:title="@string/go_to_test_message"
-        yourapp:showAsAction="never"/>
-    <item
-        android:id="@+id/buyCoffee"
-        android:title="@string/buy_me_coffee"
-        yourapp:showAsAction="never"/>
+        android:id="@+id/clearSearchHistory"
+        android:title="@string/clear_search_history_message"
+        yourapp:showAsAction="never" />
 </menu>

@@ -61,7 +61,7 @@
     <string name="download_folder_changed_message_new">Download folder changed</string>
     <string name="subscribes_channel">subscribes</string>
     <string name="subscribe_description">Subscribe notifications</string>
-    <string name="discard_favorite_type">Сбросить формат загрузок</string>
+    <string name="discard_favorite_type">Discard favorite type</string>
     <string name="book_readed_message">Book readed</string>
     <string name="book_downloaded_message">Book downloaded</string>
     <string name="download_only_this_format">Download only this format</string>
@@ -146,4 +146,34 @@
     <string name="books_download_channel_description">Books download progress message</string>
     <string name="use_hardware_acceleration_title">Use hardware acceleration</string>
     <string name="hide_digest_title">Hide digests</string>
+    <string name="navigation_header_image" translatable="false">navigationHeaderImage</string>
+    <string name="navigation_go_webview">WebView mode</string>
+    <string name="navigation_go_opds">OPDS mode</string>
+    <string name="navigation_drawer_open" translatable="false">drawer_open</string>
+    <string name="navigation_drawer_close" translatable="false">drawer_close</string>
+    <string name="actions">Actions</string>
+    <string name="navigation_go_settings">Settings</string>
+    <string name="download_preferences">Download preferences</string>
+    <string name="title_change_download_folder">Change download folder</string>
+    <string name="pref_download_location" translatable="false">download_location_dir</string>
+    <string name="navigation_go_downloads">DownloadSchedule</string>
+    <string name="reserve_preferences">Preferences backup</string>
+    <string name="backup_settings" translatable="false">backup settings</string>
+    <string name="title_backup_settings">Backup settings</string>
+    <string name="summary_backup_settings">Backup app settings and lists of downloaded and readed books and subscribes</string>
+    <string name="restore_settings" translatable="false">restore settings</string>
+    <string name="summary_restore_settings">Restore previously backuped settings</string>
+    <string name="check_updates">Check updates</string>
+    <string name="summary_check_updates">Automatic check updates when app starts</string>
+    <string name="update_preferences">Update preferences</string>
+    <string name="connection_preferences">Connection settings</string>
+    <string name="title_subscribe_results">Results</string>
+    <string name="title_subscribe">Subscribe</string>
+    <string name="navigation_go_subscriptions">Subscriptions</string>
+    <string name="title_switcher_subscribes_check_automatically">Check automatically</string>
+    <string name="label_books_on_subscribes_not_found">Books on subscribes not found</string>
+    <string name="title_favorite_format_preference">Favorite format</string>
+    <string name="hide_downloaded">Hide downloaded</string>
+    <string name="title_check_update_now">Check update now</string>
+    <string name="pref_check_update_now" translatable="false">check update now</string>
 </resources>

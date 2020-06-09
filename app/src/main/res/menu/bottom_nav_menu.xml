@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_subscribe"
+        android:icon="@drawable/ic_list_black_24"
+        android:title="@string/title_subscribe" />
+
+    <item
+        android:id="@+id/navigation_subscribe_results"
+        android:icon="@drawable/ic_book_black_24dp"
+        android:title="@string/title_subscribe_results" />
+</menu>

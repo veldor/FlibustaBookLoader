@@ -3,6 +3,9 @@ package net.veldor.flibustaloader.utils;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.util.Log;
+
+import androidx.documentfile.provider.DocumentFile;
 
 import net.veldor.flibustaloader.App;
 
@@ -16,6 +19,8 @@ public class MyPreferences {
     private static final String LAST_SEARCH_URL_PREF = "last load url";
     private static final String HW_ACCELERATION_PREF = "hardware acceleration";
     private static final String HIDE_DIGESTS_PREF = "hide digests";
+    private static final String HIDE_DOWNLOADED_PREF = "hide downloaded";
+    private static final String LAST_CHANGELOG_VERSION_PREF = "last changelog version";
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
@@ -59,6 +64,7 @@ public class MyPreferences {
 
     public File getDownloadDir(){
         String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, null);
+        Log.d("surprise", "MyPreferences getDownloadDir 62: dir is " + PREFERENCE_DOWNLOAD_LOCATION);
         if(download_location != null){
             File file = new File(download_location);
             if(file.isDirectory()){
@@ -91,5 +97,40 @@ public class MyPreferences {
 
     public void switchDigestsHide(){
         mSharedPreferences.edit().putBoolean(HIDE_DIGESTS_PREF, !isDigestsHide()).apply();
+    }
+
+    public String getDownloadDirLocation() {
+        DocumentFile dir = App.getInstance().getDownloadDir();
+        if(dir.isDirectory()){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                return UriConverter.getPath(App.getInstance(), dir.getUri());
+            }
+            else{
+                return dir.getUri().getPath();
+            }
+        }
+        File compatDir = getDownloadDir();
+        if(compatDir.isDirectory()){
+            return compatDir.getAbsolutePath();
+        }
+        return "Не распознал папку загрузок";
+    }
+
+    public boolean isDownloadedHide() {
+        return mSharedPreferences.getBoolean(HIDE_DOWNLOADED_PREF, false);
+    }
+    public void switchDownloadedHide(){
+        mSharedPreferences.edit().putBoolean(HIDE_DOWNLOADED_PREF, !isDownloadedHide()).apply();
+    }
+
+    public boolean isShowChanges() {
+        // получу текущую версию приложения и последнюю версию, в которой отображались изменения
+        String currentVersion = Grammar.getAppVersion();
+        String savedVersion = mSharedPreferences.getString(LAST_CHANGELOG_VERSION_PREF, "0");
+        return  !currentVersion.equals(savedVersion);
+    }
+
+    public void setChangesViewed() {
+        mSharedPreferences.edit().putString(LAST_CHANGELOG_VERSION_PREF, Grammar.getAppVersion()).apply();
     }
 }

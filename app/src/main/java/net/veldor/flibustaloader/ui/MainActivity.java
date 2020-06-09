@@ -33,6 +33,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.io.File;
@@ -160,15 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
             // отображу версию приложения
             TextView versionView = findViewById(R.id.app_version);
-            String version;
-            try {
-                PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-                version = pInfo.versionName;
-                versionView.setText(String.format(Locale.ENGLISH, getString(R.string.application_version_message), version));
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.d("surprise", "MainActivity setupUI: can't found version");
-                e.printStackTrace();
-            }
+            String version = Grammar.getAppVersion();
+            versionView.setText(String.format(Locale.ENGLISH, getString(R.string.application_version_message), version));
 
             Button startBtn = findViewById(R.id.testStartApp);
             startBtn.setOnClickListener(v -> {
@@ -308,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // проверю, если используем ODPS- перенаправлю в другую активность
             if (App.getInstance().getView() == App.VIEW_ODPS) {
+                //targetActivityIntent = new Intent(this, OPDSActivity.class);
                 targetActivityIntent = new Intent(this, OPDSActivity.class);
             } else {
                 targetActivityIntent = new Intent(this, WebViewActivity.class);

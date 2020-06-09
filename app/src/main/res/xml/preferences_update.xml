@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <CheckBoxPreference
+        app:key="check_updates"
+        app:title="@string/check_updates"
+        android:defaultValue="true"
+        android:summary="@string/summary_check_updates"/>
+    <Preference
+        app:key="@string/pref_check_update_now"
+        android:title="@string/title_check_update_now"/>
+</PreferenceScreen>

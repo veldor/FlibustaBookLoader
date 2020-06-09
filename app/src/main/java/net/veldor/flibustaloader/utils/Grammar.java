@@ -1,8 +1,15 @@
 package net.veldor.flibustaloader.utils;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.text.Html;
+import android.util.Log;
 
+import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.R;
+
+import java.util.Locale;
 import java.util.Random;
 
 public class Grammar {
@@ -20,5 +27,16 @@ public class Grammar {
 
         Random r = new Random();
         return r.nextInt(max - min + 1) + min;
+    }
+
+    public static String getAppVersion() {
+        try {
+            PackageInfo pInfo = App.getInstance().getPackageManager().getPackageInfo(App.getInstance().getPackageName(), 0);
+            return pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.d("surprise", "MainActivity setupUI: can't found version");
+            e.printStackTrace();
+        }
+        return "0";
     }
 }
