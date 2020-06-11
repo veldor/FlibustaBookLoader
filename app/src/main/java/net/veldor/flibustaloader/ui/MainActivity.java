@@ -3,7 +3,6 @@ package net.veldor.flibustaloader.ui;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -42,7 +41,7 @@ import java.util.Locale;
 
 import lib.folderpicker.FolderPicker;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
 
     private static final int REQUEST_WRITE_READ = 22;
@@ -109,13 +108,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish());
-        if(!MainActivity.this.isFinishing()) {
+        if (!MainActivity.this.isFinishing()) {
             dialogBuilder.create().show();
         }
     }
 
     private void setupUI() {
-        if(MyPreferences.getInstance().isHardwareAcceleration()){
+        if (MyPreferences.getInstance().isHardwareAcceleration()) {
             // проверю аппаратное ускорение
             getWindow().setFlags(
                     WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
@@ -127,24 +126,27 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         View rootView = findViewById(R.id.rootView);
-        if(rootView != null){
-            try{
-                // назначу фон
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    rootView.setBackground(getDrawable(R.drawable.back_3));
+        if (rootView != null) {
+            // если это читалка- фон не назначаю
+            if (isEInk()) {
+                Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
+            } else {
+                try {
+                    // назначу фон
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        rootView.setBackground(getDrawable(R.drawable.back_3));
+                    } else {
+                        rootView.setBackground(getResources().getDrawable(R.drawable.back_3));
+                    }
+                } catch (Exception e) {
+                    Log.d("surprise", "MainActivity setupUI 137: can't set drawable");
                 }
-                else{
-                    rootView.setBackground(getResources().getDrawable(R.drawable.back_3));
-                }
-            }
-            catch (Exception e){
-                Log.d("surprise", "MainActivity setupUI 137: can't set drawable");
             }
         }
 
         // переключатель аппаратного ускорения
         Switch switcher = findViewById(R.id.useHardwareAccelerationSwitcher);
-        if(switcher != null){
+        if (switcher != null) {
             switcher.setChecked(MyPreferences.getInstance().isHardwareAcceleration());
             switcher.setOnCheckedChangeListener((buttonView, isChecked) -> MyPreferences.getInstance().switchHardwareAcceleration());
         }
@@ -173,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showForceStartDialog() {
-        if(!MainActivity.this.isFinishing()) {
+        if (!MainActivity.this.isFinishing()) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setMessage("Принудительный запуск приложения. Внимание, это не значит, что приложение будет работать! Данная функция сделана исключительно для тех ситуаций, когда приложение не смогло само определить, что клиент TOR успешно запустился (проблема некоторорых китайских аппаратов). Так что используйте только если точно знаете, что делаете");
             dialogBuilder.setPositiveButton("Да, я знаю, что делаю", (dialogInterface, i) -> torLoaded());
@@ -182,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupObservers() {
+    protected void setupObservers() {
         if (!App.getInstance().isExternalVpn()) {
             // зарегистрирую отслеживание загружающегося TOR
             LiveData<AndroidOnionProxyManager> loadedTor = App.getInstance().mLoadedTor;
@@ -258,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectView() {
-        if(!MainActivity.this.isFinishing()) {
+        if (!MainActivity.this.isFinishing()) {
             // покажу диалог выбора вида приложения
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle("Выберите внешний вид")
@@ -281,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showPermissionDialog() {
-        if(!MainActivity.this.isFinishing()) {
+        if (!MainActivity.this.isFinishing()) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle("Необходимо предоставить разрешения")
                     .setMessage("Для загрузки книг необходимо предоставить доступ к памяти устройства")
@@ -390,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void torLoadTooLongDialog() {
-        if(!MainActivity.this.isFinishing()) {
+        if (!MainActivity.this.isFinishing()) {
             Log.d("surprise", "MainActivity torLoadTooLongDialog: tor load too long err");
             if (mActivityVisible) {
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
@@ -409,7 +411,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void showTorNotWorkDialog() {
-        if(!MainActivity.this.isFinishing()) {
+        if (!MainActivity.this.isFinishing()) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             AlertDialog show = dialogBuilder.setTitle(getString(R.string.tor_cant_load_message))
                     .setMessage(getString(R.string.tor_not_start_body))
@@ -422,7 +424,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void handleUseExternalVpn() {
-        if(!MainActivity.this.isFinishing()) {
+        if (!MainActivity.this.isFinishing()) {
             // покажу диалог с объяснением последствий включения VPN
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder
@@ -480,11 +482,10 @@ public class MainActivity extends AppCompatActivity {
                 if (data != null && data.getExtras() != null) {
                     String folderLocation = data.getExtras().getString("data");
                     File file = new File(folderLocation);
-                    if(file.isDirectory() && MyPreferences.getInstance().saveDownloadFolder(folderLocation)){
+                    if (file.isDirectory() && MyPreferences.getInstance().saveDownloadFolder(folderLocation)) {
                         Toast.makeText(this, "Папка сохранена!", Toast.LENGTH_SHORT).show();
                         handleStart();
-                    }
-                    else{
+                    } else {
                         Toast.makeText(this, "Не удалось сохранить папку, попробуйте ещё раз!", Toast.LENGTH_SHORT).show();
                         showSelectDownloadFolderDialog();
                     }

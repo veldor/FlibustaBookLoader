@@ -21,18 +21,22 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".ui.Loader"/>
+        <activity android:name=".ui.BaseActivity" />
+        <activity android:name=".ui.Loader" />
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="http" />
                 <data android:host="flibusta.is" />
                 <data android:host="flibustahezeous3.onion" />
@@ -47,9 +51,9 @@
             android:label="@string/title_activity_webview" />
         <activity
             android:name=".ui.ActivityBookDownloadSchedule"
-            android:theme="@style/OldAppTheme"
             android:label="@string/title_activity_download_schedule"
-            android:parentActivityName=".ui.OPDSActivity" />
+            android:parentActivityName=".ui.OPDSActivity"
+            android:theme="@style/OldAppTheme" />
         <activity android:name=".ui.SettingsActivity" />
         <activity android:name=".ui.SubscriptionsActivity" />
 

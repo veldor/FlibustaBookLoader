@@ -24,6 +24,7 @@
 -keepattributes SourceFile,LineNumberTable
 -keep public class * extends java.lang.Exception
 
+#noinspection ShrinkerUnresolvedReference
 -keep class com.crashlytics.** { *; }
 -dontwarn com.crashlytics.**
 

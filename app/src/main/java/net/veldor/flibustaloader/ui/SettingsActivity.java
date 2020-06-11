@@ -9,13 +9,9 @@ import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -27,7 +23,6 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.Operation;
 import androidx.work.WorkManager;
 
-import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import net.veldor.flibustaloader.App;
@@ -43,12 +38,15 @@ import java.io.File;
 
 import lib.folderpicker.FolderPicker;
 
-public class SettingsActivity extends AppCompatActivity implements PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
+public class SettingsActivity extends BaseActivity implements PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setupUI();
+
+        setContentView(R.layout.new_preferences_activity);
+
+        setupInterface();
 
         // добавлю главный фрагмент
         if (savedInstanceState == null) {
@@ -59,36 +57,15 @@ public class SettingsActivity extends AppCompatActivity implements PreferenceFra
         }
     }
 
-    private void setupUI() {
-
-        if (MyPreferences.getInstance().isHardwareAcceleration()) {
-            // включу аппаратное ускорение
-            getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
-        }
-
-        setContentView(R.layout.new_preferences_activity);
-
-        // включу поддержку тулбара
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        // покажу гамбургер :)
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.setDrawerIndicatorEnabled(true);
-        toggle.syncState();
-
-        // скрою переход на настройки
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(new NavigatorSelectHandler(this));
-        Menu menuNav = navigationView.getMenu();
+    @Override
+    protected void setupInterface() {
+        super.setupInterface();
+        // скрою переход на данное активити
+        Menu menuNav = mNavigationView.getMenu();
         MenuItem item = menuNav.findItem(R.id.goToSettings);
         item.setEnabled(false);
         item.setChecked(true);
     }
-
 
     @Override
     public boolean onPreferenceStartFragment(PreferenceFragmentCompat caller, Preference pref) {

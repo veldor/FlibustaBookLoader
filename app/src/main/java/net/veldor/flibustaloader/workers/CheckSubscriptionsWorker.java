@@ -19,6 +19,7 @@ import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.parsers.SubscriptionsParser;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.SubscriptionItem;
+import net.veldor.flibustaloader.ui.BaseActivity;
 import net.veldor.flibustaloader.utils.SubscribesHandler;
 import net.veldor.flibustaloader.view_models.SubscriptionsViewModel;
 
@@ -120,8 +121,7 @@ public class CheckSubscriptionsWorker extends Worker {
             // найдены книги
             Notificator.getInstance().sendFoundSubscribesNotification();
             serializeResult();
-        }
-        else{
+        } else {
             Notificator.getInstance().sendNotFoundSubscribesNotification();
         }
         if (mLastCheckedBookId != null) {
@@ -142,6 +142,8 @@ public class CheckSubscriptionsWorker extends Worker {
             oos.writeObject(result);
             oos.close();
             fos.close();
+            // оповещу об изменении списка
+            BaseActivity.sLiveFoundedSubscriptionsCount.postValue(true);
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }

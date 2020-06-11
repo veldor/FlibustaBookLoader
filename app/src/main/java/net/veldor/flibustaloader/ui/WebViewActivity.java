@@ -17,25 +17,20 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.SearchView;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import net.veldor.flibustaloader.App;
@@ -51,11 +46,10 @@ import net.veldor.flibustaloader.view_models.MainViewModel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 
-public class WebViewActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
+public class WebViewActivity extends BaseActivity implements SearchView.OnQueryTextListener{
 
     public static final String CALLED = "activity_called";
     private MyWebView mWebView;
@@ -76,7 +70,12 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setupUI();
+
+        setContentView(R.layout.new_webview_activity);
+
+        setupInterface();
+
+        showChangesList();
 
         // проверю, не запущено ли приложение с помощью интента
         if (getIntent().getData() != null) {//check if intent is not null
@@ -118,34 +117,15 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
         autocompleteStrings = mMyViewModel.getSearchAutocomplete();
     }
 
-    private void setupUI() {
-        if (MyPreferences.getInstance().isHardwareAcceleration()) {
-            // включу аппаратное ускорение
-            getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
-        }
+    @Override
+    protected void setupInterface() {
+        super.setupInterface();
 
-        setContentView(R.layout.new_webview_activity);
-
-        // включу поддержку тулбара
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        // покажу гамбургер :)
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.setDrawerIndicatorEnabled(true);
-        toggle.syncState();
-
-        // скрою переход на WebView
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(new NavigatorSelectHandler(this));
-        Menu menuNav=navigationView.getMenu();
+        // скрою переход на данное активити
+        Menu menuNav = mNavigationView.getMenu();
         MenuItem item = menuNav.findItem(R.id.goToWebView);
         item.setEnabled(false);
         item.setChecked(true);
-        showChangesList();
     }
 
     private void showChangesList() {
@@ -495,11 +475,6 @@ public class WebViewActivity extends AppCompatActivity implements SearchView.OnQ
             WebViewActivity.this.startActivity(intent);
             Runtime.getRuntime().exit(0);
         }
-    }
-
-
-    private void changeTitle(String s) {
-            Objects.requireNonNull(getSupportActionBar()).setTitle(s);
     }
 
     @Override

@@ -6,28 +6,30 @@ import net.veldor.flibustaloader.ui.OPDSActivity;
 public class URLHelper {
 
     public static String getBaseUrl() {
-        if(App.getInstance().isExternalVpn()){
-            return "http://flibustahezeous3.onion";
-        }
+        App.getInstance().isExternalVpn();
         return "http://flibustahezeous3.onion";
     }
+
     public static String getBaseOPDSUrl() {
-        if(App.getInstance().isExternalVpn()){
+        if (App.getInstance().isExternalVpn()) {
             return "http://flibusta.is";
         }
         return "http://flibustahezeous3.onion";
     }
 
+    public static String getFlibustaIsUrl() {
+        return "http://flibusta.is";
+    }
+
     public static String getSearchRequest(String searchType, String request) {
         // базовый URL зависит от исползуемого соединения
         StringBuilder urlConstructor = new StringBuilder();
-        if(App.getInstance().isExternalVpn()){
+        if (App.getInstance().isExternalVpn()) {
             urlConstructor.append("http://flibusta.is/opds/");
-        }
-        else{
+        } else {
             urlConstructor.append("http://flibustahezeous3.onion/opds/");
         }
-        switch (searchType){
+        switch (searchType) {
             case OPDSActivity.SEARCH_TYPE_BOOKS:
                 urlConstructor.append("search?searchType=books&searchTerm=").append(request);
                 break;

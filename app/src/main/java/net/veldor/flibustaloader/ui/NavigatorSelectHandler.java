@@ -72,7 +72,7 @@ public class NavigatorSelectHandler implements NavigationView.OnNavigationItemSe
     }
 
     private void tryCloseDrawer() {
-        DrawerLayout drawer = (DrawerLayout) mContext.findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = mContext.findViewById(R.id.drawer_layout);
         if(drawer != null){
             drawer.closeDrawer(GravityCompat.START);
         }

@@ -34,4 +34,8 @@ public class History {
         }
         return null;
     }
+
+    public String showLastPage() {
+        return mHistory.peek();
+    }
 }

@@ -12,7 +12,6 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
-import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker;
 import net.veldor.flibustaloader.workers.LoadSubscriptionsWorker;
 
 import org.jsoup.Jsoup;
@@ -395,7 +394,7 @@ public class XMLParser {
 
                    }
                 }
-
+                Log.d("surprise", "XMLParser searchDownloadLinks 398: found download links on page: " + linksList.size());
             }
             else{
                 Log.d("surprise", "XMLParser searchDownloadLinks: not found links");

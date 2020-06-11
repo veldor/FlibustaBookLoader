@@ -24,8 +24,6 @@
     <string name="share_link_message">Share link</string>
     <string name="share_url_message">Sharing page link</string>
     <string name="share_url_title">Share link with</string>
-    <string name="miscellaneous">Miscellaneous</string>
-    <string name="set_downloads_folder">Set downloads folder</string>
     <string name="download_folder_changed_message">Download folder changed on</string>
     <string name="title_activity_opds">OPDS</string>
     <string name="whoSearchMessage">Search what?</string>
@@ -40,7 +38,6 @@
     <string name="search_sequence_message">Sequences</string>
     <string name="load_more_button">Load more</string>
     <string name="select_sequences_choose_message">Select sequence</string>
-    <string name="set_update_check_message">Check update</string>
     <string name="book_menu">book menu</string>
     <string name="hide_read">Hide read</string>
     <string name="initialize_tor_message">Initialize TOR…</string>
@@ -52,10 +49,7 @@
     <string name="load_waiting_title">Do my work</string>
     <string name="sort_list">Sort by</string>
     <string name="force_start">Force start</string>
-    <string name="switch_to_vebview_message">Switch to WebView</string>
-    <string name="switch_to_opds_message">Switch to OPDS</string>
     <string name="clear_search_history_message">Clear search history</string>
-    <string name="subscribe_message">Subscribe</string>
     <string name="subscribe_msg">Subscribe</string>
     <string name="delete_item" translatable="false">deleteItem</string>
     <string name="download_folder_changed_message_new">Download folder changed</string>
@@ -67,13 +61,11 @@
     <string name="download_only_this_format">Download only this format</string>
     <string name="remember_format">Remember type</string>
     <string name="do_not_re_download">Download again</string>
-    <string name="download_settings">Mass Download</string>
     <string name="go_to_test_message">Test app</string>
     <string name="backward">backward</string>
     <string name="enter_value_message">Enter value</string>
     <string name="begin_tor_init_msg">Begin initialize</string>
     <string name="default_app_version">1.0</string>
-    <string name="reserve_settings_message">Reserve settings</string>
     <string name="restore_settings_message">Restore settings</string>
     <string name="misc_channel">misc notifications</string>
     <string name="misc_description">misc notifications</string>
@@ -90,7 +82,6 @@
     <string name="tor_continue_loading" tools:ignore="PluralsCandidate">Tor loading by %d seconds</string>
     <string name="subscription_describe">Тут можно подписаться на новинки книжной индустрии. Выберите, на что вы хотите подписаться, после этого нажмите кнопку \'Подписаться\' и каждый день в полдень программа будет проверять, не появилось ли что-то новое по интересующей вас теме. Если найдётся что-то интересное- вы получите уведомление!</string>
     <string name="title_activity_webview">WebView</string>
-    <string name="title_activity_subscribe">Subscriptions</string>
     <string name="show_all_results_switcher_text">Show all result</string>
     <string name="download_all_button">Download all</string>
     <string name="download_selected_button">Download selected</string>
@@ -99,7 +90,6 @@
     <string name="waiting_download_message">Waiting download</string>
     <string name="stop_download_message">Stop download</string>
     <string name="continue_download_message">Continue download</string>
-    <string name="show_downloads_schedule_message">Show downloads schedule</string>
     <string name="books_not_selected_message">No book selected</string>
     <string name="select_books_for_download_message">Select books for download</string>
     <string name="download_selected_message">Download selected</string>
@@ -111,10 +101,6 @@
     <string name="ok">OK</string>
     <string name="no">No, thanks</string>
     <string name="book_added_to_schedule_message">Book added to schedule</string>
-    <string name="repeat_download_message">Repeat download</string>
-    <string name="skip_book_message">Skip book</string>
-    <string name="error_download_message">Download error</string>
-    <string name="download_error_message">"Download error. Can't load "</string>
     <string name="tor_init_error_message">TOR init error!</string>
     <string name="request_restart_tor_message">Restart TOR!</string>
     <string name="download_paused_message">Downloading paused!</string>
@@ -125,21 +111,16 @@
     <string name="cancel_download_from_notification_message">Drop</string>
     <string name="later_message">Later</string>
     <string name="waiting_internet_message">waiting for internet connection</string>
-    <string name="download_schedue_empty_message">Download schedule empty</string>
-    <string name="connection_menu_title">Connection</string>
-    <string name="use_externalVpnMessage">I use eternal VPN</string>
+    <string name="download_schedule_empty_message">Download schedule empty</string>
     <string name="confirm">Yes, confirm</string>
     <string name="use_external_proxy_message">Use external VPN</string>
     <string name="switch_layout_message">Switch layout</string>
-    <string name="subscribes">Subscribes</string>
     <string name="check_subscribes_label">Check now</string>
     <string name="not_found_subscribes_message">Subscribes not found</string>
     <string name="subscribes_check_channel">subscribes check</string>
     <string name="subscribes_check_channel_description">Subscribes check notification</string>
-    <string name="check_flibusta_subscritions_message">Check flibusta subscriptions</string>
-    <string name="show_subscriptions_list_label">Show subscriptions list</string>
+    <string name="check_flibusta_subscriptions_message">Check flibusta subscriptions</string>
     <string name="check_full_subscribes_label">Total check subscribes</string>
-    <string name="subscriptions_auto_check_label">Auto-check</string>
     <string name="autocheck_enabled_message">Subscriptions autocheck enabled. Next check after 24 hours</string>
     <string name="autocheck_disabled_message">Subscriptions autocheck disabled</string>
     <string name="books_download_channel">Books download channel</string>
@@ -162,7 +143,7 @@
     <string name="title_backup_settings">Backup settings</string>
     <string name="summary_backup_settings">Backup app settings and lists of downloaded and readed books and subscribes</string>
     <string name="restore_settings" translatable="false">restore settings</string>
-    <string name="summary_restore_settings">Restore previously backuped settings</string>
+    <string name="summary_restore_settings">Restore previously backed-up settings</string>
     <string name="check_updates">Check updates</string>
     <string name="summary_check_updates">Automatic check updates when app starts</string>
     <string name="update_preferences">Update preferences</string>

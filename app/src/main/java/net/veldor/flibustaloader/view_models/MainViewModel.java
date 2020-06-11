@@ -4,7 +4,6 @@ import android.app.Application;
 import android.util.SparseBooleanArray;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
@@ -17,6 +16,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyWebView;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
+import net.veldor.flibustaloader.interfaces.MyViewModelInterface;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.updater.Updater;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
 
-public class MainViewModel extends AndroidViewModel {
+public class MainViewModel extends GlobalViewModel implements MyViewModelInterface {
     private static final String ADD_TO_DOWNLOAD_QUEUE_ACTION = "add to download queue";
     public static final String MULTIPLY_DOWNLOAD = "multiply download";
 

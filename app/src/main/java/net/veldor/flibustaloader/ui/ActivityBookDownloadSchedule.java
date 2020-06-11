@@ -6,14 +6,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.LiveData;
@@ -22,13 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkInfo;
 
-import com.google.android.material.navigation.NavigationView;
-
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.adapters.DownloadScheduleAdapter;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
-import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
@@ -37,7 +30,7 @@ import java.util.List;
 import static android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP;
 
 
-public class ActivityBookDownloadSchedule extends AppCompatActivity {
+public class ActivityBookDownloadSchedule extends BaseActivity {
     private MainViewModel MyViewModel;
     private DownloadScheduleAdapter BooksAdapter;
     private View StopDownloadBtn;
@@ -47,7 +40,9 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setupUI();
+        setContentView(R.layout.new_download_schedule_activity);
+
+        setupInterface();
 
         MyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
@@ -88,34 +83,13 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
         ContinueDownloadBtn.setVisibility(View.GONE);
     }
 
+    @Override
+    protected void setupInterface() {
 
-
-
-    private void setupUI() {
-
-        if (MyPreferences.getInstance().isHardwareAcceleration()) {
-            // включу аппаратное ускорение
-            getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
-        }
-
-        setContentView(R.layout.new_download_schedule_activity);
-
-        // включу поддержку тулбара
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        // покажу гамбургер :)
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.setDrawerIndicatorEnabled(true);
-        toggle.syncState();
+        super.setupInterface();
 
         // скрою переход на данное активити
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(new NavigatorSelectHandler(this));
-        Menu menuNav = navigationView.getMenu();
+        Menu menuNav = mNavigationView.getMenu();
         MenuItem item = menuNav.findItem(R.id.goToDownloadsList);
         item.setEnabled(false);
         item.setChecked(true);
@@ -134,7 +108,7 @@ public class ActivityBookDownloadSchedule extends AppCompatActivity {
         // проверю, есть ли книги в очереди скачивания
         int queueSize = App.getInstance().mDatabase.booksDownloadScheduleDao().getQueueSize();
         if(queueSize == 0){
-            Toast.makeText(this, R.string.download_schedue_empty_message, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.download_schedule_empty_message, Toast.LENGTH_LONG).show();
             finish();
         }
 

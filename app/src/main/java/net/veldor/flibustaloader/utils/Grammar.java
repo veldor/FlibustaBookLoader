@@ -7,9 +7,7 @@ import android.text.Html;
 import android.util.Log;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.R;
 
-import java.util.Locale;
 import java.util.Random;
 
 public class Grammar {

@@ -10,15 +10,11 @@ import androidx.documentfile.provider.DocumentFile;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
-import net.veldor.flibustaloader.ecxeptions.FlibustaUnreachableException;
 import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.URLHelper;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
 import cz.msebera.android.httpclient.HttpEntity;
@@ -100,95 +96,30 @@ public class ExternalVpnVewClient {
         return null;
     }
 
-    public static boolean downloadBook(BooksDownloadSchedule book) {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                // получу имя файла
-                DocumentFile downloadsDir = App.getInstance().getDownloadDir();
-                DocumentFile newFile;
-                newFile = downloadsDir.createFile(book.format, book.name);
-                if (newFile != null) {
-                    // запрошу данные
-                    HttpResponse response = rawRequest(URLHelper.getBaseUrl() + book.link);
-                    if (response != null) {
-                        int status = response.getStatusLine().getStatusCode();
-                        Log.d("surprise", "ExternalVpnVewClient downloadBook status is " + status);
-                        if (status == 200) {
-                            HttpEntity entity = response.getEntity();
-                            if (entity != null) {
-                                InputStream content = entity.getContent();
-                                if (content != null) {
-                                    OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
-                                    if (out != null) {
-                                        int read;
-                                        byte[] buffer = new byte[1024];
-                                        while ((read = content.read(buffer)) > 0) {
-                                            out.write(buffer, 0, read);
-                                        }
-                                        out.close();
-                                        if (newFile.isFile() && newFile.length() > 0) {
-                                            return true;
-                                        }
-                                    } else {
-                                        Log.d("surprise", "TorWebClient downloadBook: файл не найден");
-                                    }
-                                }
-                            }
-                        } else if (status == 500) {
-                            Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
-                            throw new BookNotFoundException();
-                        } else if (status == 404) {
-                            Log.d("surprise", "TorWebClient downloadBook: flibusta not answer");
-                            throw new FlibustaUnreachableException();
-                        }
-                    }
-                }
-            }
-            else {
-                File file = MyPreferences.getInstance().getDownloadDir();
-                if (file != null) {
-                    File newFile = new File(file, book.name);
-                    // запрошу данные
-                    Log.d("surprise", "TorWebClient downloadBook: request " + book.link);
-                    HttpResponse response = rawRequest(URLHelper.getBaseUrl() + book.link);
-                    if (response != null) {
-                        int status = response.getStatusLine().getStatusCode();
-                        if (status == 200) {
-                            HttpEntity entity = response.getEntity();
-                            if (entity != null) {
-                                InputStream content = entity.getContent();
-                                if (content != null) {
-                                    OutputStream out = new FileOutputStream(newFile);
-                                    int read;
-                                    byte[] buffer = new byte[1024];
-                                    while ((read = content.read(buffer)) > 0) {
-                                        out.write(buffer, 0, read);
-                                    }
-                                    out.close();
-                                    if (newFile.isFile() && newFile.length() > 0) {
-                                        return true;
-                                    }
-                                }
-                            }
-                        } else if (status == 500) {
-                            Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
-                            throw new BookNotFoundException();
-                        } else if (status == 404) {
-                            Log.d("surprise", "TorWebClient downloadBook: flibusta not answer");
-                            throw new FlibustaUnreachableException();
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.d("surprise", "TorWebClient downloadBook: ошибка при сохранении");
-        } catch (FlibustaUnreachableException e) {
-            e.printStackTrace();
-        } catch (BookNotFoundException e) {
-            e.printStackTrace();
+    public static void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException {
+        Log.d("surprise", "ExternalVpnVewClient downloadBook 112: request " + URLHelper.getBaseUrl() + book.link);
+        HttpResponse response = rawRequest(URLHelper.getBaseUrl() + book.link);
+        if (response == null || response.getStatusLine().getStatusCode() != 200 || response.getEntity().getContentLength() < 1) {
+            // попробую загрузку с резервного адреса
+            Log.d("surprise", "ExternalVpnVewClient downloadBook 116: request from reserve " + URLHelper.getFlibustaIsUrl() + book.link);
+            response = rawRequest(URLHelper.getFlibustaIsUrl() + book.link);
         }
-        return false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // получу имя файла
+            DocumentFile downloadsDir = App.getInstance().getDownloadDir();
+            DocumentFile newFile = downloadsDir.createFile(book.format, book.name);
+            if (newFile != null) {
+                // запрошу данные
+                Log.d("surprise", "TorWebClient downloadBook: request " + book.link + " of book " + book.name);
+                GlobalWebClient.handleBookLoadRequest(response, newFile);
+            }
+        } else {
+            File file = MyPreferences.getInstance().getDownloadDir();
+            if (file != null) {
+                File newCompatFile = new File(file, book.name);
+                GlobalWebClient.handleBookLoadRequest(response, newCompatFile);
+            }
+        }
     }
 
     public static HttpResponse rawRequest(String url) {

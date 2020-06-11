@@ -48,10 +48,6 @@ public class MyPreferences {
         mSharedPreferences.edit().putString(LAST_SEARCH_URL_PREF, s).apply();
     }
 
-    public String getLastLoadUrl(){
-        return mSharedPreferences.getString(LAST_SEARCH_URL_PREF, null);
-    }
-
     public boolean saveDownloadFolder(String folderLocation) {
         // ещё раз попробую создать файл
         File file = new File(folderLocation);

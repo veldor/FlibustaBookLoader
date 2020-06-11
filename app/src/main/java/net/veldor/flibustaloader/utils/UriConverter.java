@@ -1,18 +1,12 @@
 package net.veldor.flibustaloader.utils;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 
 import androidx.annotation.RequiresApi;
-
-import net.veldor.flibustaloader.App;
-
-import java.io.File;
 
 class UriConverter {
 

@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader.adapters;
 
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -114,12 +113,12 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
         for (FoundedBook f :
                 mBooks) {
             if (f != null && f.id.equals(bookId)) {
+                f.downloaded = true;
                 if(MyPreferences.getInstance().isDownloadedHide()){
                     mBooks.remove(f);
                     notifyItemRemoved(mBooks.lastIndexOf(f));
                 }
                 else{
-                    f.downloaded = true;
                     notifyItemChanged(mBooks.lastIndexOf(f));
                 }
                 break;

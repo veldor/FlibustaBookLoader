@@ -28,7 +28,6 @@ import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
-import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
@@ -48,7 +47,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class App extends Application {
     //todo switch to false on release
-    public static boolean isTestVersion = false;
+    public static final boolean isTestVersion = true;
 
     public static final String SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
@@ -72,14 +71,11 @@ public class App extends Application {
     private static final String PREFERENCE_PREVIEWS = "cover_previews_show";
 
     public static int sSearchType = OPDSActivity.SEARCH_BOOKS;
-    private final ArrayList<String> mSearchHistory = new ArrayList<>();
     // место для хранения текста ответа поиска
     public final MutableLiveData<String> mSearchTitle = new MutableLiveData<>();
     public final MutableLiveData<ArrayList<FoundedSequence>> mSelectedSequences = new MutableLiveData<>();
     // место для хранения выбранной серии
     public final MutableLiveData<FoundedSequence> mSelectedSequence = new MutableLiveData<>();
-    // место для хранения результатов парсинга ответа
-    public final MutableLiveData<ArrayList<FoundedItem>> mParsedResult = new MutableLiveData<>();
     // добавление результатов к уже имеющимся
     public boolean mResultsEscalate = false;
 
@@ -134,7 +130,7 @@ public class App extends Application {
     public final MutableLiveData<Boolean> mTypeSelected = new MutableLiveData<>();
     private SharedPreferences mSharedPreferences;
     public AppDatabase mDatabase;
-    public LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
+    public final LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
     private SubscribeBooks mBooksSubscribe;
     private SubscribeAuthors mAuthorsSubscribe;
@@ -277,17 +273,6 @@ public class App extends Application {
 
     public String getLastLoadedUrl() {
         return mSharedPreferences.getString(PREFERENCE_LAST_LOADED_URL, URLHelper.getBaseUrl());
-    }
-
-    private boolean isSearchHistory() {
-        return mSearchHistory.size() > 0;
-    }
-
-    public String getLastHistoryElement() {
-        if (isSearchHistory()) {
-            return mSearchHistory.get(mSearchHistory.size() - 1);
-        }
-        return null;
     }
 
     public boolean isCheckUpdate() {

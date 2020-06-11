@@ -32,7 +32,7 @@ public class SearchResponseParser {
     private static final String NEW_SEQUENCES = "tag:search:new:sequence";
     private static final String NEW_AUTHORS = "tag:search:new:author";
     private NodeList mEntries;
-    private XPath mXpath;
+    private final XPath mXpath;
 
     public SearchResponseParser(String answer) throws XPathExpressionException {
         Document document = getDocument(answer);

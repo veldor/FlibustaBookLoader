@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 
 import androidx.annotation.NonNull;
@@ -14,6 +13,7 @@ import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
+import net.veldor.flibustaloader.ui.BaseActivity;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MimeTypes;
@@ -29,6 +29,8 @@ public class AddBooksToDownloadQueueWorker extends Worker {
 
     public static void addLink(DownloadLink downloadLink) {
         addDownloadLink(App.getInstance().mDatabase.booksDownloadScheduleDao(), downloadLink);
+        // уведомлю, что размер списка закачек изменился
+        BaseActivity.sLiveDownloadScheduleCount.postValue(true);
     }
 
     @NonNull
@@ -117,6 +119,8 @@ public class AddBooksToDownloadQueueWorker extends Worker {
                     continue;
                 }
                 addDownloadLink(dao, link);
+                // уведомлю, что размер списка закачек изменился
+                BaseActivity.sLiveDownloadScheduleCount.postValue(true);
             }
         }
         return Result.success();

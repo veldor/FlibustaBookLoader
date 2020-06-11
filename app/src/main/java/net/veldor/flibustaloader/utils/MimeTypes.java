@@ -89,15 +89,4 @@ public class MimeTypes {
         }
         return shortMime;
     }
-
-    public static int getIntMime(String favoriteFormat) {
-        int counter = 0;
-        for(String mime:MIMES_LIST){
-            if(mime.equals(getMime(favoriteFormat))){
-                return counter;
-            }
-            counter++;
-        }
-        return 0;
-    }
 }

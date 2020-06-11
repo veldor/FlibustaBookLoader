@@ -52,6 +52,7 @@ public class Notificator {
     public static final int CHECK_SUBSCRIBES_WORKER_NOTIFICATION = 10;
     private static final int RESTART_TOR_CODE = 11;
     private static final String DOWNLOADED_BOOKS_GROUP = "downloaded books";
+    private static final String ERROR_DOWNLOAD_BOOKS_GROUP = "error download books";
     private static Notificator instance;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
@@ -112,6 +113,16 @@ public class Notificator {
 
     public void sendLoadedBookNotification(String name, String type) {
 
+        // Добавлю группу
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_book_black_24dp)
+                        .setContentInfo("Загруженные книги")
+                        .setGroup(DOWNLOADED_BOOKS_GROUP)
+                        .setGroupSummary(true);
+
+        mNotificationManager.notify(-100, mBuilder.build());
+
         Log.d("surprise", "Notificator sendLoadedBookNotification 118: type is " + type);
 
         // создам интент для функции отправки файла
@@ -145,20 +156,33 @@ public class Notificator {
                 .setAutoCancel(true)
                 .addAction(R.drawable.ic_share_white_24dp, "Отправить", sharePendingIntent)
                 .addAction(R.drawable.ic_open_black_24dp, "Открыть", openPendingIntent);
-        Notification notification = notificationBuilder.build();
-        mNotificationManager.notify(BookLoadedId, notification);
+        mNotificationManager.notify(BookLoadedId, notificationBuilder.build());
         ++BookLoadedId;
+    }
+
+
+    public void sendBookNotFoundInCurrentFormatNotification(BooksDownloadSchedule book) {
         // Добавлю группу
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
-                        .setSmallIcon(R.drawable.ic_book_black_24dp)
+                        .setSmallIcon(R.drawable.ic_warning_red_24dp)
                         .setContentInfo("Загруженные книги")
-                        .setGroup(DOWNLOADED_BOOKS_GROUP)
+                        .setContentTitle("Не удалось загрузить книги")
+                        .setGroup(ERROR_DOWNLOAD_BOOKS_GROUP)
                         .setGroupSummary(true);
 
-        notification = mBuilder.build();
+        mNotificationManager.notify(-101, mBuilder.build());
 
-        mNotificationManager.notify(-100, notification);
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_warning_red_24dp)
+                .setContentTitle(mContext.getString(R.string.book_load_error_message))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, mContext.getString(R.string.book_unreachable_message), book.name, MimeTypes.getDownloadMime(book.format))))
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setGroup(ERROR_DOWNLOAD_BOOKS_GROUP)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+        mNotificationManager.notify(BookLoadedId, notificationBuilder.build());
+        ++BookLoadedId;
     }
 
     public void sendFoundSubscribesNotification() {
@@ -233,21 +257,6 @@ public class Notificator {
         mNotificationManager.notify(BOOKS_SUCCESS_NOTIFICATION, downloadCompleteBuilder.build());
     }
 
-    public void showBooksLoadErrorNotification(String name) {
-        // добавлю интент для отображения экрана очереди скачивания
-        Intent openScheduleIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
-        openScheduleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent openSchedulePendingIntent = PendingIntent.getActivity(mContext, OPEN_SCHEDULE_CODE, openScheduleIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-
-        NotificationCompat.Builder downloadCompleteBuilder = new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_error_black_24dp)
-                .setContentTitle(mContext.getString(R.string.error_download_message))
-                .setContentIntent(openSchedulePendingIntent)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(mContext.getString(R.string.download_error_message) + name));
-        mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, downloadCompleteBuilder.build());
-    }
-
     public void createMassDownloadStoppedNotification() {
         cancelTorErrorMessage();
         NotificationCompat.Builder downloadStoppedBuilder = new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
@@ -283,16 +292,6 @@ public class Notificator {
                 .addAction(R.drawable.ic_play_arrow_white_24dp, mContext.getString(R.string.request_restart_tor_message), RestartTorPendingIntent)
                 .setContentText(mContext.getString(R.string.download_paused_message));
         mNotificationManager.notify(TOR_LOAD_ERROR_NOTIFICATION, downloadCompleteBuilder.build());
-    }
-
-    public void sendBookNotFoundInCurrentFormatNotification(BooksDownloadSchedule book) {
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_warning_red_24dp)
-                .setContentTitle(mContext.getString(R.string.book_load_error_message))
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, mContext.getString(R.string.book_unreachable_message), book.name, MimeTypes.getDownloadMime(book.format))))
-                .setAutoCancel(true);
-        mNotificationManager.notify(BookLoadedId, notificationBuilder.build());
-        ++BookLoadedId;
     }
 
     private void cancelTorErrorMessage() {
@@ -340,7 +339,7 @@ public class Notificator {
     public Notification getCheckSubscribesNotification() {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, SUBSCRIBE_CHECK_SERVICE_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_book_black_24dp)
-                .setContentTitle(App.getInstance().getString(R.string.check_flibusta_subscritions_message))
+                .setContentTitle(App.getInstance().getString(R.string.check_flibusta_subscriptions_message))
                 .setProgress(0, 0, true)
                 .setOngoing(true);
         return notificationBuilder.build();
