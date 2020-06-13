@@ -8,6 +8,7 @@ import android.util.Log;
 import androidx.documentfile.provider.DocumentFile;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.R;
 
 import java.io.File;
 
@@ -128,5 +129,10 @@ public class MyPreferences {
 
     public void setChangesViewed() {
         mSharedPreferences.edit().putString(LAST_CHANGELOG_VERSION_PREF, Grammar.getAppVersion()).apply();
+    }
+
+
+    public boolean isEink() {
+        return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_is_eink), false);
     }
 }

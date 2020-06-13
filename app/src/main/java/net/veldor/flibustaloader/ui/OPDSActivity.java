@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
@@ -447,8 +448,8 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mRootView = findViewById(R.id.rootView);
 
         if (mRootView != null) {
-            if (isEInk()) {
-                Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
+            if (isEInk() || MyPreferences.getInstance().isEink()) {
+                //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
             } else {
                 // назначу фон
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -864,7 +865,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 Window window = mShowLoadDialog.getWindow();
                 if (window != null) {
                     TextView dialogText = window.findViewById(R.id.title);
-                    dialogText.setText(s);
+                    if(dialogText != null){
+                        dialogText.setText(s);
+                    }
                 }
             }
             if (s != null && !s.isEmpty() && mMultiplyDownloadDialog != null) {
@@ -872,7 +875,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 Window window = mMultiplyDownloadDialog.getWindow();
                 if (window != null) {
                     TextView dialogText = window.findViewById(R.id.title);
-                    dialogText.setText(s);
+                    if(dialogText != null){
+                        dialogText.setText(s);
+                    }
                 }
             }
         });
@@ -1314,25 +1319,44 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showMultiplyDownloadDialog() {
         if (mMultiplyDownloadDialog == null) {
-            mMultiplyDownloadDialog = new GifDialog.Builder(this)
-                    .setTitle(getString(R.string.download_books_title))
-                    .setMessage(getString(R.string.download_books_msg))
-                    .setGifResource(R.drawable.loading)   //Pass your Gif here
-                    .isCancellable(false)
-                    .setPositiveBtnText("Отменить")
-                    .OnPositiveClicked(() -> {
-                        if (App.getInstance().mProcess != null) {
-                            Log.d("surprise", "OPDSActivity OnClick kill process");
-                            WorkManager.getInstance(OPDSActivity.this).cancelWorkById(App.getInstance().mProcess.getId());
-                        }
-                        if (mMultiplyDownloadDialog != null) {
-                            mMultiplyDownloadDialog.dismiss();
-                        }
-                        // отменю операцию
-                        Toast.makeText(OPDSActivity.this, "Загрузка книг отменена", Toast.LENGTH_LONG).show();
+            if(isEInk() || MyPreferences.getInstance().isEink()){
+                mMultiplyDownloadDialog = new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.download_books_title))
+                        .setMessage(getString(R.string.download_books_msg))
+                        .setPositiveButton("Отменить", (dialog, which) -> {
+                            if (App.getInstance().mProcess != null) {
+                                Log.d("surprise", "OPDSActivity OnClick kill process");
+                                WorkManager.getInstance(OPDSActivity.this).cancelWorkById(App.getInstance().mProcess.getId());
+                            }
+                            if (mMultiplyDownloadDialog != null) {
+                                mMultiplyDownloadDialog.dismiss();
+                            }
+                            // отменю операцию
+                            Toast.makeText(OPDSActivity.this, "Загрузка книг отменена", Toast.LENGTH_LONG).show();
+                        })
+                        .create();
+            }
+            else{
+                mMultiplyDownloadDialog = new GifDialog.Builder(this)
+                        .setTitle(getString(R.string.download_books_title))
+                        .setMessage(getString(R.string.download_books_msg))
+                        .setGifResource(R.drawable.loading)   //Pass your Gif here
+                        .isCancellable(false)
+                        .setPositiveBtnText("Отменить")
+                        .OnPositiveClicked(() -> {
+                            if (App.getInstance().mProcess != null) {
+                                Log.d("surprise", "OPDSActivity OnClick kill process");
+                                WorkManager.getInstance(OPDSActivity.this).cancelWorkById(App.getInstance().mProcess.getId());
+                            }
+                            if (mMultiplyDownloadDialog != null) {
+                                mMultiplyDownloadDialog.dismiss();
+                            }
+                            // отменю операцию
+                            Toast.makeText(OPDSActivity.this, "Загрузка книг отменена", Toast.LENGTH_LONG).show();
 
-                    })
-                    .build();
+                        })
+                        .build();
+            }
         }
         //mMultiplyDownloadDialog.setMessage("Считаю количество книг для скачивания");
         if (!OPDSActivity.this.isFinishing()) {
@@ -1403,7 +1427,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void doSearch(String s) {
         mFab.setVisibility(View.GONE);
-        if (s != null && !s.isEmpty()) {
+        if (s != null && !s.isEmpty() && !(mSearchView == null)) {
             mSearchView.onActionViewCollapsed();
             // сохраню последнюю загруженную страницу
             MyPreferences.getInstance().saveLastLoadedPage(s);
@@ -1428,19 +1452,33 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showLoadWaitingDialog() {
         if (mShowLoadDialog == null) {
-            mShowLoadDialog = new GifDialog.Builder(this)
-                    .setTitle(getString(R.string.load_waiting_title))
-                    .setMessage(getString(R.string.load_waiting_message))
-                    .setGifResource(R.drawable.loading)   //Pass your Gif here
-                    .isCancellable(false)
-                    .setPositiveBtnText("Отменить")
-                    .OnPositiveClicked(() -> {
-                        // отменю операцию поиска
-                        WorkManager.getInstance(OPDSActivity.this).cancelUniqueWork(SearchWorker.WORK_TAG);
-                        hideWaitingDialog();
-                        Toast.makeText(OPDSActivity.this, "Загрузка отменена", Toast.LENGTH_LONG).show();
-                    })
-                    .build();
+            if(isEInk() || MyPreferences.getInstance().isEink()){
+                mShowLoadDialog = new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.download_books_title))
+                        .setMessage(getString(R.string.download_books_msg))
+                        .setPositiveButton("Отменить", (dialog, which) -> {
+                            // отменю операцию поиска
+                            WorkManager.getInstance(OPDSActivity.this).cancelUniqueWork(SearchWorker.WORK_TAG);
+                            hideWaitingDialog();
+                            Toast.makeText(OPDSActivity.this, "Загрузка отменена", Toast.LENGTH_LONG).show();
+                        })
+                        .create();
+            }
+            else{
+                mShowLoadDialog = new GifDialog.Builder(this)
+                        .setTitle(getString(R.string.load_waiting_title))
+                        .setMessage(getString(R.string.load_waiting_message))
+                        .setGifResource(R.drawable.loading)   //Pass your Gif here
+                        .isCancellable(false)
+                        .setPositiveBtnText("Отменить")
+                        .OnPositiveClicked(() -> {
+                            // отменю операцию поиска
+                            WorkManager.getInstance(OPDSActivity.this).cancelUniqueWork(SearchWorker.WORK_TAG);
+                            hideWaitingDialog();
+                            Toast.makeText(OPDSActivity.this, "Загрузка отменена", Toast.LENGTH_LONG).show();
+                        })
+                        .build();
+            }
         }
         if (!OPDSActivity.this.isFinishing()) {
             mShowLoadDialog.show();

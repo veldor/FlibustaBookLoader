@@ -157,4 +157,6 @@
     <string name="hide_downloaded">Hide downloaded</string>
     <string name="title_check_update_now">Check update now</string>
     <string name="pref_check_update_now" translatable="false">check update now</string>
+    <string name="view_preferences">View preferences</string>
+    <string name="pref_is_eink">is eink</string>
 </resources>

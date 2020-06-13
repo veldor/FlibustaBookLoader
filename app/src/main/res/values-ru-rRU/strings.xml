@@ -148,4 +148,5 @@
     <string name="hide_downloaded">Скрывать загруженные</string>
     <string name="title_favorite_format_preference">Предпочитаемый формат</string>
     <string name="title_check_update_now">Проверить обновление сейчас</string>
+    <string name="view_preferences">Внешний вид</string>
 </resources>

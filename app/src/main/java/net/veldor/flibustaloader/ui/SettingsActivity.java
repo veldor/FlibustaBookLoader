@@ -175,6 +175,13 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
         }
     }
 
+    public static class ViewPreferencesFragment extends PreferenceFragmentCompat {
+
+        @Override
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+            setPreferencesFromResource(R.xml.preferences_view, rootKey);
+        }
+    }
     public static class UpdatePreferencesFragment extends PreferenceFragmentCompat {
 
         @Override

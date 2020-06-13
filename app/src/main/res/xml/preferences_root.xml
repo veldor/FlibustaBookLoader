@@ -18,6 +18,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Preference
+        app:title="@string/view_preferences"
+        app:icon="@drawable/ic_baseline_eye_24"
+        app:summary="Настройки внешнего вида"
+        app:fragment="net.veldor.flibustaloader.ui.SettingsActivity$ViewPreferencesFragment"/>
+    <Preference
         app:title="@string/download_preferences"
         app:icon="@drawable/ic_cloud_download_black_24dp"
         app:summary="Настройки загрузок"

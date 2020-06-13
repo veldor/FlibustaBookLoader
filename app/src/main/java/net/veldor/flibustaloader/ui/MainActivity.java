@@ -128,8 +128,8 @@ public class MainActivity extends BaseActivity {
         View rootView = findViewById(R.id.rootView);
         if (rootView != null) {
             // если это читалка- фон не назначаю
-            if (isEInk()) {
-                Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
+            if (isEInk() || MyPreferences.getInstance().isEink()) {
+                //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
             } else {
                 try {
                     // назначу фон
