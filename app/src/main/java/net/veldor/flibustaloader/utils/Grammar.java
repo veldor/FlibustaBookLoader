@@ -7,6 +7,7 @@ import android.text.Html;
 import android.util.Log;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.selections.Author;
 
 import java.util.Random;
 
@@ -19,7 +20,8 @@ public class Grammar {
             return (Html.fromHtml(html)).toString();
         }
     }
-    public static int getRandom(){
+
+    public static int getRandom() {
         int min = 1000;
         int max = 9999;
 
@@ -36,5 +38,24 @@ public class Grammar {
             e.printStackTrace();
         }
         return "0";
+    }
+
+    public static String createAuthorDirName(Author author) {
+        String dirname;
+        // разобью имя автора по пробелу
+        String[] parts = author.name.split(" ");
+        if (parts.length > 1) {
+            dirname = parts[1] + ' ' + parts[0];
+        } else {
+            dirname = parts[0];
+        }
+        if (dirname.length() > 100) {
+            return dirname.substring(0, 100);
+        }
+        return dirname;
+    }
+
+    public static String clearDirName(String dirName) {
+        return dirName.replaceAll("[^ а-яА-Яa-zA-Z0-9.\\-]", "");
     }
 }

@@ -148,7 +148,7 @@ public class DownloadBooksWorker extends Worker {
                         downloadBooksDao.insert(downloadedBook);
                         // удалю книгу из очереди скачивания
                         // покажу уведомление о успешной загрузке
-                        mNotificator.sendLoadedBookNotification(queuedElement.name, queuedElement.format);
+                        mNotificator.sendLoadedBookNotification(queuedElement);
                         dao.delete(queuedElement);
                         // уведомлю, что размер списка закачек изменился
                         BaseActivity.sLiveDownloadScheduleCount.postValue(true);

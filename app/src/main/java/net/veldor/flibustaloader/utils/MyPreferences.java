@@ -98,7 +98,7 @@ public class MyPreferences {
 
     public String getDownloadDirLocation() {
         DocumentFile dir = App.getInstance().getDownloadDir();
-        if(dir.isDirectory()){
+        if(dir != null && dir.isDirectory()){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 return UriConverter.getPath(App.getInstance(), dir.getUri());
             }
@@ -107,7 +107,7 @@ public class MyPreferences {
             }
         }
         File compatDir = getDownloadDir();
-        if(compatDir.isDirectory()){
+        if(compatDir != null && compatDir.isDirectory()){
             return compatDir.getAbsolutePath();
         }
         return "Не распознал папку загрузок";
@@ -132,7 +132,15 @@ public class MyPreferences {
     }
 
 
-    public boolean isEink() {
+    public boolean isEInk() {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_is_eink), false);
+    }
+
+    public boolean isCreateAuthorsDir(){
+        return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_create_author_folder), false);
+    }
+
+    public boolean isCreateSequencesDir(){
+        return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_create_sequence_folder), false);
     }
 }

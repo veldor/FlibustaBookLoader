@@ -159,4 +159,6 @@
     <string name="pref_check_update_now" translatable="false">check update now</string>
     <string name="view_preferences">View preferences</string>
     <string name="pref_is_eink">is eink</string>
+    <string name="pref_create_author_folder">create author folder</string>
+    <string name="pref_create_sequence_folder">create sequence folder</string>
 </resources>

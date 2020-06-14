@@ -384,4 +384,57 @@ public class Notificator {
         mDownloadScheduleBuilder.build();
         mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mDownloadScheduleBuilder.build());
     }
+
+    public void sendLoadedBookNotification(BooksDownloadSchedule queuedElement) {
+
+        // Добавлю группу
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_book_black_24dp)
+                        .setContentInfo("Загруженные книги")
+                        .setGroup(DOWNLOADED_BOOKS_GROUP)
+                        .setGroupSummary(true);
+
+        mNotificationManager.notify(-100, mBuilder.build());
+
+        Log.d("surprise", "Notificator sendLoadedBookNotification 118: type is " + queuedElement.format);
+
+        // создам интент для функции отправки файла
+        Intent shareIntent = new Intent(mContext, BookActionReceiver.class);
+        shareIntent.putExtra(BookLoadedReceiver.EXTRA_ACTION_TYPE, BookLoadedReceiver.ACTION_TYPE_SHARE);
+        shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, queuedElement.format);
+        shareIntent.putExtra(BookLoadedReceiver.EXTRA_AUTHOR_FOLDER, queuedElement.authorDirName);
+        shareIntent.putExtra(BookLoadedReceiver.EXTRA_SEQUENCE_FOLDER, queuedElement.sequenceDirName);
+        shareIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, BookLoadedId);
+        shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, queuedElement.name);
+        PendingIntent sharePendingIntent = PendingIntent.getBroadcast(mContext, START_SHARING_REQUEST_CODE, shareIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // создам интент для функции открытия файла
+
+        Intent openIntent = new Intent(mContext, BookActionReceiver.class);
+        openIntent.putExtra(BookLoadedReceiver.EXTRA_ACTION_TYPE, BookLoadedReceiver.ACTION_TYPE_OPEN);
+        openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, queuedElement.format);
+        openIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, BookLoadedId);
+        openIntent.putExtra(BookLoadedReceiver.EXTRA_AUTHOR_FOLDER, queuedElement.authorDirName);
+        openIntent.putExtra(BookLoadedReceiver.EXTRA_SEQUENCE_FOLDER, queuedElement.sequenceDirName);
+        openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, queuedElement.name);
+        PendingIntent openPendingIntent = PendingIntent.getBroadcast(mContext, START_OPEN_REQUEST_CODE, openIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent openMainIntent = new Intent(mContext, MainActivity.class);
+        PendingIntent startMainPending = PendingIntent.getActivity(mContext, START_APP_CODE, openMainIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, BOOKS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_book_black_24dp)
+                .setContentTitle(queuedElement.name)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(queuedElement.name + " :успешно загружено"))
+                .setContentIntent(startMainPending)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setGroup(DOWNLOADED_BOOKS_GROUP)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .addAction(R.drawable.ic_share_white_24dp, "Отправить", sharePendingIntent)
+                .addAction(R.drawable.ic_open_black_24dp, "Открыть", openPendingIntent);
+        mNotificationManager.notify(BookLoadedId, notificationBuilder.build());
+        ++BookLoadedId;
+    }
 }

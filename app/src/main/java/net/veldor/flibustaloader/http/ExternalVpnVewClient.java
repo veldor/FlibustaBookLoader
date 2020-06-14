@@ -7,10 +7,9 @@ import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
 
-import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
-import net.veldor.flibustaloader.utils.MyPreferences;
+import net.veldor.flibustaloader.utils.FilesHandler;
 import net.veldor.flibustaloader.utils.URLHelper;
 
 import java.io.File;
@@ -105,20 +104,15 @@ public class ExternalVpnVewClient {
             response = rawRequest(URLHelper.getFlibustaIsUrl() + book.link);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // получу имя файла
-            DocumentFile downloadsDir = App.getInstance().getDownloadDir();
-            DocumentFile newFile = downloadsDir.createFile(book.format, book.name);
+            DocumentFile newFile = FilesHandler.getDownloadFile(book);
             if (newFile != null) {
                 // запрошу данные
                 Log.d("surprise", "TorWebClient downloadBook: request " + book.link + " of book " + book.name);
                 GlobalWebClient.handleBookLoadRequest(response, newFile);
             }
         } else {
-            File file = MyPreferences.getInstance().getDownloadDir();
-            if (file != null) {
-                File newCompatFile = new File(file, book.name);
-                GlobalWebClient.handleBookLoadRequest(response, newCompatFile);
-            }
+            File file = FilesHandler.getCompatDownloadFile(book);
+            GlobalWebClient.handleBookLoadRequest(response, file);
         }
     }
 

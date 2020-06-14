@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.parsers;
 
+import android.util.Log;
+
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.selections.Author;
@@ -78,11 +80,26 @@ class BooksParser {
                     ++innerCounter;
 
                 }
-                if(hideDigests && book.authors.size() > 3){
+                if (hideDigests && book.authors.size() > 3) {
                     continue;
                 }
                 book.author = stringBuilder.toString();
             }
+            // создам название папки с именем автора
+            String authorDirName;
+            if (book.authors.size() == 0) {
+                authorDirName = "Без автора";
+            } else if (book.authors.size() == 1) {
+                // создам название папки
+                authorDirName = Grammar.createAuthorDirName(book.authors.get(0));
+            } else if (book.authors.size() == 2) {
+                authorDirName = Grammar.createAuthorDirName(book.authors.get(0)) + " " + Grammar.createAuthorDirName(book.authors.get(1));
+            } else {
+                authorDirName = "Антологии";
+            }
+            Log.d("surprise", "BooksParser parse 100: finded autor " + authorDirName);
+            authorDirName = Grammar.clearDirName(authorDirName);
+            Log.d("surprise", "BooksParser parse 100: author dir name is " + authorDirName);
             // добавлю категории
             xpathResult = (NodeList) xPath.evaluate("./category", entry, XPathConstants.NODESET);
             if (xpathResult.getLength() > 0) {
@@ -112,21 +129,7 @@ class BooksParser {
             book.translate = Grammar.textFromHtml(getInfoFromContent(someString, "Перевод:"));
             book.sequenceComplex = getInfoFromContent(someString, "Серия:");
 
-            // найду ссылки на скачивание книги
-            xpathResult = (NodeList) xPath.evaluate("./link[@rel='http://opds-spec.org/acquisition/open-access']", entry, XPathConstants.NODESET);
-            innerCounter = 0;
-            while ((someNode = xpathResult.item(innerCounter)) != null) {
-                someAttributes = someNode.getAttributes();
-                downloadLink = new DownloadLink();
-                downloadLink.id = book.id;
-                downloadLink.url = someAttributes.getNamedItem("href").getTextContent();
-                downloadLink.mime = someAttributes.getNamedItem("type").getTextContent();
-                downloadLink.name = book.name;
-                downloadLink.author = book.author;
-                downloadLink.size = book.size;
-                book.downloadLinks.add(downloadLink);
-                innerCounter++;
-            }
+            String sequenceName = null;
             // найду ссылки на серии
             xpathResult = (NodeList) xPath.evaluate("./link[@rel='related']", entry, XPathConstants.NODESET);
             innerCounter = 0;
@@ -142,13 +145,49 @@ class BooksParser {
                 }
                 innerCounter++;
             }
+            if (book.sequenceComplex != null) {
+                // буду учитывать только первую серию
+                // после хеша идёт номер книги в серии, он нам не нужен
+                sequenceName = book.sequenceComplex;
+                if (sequenceName.indexOf("#") > 0) {
+                    sequenceName = sequenceName.substring(0, sequenceName.indexOf("#"));
+                }
+                if (sequenceName.length() > 100) {
+                    sequenceName = sequenceName.substring(0, 100);
+                }
+                if(sequenceName.startsWith("Серия: ")){
+                    sequenceName = sequenceName.substring(7);
+                }
+                sequenceName = Grammar.clearDirName(sequenceName);
+            }
+            Log.d("surprise", "BooksParser parse 173: sequence is " + sequenceName);
+
+            // найду ссылки на скачивание книги
+            xpathResult = (NodeList) xPath.evaluate("./link[@rel='http://opds-spec.org/acquisition/open-access']", entry, XPathConstants.NODESET);
+            innerCounter = 0;
+            while ((someNode = xpathResult.item(innerCounter)) != null) {
+                someAttributes = someNode.getAttributes();
+                downloadLink = new DownloadLink();
+                downloadLink.id = book.id;
+                downloadLink.url = someAttributes.getNamedItem("href").getTextContent();
+                downloadLink.mime = someAttributes.getNamedItem("type").getTextContent();
+                downloadLink.name = book.name;
+                downloadLink.author = book.author;
+                downloadLink.size = book.size;
+                downloadLink.authorDirName = authorDirName;
+                if(sequenceName != null){
+                    downloadLink.sequenceDirName = sequenceName;
+                }
+                book.downloadLinks.add(downloadLink);
+                innerCounter++;
+            }
 
             // если назначена загрузка превью- гружу их
-            if(isLoadPreviews){
+            if (isLoadPreviews) {
                 someNode = ((Node) xPath.evaluate("./link[@rel='http://opds-spec.org/image']", entry, XPathConstants.NODE));
-                if(someNode != null){
+                if (someNode != null) {
                     someString = someNode.getAttributes().getNamedItem("href").getTextContent();
-                    if(someString != null && !someString.isEmpty()){
+                    if (someString != null && !someString.isEmpty()) {
                         book.previewUrl = someString;
                     }
                 }
@@ -157,6 +196,7 @@ class BooksParser {
         }
         return result;
     }
+
     private static String getInfoFromContent(String item, String s) {
         int start = item.indexOf(s);
         int end = item.indexOf("<br/>", start);

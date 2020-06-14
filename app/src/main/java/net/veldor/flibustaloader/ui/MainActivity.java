@@ -20,7 +20,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
 import androidx.documentfile.provider.DocumentFile;
@@ -128,7 +127,7 @@ public class MainActivity extends BaseActivity {
         View rootView = findViewById(R.id.rootView);
         if (rootView != null) {
             // если это читалка- фон не назначаю
-            if (isEInk() || MyPreferences.getInstance().isEink()) {
+            if (isEInk() || MyPreferences.getInstance().isEInk()) {
                 //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
             } else {
                 try {

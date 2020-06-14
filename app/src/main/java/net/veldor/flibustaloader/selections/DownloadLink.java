@@ -9,4 +9,6 @@ public class DownloadLink implements Serializable {
     public String name;
     public String author;
     public String size;
+    public String authorDirName;
+    public String sequenceDirName;
 }

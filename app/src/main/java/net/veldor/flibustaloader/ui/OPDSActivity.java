@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
@@ -448,7 +447,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mRootView = findViewById(R.id.rootView);
 
         if (mRootView != null) {
-            if (isEInk() || MyPreferences.getInstance().isEink()) {
+            if (isEInk() || MyPreferences.getInstance().isEInk()) {
                 //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
             } else {
                 // назначу фон
@@ -1319,7 +1318,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showMultiplyDownloadDialog() {
         if (mMultiplyDownloadDialog == null) {
-            if(isEInk() || MyPreferences.getInstance().isEink()){
+            if(isEInk() || MyPreferences.getInstance().isEInk()){
                 mMultiplyDownloadDialog = new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.download_books_title))
                         .setMessage(getString(R.string.download_books_msg))
@@ -1452,7 +1451,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showLoadWaitingDialog() {
         if (mShowLoadDialog == null) {
-            if(isEInk() || MyPreferences.getInstance().isEink()){
+            if(isEInk() || MyPreferences.getInstance().isEInk()){
                 mShowLoadDialog = new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.download_books_title))
                         .setMessage(getString(R.string.download_books_msg))

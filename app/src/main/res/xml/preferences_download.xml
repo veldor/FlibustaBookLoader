@@ -20,6 +20,16 @@
             android:summaryOff="Если файл недоступен в выбранном формате- он будет скачан в доступном"
             android:title="Скачивать файлы только в выбранном формате" />
 
+        <SwitchPreference
+            app:key="@string/pref_create_author_folder"
+            android:defaultValue="false"
+            android:title="Создавать папки для различных авторов" />
+
+        <SwitchPreference
+            app:key="@string/pref_create_sequence_folder"
+            android:defaultValue="false"
+            android:title="Создавать папки для различных серий" />
+
         <DropDownPreference
             app:key="favorite format"
             android:title="@string/title_favorite_format_preference"
