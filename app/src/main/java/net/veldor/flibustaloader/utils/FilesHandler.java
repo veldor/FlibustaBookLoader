@@ -37,6 +37,18 @@ public class FilesHandler {
         }
     }
 
+    public static void shareFile (DocumentFile zip){
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.putExtra(Intent.EXTRA_STREAM, zip.getUri());
+        shareIntent.setType("application/zip");
+        shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
+        if (intentCanBeHandled(shareIntent)) {
+            App.getInstance().startActivity(shareIntent);
+        } else {
+            Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public static String getChangeText() {
         try {
             InputStream textFileStream = App.getInstance().getAssets().open("changes.txt");
@@ -55,26 +67,38 @@ public class FilesHandler {
     public static DocumentFile getDownloadFile(BooksDownloadSchedule book) {
             // получу имя файла
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();
-            // проверю, нужно ли создавать папку под автора
-            if (MyPreferences.getInstance().isCreateAuthorsDir()) {
-                // создам папку
-                if (downloadsDir.findFile(book.authorDirName) == null) {
-                    downloadsDir = downloadsDir.createDirectory(book.authorDirName);
+            if(MyPreferences.getInstance().isCreateSequencesDir() && book.reservedSequenceName != null){
+                if (downloadsDir.findFile(book.reservedSequenceName) == null) {
+                    downloadsDir = downloadsDir.createDirectory(book.reservedSequenceName);
                 } else {
-                    downloadsDir = downloadsDir.findFile(book.authorDirName);
+                    downloadsDir = downloadsDir.findFile(book.reservedSequenceName);
                 }
                 if (downloadsDir == null) {
                     downloadsDir = App.getInstance().getDownloadDir();
                 }
             }
-            if(MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null && !book.sequenceDirName.isEmpty()){
-                if (downloadsDir.findFile(book.sequenceDirName) == null) {
-                    downloadsDir = downloadsDir.createDirectory(book.sequenceDirName);
-                } else {
-                    downloadsDir = downloadsDir.findFile(book.sequenceDirName);
+            else{
+                // проверю, нужно ли создавать папку под автора
+                if (MyPreferences.getInstance().isCreateAuthorsDir()) {
+                    // создам папку
+                    if (downloadsDir.findFile(book.authorDirName) == null) {
+                        downloadsDir = downloadsDir.createDirectory(book.authorDirName);
+                    } else {
+                        downloadsDir = downloadsDir.findFile(book.authorDirName);
+                    }
+                    if (downloadsDir == null) {
+                        downloadsDir = App.getInstance().getDownloadDir();
+                    }
                 }
-                if (downloadsDir == null) {
-                    downloadsDir = App.getInstance().getDownloadDir();
+                if(MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null && !book.sequenceDirName.isEmpty()){
+                    if (downloadsDir.findFile(book.sequenceDirName) == null) {
+                        downloadsDir = downloadsDir.createDirectory(book.sequenceDirName);
+                    } else {
+                        downloadsDir = downloadsDir.findFile(book.sequenceDirName);
+                    }
+                    if (downloadsDir == null) {
+                        downloadsDir = App.getInstance().getDownloadDir();
+                    }
                 }
             }
             return downloadsDir.createFile(book.format, book.name);
@@ -83,11 +107,16 @@ public class FilesHandler {
     public static File getCompatDownloadFile(BooksDownloadSchedule book) {
         File file = MyPreferences.getInstance().getDownloadDir();
         // проверю, нужно ли создавать папку под автора
-        if (MyPreferences.getInstance().isCreateAuthorsDir()) {
-            file = new File(file, book.authorDirName);
+        if(MyPreferences.getInstance().isCreateSequencesDir() && book.reservedSequenceName != null){
+            file = new File(file, book.reservedSequenceName);
         }
-        if(MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null){
-            file = new File(file, book.sequenceDirName);
+        else{
+            if (MyPreferences.getInstance().isCreateAuthorsDir()) {
+                file = new File(file, book.authorDirName);
+            }
+            if(MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null){
+                file = new File(file, book.sequenceDirName);
+            }
         }
         return new File(file, book.name);
     }

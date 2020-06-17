@@ -77,7 +77,6 @@ public class TorWebClient {
                 throw new TorNotLoadedException();
             }
             int port = onionProxyManager.getIPv4LocalHostSocksPort();
-            Log.d("surprise", "TorWebClient TorWebClient 82: port is " + port);
             InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
             mContext = HttpClientContext.create();
             mContext.setAttribute("socks.address", socksaddr);
@@ -169,8 +168,6 @@ public class TorWebClient {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 DocumentFile newFile = FilesHandler.getDownloadFile(book);
                 if (newFile != null) {
-                    // запрошу данные
-                    Log.d("surprise", "TorWebClient downloadBook: request " + book.link + " of book " + book.name);
                     GlobalWebClient.handleBookLoadRequest(response, newFile);
                 }
             } else {

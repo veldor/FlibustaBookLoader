@@ -22,8 +22,10 @@ public class BooksDownloadSchedule {
     public String author = "";
     @NotNull
     public String format = "";
-    @NotNull
+
     public String authorDirName = "";
 
     public String sequenceDirName = "";
+
+    public String reservedSequenceName = "";
 }

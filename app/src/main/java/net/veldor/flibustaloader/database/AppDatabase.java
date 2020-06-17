@@ -12,7 +12,7 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
-@Database(entities = {ReadedBooks.class, DownloadedBooks.class, BooksDownloadSchedule.class}, version = 5, exportSchema = false)
+@Database(entities = {ReadedBooks.class, DownloadedBooks.class, BooksDownloadSchedule.class}, version = 6, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ReadedBooksDao readedBooksDao();
     public abstract DownloadedBooksDao downloadedBooksDao();
@@ -40,8 +40,14 @@ public abstract class AppDatabase extends RoomDatabase {
     public static final Migration MIGRATION_4_5 = new Migration(4, 5) {
         @Override
         public void migrate(final SupportSQLiteDatabase database) {
-            database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN authorDirName TEXT NOT NULL");
+            database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN authorDirName TEXT");
             database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN sequenceDirName TEXT");
+        }
+    };
+    public static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(final SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN reservedSequenceName TEXT");
         }
     };
 }

@@ -16,6 +16,7 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.ui.OPDSActivity;
+import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.URLHelper;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 public class SearchWorker extends Worker {
     public static final String REQUEST = "request";
     public static final String WORK_TAG = "search worker";
+    public static String sSequenceName;
 
     public SearchWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -31,6 +33,15 @@ public class SearchWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        String reservedSequenceName = null;
+        // если есть имя серии- сохраню книги в папку с данным имененм
+        if(sSequenceName != null){
+            reservedSequenceName = Grammar.clearDirName(sSequenceName);
+            sSequenceName = null;
+            if(reservedSequenceName.startsWith("Все книги серии ")){
+                reservedSequenceName = reservedSequenceName.substring(16);
+            }
+        }
         try {
             // оповещу о начале нового поиска
             OPDSActivity.sNewSearch.postValue(true);
@@ -50,7 +61,7 @@ public class SearchWorker extends Worker {
                     SearchResponseParser parser = new SearchResponseParser(answer);
                     int resultType = parser.getType();
                     Log.d("surprise", "SearchWorker doWork 52: result type is " + resultType);
-                    result = parser.parseResponse();
+                    result = parser.parseResponse(reservedSequenceName);
                     if (!isStopped()) {
                         if(result == null || result.size() == 0){
                             // Ничего не найдено, уведомлю об этом
@@ -73,7 +84,7 @@ public class SearchWorker extends Worker {
                                         answer = GlobalWebClient.request(request);
                                         if (answer != null && !isStopped()) {
                                             parser = new SearchResponseParser(answer);
-                                            result = parser.parseResponse();
+                                            result = parser.parseResponse(reservedSequenceName);
                                             if (result.size() > 0 && !isStopped()) {
                                                 //noinspection unchecked
                                                 OPDSActivity.sLiveGenresFound.postValue((ArrayList<Genre>) result);
@@ -99,7 +110,7 @@ public class SearchWorker extends Worker {
                                         answer = GlobalWebClient.request(request);
                                         if (answer != null && !isStopped()) {
                                             parser = new SearchResponseParser(answer);
-                                            result = parser.parseResponse();
+                                            result = parser.parseResponse(reservedSequenceName);
                                             if (result.size() > 0 && !isStopped()) {
                                                 //noinspection unchecked
                                                 OPDSActivity.sLiveSequencesFound.postValue((ArrayList<FoundedSequence>) result);
@@ -130,7 +141,7 @@ public class SearchWorker extends Worker {
                                         answer = GlobalWebClient.request(request);
                                         if (answer != null && !isStopped()) {
                                             parser = new SearchResponseParser(answer);
-                                            result = parser.parseResponse();
+                                            result = parser.parseResponse(reservedSequenceName);
                                             if (result.size() > 0 && !isStopped()) {
                                                 //noinspection unchecked
                                                 OPDSActivity.sLiveAuthorsFound.postValue((ArrayList<Author>) result);
@@ -160,7 +171,7 @@ public class SearchWorker extends Worker {
                                             answer = GlobalWebClient.request(request);
                                             if (answer != null && !isStopped()) {
                                                 parser = new SearchResponseParser(answer);
-                                                result = parser.parseResponse();
+                                                result = parser.parseResponse(reservedSequenceName);
                                                 if (result.size() > 0 && !isStopped()) {
                                                     //noinspection unchecked
                                                     OPDSActivity.sLiveBooksFound.postValue((ArrayList<FoundedBook>) result);

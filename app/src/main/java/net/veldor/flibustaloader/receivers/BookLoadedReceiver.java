@@ -18,6 +18,7 @@ public class BookLoadedReceiver extends BroadcastReceiver {
     public static final String ACTION_TYPE_SHARE = "share";
     public static final String EXTRA_AUTHOR_FOLDER = "author folder";
     public static final String EXTRA_SEQUENCE_FOLDER = "sequence folder";
+    public static final String EXTRA_RESERVED_SEQUENCE_FOLDER = "reserved sequence folder";
 
 
     @Override

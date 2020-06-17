@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.view_models;
 
 import android.app.Application;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 
 import androidx.annotation.NonNull;
@@ -28,25 +29,29 @@ import net.veldor.flibustaloader.workers.SearchWorker;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Stack;
 import java.util.UUID;
 
 public class MainViewModel extends GlobalViewModel implements MyViewModelInterface {
     private static final String ADD_TO_DOWNLOAD_QUEUE_ACTION = "add to download queue";
     public static final String MULTIPLY_DOWNLOAD = "multiply download";
 
+    private final Stack<Integer> mClickedItemsStack = new Stack<>();
+
     public MainViewModel(@NonNull Application application) {
         super(application);
     }
 
-    public int getViewMode(){
+    public int getViewMode() {
         return App.getInstance().getViewMode();
     }
-    public void switchViewMode(int type){
+
+    public void switchViewMode(int type) {
         App.getInstance().switchViewMode(type);
     }
 
     // загрузка ядра TOR
-    public LiveData<AndroidOnionProxyManager> getTor(){
+    public LiveData<AndroidOnionProxyManager> getTor() {
         return App.getInstance().mTorManager;
     }
 
@@ -97,6 +102,7 @@ public class MainViewModel extends GlobalViewModel implements MyViewModelInterfa
         WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(ADD_TO_DOWNLOAD_QUEUE_ACTION, ExistingWorkPolicy.REPLACE, downloadSelected);
         return WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadSelected.getId());
     }
+
     public LiveData<WorkInfo> downloadAll(boolean unloaded) {
         App.getInstance().mDownloadSelectedBooks = null;
         App.getInstance().mDownloadUnloaded = unloaded;
@@ -130,5 +136,17 @@ public class MainViewModel extends GlobalViewModel implements MyViewModelInterfa
         OneTimeWorkRequest searchWorkRequest = new OneTimeWorkRequest.Builder(SearchWorker.class).addTag(SearchWorker.WORK_TAG).setInputData(inputData).build();
         WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(SearchWorker.WORK_TAG, ExistingWorkPolicy.REPLACE, searchWorkRequest);
         return searchWorkRequest.getId();
+    }
+
+    public void saveClickedIndex(int sClickedItemIndex) {
+        mClickedItemsStack.push(sClickedItemIndex);
+        Log.d("surprise", "MainViewModel saveClickedIndex 140: to stack added " + sClickedItemIndex + ", stack size is " + mClickedItemsStack.size());
+    }
+
+    public Integer getLastClickedElement() {
+        if (!mClickedItemsStack.isEmpty()) {
+            return mClickedItemsStack.pop();
+        }
+        return -1;
     }
 }

@@ -8,8 +8,8 @@ android {
         minSdkVersion 16
         //noinspection OldTargetApi
         targetSdkVersion 28
-        versionCode 46
-        versionName "2.2.4"
+        versionCode 48
+        versionName "2.2.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

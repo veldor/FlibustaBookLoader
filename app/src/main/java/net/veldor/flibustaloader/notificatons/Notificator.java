@@ -200,16 +200,6 @@ public class Notificator {
         mNotificationManager.notify(SUBSCRIBE_NOTIFICATION, notification);
     }
 
-    public void sendBackupSuccessNotification() {
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, MISC_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_backup_black_24dp)
-                .setContentTitle("Настройки сохранены")
-                .setStyle(new NotificationCompat.BigTextStyle().bigText("Резервная копия настроек сохранена в папку " + App.BACKUP_DIR_NAME))
-                .setAutoCancel(true);
-        Notification notification = notificationBuilder.build();
-        mNotificationManager.notify(BACKUP_COMPLETED_NOTIFICATION, notification);
-    }
-
     public Notification createMassBookLoadNotification() {
         cancelTorErrorMessage();
         // при нажатии на уведомление- открою экран ожидания очереди
@@ -405,6 +395,7 @@ public class Notificator {
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, queuedElement.format);
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_AUTHOR_FOLDER, queuedElement.authorDirName);
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_SEQUENCE_FOLDER, queuedElement.sequenceDirName);
+        shareIntent.putExtra(BookLoadedReceiver.EXTRA_RESERVED_SEQUENCE_FOLDER, queuedElement.reservedSequenceName);
         shareIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, BookLoadedId);
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, queuedElement.name);
         PendingIntent sharePendingIntent = PendingIntent.getBroadcast(mContext, START_SHARING_REQUEST_CODE, shareIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -417,6 +408,7 @@ public class Notificator {
         openIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, BookLoadedId);
         openIntent.putExtra(BookLoadedReceiver.EXTRA_AUTHOR_FOLDER, queuedElement.authorDirName);
         openIntent.putExtra(BookLoadedReceiver.EXTRA_SEQUENCE_FOLDER, queuedElement.sequenceDirName);
+        openIntent.putExtra(BookLoadedReceiver.EXTRA_RESERVED_SEQUENCE_FOLDER, queuedElement.reservedSequenceName);
         openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, queuedElement.name);
         PendingIntent openPendingIntent = PendingIntent.getBroadcast(mContext, START_OPEN_REQUEST_CODE, openIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

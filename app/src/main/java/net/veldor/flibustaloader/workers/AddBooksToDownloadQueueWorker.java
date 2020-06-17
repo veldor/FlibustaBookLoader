@@ -136,6 +136,7 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         newScheduleElement.size = link.size;
         newScheduleElement.authorDirName = link.authorDirName;
         newScheduleElement.sequenceDirName = link.sequenceDirName;
+        newScheduleElement.reservedSequenceName = link.reservedSequenceName;
         // определю имя ссылки для скачивания =======================================
         String author_last_name;
         if (link.author != null && !link.author.isEmpty()) {

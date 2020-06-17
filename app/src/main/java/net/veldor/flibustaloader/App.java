@@ -30,6 +30,7 @@ import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.ui.OPDSActivity;
+import net.veldor.flibustaloader.utils.LogHandler;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
 import net.veldor.flibustaloader.utils.SubscribeSequences;
@@ -141,6 +142,9 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        //todo удалить в релизной версии
+        LogHandler.getInstance().initLog();
+
         // читаю настройки sharedPreferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         instance = this;
@@ -161,7 +165,7 @@ public class App extends Application {
         // получаю базу данных
         mDatabase = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database")
-                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5)
+                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
                 .allowMainThreadQueries()
                 .build();
 

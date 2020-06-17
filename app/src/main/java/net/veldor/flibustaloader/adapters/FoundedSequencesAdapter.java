@@ -16,6 +16,7 @@ import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedSequenceItemBinding;
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.FoundedSequence;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
@@ -56,15 +57,13 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
     }
 
     public void setContent(ArrayList<FoundedSequence> newData) {
-        if(newData == null){
+        if (newData == null) {
             mSequences = new ArrayList<>();
             notifyDataSetChanged();
-        }
-        else if(newData.size() == 0 && mSequences.size() == 0){
-            Toast.makeText(App.getInstance(), "Жанры не найдены",Toast.LENGTH_SHORT).show();
+        } else if (newData.size() == 0 && mSequences.size() == 0) {
+            Toast.makeText(App.getInstance(), "Жанры не найдены", Toast.LENGTH_SHORT).show();
             notifyDataSetChanged();
-        }
-        else{
+        } else {
             int previousArrayLen = mSequences.size();
             mSequences.addAll(newData);
             notifyItemRangeInserted(previousArrayLen, newData.size());
@@ -74,7 +73,7 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
     public void sort() {
         SortHandler.sortSequences(mSequences);
         notifyDataSetChanged();
-        Toast.makeText(App.getInstance(), "Серии отсортированы!",Toast.LENGTH_SHORT).show();
+        Toast.makeText(App.getInstance(), "Серии отсортированы!", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -83,9 +82,10 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
         notifyDataSetChanged();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ViewDataBinding mBinding;
+        private final View mRootView;
         private FoundedSequence mSequence;
 
         ViewHolder(ViewDataBinding binding) {
@@ -93,13 +93,26 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
             mBinding = binding;
 
             View container = mBinding.getRoot();
-            container.setOnClickListener(v -> App.getInstance().mSelectedSequence.postValue(mSequence));
+            mRootView = container.findViewById(R.id.rootView);
+            container.setOnClickListener(v -> {
+                App.getInstance().mSelectedSequence.postValue(mSequence);
+
+                // сообщу, по какому именно элементу был клик
+                OPDSActivity.sClickedItemIndex = mSequences.indexOf(mSequence);
+            });
 
         }
+
         void bind(final FoundedSequence sequence) {
             mSequence = sequence;
             mBinding.setVariable(BR.sequence, sequence);
             mBinding.executePendingBindings();
+            if(OPDSActivity.sElementForSelectionIndex >= 0 && mSequences.size() > OPDSActivity.sElementForSelectionIndex && mSequences.indexOf(mSequence) == OPDSActivity.sElementForSelectionIndex){
+                mRootView.setBackgroundColor(App.getInstance().getResources().getColor(R.color.selected_item_background));
+            }
+            else{
+                mRootView.setBackground(App.getInstance().getResources().getDrawable(R.drawable.sequence_layout));
+            }
         }
     }
 }

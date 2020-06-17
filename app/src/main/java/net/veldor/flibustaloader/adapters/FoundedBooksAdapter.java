@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.adapters;
 
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -224,6 +225,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             Button downloadButton = mRoot.findViewById(R.id.downloadBookBtn);
             if (downloadButton != null) {
                 downloadButton.setOnClickListener(view -> {
+                    Log.d("surprise", "ViewHolder ViewHolder 227: founded links for download " + mBook.downloadLinks);
                     // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
                     if (mBook.downloadLinks.size() > 1) {
                         String savedMime = App.getInstance().getFavoriteMime();

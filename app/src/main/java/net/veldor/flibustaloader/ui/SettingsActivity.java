@@ -5,7 +5,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,9 +22,11 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.Operation;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
@@ -37,6 +40,8 @@ import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 import java.io.File;
 
 import lib.folderpicker.FolderPicker;
+
+import static androidx.work.WorkInfo.State.SUCCEEDED;
 
 public class SettingsActivity extends BaseActivity implements PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
 
@@ -83,6 +88,8 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
     public static class ReservePreferencesFragment extends PreferenceFragmentCompat {
 
         private static final int BACKUP_FILE_REQUEST_CODE = 10;
+        private static final int REQUEST_CODE = 1;
+        private static final int READ_REQUEST_CODE = 2;
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -97,22 +104,14 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
             Preference settingsRestorePref = findPreference(getString(R.string.restore_settings));
             if (settingsBackupPref != null) {
                 settingsBackupPref.setOnPreferenceClickListener(preference -> {
-                    // запущу рабочего, сохраняющего базу данных прочитанного и скачанного в XML
-                    Toast.makeText(getContext(), "Запущено резервирование настроек", Toast.LENGTH_SHORT).show();
-                    OneTimeWorkRequest reserveWorker = new OneTimeWorkRequest.Builder(ReserveSettingsWorker.class).build();
-                    LiveData<Operation.State> workState = WorkManager.getInstance(App.getInstance()).enqueue(reserveWorker).getState();
-                    // Отслежу резервирование настроек, когда оно будет закончено- предложу отправить файл с настройками
-                    workState.observe(ReservePreferencesFragment.this, state -> {
-                        if (state.toString().equals("SUCCESS")) {
-                            // отправка файла
-                            File zip = new File(new File(Environment.getExternalStorageDirectory(), App.BACKUP_DIR_NAME), App.BACKUP_FILE_NAME);
-                            if (zip.isFile()) {
-                                Toast.makeText(getContext(), "Настройки сохранены. Вот файл с ними", Toast.LENGTH_SHORT).show();
-                                FilesHandler.shareFile(zip);
-                            }
-                            workState.removeObservers(ReservePreferencesFragment.this);
-                        }
-                    });
+                    Toast.makeText(getContext(), "Выберите папку для сохранения резервной копии", Toast.LENGTH_SHORT).show();
+                    // открою диалог выбора папки
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_CODE);
+                    } else {
+                        Intent intent = new Intent(getContext(), FolderPicker.class);
+                        startActivityForResult(intent, READ_REQUEST_CODE);
+                    }
                     return false;
                 });
             }
@@ -149,10 +148,70 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                             LiveData<Operation.State> workState = WorkManager.getInstance(App.getInstance()).enqueue(restoreWorker).getState();
                             workState.observe(ReservePreferencesFragment.this, state -> {
                                 if (state.toString().equals("SUCCESS")) {
+                                    // настройки приложения восстановлены
+                                    Toast.makeText(getContext(), "Настройки приложения восстановлены", Toast.LENGTH_SHORT).show();
+                                    workState.removeObservers(ReservePreferencesFragment.this);
+                                    new Handler().postDelayed(new BaseActivity.ResetApp(), 1000);
+                                }
+                                else if(state instanceof Operation.State.FAILURE){
+                                    Toast.makeText(getContext(), "Не удалось восстановить настройки приложения", Toast.LENGTH_SHORT).show();
+                                    workState.removeObservers(ReservePreferencesFragment.this);
+                                }
+                            });
+                        }
+                    }
+                }
+            } else if (requestCode == REQUEST_CODE) {
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
+                        Uri treeUri = data.getData();
+                        if (treeUri != null) {
+                            // проверю наличие файла
+                            DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
+                            if (dl != null && dl.isDirectory()) {
+                                // зарезирвирую настройки в данную директорию
+                                ReserveSettingsWorker.sSaveDir = dl;
+                                OneTimeWorkRequest reserveWorker = new OneTimeWorkRequest.Builder(ReserveSettingsWorker.class).build();
+                                WorkManager.getInstance(App.getInstance()).enqueue(reserveWorker);
+                                LiveData<WorkInfo> workStatus = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(reserveWorker.getId());
+                                // Отслежу резервирование настроек, когда оно будет закончено- предложу отправить файл с настройками
+                                workStatus.observe(ReservePreferencesFragment.this, state -> {
+                                    Log.d("surprise", "ReservePreferencesFragment onActivityResult 174: state is " + state);
+                                    if (state.getState() == SUCCEEDED) {
+                                        Log.d("surprise", "ReservePreferencesFragment onActivityResult 173: here");
+                                        // отправка файла
+                                        DocumentFile zip = ReserveSettingsWorker.sBackupFile;
+                                        Log.d("surprise", "ReservePreferencesFragment onActivityResult 177: zip is " + zip);
+                                        if (zip != null && zip.isFile()) {
+                                            Toast.makeText(getContext(), "Настройки сохранены. Вот файл с ними", Toast.LENGTH_SHORT).show();
+                                            FilesHandler.shareFile(zip);
+                                        }
+                                        workStatus.removeObservers(ReservePreferencesFragment.this);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            } else if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+                // сохраню файл
+                if (data != null && data.getExtras() != null) {
+                    String folderLocation = data.getExtras().getString("data");
+                    if (folderLocation != null) {
+                        File destination = new File(folderLocation);
+                        if (destination.exists()) {
+                            ReserveSettingsWorker.sCompatSaveDir = destination;
+                            OneTimeWorkRequest reserveWorker = new OneTimeWorkRequest.Builder(ReserveSettingsWorker.class).build();
+                            LiveData<Operation.State> workState = WorkManager.getInstance(App.getInstance()).enqueue(reserveWorker).getState();
+                            // Отслежу резервирование настроек, когда оно будет закончено- предложу отправить файл с настройками
+                            workState.observe(ReservePreferencesFragment.this, state -> {
+                                if (state.toString().equals("SUCCESS")) {
+                                    Log.d("surprise", "ReservePreferencesFragment onActivityResult 173: here");
                                     // отправка файла
-                                    File zip = new File(new File(Environment.getExternalStorageDirectory(), App.BACKUP_DIR_NAME), App.BACKUP_FILE_NAME);
-                                    if (zip.isFile()) {
-                                        Toast.makeText(getContext(), "Настройки приложения восстановлены", Toast.LENGTH_SHORT).show();
+                                    File zip = ReserveSettingsWorker.sCompatBackupFile;
+                                    Log.d("surprise", "ReservePreferencesFragment onActivityResult 177: zip is " + zip);
+                                    if (zip != null && zip.isFile()) {
+                                        Toast.makeText(getContext(), "Настройки сохранены. Вот файл с ними", Toast.LENGTH_SHORT).show();
                                         FilesHandler.shareFile(zip);
                                     }
                                     workState.removeObservers(ReservePreferencesFragment.this);
@@ -182,6 +241,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
             setPreferencesFromResource(R.xml.preferences_view, rootKey);
         }
     }
+
     public static class UpdatePreferencesFragment extends PreferenceFragmentCompat {
 
         @Override

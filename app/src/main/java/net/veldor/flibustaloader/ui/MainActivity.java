@@ -350,34 +350,36 @@ public class MainActivity extends BaseActivity {
 
     private void startTimer() {
         int waitingTime = TOR_LOAD_MAX_TIME * 1000; // 3 minute in milli seconds
-        mProgressCounter = 0;
-        mCdt = new CountDownTimer(waitingTime, 1000) {
-            public void onTick(long millisUntilFinished) {
-                mProgressCounter++;
-                mTorLoadingProgressIndicator.setProgress(mProgressCounter);
-                if (mTor != null) {
-                    String last = mTor.getLastLog();
-                    if (last != null) {
-                        if (!last.isEmpty()) {
-                            mTorLoadingStatusText.setText(last);
+        if (mProgressCounter == 0){
+            mProgressCounter = 1;
+            mCdt = new CountDownTimer(waitingTime, 1000) {
+                public void onTick(long millisUntilFinished) {
+                    mProgressCounter++;
+                    mTorLoadingProgressIndicator.setProgress(mProgressCounter);
+                    if (mTor != null) {
+                        String last = mTor.getLastLog();
+                        if (last != null) {
+                            if (!last.isEmpty()) {
+                                mTorLoadingStatusText.setText(last);
+                            } else {
+                                mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loading), mProgressCounter));
+                            }
                         } else {
                             mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loading), mProgressCounter));
+
                         }
                     } else {
-                        mTorLoadingStatusText.setText(String.format(Locale.ENGLISH, getString(R.string.tor_continue_loading), mProgressCounter));
-
+                        mTorLoadingStatusText.setText(R.string.wait_tor_loading_message);
                     }
-                } else {
-                    mTorLoadingStatusText.setText(R.string.wait_tor_loading_message);
                 }
-            }
 
-            public void onFinish() {
-                // tor не загрузился, покажу сообщение с предложением подождать или перезапустить процесс
-                torLoadTooLongDialog();
-            }
-        };
-        mCdt.start();
+                public void onFinish() {
+                    // tor не загрузился, покажу сообщение с предложением подождать или перезапустить процесс
+                    torLoadTooLongDialog();
+                }
+            };
+            mCdt.start();
+        }
     }
 
 

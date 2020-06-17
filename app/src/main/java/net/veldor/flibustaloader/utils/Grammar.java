@@ -45,7 +45,7 @@ public class Grammar {
         // разобью имя автора по пробелу
         String[] parts = author.name.split(" ");
         if (parts.length > 1) {
-            dirname = parts[1] + ' ' + parts[0];
+            dirname = parts[0] + ' ' + parts[1];
         } else {
             dirname = parts[0];
         }

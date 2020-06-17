@@ -15,7 +15,6 @@ import net.veldor.flibustaloader.BR;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedGenreItemBinding;
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
-import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.Genre;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.SortHandler;
@@ -25,8 +24,6 @@ import java.util.ArrayList;
 public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdapter.ViewHolder> implements MyAdapterInterface {
     private ArrayList<Genre> mGenres;
     private LayoutInflater mLayoutInflater;
-
-    private DownloadLink mCurrentLink;
 
     public FoundedGenresAdapter(ArrayList<Genre> arrayList) {
 
@@ -86,9 +83,10 @@ public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdap
         notifyDataSetChanged();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ViewDataBinding mBinding;
+        private final View mRootView;
         private Genre mGenre;
 
         ViewHolder(ViewDataBinding binding) {
@@ -96,12 +94,11 @@ public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdap
             mBinding = binding;
 
             View container = mBinding.getRoot();
-
-            container.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    OPDSActivity.sLiveSearchLink.postValue(mGenre.term);
-                }
+            mRootView = container.findViewById(R.id.rootView);
+            container.setOnClickListener(view -> {
+                OPDSActivity.sLiveSearchLink.postValue(mGenre.term);
+                // сообщу, по какому именно элементу был клик
+                OPDSActivity.sClickedItemIndex = mGenres.indexOf(mGenre);
             });
 
         }
@@ -110,6 +107,12 @@ public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdap
             mGenre = foundedGenre;
             mBinding.setVariable(BR.genre, foundedGenre);
             mBinding.executePendingBindings();
+            if(OPDSActivity.sElementForSelectionIndex >= 0 && mGenres.size() > OPDSActivity.sElementForSelectionIndex && mGenres.indexOf(mGenre) == OPDSActivity.sElementForSelectionIndex){
+                mRootView.setBackgroundColor(App.getInstance().getResources().getColor(R.color.selected_item_background));
+            }
+            else{
+                mRootView.setBackground(App.getInstance().getResources().getDrawable(R.drawable.genre_layout));
+            }
         }
     }
 }

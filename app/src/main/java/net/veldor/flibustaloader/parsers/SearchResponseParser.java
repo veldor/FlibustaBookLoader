@@ -41,7 +41,7 @@ public class SearchResponseParser {
         mEntries = (NodeList) mXpath.evaluate("/feed/entry", document, XPathConstants.NODESET);
     }
 
-    public ArrayList parseResponse() throws XPathExpressionException {
+    public ArrayList parseResponse(String reservedSequenceName) throws XPathExpressionException {
         // получу сущности
         if (mEntries != null && mEntries.getLength() > 0) {
             // в зависимости от типа сущностей запущу парсер
@@ -58,7 +58,7 @@ public class SearchResponseParser {
                             .SEARCH_NEW_AUTHORS:
                         return AuthorsParser.parse(mEntries, mXpath);
                     case OPDSActivity.SEARCH_BOOKS:
-                        return BooksParser.parse(mEntries, mXpath);
+                        return BooksParser.parse(mEntries, mXpath, reservedSequenceName);
                 }
             }
         }
@@ -81,7 +81,6 @@ public class SearchResponseParser {
     private int identificationSearchType(Node item, XPath xPath) throws XPathExpressionException {
         // получу идентификатор
         String id = ((Node) xPath.evaluate("./id", item, XPathConstants.NODE)).getTextContent();
-        Log.d("surprise", "SearchResponseParser identificationSearchType 82: identification id is " + id);
         if (id.startsWith(BOOK_TYPE)) {
             return OPDSActivity.SEARCH_BOOKS;
         } else if (id.startsWith(GENRE_TYPE)) {

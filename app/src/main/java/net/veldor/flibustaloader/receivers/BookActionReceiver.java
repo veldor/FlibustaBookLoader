@@ -31,9 +31,10 @@ public class BookActionReceiver extends BroadcastReceiver {
         String type = intent.getStringExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE);
         String authorFolder = intent.getStringExtra(BookLoadedReceiver.EXTRA_AUTHOR_FOLDER);
         String sequenceFolder = intent.getStringExtra(BookLoadedReceiver.EXTRA_SEQUENCE_FOLDER);
+        String reservedSequenceFolder = intent.getStringExtra(BookLoadedReceiver.EXTRA_RESERVED_SEQUENCE_FOLDER);
         if (actionType != null && actionType.equals(BookLoadedReceiver.ACTION_TYPE_SHARE))
-            BookSharer.shareBook(name, type, authorFolder, sequenceFolder);
+            BookSharer.shareBook(name, type, authorFolder, sequenceFolder, reservedSequenceFolder);
         else if (actionType != null && actionType.equals(BookLoadedReceiver.ACTION_TYPE_OPEN))
-            BookOpener.openBook(name, type, authorFolder, sequenceFolder);
+            BookOpener.openBook(name, type, authorFolder, sequenceFolder, reservedSequenceFolder);
     }
 }

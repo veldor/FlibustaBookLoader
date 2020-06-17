@@ -23,7 +23,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 class BooksParser {
-    public static ArrayList<FoundedBook> parse(NodeList entries, XPath xPath) throws XPathExpressionException {
+    public static ArrayList<FoundedBook> parse(NodeList entries, XPath xPath, String reservedSequenceName) throws XPathExpressionException {
         ArrayList<FoundedBook> result = new ArrayList<>();
         boolean isLoadPreviews = App.getInstance().isPreviews();
         // обработаю найденные книги
@@ -97,9 +97,7 @@ class BooksParser {
             } else {
                 authorDirName = "Антологии";
             }
-            Log.d("surprise", "BooksParser parse 100: finded autor " + authorDirName);
             authorDirName = Grammar.clearDirName(authorDirName);
-            Log.d("surprise", "BooksParser parse 100: author dir name is " + authorDirName);
             // добавлю категории
             xpathResult = (NodeList) xPath.evaluate("./category", entry, XPathConstants.NODESET);
             if (xpathResult.getLength() > 0) {
@@ -160,7 +158,6 @@ class BooksParser {
                 }
                 sequenceName = Grammar.clearDirName(sequenceName);
             }
-            Log.d("surprise", "BooksParser parse 173: sequence is " + sequenceName);
 
             // найду ссылки на скачивание книги
             xpathResult = (NodeList) xPath.evaluate("./link[@rel='http://opds-spec.org/acquisition/open-access']", entry, XPathConstants.NODESET);
@@ -174,6 +171,7 @@ class BooksParser {
                 downloadLink.name = book.name;
                 downloadLink.author = book.author;
                 downloadLink.size = book.size;
+                downloadLink.reservedSequenceName = reservedSequenceName;
                 downloadLink.authorDirName = authorDirName;
                 if(sequenceName != null){
                     downloadLink.sequenceDirName = sequenceName;

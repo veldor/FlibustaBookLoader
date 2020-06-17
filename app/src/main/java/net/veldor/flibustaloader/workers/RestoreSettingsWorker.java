@@ -45,7 +45,6 @@ public class RestoreSettingsWorker extends Worker {
             if (uriString != null && !uriString.isEmpty()) {
                 Uri uri = Uri.parse(uriString);
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-
                     InputStream fileData = App.getInstance().getContentResolver().openInputStream(uri);
                     ZipInputStream zin = new ZipInputStream(fileData);
                     ZipEntry ze;
@@ -84,6 +83,7 @@ public class RestoreSettingsWorker extends Worker {
                         }
                     }
                     zin.close();
+                    return Result.success();
                 }
             }
         } catch (FileNotFoundException e) {
@@ -91,7 +91,7 @@ public class RestoreSettingsWorker extends Worker {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return Result.success();
+        return Result.failure();
     }
 
     private void extractFromZip(ZipInputStream zis, File fileName) {

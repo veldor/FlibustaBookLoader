@@ -23,17 +23,22 @@ import static net.veldor.flibustaloader.utils.BookOpener.intentCanBeHandled;
 
 public class BookSharer {
 
-    public static void shareBook(String name, String type, String authorDir, String sequenceDir) {
+    public static void shareBook(String name, String type, String authorDir, String sequenceDir, String reservedSequenceFolder) {
         File file;
         // ========================================================================================
         Context context = App.getInstance();
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();
-            if (MyPreferences.getInstance().isCreateAuthorsDir() && authorDir != null && !authorDir.isEmpty()) {
-                downloadsDir = downloadsDir.findFile(authorDir);
+            if(MyPreferences.getInstance().isCreateSequencesDir() && reservedSequenceFolder != null){
+                downloadsDir = downloadsDir.findFile(reservedSequenceFolder);
             }
-            if (MyPreferences.getInstance().isCreateSequencesDir() && downloadsDir != null && sequenceDir != null && !sequenceDir.isEmpty()) {
-                downloadsDir = downloadsDir.findFile(sequenceDir);
+            else{
+                if (MyPreferences.getInstance().isCreateAuthorsDir() && authorDir != null && !authorDir.isEmpty()) {
+                    downloadsDir = downloadsDir.findFile(authorDir);
+                }
+                if (MyPreferences.getInstance().isCreateSequencesDir() && downloadsDir != null && sequenceDir != null && !sequenceDir.isEmpty()) {
+                    downloadsDir = downloadsDir.findFile(sequenceDir);
+                }
             }
             if (downloadsDir != null) {
                 DocumentFile downloadFile = downloadsDir.findFile(name);
@@ -73,11 +78,16 @@ public class BookSharer {
             }
         } else {
             File dd = MyPreferences.getInstance().getDownloadDir();
-            if (MyPreferences.getInstance().isCreateAuthorsDir() && authorDir != null && !authorDir.isEmpty()) {
-                dd = new File(dd, authorDir);
+            if(MyPreferences.getInstance().isCreateSequencesDir() && reservedSequenceFolder != null){
+                dd = new File(dd, reservedSequenceFolder);
             }
-            if (MyPreferences.getInstance().isCreateSequencesDir() && sequenceDir != null && !sequenceDir.isEmpty()) {
-                dd = new File(dd, sequenceDir);
+            else{
+                if (MyPreferences.getInstance().isCreateAuthorsDir() && authorDir != null && !authorDir.isEmpty()) {
+                    dd = new File(dd, authorDir);
+                }
+                if (MyPreferences.getInstance().isCreateSequencesDir() && sequenceDir != null && !sequenceDir.isEmpty()) {
+                    dd = new File(dd, sequenceDir);
+                }
             }
             File bookFile = new File(dd, name);
             if (bookFile.isFile()) {

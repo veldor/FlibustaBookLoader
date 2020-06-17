@@ -19,7 +19,7 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 
 public class BookOpener {
-    public static void openBook(String name, String type, String authorDir, String sequenceDir) {
+    public static void openBook(String name, String type, String authorDir, String sequenceDir, String reservedSequenceFolder) {
         Context context = App.getInstance();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();

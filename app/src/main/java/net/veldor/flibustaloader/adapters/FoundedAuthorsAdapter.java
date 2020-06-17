@@ -17,6 +17,7 @@ import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.databinding.SearchedAuthorItemBinding;
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.Author;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.utils.SortHandler;
 
 import java.util.ArrayList;
@@ -82,9 +83,10 @@ public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAd
         notifyDataSetChanged();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
 
         private final ViewDataBinding mBinding;
+        private final View mRootView;
         private Author mAuthor;
 
         ViewHolder(ViewDataBinding binding) {
@@ -93,16 +95,17 @@ public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAd
 
             View container = mBinding.getRoot();
 
-            container.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (mAuthor.uri != null) {
-                        App.getInstance().mSelectedAuthor.postValue(mAuthor);
-                    } else {
-                        // поиск новых книг автора
-                        App.getInstance().mAuthorNewBooks.postValue(mAuthor);
-                    }
+            mRootView = container.findViewById(R.id.rootView);
+
+            container.setOnClickListener(view -> {
+                if (mAuthor.uri != null) {
+                    App.getInstance().mSelectedAuthor.postValue(mAuthor);
+                } else {
+                    // поиск новых книг автора
+                    App.getInstance().mAuthorNewBooks.postValue(mAuthor);
                 }
+                // сообщу, по какому именно элементу был клик
+                OPDSActivity.sClickedItemIndex = mAuthors.indexOf(mAuthor);
             });
         }
 
@@ -110,6 +113,12 @@ public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAd
             mBinding.setVariable(BR.author, foundedAuthor);
             mBinding.executePendingBindings();
             mAuthor = foundedAuthor;
+            if(OPDSActivity.sElementForSelectionIndex >= 0 && mAuthors.size() > OPDSActivity.sElementForSelectionIndex && mAuthors.indexOf(mAuthor) == OPDSActivity.sElementForSelectionIndex){
+                mRootView.setBackgroundColor(App.getInstance().getResources().getColor(R.color.selected_item_background));
+            }
+            else{
+                mRootView.setBackground(App.getInstance().getResources().getDrawable(R.drawable.author_layout));
+            }
         }
     }
 }

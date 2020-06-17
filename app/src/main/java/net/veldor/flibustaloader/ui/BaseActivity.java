@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.ui;
 
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -157,5 +158,16 @@ public class BaseActivity extends AppCompatActivity {
 
     public boolean isEInk() {
         return getWindowManager().getDefaultDisplay().getRefreshRate() < 25.0;
+    }
+
+
+    public static class ResetApp implements Runnable {
+        @Override
+        public void run() {
+            Intent intent = new Intent(App.getInstance(), MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            App.getInstance().startActivity(intent);
+            Runtime.getRuntime().exit(0);
+        }
     }
 }
