@@ -423,7 +423,8 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     })
-                    .setCancelable(false);
+                    .setNegativeButton("Ok", null)
+                    .setCancelable(true);
             mTorRestartDialog = dialogBuilder.create();
         }
         mTorRestartDialog.show();

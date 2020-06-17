@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -9,6 +10,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.parsers.SearchResponseParser;
 import net.veldor.flibustaloader.selections.Author;
@@ -20,6 +22,8 @@ import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.URLHelper;
 
 import java.util.ArrayList;
+
+import static net.veldor.flibustaloader.MyWebViewClient.TOR_CONNECT_ERROR_ACTION;
 
 public class SearchWorker extends Worker {
     public static final String REQUEST = "request";
@@ -190,7 +194,8 @@ public class SearchWorker extends Worker {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d("surprise", "SearchWorker doWork 77: i failed( " + e.getMessage() + ")");
+            Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+            App.getInstance().sendBroadcast(finishLoadingIntent);
             return Result.failure();
         }
         OPDSActivity.sNewSearch.postValue(false);

@@ -1595,7 +1595,8 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     })
-                    .setCancelable(false);
+                    .setNegativeButton("Ok", null)
+                    .setCancelable(true);
             mTorRestartDialog = dialogBuilder.create();
         }
         if (!OPDSActivity.this.isFinishing()) {
