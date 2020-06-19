@@ -23,6 +23,7 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BookSharer;
 import net.veldor.flibustaloader.utils.MyFileReader;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker;
 import net.veldor.flibustaloader.workers.SearchWorker;
@@ -125,7 +126,9 @@ public class MainViewModel extends GlobalViewModel implements MyViewModelInterfa
 
     public void addToDownloadQueue(DownloadLink downloadLink) {
         AddBooksToDownloadQueueWorker.addLink(downloadLink);
-        App.getInstance().initializeDownload();
+        if (MyPreferences.getInstance().isDownloadAutostart()){
+            App.getInstance().initializeDownload();
+        }
     }
 
     public UUID request(String s) {

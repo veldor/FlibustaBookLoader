@@ -24,6 +24,7 @@ import net.veldor.flibustaloader.utils.URLHelper;
 import java.util.ArrayList;
 
 import static net.veldor.flibustaloader.MyWebViewClient.TOR_CONNECT_ERROR_ACTION;
+import static net.veldor.flibustaloader.http.TorWebClient.ERROR_DETAILS;
 
 public class SearchWorker extends Worker {
     public static final String REQUEST = "request";
@@ -89,7 +90,7 @@ public class SearchWorker extends Worker {
                                         if (answer != null && !isStopped()) {
                                             parser = new SearchResponseParser(answer);
                                             result = parser.parseResponse(reservedSequenceName);
-                                            if (result.size() > 0 && !isStopped()) {
+                                            if (result != null && result.size() > 0 && !isStopped()) {
                                                 //noinspection unchecked
                                                 OPDSActivity.sLiveGenresFound.postValue((ArrayList<Genre>) result);
                                             }
@@ -115,7 +116,7 @@ public class SearchWorker extends Worker {
                                         if (answer != null && !isStopped()) {
                                             parser = new SearchResponseParser(answer);
                                             result = parser.parseResponse(reservedSequenceName);
-                                            if (result.size() > 0 && !isStopped()) {
+                                            if (result != null && result.size() > 0 && !isStopped()) {
                                                 //noinspection unchecked
                                                 OPDSActivity.sLiveSequencesFound.postValue((ArrayList<FoundedSequence>) result);
                                             }
@@ -146,7 +147,7 @@ public class SearchWorker extends Worker {
                                         if (answer != null && !isStopped()) {
                                             parser = new SearchResponseParser(answer);
                                             result = parser.parseResponse(reservedSequenceName);
-                                            if (result.size() > 0 && !isStopped()) {
+                                            if (result != null && result.size() > 0 && !isStopped()) {
                                                 //noinspection unchecked
                                                 OPDSActivity.sLiveAuthorsFound.postValue((ArrayList<Author>) result);
                                             }
@@ -176,7 +177,7 @@ public class SearchWorker extends Worker {
                                             if (answer != null && !isStopped()) {
                                                 parser = new SearchResponseParser(answer);
                                                 result = parser.parseResponse(reservedSequenceName);
-                                                if (result.size() > 0 && !isStopped()) {
+                                                if (result != null && result.size() > 0 && !isStopped()) {
                                                     //noinspection unchecked
                                                     OPDSActivity.sLiveBooksFound.postValue((ArrayList<FoundedBook>) result);
                                                 }
@@ -195,6 +196,7 @@ public class SearchWorker extends Worker {
         } catch (Exception e) {
             e.printStackTrace();
             Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+            finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
             App.getInstance().sendBroadcast(finishLoadingIntent);
             return Result.failure();
         }

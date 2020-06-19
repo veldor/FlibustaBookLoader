@@ -8,6 +8,11 @@
     <PreferenceCategory android:title="Настройки для OPDS">
 
         <SwitchPreference
+            app:key="download auto start"
+            android:defaultValue="true"
+            android:summary="Автоматический старт загрузки книг при добавлении в очередь."
+            android:title="Загружать книги автоматически" />
+        <SwitchPreference
             app:key="re download"
             android:defaultValue="true"
             android:summary="Если отключено- файлы, которые были загружены раньше не будут загружены повторно."

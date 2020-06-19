@@ -19,7 +19,7 @@
     <string name="use_light_fast_style">Быстрый упрощённый</string>
     <string name="use_fat_fast_style">Быстрый крупный</string>
     <string name="tor_is_stopped">Не удалось получить данные</string>
-    <string name="tor_restart_dialog_message">Данные не получены. Возможно, нет подключения к интернету. Взможно, нужно перезапустить TOR. Возможно, сайт Флибусты опять сломался. Нажмите на кнопку ниже и попробуем ещё раз.</string>
+    <string name="tor_restart_dialog_message">Данные не получены. Нажмите на кнопку ниже и попробуем ещё раз. Подробности: </string>
     <string name="restart_tor_message">Попробовать ещё раз</string>
     <string name="share_link_message">Поделиться</string>
     <string name="share_url_message">Ссылка на страницу</string>
@@ -149,4 +149,5 @@
     <string name="title_favorite_format_preference">Предпочитаемый формат</string>
     <string name="title_check_update_now">Проверить обновление сейчас</string>
     <string name="view_preferences">Внешний вид</string>
+    <string name="navigation_header_text">Сидите дома,читайте книги</string>
 </resources>

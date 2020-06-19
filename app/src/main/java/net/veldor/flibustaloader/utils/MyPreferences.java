@@ -22,6 +22,7 @@ public class MyPreferences {
     private static final String HIDE_DIGESTS_PREF = "hide digests";
     private static final String HIDE_DOWNLOADED_PREF = "hide downloaded";
     private static final String LAST_CHANGELOG_VERSION_PREF = "last changelog version";
+    private static final String BOOKS_DOWNLOAD_AUTOSTART = "download auto start";
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
@@ -143,4 +144,9 @@ public class MyPreferences {
     public boolean isCreateSequencesDir(){
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_create_sequence_folder), false);
     }
+    public boolean isDownloadAutostart(){
+        return mSharedPreferences.getBoolean(BOOKS_DOWNLOAD_AUTOSTART, true);
+    }
+
+
 }

@@ -80,6 +80,8 @@ public class SubscriptionsViewModel extends ViewModel {
 
     public void addToDownloadQueue(DownloadLink downloadLink) {
         AddBooksToDownloadQueueWorker.addLink(downloadLink);
-        App.getInstance().initializeDownload();
+        if(MyPreferences.getInstance().isDownloadAutostart()){
+            App.getInstance().initializeDownload();
+        }
     }
 }

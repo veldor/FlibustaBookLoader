@@ -257,7 +257,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
                     // если автор один- вывожу диалог выбора отображения, если несколько- вывожу диалог выбора автора
                     if (mBook.authors.size() > 1) {
                         App.getInstance().mSelectedAuthors.postValue(mBook.authors);
-                    } else {
+                    } else if(mBook.authors.size() == 1){
                         App.getInstance().mSelectedAuthor.postValue(mBook.authors.get(0));
                     }
                 });

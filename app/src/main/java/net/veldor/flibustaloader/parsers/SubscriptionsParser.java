@@ -32,6 +32,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import static net.veldor.flibustaloader.MyWebViewClient.TOR_CONNECT_ERROR_ACTION;
+import static net.veldor.flibustaloader.http.TorWebClient.ERROR_DETAILS;
 
 public class SubscriptionsParser {
     public static void handleSearchResults(ArrayList<FoundedBook> result, String answer, ArrayList<SubscriptionItem> subscribes) throws XPathExpressionException {
@@ -127,6 +128,7 @@ public class SubscriptionsParser {
             // ошибка поиска, предположу, что страница недоступна
             // отправлю оповещение об ошибке загрузки TOR
             Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+            finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
             App.getInstance().sendBroadcast(finishLoadingIntent);
             e.printStackTrace();
         }

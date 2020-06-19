@@ -17,7 +17,6 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.utils.FilesHandler;
-import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.URLHelper;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
@@ -44,6 +43,7 @@ import static net.veldor.flibustaloader.MyWebViewClient.TOR_NOT_RUNNING_ERROR;
 
 public class TorWebClient {
 
+    public static final String ERROR_DETAILS = "error details";
     private HttpClient mHttpClient;
     private HttpClientContext mContext;
 
@@ -84,22 +84,23 @@ public class TorWebClient {
             e.printStackTrace();
             if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
-                broadcastTorError();
+                broadcastTorError(e);
             }
         } catch (RuntimeException e) {
             e.printStackTrace();
             if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
-                broadcastTorError();
+                broadcastTorError(e);
             }
         }
     }
 
-    private static void broadcastTorError() {
+    private static void broadcastTorError(Exception e) {
         // остановлю все задачи
         WorkManager.getInstance(App.getInstance()).cancelAllWork();
         // отправлю оповещение об ошибке загрузки TOR
         Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+        finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
         App.getInstance().sendBroadcast(finishLoadingIntent);
     }
 
@@ -116,7 +117,7 @@ public class TorWebClient {
             return inputStreamToString(is);
         } catch (IOException e) {
             App.getInstance().mLoadAllStatus.postValue("Ошибка загрузки страницы");
-            broadcastTorError();
+            broadcastTorError(e);
             e.printStackTrace();
         }
         return null;

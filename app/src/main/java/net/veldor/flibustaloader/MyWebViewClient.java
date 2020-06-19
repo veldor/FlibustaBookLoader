@@ -50,6 +50,7 @@ import cz.msebera.android.httpclient.impl.client.HttpClients;
 import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
+import static net.veldor.flibustaloader.http.TorWebClient.ERROR_DETAILS;
 import static net.veldor.flibustaloader.workers.StartTorWorker.startTor;
 
 public class MyWebViewClient extends WebViewClient {
@@ -398,6 +399,7 @@ public class MyWebViewClient extends WebViewClient {
             if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
                 // отправлю оповещение об ошибке загрузки TOR
                 Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+                finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
                 App.getInstance().sendBroadcast(finishLoadingIntent);
                 // отображу сообщение о невозможности загрузки
                 String message = "<H1 style='text-align:center;'>Ошибка подключения к сети</H1>";
@@ -415,6 +417,7 @@ public class MyWebViewClient extends WebViewClient {
             } else {
                 Log.d("surprise", "MyWebViewClient handleRequest page loading error");
                 Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
+                finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
                 App.getInstance().sendBroadcast(finishLoadingIntent);
             }
 

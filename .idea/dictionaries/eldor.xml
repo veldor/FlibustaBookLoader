@@ -12,6 +12,7 @@
       <w>autofill</w>
       <w>autofocus</w>
       <w>autoplay</w>
+      <w>autostart</w>
       <w>beforeunload</w>
       <w>bhtml</w>
       <w>bjson</w>

@@ -137,6 +137,7 @@ public class DownloadBooksWorker extends Worker {
                     dao.delete(queuedElement);
                     // уведомлю, что размер списка закачек изменился
                     BaseActivity.sLiveDownloadScheduleCount.postValue(true);
+                    Log.d("surprise", "DownloadBooksWorker doWork book " + queuedElement.name + " skipped as downloaded");
                     continue;
                 }
                 // загружу книгу
