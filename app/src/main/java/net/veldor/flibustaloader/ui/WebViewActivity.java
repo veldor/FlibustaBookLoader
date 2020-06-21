@@ -39,6 +39,7 @@ import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.dialogs.ChangelogDialog;
 import net.veldor.flibustaloader.dialogs.GifDialog;
+import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
@@ -405,16 +406,20 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         @Override
         public void onReceive(Context context, Intent intent) {
             // покажу диалоговое окно с оповещением, что TOR остановлен и кнопкой повторного запуска
-            showTorRestartDialog();
+            String errorDetails = intent.getStringExtra(TorWebClient.ERROR_DETAILS);
+            showTorRestartDialog(errorDetails);
         }
     }
 
-    private void showTorRestartDialog() {
+    private void showTorRestartDialog(String errorDetails) {
+        if(errorDetails == null){
+        errorDetails = "";
+    }
         if (mTorRestartDialog == null) {
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.tor_is_stopped)
-                    .setMessage(R.string.tor_restart_dialog_message)
+                    .setMessage(R.string.tor_restart_dialog_message + errorDetails)
                     .setPositiveButton(R.string.restart_tor_message, (dialog, which) -> {
                         App.getInstance().startTor();
                         dialog.dismiss();
@@ -432,7 +437,6 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
 
     private void showBookLoadingDialog() {
         if (mShowLoadDialog == null) {
-
             mShowLoadDialog = new GifDialog.Builder(this)
                     .setTitle(getString(R.string.load_waiting_title))
                     .setMessage(getString(R.string.load_waiting_message))
