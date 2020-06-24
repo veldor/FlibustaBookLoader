@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.utils;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.StrictMode;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.documentfile.provider.DocumentFile;
@@ -70,10 +71,13 @@ public class FilesHandler {
             if(MyPreferences.getInstance().isCreateSequencesDir() && book.reservedSequenceName != null){
                 if (downloadsDir.findFile(book.reservedSequenceName) == null) {
                     downloadsDir = downloadsDir.createDirectory(book.reservedSequenceName);
+                    Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.reservedSequenceName);
                 } else {
                     downloadsDir = downloadsDir.findFile(book.reservedSequenceName);
+                    Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.reservedSequenceName);
                 }
                 if (downloadsDir == null) {
+                    Log.d("surprise", "FilesHandler getDownloadFile can't create dir " + book.reservedSequenceName);
                     downloadsDir = App.getInstance().getDownloadDir();
                 }
             }
@@ -83,24 +87,31 @@ public class FilesHandler {
                     // создам папку
                     if (downloadsDir.findFile(book.authorDirName) == null) {
                         downloadsDir = downloadsDir.createDirectory(book.authorDirName);
+                        Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.authorDirName);
                     } else {
                         downloadsDir = downloadsDir.findFile(book.authorDirName);
+                        Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.authorDirName);
                     }
                     if (downloadsDir == null) {
+                        Log.d("surprise", "FilesHandler getDownloadFile can't create dir " + book.authorDirName);
                         downloadsDir = App.getInstance().getDownloadDir();
                     }
                 }
                 if(MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null && !book.sequenceDirName.isEmpty()){
                     if (downloadsDir.findFile(book.sequenceDirName) == null) {
                         downloadsDir = downloadsDir.createDirectory(book.sequenceDirName);
+                        Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.sequenceDirName);
                     } else {
                         downloadsDir = downloadsDir.findFile(book.sequenceDirName);
+                        Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.sequenceDirName);
                     }
                     if (downloadsDir == null) {
                         downloadsDir = App.getInstance().getDownloadDir();
+                        Log.d("surprise", "FilesHandler getDownloadFile can't create dir " + book.sequenceDirName);
                     }
                 }
             }
+        Log.d("surprise", "FilesHandler getDownloadFile load to dir " + downloadsDir.getUri());
             return downloadsDir.createFile(book.format, book.name);
     }
 
@@ -109,15 +120,19 @@ public class FilesHandler {
         // проверю, нужно ли создавать папку под автора
         if(MyPreferences.getInstance().isCreateSequencesDir() && book.reservedSequenceName != null){
             file = new File(file, book.reservedSequenceName);
+            Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.reservedSequenceName);
         }
         else{
             if (MyPreferences.getInstance().isCreateAuthorsDir()) {
                 file = new File(file, book.authorDirName);
+                Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.authorDirName);
             }
             if(MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null){
+                Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.sequenceDirName);
                 file = new File(file, book.sequenceDirName);
             }
         }
+        Log.d("surprise", "FilesHandler getDownloadFile load to dir " + file.getAbsolutePath());
         return new File(file, book.name);
     }
 }

@@ -53,7 +53,7 @@ public class GlobalWebClient {
                                 out.close();
                                 Log.d("surprise", "TorWebClient downloadBook 188: created file length is " + newFile.length());
                                 if (newFile.length() > 0) {
-                                    Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved");
+                                    Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getUri());
                                     return;
                                 }
                             }
@@ -89,7 +89,7 @@ public class GlobalWebClient {
                             out.close();
                             Log.d("surprise", "TorWebClient downloadBook 188: created file length is " + newFile.length());
                             if (newFile.length() > 0) {
-                                Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved");
+                                Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getAbsolutePath());
                                 return;
                             }
                         }
