@@ -108,86 +108,112 @@ public class DownloadBooksWorker extends Worker {
         BooksDownloadScheduleDao dao = db.booksDownloadScheduleDao();
         DownloadedBooksDao downloadBooksDao = db.downloadedBooksDao();
         Boolean reDownload = App.getInstance().isReDownload();
-        // получу количество книг на начало скачивания
-        int mBooksCount = dao.getQueueSize();
-        int bookDownloadsWithErrors = 0;
-        if (mBooksCount > 0) {
-            // помечу рабочего важным
-            ForegroundInfo info = createForegroundInfo();
-            setForegroundAsync(info);
-            // создам уведомление о скачивании
-            mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount, 0, true);
-            mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
-            BooksDownloadSchedule queuedElement;
-            // начну скачивание
-            // периодически удостовериваюсь, что работа не отменена
-            if (isStopped()) {
-                // немедленно прекращаю работу
-                mNotificator.cancelBookLoadNotification();
-                return Result.success();
-            }
-            int downloadCounter = 1;
-            // пока есть книги в очереди скачивания и работа не остановлена
-            while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()) {
-                mNotificator.updateDownloadProgress(dao.getQueueSize() + downloadCounter - 1, downloadCounter);
-                // освежу уведомление
-                //updateDownloadStatusNotification(downloadCounter);
-                // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
-                if (!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null) {
-                    dao.delete(queuedElement);
-                    // уведомлю, что размер списка закачек изменился
-                    BaseActivity.sLiveDownloadScheduleCount.postValue(true);
-                    Log.d("surprise", "DownloadBooksWorker doWork book " + queuedElement.name + " skipped as downloaded");
-                    continue;
+        try {
+            // получу количество книг на начало скачивания
+            int mBooksCount = dao.getQueueSize();
+            int bookDownloadsWithErrors = 0;
+            if (mBooksCount > 0) {
+                // помечу рабочего важным
+                ForegroundInfo info = createForegroundInfo();
+                setForegroundAsync(info);
+                // создам уведомление о скачивании
+                //mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount, 0, true);
+                //mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
+                BooksDownloadSchedule queuedElement;
+                // начну скачивание
+                // периодически удостовериваюсь, что работа не отменена
+                if (isStopped()) {
+                    // немедленно прекращаю работу
+                    mNotificator.cancelBookLoadNotification();
+
+                    return Result.success();
                 }
-                // загружу книгу
-                try {
-                    downloadBook(queuedElement);
-                    if (!isStopped()) {
-                        // отмечу книгу как скачанную
-                        DownloadedBooks downloadedBook = new DownloadedBooks();
-                        downloadedBook.bookId = queuedElement.bookId;
-                        downloadBooksDao.insert(downloadedBook);
-                        // удалю книгу из очереди скачивания
-                        // покажу уведомление о успешной загрузке
-                        mNotificator.sendLoadedBookNotification(queuedElement);
+                int downloadCounter = 1;
+                // пока есть книги в очереди скачивания и работа не остановлена
+                while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()) {
+                    //mNotificator.updateDownloadProgress(dao.getQueueSize() + downloadCounter - 1, downloadCounter);
+                    // освежу уведомление
+                    //updateDownloadStatusNotification(downloadCounter);
+                    // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
+                    if (!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null) {
                         dao.delete(queuedElement);
                         // уведомлю, что размер списка закачек изменился
                         BaseActivity.sLiveDownloadScheduleCount.postValue(true);
-                        // оповещу о скачанной книге
-                        App.getInstance().mLiveDownloadedBookId.postValue(queuedElement.bookId);
+                        Log.d("surprise", "DownloadBooksWorker doWork book " + queuedElement.name + " skipped as downloaded");
+                        continue;
                     }
-                } catch (BookNotFoundException e) {
-                    Log.d("surprise", "DownloadBooksWorker doWork 173: catch book not found error");
-                    // ошибка загрузки книг, выведу сообщение об ошибке
-                    mNotificator.sendBookNotFoundInCurrentFormatNotification(queuedElement);
-                    bookDownloadsWithErrors++;
-                    downloadErrors.add(queuedElement);
-                    dao.delete(queuedElement);
+                    // загружу книгу
+                    try {
+                        downloadBook(queuedElement);
+                        if (!isStopped()) {
+                            // отмечу книгу как скачанную
+                            DownloadedBooks downloadedBook = new DownloadedBooks();
+                            downloadedBook.bookId = queuedElement.bookId;
+                            downloadBooksDao.insert(downloadedBook);
+                            // удалю книгу из очереди скачивания
+                            // покажу уведомление о успешной загрузке
+                            mNotificator.sendLoadedBookNotification(queuedElement);
+                            dao.delete(queuedElement);
+                            // уведомлю, что размер списка закачек изменился
+                            BaseActivity.sLiveDownloadScheduleCount.postValue(true);
+                            // оповещу о скачанной книге
+                            App.getInstance().mLiveDownloadedBookId.postValue(queuedElement.bookId);
+                        }
+                    } catch (BookNotFoundException e) {
+                        Log.d("surprise", "DownloadBooksWorker doWork 173: catch book not found error");
+                        // ошибка загрузки книг, выведу сообщение об ошибке
+                        mNotificator.sendBookNotFoundInCurrentFormatNotification(queuedElement);
+                        bookDownloadsWithErrors++;
+                        downloadErrors.add(queuedElement);
+                        dao.delete(queuedElement);
+                        // уведомлю, что размер списка закачек изменился
+                        BaseActivity.sLiveDownloadScheduleCount.postValue(true);
+                    } catch (TorNotLoadedException e) {
+                        Log.d("surprise", "DownloadBooksWorker doWork 172: catch tor load exception, download work stopped");
+                        e.printStackTrace();
+                        // при ошибке загрузки TOR остановлю работу
+                        if (downloadErrors.size() > 0) {
+                            for (BooksDownloadSchedule b :
+                                    downloadErrors) {
+                                dao.insert(b);
+                                downloadErrors.remove(b);
+                            }
+                        }
+                        mNotificator.cancelBookLoadNotification();
+                        mNotificator.showTorNotLoadedNotification();
+                        return Result.success();
+                    }
+                    ++downloadCounter;
+                }
+                // цикл закончился, проверю, все ли книги загружены
+                mBooksCount = dao.getQueueSize();
+                if (mBooksCount == 0 && !isStopped()) {
+                    // ура, всё загружено, выведу сообщение об успешной загрузке
+                    mNotificator.showBooksLoadedNotification(bookDownloadsWithErrors);
+                    // Добавлю все книги с ошибками обратно в список загрузки
+                    for (BooksDownloadSchedule b :
+                            downloadErrors) {
+                        dao.insert(b);
+                        downloadErrors.remove(b);
+                    }
                     // уведомлю, что размер списка закачек изменился
                     BaseActivity.sLiveDownloadScheduleCount.postValue(true);
                 }
-                ++downloadCounter;
             }
-            // цикл закончился, проверю, все ли книги загружены
-            mBooksCount = dao.getQueueSize();
-            if (mBooksCount == 0 && !isStopped()) {
-                // ура, всё загружено, выведу сообщение об успешной загрузке
-                mNotificator.showBooksLoadedNotification(bookDownloadsWithErrors);
-                // Добавлю все книги с ошибками обратно в список загрузки
+        } finally {
+            if (downloadErrors.size() > 0) {
                 for (BooksDownloadSchedule b :
                         downloadErrors) {
                     dao.insert(b);
+                    downloadErrors.remove(b);
                 }
-                // уведомлю, что размер списка закачек изменился
-                BaseActivity.sLiveDownloadScheduleCount.postValue(true);
             }
         }
         mNotificator.cancelBookLoadNotification();
         return Result.success();
     }
 
-    private void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException {
+    private void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, TorNotLoadedException {
         if (App.getInstance().isExternalVpn()) {
             Log.d("surprise", "DownloadBooksWorker downloadBook try download trough external vpn");
             ExternalVpnVewClient.downloadBook(book);
@@ -199,7 +225,7 @@ public class DownloadBooksWorker extends Worker {
             } catch (TorNotLoadedException e) {
                 // оповещу об ошибке загрузки TOR-а
                 mNotificator.showTorNotLoadedNotification();
-                throw new BookNotFoundException();
+                throw new TorNotLoadedException();
             }
         }
     }

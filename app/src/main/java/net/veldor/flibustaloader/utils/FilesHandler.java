@@ -90,10 +90,10 @@ public class FilesHandler {
                         Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.authorDirName);
                     } else {
                         downloadsDir = downloadsDir.findFile(book.authorDirName);
-                        Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.authorDirName);
+                        Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.authorDirName);
                     }
                     if (downloadsDir == null) {
-                        Log.d("surprise", "FilesHandler getDownloadFile can't create dir " + book.authorDirName);
+                        Log.d("surprise", "FilesHandler getDownloadFile can't use dir " + book.authorDirName);
                         downloadsDir = App.getInstance().getDownloadDir();
                     }
                 }
@@ -103,11 +103,11 @@ public class FilesHandler {
                         Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.sequenceDirName);
                     } else {
                         downloadsDir = downloadsDir.findFile(book.sequenceDirName);
-                        Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.sequenceDirName);
+                        Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.sequenceDirName);
                     }
                     if (downloadsDir == null) {
                         downloadsDir = App.getInstance().getDownloadDir();
-                        Log.d("surprise", "FilesHandler getDownloadFile can't create dir " + book.sequenceDirName);
+                        Log.d("surprise", "FilesHandler getDownloadFile can't use dir " + book.sequenceDirName);
                     }
                 }
             }
@@ -125,10 +125,10 @@ public class FilesHandler {
         else{
             if (MyPreferences.getInstance().isCreateAuthorsDir()) {
                 file = new File(file, book.authorDirName);
-                Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.authorDirName);
+                Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.authorDirName);
             }
             if(MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null){
-                Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.sequenceDirName);
+                Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.sequenceDirName);
                 file = new File(file, book.sequenceDirName);
             }
         }
