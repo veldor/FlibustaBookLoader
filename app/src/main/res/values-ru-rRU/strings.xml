@@ -150,4 +150,5 @@
     <string name="title_check_update_now">Проверить обновление сейчас</string>
     <string name="view_preferences">Внешний вид</string>
     <string name="navigation_header_text">Сидите дома,читайте книги</string>
+    <string name="show_authors_list_buton">Показать список авторов</string>
 </resources>

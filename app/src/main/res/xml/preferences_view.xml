@@ -7,4 +7,9 @@
         android:summary="Отключены фоновые изображения и GIF"
         android:summaryOff="Обычный вид"
         android:title="Электронная книга" />
+    <SwitchPreference
+        app:key="@string/pref_autostart_search"
+        android:defaultValue="true"
+        android:summary="Автофокус на строке ввода"
+        android:title="Автоматически открывать окно ввода, когда переключен тип поиска" />
 </PreferenceScreen>

@@ -26,8 +26,12 @@ class AuthorsParser {
             App.getInstance().mLoadAllStatus.postValue("Обрабатываю автора " + handledEntryCounter + " из " + entriesLength);
             author = new Author();
             author.name = ((Node) xPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
+            author.id = ((Node) xPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent();
             // если поиск осуществляется по новинкам- запишу ссылку на новинки, иначе- на автора
-            if(App.sSearchType == OPDSActivity.SEARCH_NEW_AUTHORS){
+            if(author.id.startsWith("tag:authors")){
+                author.uri = ((Node) xPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
+            }
+            else if(App.sSearchType == OPDSActivity.SEARCH_NEW_AUTHORS){
                 author.link = ((Node) xPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
             }
             else{

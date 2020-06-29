@@ -7,4 +7,5 @@ public class Author implements FoundedItem, Serializable {
     public String uri;
     public String content;
     public String link;
+    public String id;
 }

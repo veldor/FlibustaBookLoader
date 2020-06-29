@@ -164,6 +164,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private boolean mActivityVisible = true;
     // индекс последнего элемента, по которому кликал пользователь
     public static Integer sElementForSelectionIndex = -1;
+    private Button mShowAuthorsListActivator;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -178,6 +179,17 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
         // проверю очередь загрузки
         checkDownloadQueue();
+
+        mShowAuthorsListActivator = findViewById(R.id.showAuthorsListButton);
+
+        if(mShowAuthorsListActivator != null){
+            mShowAuthorsListActivator.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    doSearch(URLHelper.getBaseOPDSUrl() + "/opds/authorsindex", false);
+                }
+            });
+        }
 
         // определю кнопки прыжков по результатам
         mLoadMoreBtn = findViewById(R.id.load_more_button);
@@ -239,14 +251,17 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mSearchBooksButton = findViewById(R.id.searchBook);
         if (mSearchBooksButton != null) {
             mSearchBooksButton.setOnClickListener(v -> {
+                mShowAuthorsListActivator.setVisibility(View.GONE);
                 mMassLoadSwitcher.setVisibility(View.VISIBLE);
                 Toast.makeText(OPDSActivity.this, "Ищем книги", Toast.LENGTH_SHORT).show();
                 sSearchType = SEARCH_TYPE_BOOKS;
                 if (mSearchView != null) {
                     Log.d("surprise", "OPDSActivity onCreate 242: show search icon");
                     mSearchView.setVisibility(View.VISIBLE);
-                    mSearchView.setIconified(false);
-                    mSearchView.requestFocusFromTouch();
+                    if(MyPreferences.getInstance().isAutofocusSearch()){
+                        mSearchView.setIconified(false);
+                        mSearchView.requestFocusFromTouch();
+                    }
                 }
             });
         }
@@ -254,18 +269,22 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mSearchAuthorsButton = findViewById(R.id.searchAuthor);
         mSearchAuthorsButton.setOnClickListener(v -> {
             mMassLoadSwitcher.setVisibility(View.GONE);
+            mShowAuthorsListActivator.setVisibility(View.VISIBLE);
             Toast.makeText(OPDSActivity.this, "Ищем авторов", Toast.LENGTH_SHORT).show();
             sSearchType = SEARCH_TYPE_AUTHORS;
             if (mSearchView != null) {
                 Log.d("surprise", "OPDSActivity onCreate 242: show search icon");
                 mSearchView.setVisibility(View.VISIBLE);
-                mSearchView.setIconified(false);
-                mSearchView.requestFocusFromTouch();
+                if(MyPreferences.getInstance().isAutofocusSearch()){
+                    mSearchView.setIconified(false);
+                    mSearchView.requestFocusFromTouch();
+                }
             }
         });
 
         RadioButton searchGenresButton = findViewById(R.id.searchGenre);
         searchGenresButton.setOnClickListener(v -> {
+            mShowAuthorsListActivator.setVisibility(View.GONE);
             mMassLoadSwitcher.setVisibility(View.GONE);
             Toast.makeText(OPDSActivity.this, "Ищу жанры", Toast.LENGTH_SHORT).show();
             sSearchType = SEARCH_TYPE_GENRE;
@@ -331,8 +350,14 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         LiveData<Author> selectedAuthor = App.getInstance().mSelectedAuthor;
         selectedAuthor.observe(this, author -> {
             if (author != null) {
-                mSelectedAuthor = author;
-                showAuthorViewSelect();
+                // если выбран конкретный автор- отображу выбор показа его книг, если выбрана группа авторов- загружу следующую страницу выбора
+                if(author.id != null && author.id.startsWith("tag:authors")){
+                    doSearch(URLHelper.getBaseOPDSUrl() + author.uri, false);
+                }
+                else{
+                    mSelectedAuthor = author;
+                    showAuthorViewSelect();
+                }
             }
         });
 

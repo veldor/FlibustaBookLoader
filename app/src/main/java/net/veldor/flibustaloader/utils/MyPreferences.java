@@ -148,5 +148,9 @@ public class MyPreferences {
         return mSharedPreferences.getBoolean(BOOKS_DOWNLOAD_AUTOSTART, true);
     }
 
+    public boolean isAutofocusSearch(){
+        return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_autostart_search), true);
+    }
+
 
 }
