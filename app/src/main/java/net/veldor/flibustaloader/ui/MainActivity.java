@@ -40,6 +40,8 @@ import java.util.Locale;
 
 import lib.folderpicker.FolderPicker;
 
+import static net.veldor.flibustaloader.utils.BookOpener.intentCanBeHandled;
+
 public class MainActivity extends BaseActivity {
 
 
@@ -92,7 +94,17 @@ public class MainActivity extends BaseActivity {
                                         | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
                                         | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
                         );
-                        startActivityForResult(intent, DOWNLOAD_FOLDER_SELECT_REQUEST_CODE);
+                        if (intentCanBeHandled(intent)) {
+                            startActivityForResult(intent, DOWNLOAD_FOLDER_SELECT_REQUEST_CODE);
+                        } else {
+                            intent = new Intent(this, FolderPicker.class);
+                            intent.addFlags(
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                            | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                            );
+                            startActivityForResult(intent, DOWNLOAD_FOLDER_SELECT_OLD_REQUEST_CODE);
+                        }
                     } else {
                         Intent intent = new Intent(this, FolderPicker.class);
                         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
@@ -350,7 +362,7 @@ public class MainActivity extends BaseActivity {
 
     private void startTimer() {
         int waitingTime = TOR_LOAD_MAX_TIME * 1000; // 3 minute in milli seconds
-        if (mProgressCounter == 0){
+        if (mProgressCounter == 0) {
             mProgressCounter = 1;
             mCdt = new CountDownTimer(waitingTime, 1000) {
                 public void onTick(long millisUntilFinished) {
@@ -466,13 +478,27 @@ public class MainActivity extends BaseActivity {
                         // проверю наличие файла
                         DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
                         if (dl != null && dl.isDirectory()) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            try{
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                    App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                                }
+                                App.getInstance().setDownloadDir(treeUri);
+                                handleStart();
+                                return;
                             }
-                            App.getInstance().setDownloadDir(treeUri);
-                            handleStart();
-                            return;
+                            catch (Exception e){
+                                Toast.makeText(this, "Не удалось выдать разрешения на доступ, попробуем другой метод", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(this, FolderPicker.class);
+                                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+                                    intent.addFlags(
+                                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                                    | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                    );
+                                }
+                                startActivityForResult(intent, DOWNLOAD_FOLDER_SELECT_OLD_REQUEST_CODE);
+                            }
                         }
                     }
                 }

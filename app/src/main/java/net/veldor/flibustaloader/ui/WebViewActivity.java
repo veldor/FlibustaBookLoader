@@ -41,6 +41,7 @@ import net.veldor.flibustaloader.dialogs.ChangelogDialog;
 import net.veldor.flibustaloader.dialogs.GifDialog;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.utils.MyPreferences;
+import net.veldor.flibustaloader.utils.URLHelper;
 import net.veldor.flibustaloader.utils.XMLHandler;
 import net.veldor.flibustaloader.view_models.MainViewModel;
 
@@ -271,7 +272,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
                 mWebView.reload();
                 return true;
             case R.id.goHome:
-                mWebView.loadUrl(App.BASE_URL);
+                mWebView.loadUrl(URLHelper.getBaseOPDSUrl());
                 return true;
             case R.id.showNew:
                 mWebView.loadUrl(App.NEW_BOOKS);

@@ -6,11 +6,13 @@ import net.veldor.flibustaloader.ui.OPDSActivity;
 public class URLHelper {
 
     public static String getBaseUrl() {
-        App.getInstance().isExternalVpn();
         return "http://flibustahezeous3.onion";
     }
 
     public static String getBaseOPDSUrl() {
+        if(MyPreferences.getInstance().isCustomMirror()){
+            return MyPreferences.getInstance().getCustomMirror();
+        }
         if (App.getInstance().isExternalVpn()) {
             return "http://flibusta.is";
         }
@@ -24,7 +26,10 @@ public class URLHelper {
     public static String getSearchRequest(String searchType, String request) {
         // базовый URL зависит от исползуемого соединения
         StringBuilder urlConstructor = new StringBuilder();
-        if (App.getInstance().isExternalVpn()) {
+        if(MyPreferences.getInstance().isCustomMirror()){
+            urlConstructor.append(MyPreferences.getInstance().getCustomMirror()).append("/opds/");
+        }
+        else if (App.getInstance().isExternalVpn()) {
             urlConstructor.append("http://flibusta.is/opds/");
         } else {
             urlConstructor.append("http://flibustahezeous3.onion/opds/");

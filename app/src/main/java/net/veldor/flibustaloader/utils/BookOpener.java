@@ -70,7 +70,7 @@ public class BookOpener {
         }
     }
 
-    static boolean intentCanBeHandled(Intent intent) {
+    public static boolean intentCanBeHandled(Intent intent) {
         PackageManager packageManager = App.getInstance().getPackageManager();
         return intent.resolveActivity(packageManager) != null;
     }

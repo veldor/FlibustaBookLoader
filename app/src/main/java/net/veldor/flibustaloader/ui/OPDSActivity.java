@@ -860,7 +860,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         LiveData<Author> authorNewBooks = App.getInstance().mAuthorNewBooks;
         authorNewBooks.observe(this, author -> {
             if (author != null)
-                doSearch(App.BASE_URL + author.link, false);
+                doSearch(URLHelper.getBaseOPDSUrl() + author.link, false);
         });
 
         // отслеживание статуса загрузки книг

@@ -17,6 +17,7 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.utils.FilesHandler;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.URLHelper;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
@@ -106,6 +107,7 @@ public class TorWebClient {
 
 
     public String request(String text) {
+        Log.d("surprise", "TorWebClient request 109: request " + text);
         try {
             HttpGet httpGet = new HttpGet(text);
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
@@ -124,6 +126,7 @@ public class TorWebClient {
     }
 
     private HttpResponse simpleGetRequest(String url) throws IOException {
+        Log.d("surprise", "TorWebClient simpleGetRequest 128: request " + url);
         HttpGet httpGet = new HttpGet(url);
         httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
         httpGet.setHeader("X-Compress", "null");
@@ -158,7 +161,7 @@ public class TorWebClient {
 
     public void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, TorNotLoadedException {
         try {
-            HttpResponse response = simpleGetRequest(App.BASE_URL + book.link);
+            HttpResponse response = simpleGetRequest(URLHelper.getBaseOPDSUrl() + book.link);
             // проверю, что запрос выполнен и файл не пуст. Если это не так- попорбую загрузить книгу с основного домена
             if(response == null || response.getStatusLine().getStatusCode() != 200 || response.getEntity().getContentLength()  < 1){
                 Log.d("surprise", "ExternalVpnVewClient downloadBook 116: request from reserve " + URLHelper.getFlibustaIsUrl() + book.link);

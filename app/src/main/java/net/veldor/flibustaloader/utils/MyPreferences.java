@@ -153,4 +153,12 @@ public class MyPreferences {
     }
 
 
+    public boolean isCustomMirror() {
+        String mirror = mSharedPreferences.getString(App.getInstance().getString(R.string.pref_custom_flibusta_mirror), "");
+        return mirror != null && !mirror.isEmpty();
+    }
+
+    public String getCustomMirror(){
+        return mSharedPreferences.getString(App.getInstance().getString(R.string.pref_custom_flibusta_mirror), URLHelper.getBaseUrl());
+    }
 }
