@@ -56,6 +56,7 @@ public class SearchWorker extends Worker {
             // получу данные поиска
             Data data = getInputData();
             String request = data.getString(REQUEST);
+            Log.d("surprise", "doWork: load " + request);
             if (request != null) {
                 App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                 // сделаю первый запрос по-любому
@@ -76,6 +77,7 @@ public class SearchWorker extends Worker {
                             case OPDSActivity.SEARCH_GENRE:
                                 //noinspection unchecked
                                 OPDSActivity.sLiveGenresFound.postValue((ArrayList<Genre>) result);
+                                OPDSActivity.sSearchType = OPDSActivity.SEARCH_TYPE_GENRE;
                                 do {
                                     ++pageCounter;
                                     // запрошу следующую страницу, если она есть
@@ -100,6 +102,7 @@ public class SearchWorker extends Worker {
                                 while (request != null && !isStopped());
                                 break;
                             case OPDSActivity.SEARCH_SEQUENCE:
+                                OPDSActivity.sSearchType = OPDSActivity.SEARCH_TYPE_SEQUENCES;
                                 //noinspection unchecked
                                 OPDSActivity.sLiveSequencesFound.postValue((ArrayList<FoundedSequence>) result);
                                 do {
@@ -127,6 +130,7 @@ public class SearchWorker extends Worker {
                                 break;
                             case OPDSActivity.SEARCH_AUTHORS:
                             case OPDSActivity.SEARCH_NEW_AUTHORS:
+                                OPDSActivity.sSearchType = OPDSActivity.SEARCH_TYPE_AUTHORS;
                                 Log.d("surprise", "SearchWorker doWork 110: load authors");
                                 // сброшу предыдущие значения
                                 Log.d("surprise", "SearchWorker doWork 65: post new authors");
@@ -157,6 +161,7 @@ public class SearchWorker extends Worker {
                                 while (request != null && !isStopped());
                                 break;
                             case OPDSActivity.SEARCH_BOOKS:
+                                OPDSActivity.sSearchType = OPDSActivity.SEARCH_TYPE_BOOKS;
                                 // сброшу предыдущие значения
                                 OPDSActivity.sLiveBooksFound.postValue(null);
                                 //noinspection unchecked

@@ -99,6 +99,12 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
 
                 // сообщу, по какому именно элементу был клик
                 OPDSActivity.sClickedItemIndex = mSequences.indexOf(mSequence);
+                if(mSequence.link.contains("newsequences")){
+                    OPDSActivity.sBookmarkName = "Новинки в серии: " + mSequence.title;
+                }
+                else{
+                    OPDSActivity.sBookmarkName = "Серия: " + mSequence.title;
+                }
             });
 
         }

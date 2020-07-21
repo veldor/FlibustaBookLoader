@@ -48,7 +48,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class App extends Application {
     //todo switch to false on release
-    public static final boolean isTestVersion = false;
+    public static final boolean isTestVersion = true;
 
     public static final String SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
@@ -143,7 +143,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         //todo удалить в релизной версии
-        //LogHandler.getInstance().initLog();
+        LogHandler.getInstance().initLog();
 
         // читаю настройки sharedPreferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -165,7 +165,14 @@ public class App extends Application {
         // получаю базу данных
         mDatabase = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database")
-                .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
+                .addMigrations(
+                        AppDatabase.MIGRATION_1_2,
+                        AppDatabase.MIGRATION_2_3,
+                        AppDatabase.MIGRATION_3_4,
+                        AppDatabase.MIGRATION_4_5,
+                        AppDatabase.MIGRATION_5_6,
+                        AppDatabase.MIGRATION_6_7
+                )
                 .allowMainThreadQueries()
                 .build();
 

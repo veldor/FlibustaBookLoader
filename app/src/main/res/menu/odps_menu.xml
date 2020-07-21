@@ -13,6 +13,11 @@
         android:title="@string/sort_list"
         yourapp:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_bookmark"
+        android:icon="@drawable/ic_baseline_bookmark_24"
+        android:title="@string/add_bookmark"
+        yourapp:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_new"
         android:icon="@drawable/ic_new_white_24dp"
         android:title="@string/show_last"

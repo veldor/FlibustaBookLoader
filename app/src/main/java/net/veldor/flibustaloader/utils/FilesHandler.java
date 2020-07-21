@@ -69,10 +69,19 @@ public class FilesHandler {
             // получу имя файла
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();
             if(MyPreferences.getInstance().isCreateSequencesDir() && book.reservedSequenceName != null){
-                if (downloadsDir.findFile(book.reservedSequenceName) == null) {
+                if(MyPreferences.getInstance().isCreateAdditionalDir()){
+                    DocumentFile seriesDir = downloadsDir.findFile("Серии");
+                    if(seriesDir == null || !seriesDir.exists()){
+                        downloadsDir = downloadsDir.createDirectory("Серии");
+                    }
+                    else{
+                        downloadsDir = seriesDir;
+                    }
+                }
+                if (downloadsDir != null && downloadsDir.findFile(book.reservedSequenceName) == null) {
                     downloadsDir = downloadsDir.createDirectory(book.reservedSequenceName);
                     Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.reservedSequenceName);
-                } else {
+                } else if (downloadsDir != null){
                     downloadsDir = downloadsDir.findFile(book.reservedSequenceName);
                     Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.reservedSequenceName);
                 }
@@ -84,11 +93,20 @@ public class FilesHandler {
             else{
                 // проверю, нужно ли создавать папку под автора
                 if (MyPreferences.getInstance().isCreateAuthorsDir()) {
+                    if(MyPreferences.getInstance().isCreateAdditionalDir()){
+                        DocumentFile authorsDir = downloadsDir.findFile("Авторы");
+                        if(authorsDir == null || !authorsDir.exists()){
+                            downloadsDir = downloadsDir.createDirectory("Авторы");
+                        }
+                        else{
+                            downloadsDir = authorsDir;
+                        }
+                    }
                     // создам папку
-                    if (downloadsDir.findFile(book.authorDirName) == null) {
+                    if (downloadsDir != null && downloadsDir.findFile(book.authorDirName) == null) {
                         downloadsDir = downloadsDir.createDirectory(book.authorDirName);
                         Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.authorDirName);
-                    } else {
+                    } else if(downloadsDir != null){
                         downloadsDir = downloadsDir.findFile(book.authorDirName);
                         Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.authorDirName);
                     }

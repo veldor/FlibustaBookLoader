@@ -163,6 +163,10 @@
     <string name="pref_create_sequence_folder" translatable="false">create sequence folder</string>
     <string name="navigation_header_text">Stay home. read books</string>
     <string name="show_authors_list_buton">Show authors list</string>
-    <string name="pref_autostart_search">autostart search</string>
-    <string name="pref_custom_flibusta_mirror">custom flibusta mirror</string>
+    <string name="pref_autostart_search" translatable="false">autostart search</string>
+    <string name="pref_custom_flibusta_mirror" translatable="false">custom flibusta mirror</string>
+    <string name="add_bookmark">Add bookmark</string>
+    <string name="navigation_go_bookmarks">Bookmarks</string>
+    <string name="pref_create_additional_folders">create additional folders</string>
+    <string name="pref_use_custom_mirror">use custom mirror</string>
 </resources>

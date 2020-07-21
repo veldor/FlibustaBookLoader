@@ -13,7 +13,7 @@
     <string name="look">Внешний вид</string>
     <string name="show_random">Случайная книга</string>
     <string name="navigation">Навигация</string>
-    <string name="buy_me_coffee">Купите мне кофе :)</string>
+    <string name="buy_me_coffee">Поддержать разработку</string>
     <string name="use_light_fat_style">Крупный упрощённый</string>
     <string name="use_normal_style">Обычный вид</string>
     <string name="use_light_fast_style">Быстрый упрощённый</string>
@@ -151,4 +151,6 @@
     <string name="view_preferences">Внешний вид</string>
     <string name="navigation_header_text">Сидите дома,читайте книги</string>
     <string name="show_authors_list_buton">Показать список авторов</string>
+    <string name="navigation_go_bookmarks">Закладки</string>
+    <string name="add_bookmark">Добавить закладку</string>
 </resources>

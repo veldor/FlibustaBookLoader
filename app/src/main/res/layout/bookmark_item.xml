@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="bookmark"
+            type="net.veldor.flibustaloader.database.entity.Bookmark" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/sequence_layout"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/bookmark_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{bookmark.name}"
+            android:textAlignment="center"
+            android:textColor="@drawable/sequence_text_color"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/deleteItemBtn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:gravity="center_horizontal" />
+
+        <ImageButton
+            android:id="@+id/deleteItemBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_close_grayscale_24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="@string/delete_item" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

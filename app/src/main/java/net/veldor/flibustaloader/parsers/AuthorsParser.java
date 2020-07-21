@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.parsers;
 
+import android.util.Log;
+
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.ui.OPDSActivity;
@@ -27,11 +29,13 @@ class AuthorsParser {
             author = new Author();
             author.name = ((Node) xPath.evaluate("./title", entry, XPathConstants.NODE)).getTextContent();
             author.id = ((Node) xPath.evaluate("./id", entry, XPathConstants.NODE)).getTextContent();
+            Log.d("surprise", "AuthorsParser.java 32 parse: " + author.id);
             // если поиск осуществляется по новинкам- запишу ссылку на новинки, иначе- на автора
             if(author.id.startsWith("tag:authors")){
                 author.uri = ((Node) xPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
             }
             else if(App.sSearchType == OPDSActivity.SEARCH_NEW_AUTHORS){
+                Log.d("surprise", "AuthorsParser.java 35 parse: parse new author");
                 author.link = ((Node) xPath.evaluate("./link", entry, XPathConstants.NODE)).getAttributes().getNamedItem("href").getTextContent();
             }
             else{

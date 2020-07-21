@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
@@ -23,6 +24,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioButton;
@@ -55,6 +57,7 @@ import net.veldor.flibustaloader.adapters.FoundedAuthorsAdapter;
 import net.veldor.flibustaloader.adapters.FoundedBooksAdapter;
 import net.veldor.flibustaloader.adapters.FoundedGenresAdapter;
 import net.veldor.flibustaloader.adapters.FoundedSequencesAdapter;
+import net.veldor.flibustaloader.database.entity.Bookmark;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.dialogs.ChangelogDialog;
 import net.veldor.flibustaloader.dialogs.GifDialog;
@@ -90,6 +93,9 @@ import static androidx.work.WorkInfo.State.SUCCEEDED;
 import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 
 public class OPDSActivity extends BaseActivity implements SearchView.OnQueryTextListener {
+
+    public static String sBookmarkName;
+    public static final String TARGET_LINK = "target link";
     private static final String[] bookSortOptions = new String[]{"По названию книги", "По размеру", "По количеству скачиваний", "По серии", "По жанру", "По автору"};
     private static final String[] authorSortOptions = new String[]{"По имени автора от А", "По имени автора от Я", "По количеству книг от большего", "По количеству книг от меньшего"};
     private static final String[] otherSortOptions = new String[]{"От А", "От Я"};
@@ -153,7 +159,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private FloatingActionMenu mFab;
     private AlertDialog mDownloadSelectedDialog;
     private LiveData<Boolean> mSuccessSelect;
-    private static String sSearchType;
+    public static String sSearchType;
     public static String sNextPage;
     private boolean mAddToLoaded;
     private static boolean sFirstLoad = true;
@@ -182,7 +188,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
         mShowAuthorsListActivator = findViewById(R.id.showAuthorsListButton);
 
-        if(mShowAuthorsListActivator != null){
+        if (mShowAuthorsListActivator != null) {
             mShowAuthorsListActivator.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -258,7 +264,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 if (mSearchView != null) {
                     Log.d("surprise", "OPDSActivity onCreate 242: show search icon");
                     mSearchView.setVisibility(View.VISIBLE);
-                    if(MyPreferences.getInstance().isAutofocusSearch()){
+                    if (MyPreferences.getInstance().isAutofocusSearch()) {
                         mSearchView.setIconified(false);
                         mSearchView.requestFocusFromTouch();
                     }
@@ -275,7 +281,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             if (mSearchView != null) {
                 Log.d("surprise", "OPDSActivity onCreate 242: show search icon");
                 mSearchView.setVisibility(View.VISIBLE);
-                if(MyPreferences.getInstance().isAutofocusSearch()){
+                if (MyPreferences.getInstance().isAutofocusSearch()) {
                     mSearchView.setIconified(false);
                     mSearchView.requestFocusFromTouch();
                 }
@@ -288,6 +294,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             mMassLoadSwitcher.setVisibility(View.GONE);
             Toast.makeText(OPDSActivity.this, "Ищу жанры", Toast.LENGTH_SHORT).show();
             sSearchType = SEARCH_TYPE_GENRE;
+            sBookmarkName = "Все жанры";
             if (mSearchView != null) {
                 mSearchView.setVisibility(View.INVISIBLE);
             }
@@ -302,6 +309,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             mMassLoadSwitcher.setVisibility(View.GONE);
             Toast.makeText(OPDSActivity.this, "Ищу серии", Toast.LENGTH_SHORT).show();
             sSearchType = SEARCH_TYPE_SEQUENCES;
+            sBookmarkName = "Все серии";
             if (mSearchView != null) {
                 mSearchView.setVisibility(View.INVISIBLE);
             }
@@ -351,10 +359,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         selectedAuthor.observe(this, author -> {
             if (author != null) {
                 // если выбран конкретный автор- отображу выбор показа его книг, если выбрана группа авторов- загружу следующую страницу выбора
-                if(author.id != null && author.id.startsWith("tag:authors")){
+                if (author.id != null && author.id.startsWith("tag:authors")) {
                     doSearch(URLHelper.getBaseOPDSUrl() + author.uri, false);
-                }
-                else{
+                } else {
                     mSelectedAuthor = author;
                     showAuthorViewSelect();
                 }
@@ -383,6 +390,15 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         // добавлю обсерверы
         addObservers();
         checkUpdates();
+
+        // если передана ссылка- перейду по ней
+        Log.d("surprise", "check link");
+        Intent intent = getIntent();
+        String link = intent.getStringExtra(TARGET_LINK);
+        if (link != null) {
+            Log.d("surprise", "have link");
+            doSearch(link, false);
+        }
     }
 
     private void checkSearchType() {
@@ -620,7 +636,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             if (workInfo != null && workInfo.getState() == SUCCEEDED) {
                 Toast.makeText(OPDSActivity.this, "Книги добавлены в очередь скачивания", Toast.LENGTH_LONG).show();
                 // запущу скачивание
-                if(MyPreferences.getInstance().isDownloadAutostart()){
+                if (MyPreferences.getInstance().isDownloadAutostart()) {
                     mViewModel.initiateMassDownload();
                 }
                 startActivity(new Intent(getBaseContext(), ActivityBookDownloadSchedule.class));
@@ -662,7 +678,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             if (!aBoolean) {
 
                 new Handler().postDelayed(() -> {
-                    if (sElementForSelectionIndex >= 0 && mResultsRecycler.getAdapter() != null &&  mResultsRecycler.getAdapter().getItemCount() > sElementForSelectionIndex && mResultsRecycler.getLayoutManager() != null) {
+                    if (sElementForSelectionIndex >= 0 && mResultsRecycler.getAdapter() != null && mResultsRecycler.getAdapter().getItemCount() > sElementForSelectionIndex && mResultsRecycler.getLayoutManager() != null) {
                         float y = mResultsRecycler.getY() + mResultsRecycler.getChildAt(sElementForSelectionIndex).getY();
                         mScrollView.smoothScrollTo(0, (int) y);
                     }
@@ -755,7 +771,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         sLiveAuthorsFound.observe(this, authors -> {
             if (authors != null) {
                 if (!mSearchAuthorsButton.isChecked()) {
-                    mSearchAuthorsButton.performClick();
+                    mSearchAuthorsButton.setChecked(true);
                 }
                 App.sSearchType = SEARCH_AUTHORS;
             }
@@ -780,7 +796,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             Log.d("surprise", "OPDSActivity addObservers 656: books HERE " + books);
             if (books != null) {
                 if (!mSearchBooksButton.isChecked()) {
-                    mSearchBooksButton.performClick();
+                    mSearchBooksButton.setChecked(true);
                 }
             }
             App.sSearchType = SEARCH_BOOKS;
@@ -860,7 +876,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         LiveData<Author> authorNewBooks = App.getInstance().mAuthorNewBooks;
         authorNewBooks.observe(this, author -> {
             if (author != null)
-                doSearch(URLHelper.getBaseOPDSUrl() + author.link, false);
+                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/new/0/newauthors/" + author.id.substring(22), false);
         });
 
         // отслеживание статуса загрузки книг
@@ -1227,6 +1243,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             case R.id.action_new:
                 showNewDialog();
                 return true;
+            case R.id.action_bookmark:
+                addBookmark();
+                return true;
             case R.id.clearSearchHistory:
                 clearHistory();
                 return true;
@@ -1281,6 +1300,36 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void addBookmark() {
+        // покажу диалоговое окно с предложением подтвердить название закладки
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_bookmark_name, null);
+        EditText input = view.findViewById(R.id.bookmarkNameInput);
+        input.setText(sBookmarkName);
+        dialogBuilder.setTitle("Название закладки")
+                .setView(view)
+                .setPositiveButton("Сохранить", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String bookmarkText = input.getText().toString();
+                        String link = History.getInstance().showLastPage();
+                        if (!bookmarkText.isEmpty() && link != null) {
+                            // сохраню закладку
+                            Bookmark bookmark = new Bookmark();
+                            bookmark.link = link;
+                            Log.d("surprise", "onClick: add link " + link);
+                            bookmark.name = bookmarkText;
+                            App.getInstance().mDatabase.bookmarksDao().insert(bookmark);
+                            Toast.makeText(OPDSActivity.this, "Закладка добавлена", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(OPDSActivity.this, "Нужно заполнить имя закладки и произвести поиск", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                })
+                .setNegativeButton(android.R.string.no, null)
+                .show();
     }
 
     private void showReadedBooks() {
@@ -1451,6 +1500,13 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void makeSearch(String s) throws UnsupportedEncodingException {
         addValueToAutocompleteList(s);
         changeTitle("Поиск " + s);
+        if (sSearchType.equals(SEARCH_TYPE_BOOKS)) {
+            sBookmarkName = "Книга: " + s;
+        } else if (sSearchType.equals(SEARCH_TYPE_AUTHORS)) {
+            sBookmarkName = "Автор: " + s;
+        } else {
+            sBookmarkName = s;
+        }
         String searchString = URLEncoder.encode(s, "utf-8").replace("+", "%20");
         doSearch(URLHelper.getSearchRequest(sSearchType, searchString), false);
     }
@@ -1468,14 +1524,16 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void doSearch(String s, boolean searchOnBackPressed) {
         mFab.setVisibility(View.GONE);
-        if (s != null && !s.isEmpty() && !(mSearchView == null)) {
-            mSearchView.onActionViewCollapsed();
+        if (s != null && !s.isEmpty()) {
+            if (mSearchView != null) {
+                mSearchView.onActionViewCollapsed();
+            }
             // сохраню последнюю загруженную страницу
             MyPreferences.getInstance().saveLastLoadedPage(s);
             // очищу историю поиска и положу туда начальное значение
             History.getInstance().addToHistory(s);
             showLoadWaitingDialog();
-            if(!searchOnBackPressed){
+            if (!searchOnBackPressed) {
                 // сохраню порядковый номер элемента по которому был клик, если он был
                 mViewModel.saveClickedIndex(sClickedItemIndex);
             }
@@ -1538,7 +1596,10 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle(R.string.select_author_view_message)
-                    .setItems(mAuthorViewTypes, (dialog, which) -> loadAuthor(which, mSelectedAuthor.uri))
+                    .setItems(mAuthorViewTypes, (dialog, which) -> {
+                        loadAuthor(which, mSelectedAuthor.uri, mSelectedAuthor.name);
+
+                    })
             ;
             mSelectAuthorViewDialog = dialogBuilder.create();
         }
@@ -1573,20 +1634,24 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         }
     }
 
-    private void loadAuthor(int which, String authorId) {
+    private void loadAuthor(int which, String authorId, String name) {
         String url = null;
         switch (which) {
             case 0:
                 url = "/opds/authorsequences/" + authorId;
+                sBookmarkName = "Автор " + name + " по сериям";
                 break;
             case 1:
                 url = "/opds/author/" + authorId + "/authorsequenceless";
+                sBookmarkName = "Автор " + name + " вне серий";
                 break;
             case 2:
                 url = "/opds/author/" + authorId + "/alphabet";
+                sBookmarkName = "Автор " + name + " по алфавиту";
                 break;
             case 3:
                 url = "/opds/author/" + authorId + "/time";
+                sBookmarkName = "Автор " + name + " по времени";
                 break;
         }
         if (url != null) {
@@ -1610,7 +1675,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     }
 
     private void showTorRestartDialog(String errorDetails) {
-        if(errorDetails == null){
+        if (errorDetails == null) {
             errorDetails = "";
         }
         hideWaitingDialog();

@@ -53,6 +53,11 @@ public class NavigatorSelectHandler implements NavigationView.OnNavigationItemSe
                 mContext.startActivity(intent);
                 tryCloseDrawer();
                 break;
+            case R.id.goToBookmarks:
+                intent = new Intent(mContext, BookmarksActivity.class);
+                mContext.startActivity(intent);
+                tryCloseDrawer();
+                break;
             case R.id.goToSettings:
                 intent = new Intent(mContext, SettingsActivity.class);
                 mContext.startActivity(intent);

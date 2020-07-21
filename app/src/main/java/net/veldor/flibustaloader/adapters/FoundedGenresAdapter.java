@@ -99,6 +99,12 @@ public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdap
                 OPDSActivity.sLiveSearchLink.postValue(mGenre.term);
                 // сообщу, по какому именно элементу был клик
                 OPDSActivity.sClickedItemIndex = mGenres.indexOf(mGenre);
+                if(mGenre.term.contains("newgenres")){
+                    OPDSActivity.sBookmarkName = "Новинки в жанре: " + mGenre.label;
+                }
+                else{
+                    OPDSActivity.sBookmarkName = "Жанр: " + mGenre.label;
+                }
             });
 
         }

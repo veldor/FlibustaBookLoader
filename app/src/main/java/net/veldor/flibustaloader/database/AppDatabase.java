@@ -5,18 +5,21 @@ import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 
+import net.veldor.flibustaloader.database.dao.BookmarksDao;
 import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
 import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
 import net.veldor.flibustaloader.database.dao.ReadedBooksDao;
+import net.veldor.flibustaloader.database.entity.Bookmark;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
-@Database(entities = {ReadedBooks.class, DownloadedBooks.class, BooksDownloadSchedule.class}, version = 6, exportSchema = false)
+@Database(entities = {ReadedBooks.class, DownloadedBooks.class, BooksDownloadSchedule.class, Bookmark.class}, version = 7, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ReadedBooksDao readedBooksDao();
     public abstract DownloadedBooksDao downloadedBooksDao();
     public abstract BooksDownloadScheduleDao booksDownloadScheduleDao();
+    public abstract BookmarksDao bookmarksDao();
 
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
@@ -48,6 +51,13 @@ public abstract class AppDatabase extends RoomDatabase {
         @Override
         public void migrate(final SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN reservedSequenceName TEXT");
+        }
+    };
+    public static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(final SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE Bookmark (id INTEGER primary key autoincrement NOT NULL, name TEXT NOT NULL, link TEXT NOT NULL)");
         }
     };
 }

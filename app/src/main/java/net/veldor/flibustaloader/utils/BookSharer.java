@@ -27,13 +27,23 @@ public class BookSharer {
         File file;
         // ========================================================================================
         Context context = App.getInstance();
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();
             if(MyPreferences.getInstance().isCreateSequencesDir() && reservedSequenceFolder != null){
+                if(MyPreferences.getInstance().isCreateAdditionalDir()){
+                    DocumentFile sequencesDir = downloadsDir.findFile("Серии");
+                    if(sequencesDir != null && sequencesDir.exists()){
+                        downloadsDir = sequencesDir;
+                    }
+                }
                 downloadsDir = downloadsDir.findFile(reservedSequenceFolder);
             }
             else{
                 if (MyPreferences.getInstance().isCreateAuthorsDir() && authorDir != null && !authorDir.isEmpty()) {
+                    DocumentFile sequencesDir = downloadsDir.findFile("Авторы");
+                    if(sequencesDir != null && sequencesDir.exists()){
+                        downloadsDir = sequencesDir;
+                    }
                     downloadsDir = downloadsDir.findFile(authorDir);
                 }
                 if (MyPreferences.getInstance().isCreateSequencesDir() && downloadsDir != null && sequenceDir != null && !sequenceDir.isEmpty()) {

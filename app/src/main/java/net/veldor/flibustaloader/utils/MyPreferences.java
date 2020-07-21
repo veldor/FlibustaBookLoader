@@ -26,8 +26,8 @@ public class MyPreferences {
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
-    public static MyPreferences getInstance(){
-        if(instance == null){
+    public static MyPreferences getInstance() {
+        if (instance == null) {
             instance = new MyPreferences();
         }
         return instance;
@@ -42,7 +42,7 @@ public class MyPreferences {
         return mSharedPreferences.getBoolean(SUBSCRIPTIONS_AUTO_CHECK_PREF, false);
     }
 
-    public void switchSubscriptionsAutoCheck(){
+    public void switchSubscriptionsAutoCheck() {
         mSharedPreferences.edit().putBoolean(SUBSCRIPTIONS_AUTO_CHECK_PREF, !isSubscriptionsAutoCheck()).apply();
     }
 
@@ -53,19 +53,19 @@ public class MyPreferences {
     public boolean saveDownloadFolder(String folderLocation) {
         // ещё раз попробую создать файл
         File file = new File(folderLocation);
-        if(file.isDirectory()){
+        if (file.isDirectory()) {
             mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, folderLocation).apply();
             return true;
         }
         return false;
     }
 
-    public File getDownloadDir(){
+    public File getDownloadDir() {
         String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, null);
         Log.d("surprise", "MyPreferences getDownloadDir 62: dir is " + PREFERENCE_DOWNLOAD_LOCATION);
-        if(download_location != null){
+        if (download_location != null) {
             File file = new File(download_location);
-            if(file.isDirectory()){
+            if (file.isDirectory()) {
                 return file;
             }
         }
@@ -75,8 +75,7 @@ public class MyPreferences {
     public boolean isDownloadDir() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return App.getInstance().getDownloadDir() == null;
-        }
-        else{
+        } else {
             return getDownloadDir() == null;
         }
     }
@@ -85,7 +84,7 @@ public class MyPreferences {
         return mSharedPreferences.getBoolean(HW_ACCELERATION_PREF, true);
     }
 
-    public void switchHardwareAcceleration(){
+    public void switchHardwareAcceleration() {
         mSharedPreferences.edit().putBoolean(HW_ACCELERATION_PREF, !isHardwareAcceleration()).apply();
     }
 
@@ -93,22 +92,21 @@ public class MyPreferences {
         return mSharedPreferences.getBoolean(HIDE_DIGESTS_PREF, false);
     }
 
-    public void switchDigestsHide(){
+    public void switchDigestsHide() {
         mSharedPreferences.edit().putBoolean(HIDE_DIGESTS_PREF, !isDigestsHide()).apply();
     }
 
     public String getDownloadDirLocation() {
         DocumentFile dir = App.getInstance().getDownloadDir();
-        if(dir != null && dir.isDirectory()){
+        if (dir != null && dir.isDirectory()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 return UriConverter.getPath(App.getInstance(), dir.getUri());
-            }
-            else{
+            } else {
                 return dir.getUri().getPath();
             }
         }
         File compatDir = getDownloadDir();
-        if(compatDir != null && compatDir.isDirectory()){
+        if (compatDir != null && compatDir.isDirectory()) {
             return compatDir.getAbsolutePath();
         }
         return "Не распознал папку загрузок";
@@ -117,7 +115,8 @@ public class MyPreferences {
     public boolean isDownloadedHide() {
         return mSharedPreferences.getBoolean(HIDE_DOWNLOADED_PREF, false);
     }
-    public void switchDownloadedHide(){
+
+    public void switchDownloadedHide() {
         mSharedPreferences.edit().putBoolean(HIDE_DOWNLOADED_PREF, !isDownloadedHide()).apply();
     }
 
@@ -125,7 +124,7 @@ public class MyPreferences {
         // получу текущую версию приложения и последнюю версию, в которой отображались изменения
         String currentVersion = Grammar.getAppVersion();
         String savedVersion = mSharedPreferences.getString(LAST_CHANGELOG_VERSION_PREF, "0");
-        return  !currentVersion.equals(savedVersion);
+        return !currentVersion.equals(savedVersion);
     }
 
     public void setChangesViewed() {
@@ -137,28 +136,32 @@ public class MyPreferences {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_is_eink), false);
     }
 
-    public boolean isCreateAuthorsDir(){
+    public boolean isCreateAuthorsDir() {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_create_author_folder), false);
     }
 
-    public boolean isCreateSequencesDir(){
+    public boolean isCreateSequencesDir() {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_create_sequence_folder), false);
     }
-    public boolean isDownloadAutostart(){
+
+    public boolean isCreateAdditionalDir(){
+        return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_create_additional_folders), false);
+    }
+
+    public boolean isDownloadAutostart() {
         return mSharedPreferences.getBoolean(BOOKS_DOWNLOAD_AUTOSTART, true);
     }
 
-    public boolean isAutofocusSearch(){
+    public boolean isAutofocusSearch() {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_autostart_search), true);
     }
 
 
     public boolean isCustomMirror() {
-        String mirror = mSharedPreferences.getString(App.getInstance().getString(R.string.pref_custom_flibusta_mirror), "");
-        return mirror != null && !mirror.isEmpty();
+        return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_use_custom_mirror), false);
     }
 
-    public String getCustomMirror(){
+    public String getCustomMirror() {
         return mSharedPreferences.getString(App.getInstance().getString(R.string.pref_custom_flibusta_mirror), URLHelper.getBaseUrl());
     }
 }

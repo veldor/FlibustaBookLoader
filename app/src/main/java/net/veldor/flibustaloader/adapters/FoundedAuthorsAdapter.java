@@ -99,11 +99,12 @@ public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAd
             mRootView = container.findViewById(R.id.rootView);
 
             container.setOnClickListener(view -> {
-                if (mAuthor.uri != null) {
-                    App.getInstance().mSelectedAuthor.postValue(mAuthor);
-                } else {
-                    // поиск новых книг автора
+                if(mAuthor.id.startsWith("tag:search:new:author:")){
                     App.getInstance().mAuthorNewBooks.postValue(mAuthor);
+                    OPDSActivity.sBookmarkName = "Новинки автора: " + mAuthor.name;
+                }
+                else if (mAuthor.uri != null) {
+                    App.getInstance().mSelectedAuthor.postValue(mAuthor);
                 }
                 // сообщу, по какому именно элементу был клик
                 OPDSActivity.sClickedItemIndex = mAuthors.indexOf(mAuthor);

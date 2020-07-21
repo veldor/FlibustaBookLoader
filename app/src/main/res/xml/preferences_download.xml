@@ -35,6 +35,12 @@
             android:defaultValue="false"
             android:title="Создавать папки для различных серий" />
 
+        <SwitchPreferenceCompat
+            app:key="@string/pref_create_additional_folders"
+            android:defaultValue="false"
+            android:title="Доп. папки"
+            android:summary="Создать в папке загрузок отдельные папки для скачиваемых авторов и серий"/>
+
         <DropDownPreference
             app:key="favorite format"
             android:title="@string/title_favorite_format_preference"
