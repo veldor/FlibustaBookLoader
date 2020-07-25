@@ -20,16 +20,30 @@ import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 
 public class BookOpener {
     public static void openBook(String name, String type, String authorDir, String sequenceDir, String reservedSequenceFolder) {
+        Log.d("surprise", "BookOpener openBook 24: sequence dir is "  +sequenceDir);
         Context context = App.getInstance();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();
-            if (MyPreferences.getInstance().isCreateAuthorsDir() && authorDir != null && !authorDir.isEmpty()) {
-                downloadsDir = downloadsDir.findFile(authorDir);
-                Log.d("surprise", "BookOpener openBook 27: author dir is " + authorDir);
+            if(MyPreferences.getInstance().isCreateSequencesDir() && reservedSequenceFolder != null){
+                if(MyPreferences.getInstance().isCreateAdditionalDir()){
+                    DocumentFile sequencesDir = downloadsDir.findFile("Серии");
+                    if(sequencesDir != null && sequencesDir.exists()){
+                        downloadsDir = sequencesDir;
+                    }
+                }
+                downloadsDir = downloadsDir.findFile(reservedSequenceFolder);
             }
-            if (MyPreferences.getInstance().isCreateSequencesDir() && downloadsDir != null && sequenceDir != null && !sequenceDir.isEmpty()) {
-                downloadsDir = downloadsDir.findFile(sequenceDir);
-                Log.d("surprise", "BookOpener openBook 32: sequence dir is " + sequenceDir);
+            else{
+                if (MyPreferences.getInstance().isCreateAuthorsDir() && authorDir != null && !authorDir.isEmpty()) {
+                    DocumentFile sequencesDir = downloadsDir.findFile("Авторы");
+                    if(sequencesDir != null && sequencesDir.exists()){
+                        downloadsDir = sequencesDir;
+                    }
+                    downloadsDir = downloadsDir.findFile(authorDir);
+                }
+                if (MyPreferences.getInstance().isCreateSequencesDir() && downloadsDir != null && sequenceDir != null && !sequenceDir.isEmpty()) {
+                    downloadsDir = downloadsDir.findFile(sequenceDir);
+                }
             }
             if (downloadsDir != null) {
                 DocumentFile file = downloadsDir.findFile(name);
