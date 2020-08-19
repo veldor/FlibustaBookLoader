@@ -138,7 +138,7 @@ public class SubscriptionsFragment extends Fragment {
         // добавлю идентификатор строки поиска
         mSubscribeInput = mRoot.findViewById(R.id.subscribe_name);
 
-        Button subscribeBtn = mRoot.findViewById(R.id.subscribe_btn);
+        Button subscribeBtn = mRoot.findViewById(R.id.add_to_blacklist_btn);
         if(subscribeBtn != null){
             subscribeBtn.setOnClickListener(this::addSubscribe);
         }

@@ -23,25 +23,35 @@
         android:title="@string/show_last"
         yourapp:showAsAction="ifRoom" />
 
-        <item
-            android:id="@+id/menuUseDarkMode"
-            android:checkable="true"
-            android:title="@string/use_dark_mode"
-            yourapp:showAsAction="never" />
-        <item
-            android:id="@+id/switchLayout"
-            android:title="@string/switch_layout_message"
-            yourapp:showAsAction="never" />
-        <item
-            android:id="@+id/showPreviews"
-            android:checkable="true"
-            android:title="@string/show_previews"
-            yourapp:showAsAction="never" />
-        <item
-            android:id="@+id/hideDigests"
-            android:checkable="true"
-            android:title="@string/hide_digest_title"
-            yourapp:showAsAction="never" />
+    <item
+        android:id="@+id/menuUseDarkMode"
+        android:checkable="true"
+        android:title="@string/use_dark_mode"
+        yourapp:showAsAction="never" />
+    <item
+        android:id="@+id/menuCreateAuthorDir"
+        android:checkable="true"
+        android:title="@string/message_create_author_folder"
+        yourapp:showAsAction="never" />
+    <item
+        android:id="@+id/menuCreateSequenceDir"
+        android:checkable="true"
+        android:title="@string/message_create_sequence_folder"
+        yourapp:showAsAction="never" />
+    <item
+        android:id="@+id/switchLayout"
+        android:title="@string/switch_layout_message"
+        yourapp:showAsAction="never" />
+    <item
+        android:id="@+id/showPreviews"
+        android:checkable="true"
+        android:title="@string/show_previews"
+        yourapp:showAsAction="never" />
+    <item
+        android:id="@+id/hideDigests"
+        android:checkable="true"
+        android:title="@string/hide_digest_title"
+        yourapp:showAsAction="never" />
     <item
         android:id="@+id/hideReadSwitcher"
         android:checkable="true"
@@ -51,6 +61,11 @@
         android:id="@+id/hideDownloadedSwitcher"
         android:checkable="true"
         android:title="@string/hide_downloaded"
+        yourapp:showAsAction="never" />
+    <item
+        android:id="@+id/useFilter"
+        android:checkable="true"
+        android:title="@string/title_use_filter"
         yourapp:showAsAction="never" />
 
     <item

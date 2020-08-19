@@ -10,6 +10,7 @@ import androidx.documentfile.provider.DocumentFile;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.utils.FilesHandler;
+import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.URLHelper;
 
 import java.io.File;
@@ -124,6 +125,10 @@ public class ExternalVpnVewClient {
         CloseableHttpClient httpclient = HttpClients.createSystem();
         HttpGet httpget = new HttpGet(url);
         try {
+            String authCookie = MyPreferences.getInstance().getAuthCookie();
+            if (authCookie != null) {
+                httpget.setHeader("Cookie", authCookie);
+            }
             return httpclient.execute(httpget, context);
         } catch (IOException e) {
             e.printStackTrace();

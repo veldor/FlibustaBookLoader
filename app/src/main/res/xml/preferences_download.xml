@@ -4,6 +4,9 @@
     <Preference
         app:key="@string/pref_download_location"
         app:title="@string/title_change_download_folder" />
+    <Preference
+        app:key="@string/pref_download_location_alt"
+        app:title="@string/title_change_download_folder_alt" />
 
     <PreferenceCategory android:title="Настройки для OPDS">
 

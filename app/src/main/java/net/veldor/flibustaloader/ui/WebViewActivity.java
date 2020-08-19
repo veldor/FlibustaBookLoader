@@ -54,6 +54,7 @@ import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 public class WebViewActivity extends BaseActivity implements SearchView.OnQueryTextListener{
 
     public static final String CALLED = "activity_called";
+    public static final int CODE_REQUEST_LOGIN = 1;
     private MyWebView mWebView;
     private MainViewModel mMyViewModel;
     private WebViewActivity.BookLoadingReceiver mPageLoadReceiver;
@@ -72,6 +73,8 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // проверю куку
+        Log.d("surprise", "WebViewActivity.java 77 onCreate: cookie is " + MyPreferences.getInstance().getAuthCookie());
 
         setContentView(R.layout.new_webview_activity);
 
@@ -255,6 +258,11 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         }
         MenuItem menuItem = menu.findItem(R.id.menuUseDarkMode);
         menuItem.setChecked(mMyViewModel.getNightModeEnabled());
+
+        menuItem = menu.findItem(R.id.login);
+        if(MyPreferences.getInstance().getAuthCookie() != null){
+            menuItem.setVisible(false);
+        }
         return true;
     }
 
@@ -283,6 +291,9 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
             case R.id.shareLink:
                 mMyViewModel.shareLink(mWebView);
                 return true;
+            case R.id.login:
+                showLoginDialog();
+                return true;
             case R.id.clearSearchHistory:
                 clearHistory();
                 return true;
@@ -293,6 +304,10 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showLoginDialog() {
+        startActivityForResult(new Intent(this, LoginActivity.class), CODE_REQUEST_LOGIN);
     }
 
     private void clearHistory() {
@@ -311,7 +326,13 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
             // перезагружу страницу
             mWebView.setup();
             mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
-        } else {
+        }
+        else if(requestCode == CODE_REQUEST_LOGIN){
+            if(resultCode == RESULT_OK){
+                mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
+            }
+        }
+        else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }

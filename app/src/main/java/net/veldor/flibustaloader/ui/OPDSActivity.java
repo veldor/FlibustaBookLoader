@@ -64,6 +64,7 @@ import net.veldor.flibustaloader.dialogs.GifDialog;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.Author;
+import net.veldor.flibustaloader.selections.BlacklistItem;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
@@ -972,8 +973,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showPage(FoundedBook book) {
         Intent intent = new Intent(this, WebViewActivity.class);
-        String link = book.id.split(":")[2];
-        intent.setData(Uri.parse(App.BASE_BOOK_URL + link));
+        intent.setData(Uri.parse(URLHelper.getBaseUrl() + book.bookLink));
         intent.putExtra(WebViewActivity.CALLED, true);
         startActivity(intent);
     }
@@ -1115,6 +1115,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     @SuppressLint("RestrictedApi")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d("surprise", "OPDSActivity.java 1118 onCreateOptionsMenu: create menu");
         getMenuInflater().inflate(R.menu.odps_menu, menu);
 
         // включу отображение иконок в раскрывающемся меню
@@ -1177,6 +1178,14 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         myItem = menu.findItem(R.id.hideDownloadedSwitcher);
         myItem.setChecked(MyPreferences.getInstance().isDownloadedHide());
 
+        myItem = menu.findItem(R.id.menuCreateAuthorDir);
+        myItem.setChecked(MyPreferences.getInstance().isCreateAuthorsDir());
+
+        myItem = menu.findItem(R.id.menuCreateSequenceDir);
+        myItem.setChecked(MyPreferences.getInstance().isCreateSequencesDir());
+
+        myItem = menu.findItem(R.id.useFilter);
+        myItem.setChecked(MyPreferences.getInstance().isUseFilter());
         return true;
     }
 
@@ -1286,6 +1295,26 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                     Toast.makeText(OPDSActivity.this, "Скрываю книги, у которых больше 3 авторов", Toast.LENGTH_SHORT).show();
                 }
                 return true;
+            case R.id.menuCreateAuthorDir:
+                MyPreferences.getInstance().setCreateAuthorsDir(!item.isChecked());
+                invalidateMenu();
+                if (MyPreferences.getInstance().isCreateAuthorsDir()) {
+                    Toast.makeText(OPDSActivity.this, "Создаю папки для отдельных авторов", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(OPDSActivity.this, "Не создаю папки для отдельных авторов", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            case R.id.menuCreateSequenceDir:
+                MyPreferences.getInstance().setCreateSequencesDir(!item.isChecked());
+                invalidateMenu();
+                if (MyPreferences.getInstance().isCreateSequencesDir()) {
+                    Toast.makeText(OPDSActivity.this, "Создаю папки для отдельных серий", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(OPDSActivity.this, "Не создаю папки для отдельных серий", Toast.LENGTH_SHORT).show();
+                }
+                return true;
             case R.id.hideDownloadedSwitcher:
                 MyPreferences.getInstance().switchDownloadedHide();
                 invalidateMenu();
@@ -1294,6 +1323,16 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                     hideDownloadedBooks();
                 } else {
                     Toast.makeText(OPDSActivity.this, "Показываю ранее скачанные книги", Toast.LENGTH_SHORT).show();
+                    showDownloadedBooks();
+                }
+                return true;
+            case R.id.useFilter:
+                MyPreferences.getInstance().setUseFilter(!item.isChecked());
+                invalidateMenu();
+                if (MyPreferences.getInstance().isUseFilter()) {
+                    startActivity(new Intent(this, BlacklistActivity.class));
+                } else {
+                    Toast.makeText(OPDSActivity.this, "Фильтрация результатов не применяется", Toast.LENGTH_SHORT).show();
                     showDownloadedBooks();
                 }
                 return true;
@@ -1840,7 +1879,6 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void invalidateMenu() {
         invalidateOptionsMenu();
         new Handler().postDelayed(() -> {
-            Log.d("surprise", "OPDSActivity onMenuOpened 1034: menu opened");
             if (sSearchType.equals(SEARCH_TYPE_BOOKS) || sSearchType.equals(SEARCH_TYPE_AUTHORS)) {
                 Log.d("surprise", "OPDSActivity onMenuOpened 1036: showing search");
                 mSearchView.setVisibility(View.VISIBLE);

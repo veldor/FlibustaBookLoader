@@ -23,6 +23,10 @@ public class MyPreferences {
     private static final String HIDE_DOWNLOADED_PREF = "hide downloaded";
     private static final String LAST_CHANGELOG_VERSION_PREF = "last changelog version";
     private static final String BOOKS_DOWNLOAD_AUTOSTART = "download auto start";
+    private static final String PREF_USE_FILTER = "use filter";
+    private static final String PREF_ONLY_RUSSIAN = "only russian";
+    private static final String AUTH_COOKIE_NAME = "auth cookie name";
+    private static final String AUTH_COOKIE_VALUE = "auth cookie value";
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
@@ -144,7 +148,7 @@ public class MyPreferences {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_create_sequence_folder), false);
     }
 
-    public boolean isCreateAdditionalDir(){
+    public boolean isCreateAdditionalDir() {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_create_additional_folders), false);
     }
 
@@ -156,12 +160,44 @@ public class MyPreferences {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_autostart_search), true);
     }
 
-
     public boolean isCustomMirror() {
         return mSharedPreferences.getBoolean(App.getInstance().getString(R.string.pref_use_custom_mirror), false);
     }
 
     public String getCustomMirror() {
         return mSharedPreferences.getString(App.getInstance().getString(R.string.pref_custom_flibusta_mirror), URLHelper.getBaseUrl());
+    }
+
+    public void setCreateAuthorsDir(boolean checked) {
+        mSharedPreferences.edit().putBoolean(App.getInstance().getString(R.string.pref_create_author_folder), checked).apply();
+    }
+
+    public void setCreateSequencesDir(boolean checked) {
+        mSharedPreferences.edit().putBoolean(App.getInstance().getString(R.string.pref_create_sequence_folder), checked).apply();
+    }
+
+    public boolean isUseFilter() {
+        return mSharedPreferences.getBoolean(PREF_USE_FILTER, true);
+    }
+
+    public void setUseFilter(boolean check) {
+        mSharedPreferences.edit().putBoolean(PREF_USE_FILTER, check).apply();
+    }
+
+    public boolean isOnlyRussian() {
+        return mSharedPreferences.getBoolean(PREF_ONLY_RUSSIAN, false);
+    }
+
+    public void setOnlyRussian(boolean check) {
+        mSharedPreferences.edit().putBoolean(PREF_ONLY_RUSSIAN, check).apply();
+    }
+
+    public void saveLoginCookie(String cookie) {
+        Log.d("surprise", "MyPreferences.java 196 saveLoginCookie: saving cookie " + cookie);
+        mSharedPreferences.edit().putString(AUTH_COOKIE_VALUE, cookie).apply();
+    }
+
+    public String getAuthCookie() {
+        return mSharedPreferences.getString(AUTH_COOKIE_VALUE, null);
     }
 }

@@ -30,6 +30,10 @@ import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.ui.OPDSActivity;
+import net.veldor.flibustaloader.utils.BlacklistAuthors;
+import net.veldor.flibustaloader.utils.BlacklistBooks;
+import net.veldor.flibustaloader.utils.BlacklistGenres;
+import net.veldor.flibustaloader.utils.BlacklistSequences;
 import net.veldor.flibustaloader.utils.LogHandler;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
@@ -49,6 +53,9 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 public class App extends Application {
     //todo switch to false on release
     public static final boolean isTestVersion = true;
+
+    // хранилище статуса HTTP запроса
+    public final MutableLiveData<String> RequestStatus = new MutableLiveData<>();
 
     public static final String SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask=";
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
@@ -134,9 +141,13 @@ public class App extends Application {
     public final LiveData<WorkInfo> mSearchWork = new LiveData<WorkInfo>() {
     };
     private SubscribeBooks mBooksSubscribe;
+    private BlacklistBooks mBooksBlacklist;
     private SubscribeAuthors mAuthorsSubscribe;
     private SubscribeSequences mSequencesSubscribe;
     public InputStream mRequestData;
+    private BlacklistAuthors mAuthorsBlacklist;
+    private BlacklistSequences mSequencesBlacklist;
+    private BlacklistGenres mGenresBlacklist;
 
 
     @Override
@@ -322,11 +333,39 @@ public class App extends Application {
         return mBooksSubscribe;
     }
 
+    // добавлю хранилище чёрного списка
+    public BlacklistBooks getBooksBlacklist() {
+        if (mBooksBlacklist == null) {
+            mBooksBlacklist = new BlacklistBooks();
+        }
+        return mBooksBlacklist;
+    }
+
     public SubscribeAuthors getAuthorsSubscribe() {
         if (mAuthorsSubscribe == null) {
             mAuthorsSubscribe = new SubscribeAuthors();
         }
         return mAuthorsSubscribe;
+    }
+    public BlacklistAuthors getAuthorsBlacklist() {
+        if (mAuthorsBlacklist == null) {
+            mAuthorsBlacklist = new BlacklistAuthors();
+        }
+        return mAuthorsBlacklist;
+    }
+
+    public BlacklistSequences getSequencesBlacklist() {
+        if (mSequencesBlacklist == null) {
+            mSequencesBlacklist = new BlacklistSequences();
+        }
+        return mSequencesBlacklist;
+    }
+
+    public BlacklistGenres getGenresBlacklist() {
+        if (mGenresBlacklist == null) {
+            mGenresBlacklist = new BlacklistGenres();
+        }
+        return mGenresBlacklist;
     }
 
     public SubscribeSequences getSequencesSubscribe() {

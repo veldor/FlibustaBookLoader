@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -115,10 +116,20 @@ public class MainActivity extends BaseActivity {
                             );
                         }
                         startActivityForResult(intent, DOWNLOAD_FOLDER_SELECT_OLD_REQUEST_CODE);
-
                     }
                 })
-                .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish());
+                .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish())
+                .setNeutralButton("Да (v2)", (dialog, which) -> {
+                    Intent intent = new Intent(MainActivity.this, FolderPicker.class);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        intent.addFlags(
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                        | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                        );
+                    }
+                    startActivityForResult(intent, DOWNLOAD_FOLDER_SELECT_OLD_REQUEST_CODE);
+                });
         if (!MainActivity.this.isFinishing()) {
             dialogBuilder.create().show();
         }

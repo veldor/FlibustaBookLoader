@@ -1,8 +1,10 @@
 package net.veldor.flibustaloader.http;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.documentfile.provider.DocumentFile;
 import androidx.work.WorkManager;
@@ -13,6 +15,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.MyConnectionSocketFactory;
 import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.MyWebViewClient;
+import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
@@ -26,17 +29,30 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import cz.msebera.android.httpclient.Header;
+import cz.msebera.android.httpclient.HttpHeaders;
 import cz.msebera.android.httpclient.HttpResponse;
+import cz.msebera.android.httpclient.NameValuePair;
 import cz.msebera.android.httpclient.client.HttpClient;
+import cz.msebera.android.httpclient.client.entity.UrlEncodedFormEntity;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
+import cz.msebera.android.httpclient.client.methods.HttpPost;
 import cz.msebera.android.httpclient.client.protocol.HttpClientContext;
 import cz.msebera.android.httpclient.config.Registry;
 import cz.msebera.android.httpclient.config.RegistryBuilder;
 import cz.msebera.android.httpclient.conn.socket.ConnectionSocketFactory;
 import cz.msebera.android.httpclient.impl.client.HttpClients;
 import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
+import cz.msebera.android.httpclient.message.BasicNameValuePair;
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
 import static net.veldor.flibustaloader.MyWebViewClient.TOR_CONNECT_ERROR_ACTION;
@@ -183,5 +199,120 @@ public class TorWebClient {
             Log.d("surprise", "TorWebClient downloadBook: ошибка при сохранении");
             throw new TorNotLoadedException();
         }
+    }
+
+
+    public boolean login(Uri uri, String login, String password) throws Exception {
+        Log.d("surprise", "TorWebClient login start logging in");
+        HttpResponse response;
+        UrlEncodedFormEntity params;
+        params = get2post(uri, login, password);
+        try {
+            response = executeRequest("http://flibustahezeous3.onion/node?destination=node", null, params);
+            App.getInstance().RequestStatus.postValue(App.getInstance().getString(R.string.response_received_message));
+            if (response != null) {
+                int status = response.getStatusLine().getStatusCode();
+                Log.d("surprise", "TorWebClient login status is " + status);
+                // получен ответ, попробую извлечь куку
+                Header[] cookies = response.getHeaders("set-cookie");
+                if (cookies.length > 1) {
+                    StringBuilder cookieValue = new StringBuilder();
+                    for (Header c :
+                            cookies) {
+                        String value = c.getValue();
+                        if(value.startsWith("PERSISTENT_LOGIN")){
+                            cookieValue.append(value.substring(0, value.indexOf(";")));
+                        }
+                        else if(value.startsWith("SESS")){
+                            cookieValue.append(value.substring(0, value.indexOf(";")));
+                            cookieValue.append("; ");
+                        }
+                    }
+                    MyPreferences.getInstance().saveLoginCookie(cookieValue.toString());
+                    App.getInstance().RequestStatus.postValue(App.getInstance().getString(R.string.success_login_message));
+                    return true;
+                } else {
+                    Log.d("surprise", "TorWebClient login no cookie :(");
+                    Log.d("surprise", "TorWebClient.java 230 login: " + response.getEntity().getContent());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.d("surprise", "TorWebClient login error logging in");
+        }
+        return false;
+    }
+
+    private static UrlEncodedFormEntity get2post(Uri url, String login, String password) {
+        Set<String> params = url.getQueryParameterNames();
+        if (params.isEmpty()) {
+            return null;
+        }
+        List<NameValuePair> paramsArray = new ArrayList<>();
+        paramsArray.add(new BasicNameValuePair("openid_identifier", null));
+        paramsArray.add(new BasicNameValuePair("name", login));
+        paramsArray.add(new BasicNameValuePair("pass", password + "/"));
+        paramsArray.add(new BasicNameValuePair("persistent_login", "1"));
+        paramsArray.add(new BasicNameValuePair("op", "Вход в систему"));
+        paramsArray.add(new BasicNameValuePair("form_build_id", "form-sIt20MHWRjpMKIvxdtHOGqLAa4D2GiBnFIXke7LXv7Y"));
+        paramsArray.add(new BasicNameValuePair("form_id", "user_login_block"));
+        paramsArray.add(new BasicNameValuePair("return_to", "http://flibustahezeous3.onion/openid/authenticate?destination=node"));
+        try {
+            return new UrlEncodedFormEntity(paramsArray, "utf8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static Map<String, String> getQueryMap(String query) {
+        String[] params = query.split("&");
+        Map<String, String> map = new HashMap<>();
+        for (String param : params) {
+            String name = param.split("=")[0];
+            String value = param.split("=")[1];
+            map.put(name, value);
+        }
+        return map;
+    }
+
+    private HttpResponse executeRequest(String url, Map<String, String> headers, UrlEncodedFormEntity params) throws Exception {
+        try {
+            AndroidOnionProxyManager tor = App.getInstance().mTorManager.getValue();
+            if (tor != null) {
+                HttpClient httpClient = getNewHttpClient();
+                int port = tor.getIPv4LocalHostSocksPort();
+                InetSocketAddress socketAddress = new InetSocketAddress("127.0.0.1", port);
+                HttpClientContext clientContext = HttpClientContext.create();
+                clientContext.setAttribute("socks.address", socketAddress);
+
+                HttpPost request = new HttpPost(url);
+
+                if (params != null) {
+                    request.setEntity(params);
+                }
+                if (headers != null) {
+                    for (Map.Entry<String, String> entry : headers.entrySet()) {
+                        request.setHeader(entry.getKey(), entry.getValue());
+                    }
+                }
+                request.setHeader(HttpHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+                request.setHeader(HttpHeaders.ACCEPT_ENCODING, "ggzip, deflate");
+                request.setHeader(HttpHeaders.ACCEPT_LANGUAGE, "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
+                request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
+                request.setHeader(HttpHeaders.CACHE_CONTROL, "no-cache");
+                request.setHeader("DNT", "1");
+                request.setHeader(HttpHeaders.HOST, "flibustahezeous3.onion");
+                request.setHeader("Origin", "http://flibustahezeous3.onion");
+                request.setHeader(HttpHeaders.PRAGMA, "no-cache");
+                request.setHeader("Proxy-Connection", "keep-ali e");
+                request.setHeader("Upgrade-Insecure-Requests", "1");
+                request.setHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36");
+                return httpClient.execute(request, clientContext);
+            }
+        } catch (RuntimeException e) {
+                Toast.makeText(App.getInstance(), "Error request", Toast.LENGTH_LONG).show();
+            }
+        return null;
     }
 }

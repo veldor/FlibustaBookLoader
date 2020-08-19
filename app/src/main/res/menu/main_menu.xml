@@ -8,6 +8,11 @@
         yourapp:actionViewClass="androidx.appcompat.widget.SearchView"
         yourapp:showAsAction="ifRoom" />
     <item
+        android:id="@+id/login"
+        android:icon="@drawable/ic_baseline_vpn_key_black_24"
+        android:title="@string/title_login"
+        yourapp:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/goHome"
         android:icon="@drawable/ic_home_white_24dp"
         android:title="@string/go_home"

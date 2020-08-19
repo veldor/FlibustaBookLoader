@@ -241,6 +241,10 @@ public class MyWebViewClient extends WebViewClient {
                 HttpGet httpGet = new HttpGet(url);
                 httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
                 httpGet.setHeader("X-Compress", "null");
+                String authCookie = MyPreferences.getInstance().getAuthCookie();
+                if (authCookie != null) {
+                    httpGet.setHeader("Cookie", authCookie);
+                }
                 httpResponse = httpClient.execute(httpGet, context);
             }
 

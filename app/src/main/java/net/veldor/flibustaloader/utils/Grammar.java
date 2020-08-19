@@ -42,13 +42,15 @@ public class Grammar {
 
     public static String createAuthorDirName(Author author) {
         String dirname;
-        // разобью имя автора по пробелу
+        dirname = author.name;
+       /* // разобью имя автора по пробелу
         String[] parts = author.name.split(" ");
         if (parts.length > 1) {
             dirname = parts[0] + ' ' + parts[1];
-        } else {
-            dirname = parts[0];
         }
+        else {
+            dirname = parts[0];
+        }*/
         if (dirname.length() > 100) {
             return dirname.substring(0, 100);
         }

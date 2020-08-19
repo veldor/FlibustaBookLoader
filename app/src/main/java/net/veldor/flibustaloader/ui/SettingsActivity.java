@@ -152,8 +152,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                                     Toast.makeText(getContext(), "Настройки приложения восстановлены", Toast.LENGTH_SHORT).show();
                                     workState.removeObservers(ReservePreferencesFragment.this);
                                     new Handler().postDelayed(new BaseActivity.ResetApp(), 1000);
-                                }
-                                else if(state instanceof Operation.State.FAILURE){
+                                } else if (state instanceof Operation.State.FAILURE) {
                                     Toast.makeText(getContext(), "Не удалось восстановить настройки приложения", Toast.LENGTH_SHORT).show();
                                     workState.removeObservers(ReservePreferencesFragment.this);
                                 }
@@ -311,6 +310,22 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                         Intent intent = new Intent(getContext(), FolderPicker.class);
                         startActivityForResult(intent, READ_REQUEST_CODE);
                     }
+                    return false;
+                });
+            }
+
+            Preference changeDownloadFolderAltPreference = findPreference(getString(R.string.pref_download_location_alt));
+            if(changeDownloadFolderAltPreference != null){
+                changeDownloadFolderAltPreference.setOnPreferenceClickListener(preference -> {
+                    Intent intent = new Intent(getContext(), FolderPicker.class);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        intent.addFlags(
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                        | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                        );
+                    }
+                    startActivityForResult(intent, READ_REQUEST_CODE);
                     return false;
                 });
             }

@@ -22,7 +22,9 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".ui.BookmarksActivity"></activity>
+        <activity android:name=".ui.LoginActivity"></activity>
+        <activity android:name=".ui.BlacklistActivity" />
+        <activity android:name=".ui.BookmarksActivity" />
         <activity android:name=".ui.BaseActivity" />
         <activity android:name=".ui.Loader" />
         <activity

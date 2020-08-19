@@ -167,6 +167,32 @@
     <string name="pref_custom_flibusta_mirror" translatable="false">custom flibusta mirror</string>
     <string name="add_bookmark">Add bookmark</string>
     <string name="navigation_go_bookmarks">Bookmarks</string>
-    <string name="pref_create_additional_folders">create additional folders</string>
-    <string name="pref_use_custom_mirror">use custom mirror</string>
+    <string name="pref_create_additional_folders" translatable="false">create additional folders</string>
+    <string name="pref_use_custom_mirror" translatable="false">use custom mirror</string>
+    <string name="message_create_sequence_folder">Create sequences folders</string>
+    <string name="message_create_author_folder">Create authors folder</string>
+    <string name="navigation_go_blacklist">Filter</string>
+    <string name="add_to_blacklist_msg">Add to blacklist</string>
+    <string name="title_author">Author</string>
+    <string name="title_name">Name</string>
+    <string name="title_sequence">Sequence</string>
+    <string name="title_genre">Genre</string>
+    <string name="blacklist_describe">Founded books filter. Books search exclude books bu current filters</string>
+    <string name="title_use_filter">Use filter</string>
+    <string name="title_only_russian">Only books on russian</string>
+    <string name="title_login">Log-in</string>
+    <string name="login_label">Your login</string>
+    <string name="prompt_password">Your password</string>
+    <string name="action_sign_in_short" translatable="false">sign in</string>
+    <string name="action_sign_in" translatable="false">Sign in</string>
+    <string name="done_message">Done</string>
+    <string name="failed_message">Failed</string>
+    <string name="wait_for_initialize">Wait initialize</string>
+    <string name="wait_for_internet_message">Wait for internet connection</string>
+    <string name="message_prepare_request">Prepare request</string>
+    <string name="send_request_message">Send request</string>
+    <string name="success_login_message">Success login</string>
+    <string name="response_received_message">Responce received</string>
+    <string name="pref_download_location_alt" translatable="false">download location alt</string>
+    <string name="title_change_download_folder_alt">Change download folder(alternative)</string>
 </resources>

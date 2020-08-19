@@ -78,7 +78,7 @@
     <string name="launch_begin_message">Запуск инициирован!</string>
     <string name="tor_load_waiting_internet_message">Ожидаем подключения к интернету</string>
     <string name="tor_continue_loading">Tor загружается %d сек.</string>
-    <string name="subscription_describe">Тут можно подписаться на новинки книжной индустрии. Выберите тип и значение, на которое хотите подписаться, после этого нажмите кнопку \'Подписаться\'</string>
+    <string name="subscription_describe">Добавленные значения будут проигнорированы в поиске</string>
     <string name="title_activity_webview">WebView</string>
     <string name="show_all_results_switcher_text">Показывать сразу все книги</string>
     <string name="select_books_for_download_message">Выберите книги для скачивания</string>
@@ -153,4 +153,27 @@
     <string name="show_authors_list_buton">Показать список авторов</string>
     <string name="navigation_go_bookmarks">Закладки</string>
     <string name="add_bookmark">Добавить закладку</string>
+    <string name="message_create_author_folder">Создавать папки авторов</string>
+    <string name="message_create_sequence_folder">Создавать папки серий</string>
+    <string name="navigation_go_blacklist">Фильтр</string>
+    <string name="add_to_blacklist_msg">Добавить в чёрный список</string>
+    <string name="title_name">Название</string>
+    <string name="title_author">Автор</string>
+    <string name="title_sequence">Серия</string>
+    <string name="title_genre">Жанр</string>
+    <string name="blacklist_describe">Фильтр по различным категориям. Из полученных результатов поиска книг будут исключены книги по заданным значениям.</string>
+    <string name="title_use_filter">Фильтрация результатов</string>
+    <string name="title_only_russian">Только на русском языке</string>
+    <string name="title_login">Вход</string>
+    <string name="title_change_download_folder_alt">Альтернативный выбор папки</string>
+    <string name="response_received_message">Получен ответ</string>
+    <string name="success_login_message">Успешный вход</string>
+    <string name="send_request_message">Отправляю запрос</string>
+    <string name="login_label">Логин</string>
+    <string name="prompt_password">Пароль</string>
+    <string name="done_message">Сделано</string>
+    <string name="failed_message">Неудача</string>
+    <string name="wait_for_initialize">Инициализация</string>
+    <string name="wait_for_internet_message">Ожидаю интернет</string>
+    <string name="message_prepare_request">Подготавливаю запрос</string>
 </resources>

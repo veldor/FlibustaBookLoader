@@ -29,6 +29,11 @@
             app:actionViewClass="android.widget.TextView"
             android:title="@string/navigation_go_bookmarks" />
         <item
+            android:id="@+id/goToBlacklist"
+            android:icon="@drawable/ic_baseline_cancel_24"
+            app:actionViewClass="android.widget.TextView"
+            android:title="@string/navigation_go_blacklist" />
+        <item
             android:id="@+id/goToSettings"
             android:icon="@drawable/ic_baseline_settings_black_24"
             android:title="@string/navigation_go_settings" />

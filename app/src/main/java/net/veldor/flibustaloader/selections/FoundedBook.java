@@ -24,6 +24,8 @@ public class FoundedBook implements FoundedItem, Serializable {
     public boolean downloaded;
     public String previewUrl;
     public String preferredFormat;
+    public String bookLink;
+    public String bookLanguage;
 
     @Override
     public boolean equals(@Nullable Object obj) {

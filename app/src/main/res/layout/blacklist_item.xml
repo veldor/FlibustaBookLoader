@@ -5,8 +5,8 @@
     <data>
         <import type="android.view.View" />
         <variable
-            name="subscriptions"
-            type="net.veldor.flibustaloader.selections.SubscriptionItem" />
+            name="blacklists"
+            type="net.veldor.flibustaloader.selections.BlacklistItem" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -20,7 +20,7 @@
             android:id="@+id/blacklist_item_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@{subscriptions.name}"
+            android:text="@{blacklists.name}"
             android:textAlignment="center"
             android:textColor="@drawable/sequence_text_color"
             android:textSize="18sp"
