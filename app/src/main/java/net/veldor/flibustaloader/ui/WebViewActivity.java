@@ -329,6 +329,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         }
         else if(requestCode == CODE_REQUEST_LOGIN){
             if(resultCode == RESULT_OK){
+                invalidateOptionsMenu();
                 mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
             }
         }

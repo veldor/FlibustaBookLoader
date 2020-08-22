@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.ui;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -13,9 +14,11 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.GravityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LiveData;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -32,6 +35,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.FilesHandler;
+import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.TransportUtils;
 import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
@@ -317,17 +321,32 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
             Preference changeDownloadFolderAltPreference = findPreference(getString(R.string.pref_download_location_alt));
             if(changeDownloadFolderAltPreference != null){
                 changeDownloadFolderAltPreference.setOnPreferenceClickListener(preference -> {
-                    Intent intent = new Intent(getContext(), FolderPicker.class);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        intent.addFlags(
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                        | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                                        | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                        );
-                    }
-                    startActivityForResult(intent, READ_REQUEST_CODE);
+                    showAlterDirSelectDialog();
                     return false;
                 });
+            }
+        }
+
+        private void showAlterDirSelectDialog() {
+            Log.d("surprise", "SettingsActivity.java 331 showAlterDirSelectDialog: start select");
+            FragmentActivity activity = getActivity();
+            if(activity != null){
+                new AlertDialog.Builder(activity)
+                        .setTitle("Альтернативный выбор папки")
+                        .setMessage("На случай, если папка для скачивания не выбирается основным методом. Только для совместимости, никаких преимуществ этот способ не даёт, также выбранная папка может сбрасываться при перезагрузке смартфона и её придётся выбирать заново")
+                        .setCancelable(true)
+                        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                            Intent intent = new Intent(getContext(), FolderPicker.class);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                intent.addFlags(
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                );
+                            }
+                            startActivityForResult(intent, READ_REQUEST_CODE);
+                        })
+                        .create().show();
             }
         }
 

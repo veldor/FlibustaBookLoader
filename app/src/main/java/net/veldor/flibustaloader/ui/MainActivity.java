@@ -2,7 +2,6 @@ package net.veldor.flibustaloader.ui;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -120,7 +119,21 @@ public class MainActivity extends BaseActivity {
                 })
                 .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish())
                 .setNeutralButton("Да (v2)", (dialog, which) -> {
-                    Intent intent = new Intent(MainActivity.this, FolderPicker.class);
+                    showAlterDirSelectDialog();
+                });
+        if (!MainActivity.this.isFinishing()) {
+            dialogBuilder.create().show();
+        }
+    }
+
+    private void showAlterDirSelectDialog() {
+        Log.d("surprise", "SettingsActivity.java 331 showAlterDirSelectDialog: start select");
+        new AlertDialog.Builder(this)
+                .setTitle("Альтернативный выбор папки")
+                .setMessage("На случай, если папка для скачивания не выбирается основным методом. Только для совместимости, никаких преимуществ этот способ не даёт, также выбранная папка может сбрасываться при перезагрузке смартфона и её придётся выбирать заново")
+                .setCancelable(true)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    Intent intent = new Intent(this, FolderPicker.class);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                         intent.addFlags(
                                 Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -129,10 +142,8 @@ public class MainActivity extends BaseActivity {
                         );
                     }
                     startActivityForResult(intent, DOWNLOAD_FOLDER_SELECT_OLD_REQUEST_CODE);
-                });
-        if (!MainActivity.this.isFinishing()) {
-            dialogBuilder.create().show();
-        }
+                })
+                .create().show();
     }
 
     private void setupUI() {
@@ -489,7 +500,7 @@ public class MainActivity extends BaseActivity {
                         // проверю наличие файла
                         DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
                         if (dl != null && dl.isDirectory()) {
-                            try{
+                            try {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                                     App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                     App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -497,8 +508,7 @@ public class MainActivity extends BaseActivity {
                                 App.getInstance().setDownloadDir(treeUri);
                                 handleStart();
                                 return;
-                            }
-                            catch (Exception e){
+                            } catch (Exception e) {
                                 Toast.makeText(this, "Не удалось выдать разрешения на доступ, попробуем другой метод", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(this, FolderPicker.class);
                                 if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
@@ -530,6 +540,7 @@ public class MainActivity extends BaseActivity {
                 }
             }
         }
+
         super.onActivityResult(requestCode, resultCode, data);
     }
 }
