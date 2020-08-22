@@ -372,6 +372,15 @@ public class XMLParser {
         org.jsoup.nodes.Document dom;
         String url = "http://rutracker.org";
             dom = Jsoup.parse(content, "UTF-8", url);
+            // попробую найти форму входа. Если она найдена- значит, вход не выполнен. В этом случае удалю идентификационную куку
+            if(MyPreferences.getInstance().getAuthCookie() != null){
+                Elements loginForm = dom.select("form#user-login-form");
+                if(loginForm != null && loginForm.size() == 1){
+                    Log.d("surprise", "XMLParser.java 378 searchDownloadLinks: founded login FORM!!!!!!!!!!!");
+                    MyPreferences.getInstance().removeAuthCookie();
+                    App.sResetLoginCookie.postValue(true);
+                }
+            }
             Elements links = dom.select("a");
             if(links != null){
                 Pattern linkPattern  = Pattern.compile("^/b/[0-9]+/([a-z0-9]+)$");

@@ -29,6 +29,8 @@ import androidx.appcompat.widget.SearchView;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -131,6 +133,18 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         MenuItem item = menuNav.findItem(R.id.goToWebView);
         item.setEnabled(false);
         item.setChecked(true);
+
+        // буду отслеживать событие логина
+        LiveData<Boolean> cookieObserver = App.sResetLoginCookie;
+        cookieObserver.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                if(aBoolean){
+                    Toast.makeText(WebViewActivity.this, "Данные для входа устарели, придётся войти ещё раз", Toast.LENGTH_SHORT).show();
+                    invalidateOptionsMenu();
+                }
+            }
+        });
     }
 
     private void showChangesList() {

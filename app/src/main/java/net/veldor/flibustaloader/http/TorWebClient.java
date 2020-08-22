@@ -179,7 +179,7 @@ public class TorWebClient {
         try {
             HttpResponse response = simpleGetRequest(URLHelper.getBaseOPDSUrl() + book.link);
             // проверю, что запрос выполнен и файл не пуст. Если это не так- попорбую загрузить книгу с основного домена
-            if(response == null || response.getStatusLine().getStatusCode() != 200 || response.getEntity().getContentLength()  < 1){
+            if (response == null || response.getStatusLine().getStatusCode() != 200 || response.getEntity().getContentLength() < 1) {
                 Log.d("surprise", "ExternalVpnVewClient downloadBook 116: request from reserve " + URLHelper.getFlibustaIsUrl() + book.link);
                 // попробую загрузку с резервного адреса
                 response = simpleGetRequest(URLHelper.getFlibustaIsUrl() + book.link);
@@ -220,12 +220,12 @@ public class TorWebClient {
                     for (Header c :
                             cookies) {
                         String value = c.getValue();
-                        if(value.startsWith("PERSISTENT_LOGIN")){
+                        /*if(value.startsWith("PERSISTENT_LOGIN")){
                             cookieValue.append(value.substring(0, value.indexOf(";")));
                         }
-                        else if(value.startsWith("SESS")){
+                        else */
+                        if (value.startsWith("SESS")) {
                             cookieValue.append(value.substring(0, value.indexOf(";")));
-                            cookieValue.append("; ");
                         }
                     }
                     MyPreferences.getInstance().saveLoginCookie(cookieValue.toString());
@@ -311,8 +311,8 @@ public class TorWebClient {
                 return httpClient.execute(request, clientContext);
             }
         } catch (RuntimeException e) {
-                Toast.makeText(App.getInstance(), "Error request", Toast.LENGTH_LONG).show();
-            }
+            Toast.makeText(App.getInstance(), "Error request", Toast.LENGTH_LONG).show();
+        }
         return null;
     }
 }

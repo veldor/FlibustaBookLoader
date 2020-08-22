@@ -200,4 +200,8 @@ public class MyPreferences {
     public String getAuthCookie() {
         return mSharedPreferences.getString(AUTH_COOKIE_VALUE, null);
     }
+
+    public void removeAuthCookie() {
+        mSharedPreferences.edit().remove(AUTH_COOKIE_VALUE).apply();
+    }
 }
