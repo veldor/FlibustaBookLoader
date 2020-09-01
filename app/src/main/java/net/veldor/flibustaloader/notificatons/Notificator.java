@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
@@ -51,8 +52,10 @@ public class Notificator {
     private static final int MASS_DOWNLOAD_PAUSED_NOTIFICATION = 9;
     public static final int CHECK_SUBSCRIBES_WORKER_NOTIFICATION = 10;
     private static final int RESTART_TOR_CODE = 11;
+    private static final int MISC_CODE = 11;
     private static final String DOWNLOADED_BOOKS_GROUP = "downloaded books";
     private static final String ERROR_DOWNLOAD_BOOKS_GROUP = "error download books";
+    private static final int DONATE_REQUEST_CODE = 4;
     private static Notificator instance;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
@@ -428,5 +431,20 @@ public class Notificator {
                 .addAction(R.drawable.ic_open_black_24dp, "Открыть", openPendingIntent);
         mNotificationManager.notify(BookLoadedId, notificationBuilder.build());
         ++BookLoadedId;
+    }
+
+    public void begDonation() {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse("https://money.yandex.ru/to/41001269882689"));
+        PendingIntent openPendingIntent = PendingIntent.getActivity(mContext, DONATE_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, MISC_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_attach_money_24)
+                .setContentTitle("Поддержать разработку")
+                .setStyle(new NotificationCompat.BigTextStyle().bigText("Если вам понравилось приложение- можете кинуть мне денег на кофе. Если у вас есть предложения/пожелания- можете написать их в комментарии к переводу :)"))
+                .setContentIntent(openPendingIntent)
+                .addAction(R.drawable.ic_baseline_attach_money_24, "Пожертвовать", openPendingIntent)
+                .setAutoCancel(true);
+        Notification notification = notificationBuilder.build();
+        mNotificationManager.notify(MISC_CODE, notification);
     }
 }

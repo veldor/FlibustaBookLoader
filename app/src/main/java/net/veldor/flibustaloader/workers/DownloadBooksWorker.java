@@ -27,6 +27,7 @@ import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.ui.BaseActivity;
 import net.veldor.flibustaloader.utils.Grammar;
+import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -158,6 +159,11 @@ public class DownloadBooksWorker extends Worker {
                             BaseActivity.sLiveDownloadScheduleCount.postValue(true);
                             // оповещу о скачанной книге
                             App.getInstance().mLiveDownloadedBookId.postValue(queuedElement.bookId);
+                            // если не клянчил донаты- поклянчу :)
+                            if(!MyPreferences.getInstance().askedForDonation()){
+                                mNotificator.begDonation();
+                                MyPreferences.getInstance().setDonationBegged();
+                            }
                         }
                     } catch (BookNotFoundException e) {
                         Log.d("surprise", "DownloadBooksWorker doWork 173: catch book not found error");

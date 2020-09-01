@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -184,11 +183,23 @@ public class TorWebClient {
                 // попробую загрузку с резервного адреса
                 response = simpleGetRequest(URLHelper.getFlibustaIsUrl() + book.link);
             }
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                DocumentFile newFile = FilesHandler.getDownloadFile(book);
-                if (newFile != null) {
-                    GlobalWebClient.handleBookLoadRequest(response, newFile);
+                try{
+                    DocumentFile newFile = FilesHandler.getDownloadFile(book);
+                    if (newFile != null) {
+                        GlobalWebClient.handleBookLoadRequest(response, newFile);
+                    }
+                }
+                catch (Exception e){
+                    try{
+                        File file = FilesHandler.getCompatDownloadFile(book);
+                        GlobalWebClient.handleBookLoadRequest(response, file);
+                    }
+                    catch (Exception e1){
+                        // скачаю файл просто в папку загрузок
+                        File file = FilesHandler.getBaseDownloadFile(book);
+                        GlobalWebClient.handleBookLoadRequest(response, file);
+                    }
                 }
             } else {
                 File file = FilesHandler.getCompatDownloadFile(book);

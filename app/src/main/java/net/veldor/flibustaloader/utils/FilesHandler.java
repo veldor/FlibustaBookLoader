@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.utils;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.util.Log;
 import android.widget.Toast;
@@ -151,6 +152,11 @@ public class FilesHandler {
             }
         }
         Log.d("surprise", "FilesHandler getDownloadFile load to dir " + file.getAbsolutePath());
+        return new File(file, book.name);
+    }
+
+    public static File getBaseDownloadFile(BooksDownloadSchedule book) {
+        File file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         return new File(file, book.name);
     }
 }

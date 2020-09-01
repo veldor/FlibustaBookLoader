@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -31,6 +32,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MyPreferences;
 

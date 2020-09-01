@@ -27,6 +27,7 @@ public class MyPreferences {
     private static final String PREF_ONLY_RUSSIAN = "only russian";
     private static final String AUTH_COOKIE_NAME = "auth cookie name";
     private static final String AUTH_COOKIE_VALUE = "auth cookie value";
+    private static final String PREF_BEG_DONATION = "beg donation";
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
@@ -203,5 +204,13 @@ public class MyPreferences {
 
     public void removeAuthCookie() {
         mSharedPreferences.edit().remove(AUTH_COOKIE_VALUE).apply();
+    }
+
+    public boolean askedForDonation() {
+        return mSharedPreferences.getBoolean(PREF_BEG_DONATION, false);
+    }
+
+    public void setDonationBegged() {
+        mSharedPreferences.edit().putBoolean(PREF_BEG_DONATION, true).apply();
     }
 }

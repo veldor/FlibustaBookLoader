@@ -105,11 +105,22 @@ public class ExternalVpnVewClient {
             response = rawRequest(URLHelper.getFlibustaIsUrl() + book.link);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            DocumentFile newFile = FilesHandler.getDownloadFile(book);
-            if (newFile != null) {
-                // запрошу данные
-                Log.d("surprise", "TorWebClient downloadBook: request " + book.link + " of book " + book.name);
-                GlobalWebClient.handleBookLoadRequest(response, newFile);
+            try {
+                DocumentFile newFile = FilesHandler.getDownloadFile(book);
+                if (newFile != null) {
+                    // запрошу данные
+                    Log.d("surprise", "TorWebClient downloadBook: request " + book.link + " of book " + book.name);
+                    GlobalWebClient.handleBookLoadRequest(response, newFile);
+                }
+            } catch (Exception e) {
+                try {
+                    File file = FilesHandler.getCompatDownloadFile(book);
+                    GlobalWebClient.handleBookLoadRequest(response, file);
+                } catch (Exception e1) {
+                    // скачаю файл просто в папку загрузок
+                    File file = FilesHandler.getBaseDownloadFile(book);
+                    GlobalWebClient.handleBookLoadRequest(response, file);
+                }
             }
         } else {
             File file = FilesHandler.getCompatDownloadFile(book);
