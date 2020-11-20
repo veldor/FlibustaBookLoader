@@ -53,6 +53,7 @@ public class Notificator {
     public static final int CHECK_SUBSCRIBES_WORKER_NOTIFICATION = 10;
     private static final int RESTART_TOR_CODE = 11;
     private static final int MISC_CODE = 11;
+    private static final int BOOK_DOWNLOAD_PROGRESS = 11;
     private static final String DOWNLOADED_BOOKS_GROUP = "downloaded books";
     private static final String ERROR_DOWNLOAD_BOOKS_GROUP = "error download books";
     private static final int DONATE_REQUEST_CODE = 4;
@@ -446,5 +447,27 @@ public class Notificator {
                 .setAutoCancel(true);
         Notification notification = notificationBuilder.build();
         mNotificationManager.notify(MISC_CODE, notification);
+    }
+
+    public void createBookLoadingProgressNotification(int contentLength, int loaded , String name) {
+        // пересчитаю байты в килобайты
+        double total = (double) contentLength / 1024;
+        double nowLoaded = (double) loaded / 1024;
+        double percentDone = 0.;
+        if(loaded > 0){
+            percentDone = loaded * 100 / total / 1000;
+        }
+        Notification notification = new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
+                .setContentTitle("Качаю " + name)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.loaded_message), nowLoaded, total, percentDone)))
+                .setOngoing(true)
+                .setProgress(contentLength, loaded, false)
+                .setAutoCancel(false).build();
+                mNotificationManager.notify(BOOK_DOWNLOAD_PROGRESS, notification);
+    }
+
+    public void cancelBookLoadingProgressNotification() {
+        mNotificationManager.cancel(BOOK_DOWNLOAD_PROGRESS);
     }
 }

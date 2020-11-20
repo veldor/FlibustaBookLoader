@@ -195,4 +195,7 @@
     <string name="response_received_message">Responce received</string>
     <string name="pref_download_location_alt" translatable="false">download location alt</string>
     <string name="title_change_download_folder_alt">Change download folder(alternative)</string>
+    <string name="tor_title">TOR</string>
+    <string name="vpn_title">VPN</string>
+    <string name="loaded_message">Loaded %.0f of %.0f Kb (%.2f%%)</string>
 </resources>

@@ -52,7 +52,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class App extends Application {
     //todo switch to false on release
-    public static final boolean isTestVersion = false;
+    public static final boolean isTestVersion = true;
     public static MutableLiveData<Boolean> sResetLoginCookie = new MutableLiveData<>();
 
     // хранилище статуса HTTP запроса
@@ -155,7 +155,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         //todo удалить в релизной версии
-        //LogHandler.getInstance().initLog();
+        LogHandler.getInstance().initLog();
 
         // читаю настройки sharedPreferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);

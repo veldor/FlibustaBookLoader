@@ -10,7 +10,6 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.parsers.SearchResponseParser;
 import net.veldor.flibustaloader.selections.Author;

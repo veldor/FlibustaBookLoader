@@ -22,13 +22,18 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".ui.LoginActivity"></activity>
-        <activity android:name=".ui.BlacklistActivity" />
-        <activity android:name=".ui.BookmarksActivity" />
-        <activity android:name=".ui.BaseActivity" />
+        <activity android:name=".ui.LoginActivity"
+            android:launchMode="singleInstance"/>
+        <activity android:name=".ui.BlacklistActivity"
+            android:launchMode="singleInstance"/>
+        <activity android:name=".ui.BookmarksActivity"
+            android:launchMode="singleInstance"/>
+        <activity android:name=".ui.BaseActivity"
+            android:launchMode="singleInstance"/>
         <activity android:name=".ui.Loader" />
         <activity
             android:name=".ui.MainActivity"
+            android:launchMode="singleInstance"
             android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -48,18 +53,23 @@
         </activity>
         <activity
             android:name=".ui.OPDSActivity"
+            android:launchMode="singleInstance"
             android:label="@string/title_activity_opds" />
         <activity
             android:name=".ui.WebViewActivity"
+            android:launchMode="singleInstance"
             android:configChanges="uiMode"
             android:label="@string/title_activity_webview" />
         <activity
             android:name=".ui.ActivityBookDownloadSchedule"
+            android:launchMode="singleInstance"
             android:label="@string/title_activity_download_schedule"
             android:parentActivityName=".ui.OPDSActivity"
             android:theme="@style/OldAppTheme" />
-        <activity android:name=".ui.SettingsActivity" />
-        <activity android:name=".ui.SubscriptionsActivity" />
+        <activity android:name=".ui.SettingsActivity"
+            android:launchMode="singleInstance"/>
+        <activity android:name=".ui.SubscriptionsActivity"
+            android:launchMode="singleInstance"/>
 
         <receiver android:name=".receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />

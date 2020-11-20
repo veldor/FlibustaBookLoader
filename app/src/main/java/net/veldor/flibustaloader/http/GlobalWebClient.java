@@ -7,6 +7,7 @@ import androidx.documentfile.provider.DocumentFile;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.notificatons.Notificator;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,7 +41,13 @@ public class GlobalWebClient {
                 if (status == 200) {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
-                        Log.d("surprise", "TorWebClient downloadBook 177: content length is " + entity.getContentLength());
+                        long contentLength = entity.getContentLength();
+                        String fileName = newFile.getName();
+                        Notificator notifier = App.getInstance().getNotificator();
+                        if(contentLength > 0){
+                            // создам уведомление, в котором буду показывать прогресс скачивания
+                            notifier.createBookLoadingProgressNotification((int)contentLength,0,  fileName);
+                        }
                         InputStream content = entity.getContent();
                         if (content != null && entity.getContentLength() > 0) {
                             OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
@@ -49,11 +56,15 @@ public class GlobalWebClient {
                                 byte[] buffer = new byte[1024];
                                 while ((read = content.read(buffer)) > 0) {
                                     out.write(buffer, 0, read);
+                                    if(contentLength > 0) {
+                                        notifier.createBookLoadingProgressNotification((int) contentLength,(int) newFile.length(), fileName);
+                                    }
                                 }
+                                Log.d("surprise", "GlobalWebClient handleBookLoadRequestNoContentLength 114: finish parse content " + System.currentTimeMillis());
                                 out.close();
-                                Log.d("surprise", "TorWebClient downloadBook 188: created file length is " + newFile.length());
+                                content.close();
+                                notifier.cancelBookLoadingProgressNotification();
                                 if (newFile.length() > 0) {
-                                    Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getUri());
                                     return;
                                 }
                             }
@@ -77,7 +88,13 @@ public class GlobalWebClient {
                 if (status == 200) {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
-                        Log.d("surprise", "TorWebClient downloadBook 177: content length is " + entity.getContentLength());
+                        long contentLength = entity.getContentLength();
+                        String fileName = newFile.getName();
+                        Notificator notifier = App.getInstance().getNotificator();
+                        if(contentLength > 0){
+                            // создам уведомление, в котором буду показывать прогресс скачивания
+                            notifier.createBookLoadingProgressNotification((int)contentLength,0,  fileName);
+                        }
                         InputStream content = entity.getContent();
                         if (content != null && entity.getContentLength() > 0) {
                             OutputStream out = new FileOutputStream(newFile);
@@ -85,8 +102,11 @@ public class GlobalWebClient {
                             byte[] buffer = new byte[1024];
                             while ((read = content.read(buffer)) > 0) {
                                 out.write(buffer, 0, read);
+                                notifier.createBookLoadingProgressNotification((int) contentLength,(int) newFile.length(), fileName);
                             }
                             out.close();
+                            content.close();
+                            notifier.cancelBookLoadingProgressNotification();
                             Log.d("surprise", "TorWebClient downloadBook 188: created file length is " + newFile.length());
                             if (newFile.length() > 0) {
                                 Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getAbsolutePath());
@@ -103,6 +123,80 @@ public class GlobalWebClient {
         boolean deleteResult = newFile.delete();
         Log.d("surprise", "TorWebClient downloadBook: книга не найдена, статус удаления файла: " + deleteResult);
         throw new BookNotFoundException();
+    }
+    public static boolean handleBookLoadRequestNoContentLength(HttpResponse response, DocumentFile newFile) throws BookNotFoundException {
+        try {
+            if (response != null) {
+                int status = response.getStatusLine().getStatusCode();
+                if (status == 200) {
+                    HttpEntity entity = response.getEntity();
+                    if (entity != null) {
+                        Log.d("surprise", "GlobalWebClient handleBookLoadRequestNoContentLength 114: start parse content " + System.currentTimeMillis());
+                        InputStream content = entity.getContent();
+                        if (content != null) {
+                            OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
+                            if (out != null) {
+                                int read;
+                                byte[] buffer = new byte[1024];
+                                while ((read = content.read(buffer)) > 0) {
+                                    out.write(buffer, 0, read);
+                                }
+
+                                Log.d("surprise", "GlobalWebClient handleBookLoadRequestNoContentLength 114: finish parse content " + System.currentTimeMillis());
+                                out.close();
+                                content.close();
+                                Log.d("surprise", "TorWebClient downloadBook 188: created file length is " + newFile.length());
+                                if (newFile.length() > 0) {
+                                    Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getUri());
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.d("surprise", "GlobalWebClient handleBookLoadRequest 103: have error " + e.getMessage());
+        }
+        // если что-то пошло не так- удалю файл и покажу ошибку скачивания
+        newFile.delete();
+        Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
+        return false;
+    }
+
+    public static boolean handleBookLoadRequestNoContentLength(HttpResponse response, File newFile) throws BookNotFoundException {
+        try {
+            if (response != null) {
+                int status = response.getStatusLine().getStatusCode();
+                if (status == 200) {
+                    HttpEntity entity = response.getEntity();
+                    if (entity != null) {
+                        Log.d("surprise", "TorWebClient downloadBook 177: content length is " + entity.getContentLength());
+                        InputStream content = entity.getContent();
+                        if (content != null) {
+                            OutputStream out = new FileOutputStream(newFile);
+                            int read;
+                            byte[] buffer = new byte[1024];
+                            while ((read = content.read(buffer)) > 0) {
+                                out.write(buffer, 0, read);
+                            }
+                            out.close();
+                            Log.d("surprise", "TorWebClient downloadBook 188: created file length is " + newFile.length());
+                            if (newFile.length() > 0) {
+                                Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getAbsolutePath());
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.d("surprise", "GlobalWebClient handleBookLoadRequest 103: have error " + e.getMessage());
+        }
+        // если что-то пошло не так- удалю файл и покажу ошибку скачивания
+        boolean deleteResult = newFile.delete();
+        Log.d("surprise", "TorWebClient downloadBook: книга не найдена, статус удаления файла: " + deleteResult);
+        return false;
     }
 
 }

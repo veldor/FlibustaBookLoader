@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import cz.msebera.android.httpclient.Header;
+import cz.msebera.android.httpclient.HttpResponse;
+
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 import static net.veldor.flibustaloader.utils.BookOpener.intentCanBeHandled;
@@ -66,7 +69,22 @@ public class FilesHandler {
         return "no changes";
     }
 
-    public static DocumentFile getDownloadFile(BooksDownloadSchedule book) {
+    public static DocumentFile getDownloadFile(BooksDownloadSchedule book, HttpResponse response) {
+        // придётся проверять, соответствует ли разрешение запрашиваемого файла разрешению полученного
+        Header receivedContentType = response.getLastHeader("Content-Type");
+        String trueFormat = receivedContentType.getValue();
+        String trueFormatExtension = MimeTypes.getTrueFormatExtension(trueFormat);
+        if(trueFormatExtension != null){
+            // сравню полученный формат с настоящим. Если полученный отличается от настоящего- поменяю исходный
+            String extension = Grammar.getExtension(book.name);
+            if(!extension.equals(trueFormatExtension)){
+                Log.d("surprise", "FilesHandler getDownloadFile 81: realExtension " + extension + " not equal real extension " + trueFormatExtension);
+                book.format = trueFormat;
+                book.name = Grammar.changeExtension(book.name, trueFormatExtension);
+            }
+        }
+        Log.d("surprise", "FilesHandler getDownloadFile 76: requested format " + book.format);
+        Log.d("surprise", "FilesHandler getDownloadFile 76: requested name " + book.name);
             // получу имя файла
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();
             if(MyPreferences.getInstance().isCreateSequencesDir() && book.reservedSequenceName != null){

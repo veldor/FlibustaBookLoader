@@ -7,21 +7,36 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/new_opds_activity"
-    tools:ignore="Overdraw">
+    tools:ignore="Overdraw"
+    tools:showIn="@layout/new_opds_activity">
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:gravity="center_horizontal"
         android:text="@string/whoSearchMessage"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/connectionType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="#4CAF50"
+        android:padding="5dp"
+        android:text="@string/tor_title"
+        android:textAlignment="center"
+        android:textColor="#ffffff"
+        app:layout_constraintEnd_toEndOf="@+id/textView"
         app:layout_constraintTop_toTopOf="parent" />
 
     <RadioGroup
         android:id="@+id/subscribe_type"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:orientation="horizontal"
         android:paddingLeft="5dp"
         android:paddingRight="5dp"
@@ -76,19 +91,20 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:orientation="vertical">
+
             <Button
                 android:id="@+id/showAuthorsListButton"
-                android:text="@string/show_authors_list_buton"
+                style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                style="@style/Widget.AppCompat.Button.Borderless"
+                android:text="@string/show_authors_list_buton"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/showAllSwitcher"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -137,11 +153,11 @@
 
             <Button
                 android:id="@+id/load_more_button"
-                android:background="@drawable/transparent_bg_bordered_button"
                 style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_marginBottom="90dp"
+                android:background="@drawable/transparent_bg_bordered_button"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:text="@string/load_more_button"
                 android:textColor="@color/genre_text_color"

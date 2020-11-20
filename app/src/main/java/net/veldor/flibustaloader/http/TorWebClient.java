@@ -143,11 +143,11 @@ public class TorWebClient {
     private HttpResponse simpleGetRequest(String url) throws IOException {
         Log.d("surprise", "TorWebClient simpleGetRequest 128: request " + url);
         HttpGet httpGet = new HttpGet(url);
+        httpGet.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
         httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
         httpGet.setHeader("X-Compress", "null");
         return mHttpClient.execute(httpGet, mContext);
     }
-
 
     private HttpClient getNewHttpClient() {
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
@@ -176,16 +176,75 @@ public class TorWebClient {
 
     public void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, TorNotLoadedException {
         try {
+            Log.d("surprise", "TorWebClient downloadBook 179: start receiving book " + System.currentTimeMillis());
             HttpResponse response = simpleGetRequest(URLHelper.getBaseOPDSUrl() + book.link);
+            Log.d("surprise", "TorWebClient downloadBook 179: finish receiving book " + System.currentTimeMillis());
             // проверю, что запрос выполнен и файл не пуст. Если это не так- попорбую загрузить книгу с основного домена
+            if(response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1){
+                boolean result = false;
+                // тут может быть загрузка книги без указания длины контента, попробую загрузить
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    try{
+                        DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
+                        if (newFile != null) {
+                            result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, newFile);
+                        }
+                    }
+                    catch (Exception e){
+                        try{
+                            File file = FilesHandler.getCompatDownloadFile(book);
+                            result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                        }
+                        catch (Exception e1){
+                            // скачаю файл просто в папку загрузок
+                            File file = FilesHandler.getBaseDownloadFile(book);
+                            result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                        }
+                    }
+                } else {
+                    File file = FilesHandler.getCompatDownloadFile(book);
+                    result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                }
+                if(result){
+                    return;
+                }
+            }
             if (response == null || response.getStatusLine().getStatusCode() != 200 || response.getEntity().getContentLength() < 1) {
-                Log.d("surprise", "ExternalVpnVewClient downloadBook 116: request from reserve " + URLHelper.getFlibustaIsUrl() + book.link);
                 // попробую загрузку с резервного адреса
                 response = simpleGetRequest(URLHelper.getFlibustaIsUrl() + book.link);
+                if(response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1){
+                    boolean result = false;
+                    // тут может быть загрузка книги без указания длины контента, попробую загрузить
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        try{
+                            DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
+                            if (newFile != null) {
+                                result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, newFile);
+                            }
+                        }
+                        catch (Exception e){
+                            try{
+                                File file = FilesHandler.getCompatDownloadFile(book);
+                                result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                            }
+                            catch (Exception e1){
+                                // скачаю файл просто в папку загрузок
+                                File file = FilesHandler.getBaseDownloadFile(book);
+                                result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                            }
+                        }
+                    } else {
+                        File file = FilesHandler.getCompatDownloadFile(book);
+                        result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                    }
+                    if(result){
+                        return;
+                    }
+                }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 try{
-                    DocumentFile newFile = FilesHandler.getDownloadFile(book);
+                    DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                     if (newFile != null) {
                         GlobalWebClient.handleBookLoadRequest(response, newFile);
                     }
@@ -262,7 +321,7 @@ public class TorWebClient {
         List<NameValuePair> paramsArray = new ArrayList<>();
         paramsArray.add(new BasicNameValuePair("openid_identifier", null));
         paramsArray.add(new BasicNameValuePair("name", login));
-        paramsArray.add(new BasicNameValuePair("pass", password + "/"));
+        paramsArray.add(new BasicNameValuePair("pass", password));
         paramsArray.add(new BasicNameValuePair("persistent_login", "1"));
         paramsArray.add(new BasicNameValuePair("op", "Вход в систему"));
         paramsArray.add(new BasicNameValuePair("form_build_id", "form-sIt20MHWRjpMKIvxdtHOGqLAa4D2GiBnFIXke7LXv7Y"));

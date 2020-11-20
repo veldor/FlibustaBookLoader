@@ -106,7 +106,7 @@ public class ExternalVpnVewClient {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
-                DocumentFile newFile = FilesHandler.getDownloadFile(book);
+                DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                 if (newFile != null) {
                     // запрошу данные
                     Log.d("surprise", "TorWebClient downloadBook: request " + book.link + " of book " + book.name);

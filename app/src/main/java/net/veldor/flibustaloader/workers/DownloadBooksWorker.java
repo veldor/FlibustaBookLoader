@@ -220,6 +220,7 @@ public class DownloadBooksWorker extends Worker {
     }
 
     private void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, TorNotLoadedException {
+        Log.d("surprise", "DownloadBooksWorker downloadBook 223: " + book.name);
         if (App.getInstance().isExternalVpn()) {
             Log.d("surprise", "DownloadBooksWorker downloadBook try download trough external vpn");
             ExternalVpnVewClient.downloadBook(book);

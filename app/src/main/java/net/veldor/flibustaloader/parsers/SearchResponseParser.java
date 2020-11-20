@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.parsers;
 import android.util.Log;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 
 import org.w3c.dom.Document;
@@ -31,7 +32,7 @@ public class SearchResponseParser {
     private static final String NEW_GENRES = "tag:search:new:genres";
     private static final String NEW_SEQUENCES = "tag:search:new:sequence";
     private static final String NEW_AUTHORS = "tag:search:new:author";
-    private NodeList mEntries;
+    private final NodeList mEntries;
     private final XPath mXpath;
 
     public SearchResponseParser(String answer) throws XPathExpressionException {

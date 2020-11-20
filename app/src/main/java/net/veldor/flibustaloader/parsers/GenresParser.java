@@ -16,7 +16,7 @@ import javax.xml.xpath.XPathExpressionException;
 
 class GenresParser {
     public static ArrayList parse(NodeList entries, XPath xPath) {
-        ArrayList<Genre> result = new ArrayList<Genre>();
+        ArrayList<Genre> result = new ArrayList<>();
         Node entry;
         Genre genre;
         int counter = 0;

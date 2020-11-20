@@ -36,6 +36,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -167,11 +168,12 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private NestedScrollView mScrollView;
     private RadioButton mSearchBooksButton;
     private RadioButton mSearchAuthorsButton;
-    private Switch mMassLoadSwitcher;
+    private SwitchCompat mMassLoadSwitcher;
     private boolean mActivityVisible = true;
     // индекс последнего элемента, по которому кликал пользователь
     public static Integer sElementForSelectionIndex = -1;
     private Button mShowAuthorsListActivator;
+    private TextView mCnnectionTypeView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -468,6 +470,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     protected void setupInterface() {
 
         super.setupInterface();
+
+        // определю тип соединения
+        mCnnectionTypeView = findViewById(R.id.connectionType);
 
         // скрою переход на данное активити
         Menu menuNav = mNavigationView.getMenu();
@@ -1069,6 +1074,16 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onResume() {
         super.onResume();
+        if(mCnnectionTypeView != null){
+            if(App.getInstance().isExternalVpn()){
+                mCnnectionTypeView.setText(getString(R.string.vpn_title));
+                mCnnectionTypeView.setBackgroundColor(Color.parseColor("#03A9F4"));
+            }
+            else{
+                mCnnectionTypeView.setText(getString(R.string.tor_title));
+                mCnnectionTypeView.setBackgroundColor(Color.parseColor("#4CAF50"));
+            }
+        }
         if (mResultsRecycler != null && mResultsRecycler.getAdapter() instanceof MyAdapterInterface) {
             mResultsRecycler.getAdapter().notifyDataSetChanged();
         }

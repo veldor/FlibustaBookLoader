@@ -13,7 +13,6 @@ import android.widget.TextSwitcher;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.work.WorkInfo;
 
@@ -124,12 +123,9 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         });
-        requestStatus.observe(this, new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                if(s != null && !s.isEmpty()){
-                    setStatusText(s);
-                }
+        requestStatus.observe(this, s -> {
+            if(s != null && !s.isEmpty()){
+                setStatusText(s);
             }
         });
     }

@@ -74,6 +74,9 @@ public class MimeTypes {
         if (mime.equals("application/rtf")) {
             return "rtf";
         }
+        if (mime.equals("application/txt")) {
+            return "txt";
+        }
         if (DOWNLOAD_MIMES.containsKey(mime)) {
             return DOWNLOAD_MIMES.get(mime);
         }
@@ -88,5 +91,15 @@ public class MimeTypes {
             return FULL_MIMES.get(shortMime);
         }
         return shortMime;
+    }
+
+    public static String getTrueFormatExtension(String trueFormat) {
+        if(trueFormat.equals("text/plain") || trueFormat.equals("application/txt")){
+            return "txt";
+        }
+        if(trueFormat.equals("application/zip")){
+            return "zip";
+        }
+        return null;
     }
 }

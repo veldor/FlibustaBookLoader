@@ -60,4 +60,12 @@ public class Grammar {
     public static String clearDirName(String dirName) {
         return dirName.replaceAll("[^ а-яА-Яa-zA-Z0-9.\\-]", "");
     }
+
+    public static String getExtension(String filename){
+        return filename.substring(filename.lastIndexOf(".") + 1);
+    }
+
+    public static String changeExtension(String name, String trueFormatExtension) {
+        return name.substring(0, name.lastIndexOf(".")) + "." + trueFormatExtension;
+    }
 }
