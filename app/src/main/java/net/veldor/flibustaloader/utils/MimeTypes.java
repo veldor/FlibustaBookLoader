@@ -17,6 +17,7 @@ public class MimeTypes {
         put("application/djvu", "djvu");
         put("application/html+zip", "html");
         put("application/txt+zip", "txt");
+        put("application/txt", "txt");
         put("application/rtf+zip", "rtf");
     }};
     private static final HashMap<String, String> DOWNLOAD_MIMES = new HashMap<String, String>() {{
@@ -30,6 +31,7 @@ public class MimeTypes {
         put("application/html+zip", "html.zip");
         put("application/txt+zip", "txt.zip");
         put("application/rtf+zip", "rtf.zip");
+        put("application/zip", "zip");
     }};
 
     private static final HashMap<String, String> FULL_MIMES = new HashMap<String, String>() {{
@@ -101,5 +103,12 @@ public class MimeTypes {
             return "zip";
         }
         return null;
+    }
+
+    public static boolean isBookFormat(String mime) {
+        if(DOWNLOAD_MIMES.containsKey(mime)){
+            return true;
+        }
+        return false;
     }
 }

@@ -273,6 +273,14 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         MenuItem menuItem = menu.findItem(R.id.menuUseDarkMode);
         menuItem.setChecked(mMyViewModel.getNightModeEnabled());
 
+        menuItem = menu.findItem(R.id.logOut);
+        if(MyPreferences.getInstance().getAuthCookie() == null){
+            menuItem.setVisible(false);
+        }
+        else{
+            menuItem.setVisible(true);
+        }
+
         menuItem = menu.findItem(R.id.login);
         if(MyPreferences.getInstance().getAuthCookie() != null){
             menuItem.setVisible(false);
@@ -310,6 +318,11 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
                 return true;
             case R.id.clearSearchHistory:
                 clearHistory();
+                return true;
+            case R.id.logOut:
+                // удалю куку
+                MyPreferences.getInstance().removeAuthCookie();
+                recreate();
                 return true;
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {

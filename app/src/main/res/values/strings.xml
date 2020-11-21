@@ -184,7 +184,7 @@
     <string name="login_label">Your login</string>
     <string name="prompt_password">Your password</string>
     <string name="action_sign_in_short" translatable="false">sign in</string>
-    <string name="action_sign_in" translatable="false">Sign in</string>
+    <string name="action_sign_in">Sign in</string>
     <string name="done_message">Done</string>
     <string name="failed_message">Failed</string>
     <string name="wait_for_initialize">Wait initialize</string>
@@ -198,4 +198,5 @@
     <string name="tor_title">TOR</string>
     <string name="vpn_title">VPN</string>
     <string name="loaded_message">Loaded %.0f of %.0f Kb (%.2f%%)</string>
+    <string name="logout">LogOut</string>
 </resources>

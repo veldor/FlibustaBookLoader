@@ -179,4 +179,6 @@
     <string name="tor_title">TOR</string>
     <string name="vpn_title">VPN</string>
     <string name="loaded_message">Загружено %.0f из %.0f Кб (%.2f%%)</string>
+    <string name="logout">Разлогиниться</string>
+    <string name="action_sign_in">Вход</string>
 </resources>
