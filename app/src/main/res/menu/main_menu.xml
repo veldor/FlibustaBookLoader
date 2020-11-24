@@ -73,4 +73,8 @@
         android:id="@+id/clearSearchHistory"
         android:title="@string/clear_search_history_message"
         yourapp:showAsAction="never"/>
+    <item
+        android:id="@+id/logOut"
+        android:title="@string/logout"
+        yourapp:showAsAction="never"/>
 </menu>

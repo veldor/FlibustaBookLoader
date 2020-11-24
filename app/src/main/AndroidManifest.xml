@@ -53,11 +53,11 @@
         </activity>
         <activity
             android:name=".ui.OPDSActivity"
-            android:launchMode="singleInstance"
+            android:launchMode="singleTask"
             android:label="@string/title_activity_opds" />
         <activity
             android:name=".ui.WebViewActivity"
-            android:launchMode="singleInstance"
+            android:launchMode="singleTask"
             android:configChanges="uiMode"
             android:label="@string/title_activity_webview" />
         <activity

@@ -16,9 +16,12 @@ import androidx.documentfile.provider.DocumentFile;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
+import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
+import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.io.BufferedReader;
@@ -258,6 +261,49 @@ public class MyWebViewClient extends WebViewClient {
             InputStream input = httpResponse.getEntity().getContent();
             String encoding = ENCODING_UTF_8;
             String mime = httpResponse.getEntity().getContentType().getValue();
+            Log.d("surprise", "MyWebViewClient handleRequest 262: mime is " + mime);
+
+            // Если формат книжный, загружу книгу
+            if(MimeTypes.isBookFormat(mime)){
+                Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
+                startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
+                App.getInstance().sendBroadcast(startLoadingIntent);
+                // пока что- сэмулирую загрузку по типу OPDS
+                BooksDownloadSchedule newBook = new BooksDownloadSchedule();
+                // покажу хедеры
+                Header[] headers = httpResponse.getAllHeaders();
+                for (Header h :
+                        headers) {
+                    Log.d("surprise", "MyWebViewClient handleRequest 271: Header " + h.getValue());
+                    if(h.getValue().startsWith("attachment; filename=\"")){
+                        newBook.name = h.getValue().substring(22, h.getValue().length() -1);
+                        Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);
+                    }
+                }
+                // создам файл
+                newBook.link = url.substring(url.indexOf("/b"));
+                TorWebClient client = new TorWebClient();
+                client.downloadBook(newBook);
+                Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
+                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, newBook.name);
+                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, newBook.format);
+                App.getInstance().sendBroadcast(intent);
+                String message = "<H1 style='text-align:center;'>Книга загружена</H1><H2 style='text-align:center;'>Возвращаюсь на предыдущую страницу</H2><script>setTimeout(function(){history.back()}, 1000)</script>";
+                ByteArrayInputStream inputStream = null;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                    inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+                } else {
+                    try {
+                        inputStream = new ByteArrayInputStream(message.getBytes(ENCODING_UTF_8));
+                    } catch (UnsupportedEncodingException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                Intent finishLoadingIntent = new Intent(BOOK_LOAD_ACTION);
+                finishLoadingIntent.putExtra(BOOK_LOAD_EVENT, FINISH_BOOK_LOADING);
+                App.getInstance().sendBroadcast(finishLoadingIntent);
+                return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+            }
 
             // если загружена страница- добавлю её как последнюю загруженную
             if (mime.startsWith(HTML_TYPE)) {

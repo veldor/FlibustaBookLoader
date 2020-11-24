@@ -16,4 +16,6 @@
     <color name="progressColor">#FBE412</color>
     <color name="white">#FFFFFF</color>
     <color name="selected_item_background">#8A00BCD4</color>
+    <color name="gray">#BEBCBC</color>
+    <color name="dark_gray">#9F9E9E</color>
 </resources>

@@ -12,6 +12,8 @@ import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.database.entity.Bookmark;
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 import net.veldor.flibustaloader.utils.MyFileReader;
@@ -43,6 +45,8 @@ public class ReserveSettingsWorker extends Worker {
     static final String BOOKS_SUBSCRIBE_BACKUP_NAME = "data5";
     static final String AUTHORS_SUBSCRIBE_BACKUP_NAME = "data6";
     static final String SEQUENCES_SUBSCRIBE_BACKUP_NAME = "data7";
+    static final String BOOKMARKS_BACKUP_NAME = "data8";
+    static final String DOWNLOAD_SCHEDULE_BACKUP_NAME = "data9";
     public static DocumentFile sSaveDir;
     public static DocumentFile sBackupFile;
     public static File sCompatSaveDir;
@@ -150,6 +154,72 @@ public class ReserveSettingsWorker extends Worker {
                     writer.flush();
                     writer.close();
                     writeToZip(out, dataBuffer, f1, READED_BOOKS_BACKUP_NAME);
+                    boolean result = f1.delete();
+                    if (!result) {
+                        Log.d("surprise", "ReserveSettingsWorker doWork не удалось удалить временный файл");
+                    }
+                }
+                // закладки
+                List<Bookmark> rBookmarks = db.bookmarksDao().getAllBookmarks();
+                if (rBookmarks != null && rBookmarks.size() > 0) {
+                    // создам XML
+                    StringBuilder xmlBuilder = new StringBuilder();
+                    xmlBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><bookmarks>");
+                    for (Bookmark bookmark : rBookmarks) {
+                        xmlBuilder.append("<bookmark name=\"");
+                        xmlBuilder.append(bookmark.name);
+                        xmlBuilder.append("\" link=\"");
+                        xmlBuilder.append(bookmark.link);
+                        xmlBuilder.append("\"/>");
+                    }
+                    xmlBuilder.append("</bookmarks>");
+                    String text = xmlBuilder.toString();
+                    File f1 = new File(backupDir, "bookmarks");
+                    FileWriter writer = new FileWriter(f1);
+                    writer.append(text);
+                    writer.flush();
+                    writer.close();
+                    writeToZip(out, dataBuffer, f1, BOOKMARKS_BACKUP_NAME);
+                    boolean result = f1.delete();
+                    if (!result) {
+                        Log.d("surprise", "ReserveSettingsWorker doWork не удалось удалить временный файл");
+                    }
+                }
+                // список загрузки
+                List<BooksDownloadSchedule> rDownloadSchedule = db.booksDownloadScheduleDao().getAllBooks();
+                if (rDownloadSchedule != null && rDownloadSchedule.size() > 0) {
+                    // создам XML
+                    StringBuilder xmlBuilder = new StringBuilder();
+                    xmlBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><schedule>");
+                    for (BooksDownloadSchedule schedule : rDownloadSchedule) {
+                        xmlBuilder.append("<item bookId=\"");
+                        xmlBuilder.append(schedule.bookId);
+                        xmlBuilder.append("\" link=\"");
+                        xmlBuilder.append(schedule.link);
+                        xmlBuilder.append("\" name=\"");
+                        xmlBuilder.append(schedule.name);
+                        xmlBuilder.append("\" size=\"");
+                        xmlBuilder.append(schedule.size);
+                        xmlBuilder.append("\" author=\"");
+                        xmlBuilder.append(schedule.author);
+                        xmlBuilder.append("\" format=\"");
+                        xmlBuilder.append(schedule.format);
+                        xmlBuilder.append("\" authorDirName=\"");
+                        xmlBuilder.append(schedule.authorDirName);
+                        xmlBuilder.append("\" sequenceDirName=\"");
+                        xmlBuilder.append(schedule.sequenceDirName);
+                        xmlBuilder.append("\" reservedSequenceName=\"");
+                        xmlBuilder.append(schedule.reservedSequenceName);
+                        xmlBuilder.append("\"/>");
+                    }
+                    xmlBuilder.append("</schedule>");
+                    String text = xmlBuilder.toString();
+                    File f1 = new File(backupDir, "schedule");
+                    FileWriter writer = new FileWriter(f1);
+                    writer.append(text);
+                    writer.flush();
+                    writer.close();
+                    writeToZip(out, dataBuffer, f1, DOWNLOAD_SCHEDULE_BACKUP_NAME);
                     boolean result = f1.delete();
                     if (!result) {
                         Log.d("surprise", "ReserveSettingsWorker doWork не удалось удалить временный файл");

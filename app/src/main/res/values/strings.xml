@@ -198,4 +198,8 @@
     <string name="tor_title">TOR</string>
     <string name="vpn_title">VPN</string>
     <string name="loaded_message">Loaded %.0f of %.0f Kb (%.2f%%)</string>
+    <string name="books_download_progress_channel">Book download progress</string>
+    <string name="books_download_progress_channel_description">Book download progress</string>
+    <string name="is_ebook_title">This is e-book</string>
+    <string name="logout">Log-out</string>
 </resources>
