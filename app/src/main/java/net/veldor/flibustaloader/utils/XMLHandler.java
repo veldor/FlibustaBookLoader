@@ -4,6 +4,8 @@ import android.util.Log;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.database.entity.Bookmark;
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipInputStream;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -161,7 +164,9 @@ public class XMLHandler {
                     String id = node.getAttributes().getNamedItem("id").getTextContent();
                     ReadedBooks rb = new ReadedBooks();
                     rb.bookId = id;
-                    db.readedBooksDao().insert(rb);
+                    if(db.readedBooksDao().getBookById(id) == null){
+                        db.readedBooksDao().insert(rb);
+                    }
                     Log.d("surprise", "handleBackup: founded readed book");
                     ++counter;
                 }
@@ -177,8 +182,62 @@ public class XMLHandler {
                     String id = node.getAttributes().getNamedItem("id").getTextContent();
                     DownloadedBooks rb = new DownloadedBooks();
                     rb.bookId = id;
-                    db.downloadedBooksDao().insert(rb);
+                    if(db.downloadedBooksDao().getBookById(id) == null){
+                        db.downloadedBooksDao().insert(rb);
+                    }
                     Log.d("surprise", "handleBackup: founded downloaded book");
+                    ++counter;
+                }
+            }
+            entries = (NodeList) xPath.evaluate("/bookmarks/bookmark", document, XPathConstants.NODESET);
+            if (entries != null && entries.getLength() > 0) {
+                int counter = 0;
+                int entriesLen = entries.getLength();
+                Node node;
+                while (counter < entriesLen) {
+                    node = entries.item(counter);
+                    // получу идентификатор книги
+                    String name = node.getAttributes().getNamedItem("name").getTextContent();
+                    String link = node.getAttributes().getNamedItem("link").getTextContent();
+                    Bookmark bookmark = new Bookmark();
+                    bookmark.name = name;
+                    bookmark.link = link;
+                    List<Bookmark> duplicate = db.bookmarksDao().getDuplicate(bookmark.name, bookmark.link);
+                    if(duplicate == null || duplicate.size() == 0){
+                        db.bookmarksDao().insert(bookmark);
+                    }
+                    Log.d("surprise", "handleBackup: founded bookmark");
+                    ++counter;
+                }
+            }
+            entries = (NodeList) xPath.evaluate("/schedule/item", document, XPathConstants.NODESET);
+            if (entries != null && entries.getLength() > 0) {
+                int counter = 0;
+                int entriesLen = entries.getLength();
+                Node node;
+                while (counter < entriesLen) {
+                    node = entries.item(counter);
+                    BooksDownloadSchedule scheduleElement = new BooksDownloadSchedule();
+                    String bookId = node.getAttributes().getNamedItem("bookId").getTextContent();
+                    String link = node.getAttributes().getNamedItem("link").getTextContent();
+                    String name = node.getAttributes().getNamedItem("name").getTextContent();
+                    String size = node.getAttributes().getNamedItem("size").getTextContent();
+                    String author = node.getAttributes().getNamedItem("author").getTextContent();
+                    String format = node.getAttributes().getNamedItem("format").getTextContent();
+                    String authorDirName = node.getAttributes().getNamedItem("authorDirName").getTextContent();
+                    String sequenceDirName = node.getAttributes().getNamedItem("sequenceDirName").getTextContent();
+                    String reservedSequenceName = node.getAttributes().getNamedItem("reservedSequenceName").getTextContent();
+                    scheduleElement.bookId = bookId;
+                    scheduleElement.link = link;
+                    scheduleElement.name = name;
+                    scheduleElement.size = size;
+                    scheduleElement.author = author;
+                    scheduleElement.format = format;
+                    scheduleElement.authorDirName = authorDirName;
+                    scheduleElement.sequenceDirName = sequenceDirName;
+                    scheduleElement.reservedSequenceName = reservedSequenceName;
+                    db.booksDownloadScheduleDao().insert(scheduleElement);
+                    Log.d("surprise", "handleBackup: founded schedule element");
                     ++counter;
                 }
             }

@@ -18,6 +18,7 @@ public class MyPreferences {
 
     private static final String SUBSCRIPTIONS_AUTO_CHECK_PREF = "subscriptions auto check";
     private static final String LAST_SEARCH_URL_PREF = "last load url";
+    public static final String SHOW_DOWNLOAD_PROGRESS_PREF = "show download progress";
     private static final String HW_ACCELERATION_PREF = "hardware acceleration";
     private static final String HIDE_DIGESTS_PREF = "hide digests";
     private static final String HIDE_DOWNLOADED_PREF = "hide downloaded";
@@ -209,8 +210,15 @@ public class MyPreferences {
     public boolean askedForDonation() {
         return mSharedPreferences.getBoolean(PREF_BEG_DONATION, false);
     }
+    public boolean isShowDownloadProgress() {
+        return mSharedPreferences.getBoolean(SHOW_DOWNLOAD_PROGRESS_PREF, false);
+    }
 
     public void setDonationBegged() {
         mSharedPreferences.edit().putBoolean(PREF_BEG_DONATION, true).apply();
+    }
+
+    public void setEInk(boolean isChecked) {
+        mSharedPreferences.edit().putBoolean(App.getInstance().getString(R.string.pref_is_eink), isChecked).apply();
     }
 }

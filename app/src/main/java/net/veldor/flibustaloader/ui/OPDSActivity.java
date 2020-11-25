@@ -404,6 +404,16 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         }
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String link = intent.getStringExtra(TARGET_LINK);
+        if (link != null) {
+            Log.d("surprise", "have link");
+            doSearch(link, false);
+        }
+    }
+
     private void checkSearchType() {
         // получу выбранный тип поиска
         switch (mSearchRadioContainer.getCheckedRadioButtonId()) {

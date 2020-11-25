@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.http;
 
+import android.content.Intent;
 import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
@@ -8,6 +9,8 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.notificatons.Notificator;
+import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
+import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,22 +44,28 @@ public class GlobalWebClient {
                 if (status == 200) {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
+                        boolean showDownloadProgress = MyPreferences.getInstance().isShowDownloadProgress();
                         long contentLength = entity.getContentLength();
+                        long lastNotificationTime = System.currentTimeMillis();
                         String fileName = newFile.getName();
                         Notificator notifier = App.getInstance().getNotificator();
                         if(contentLength > 0){
                             // создам уведомление, в котором буду показывать прогресс скачивания
-                            notifier.createBookLoadingProgressNotification((int)contentLength,0,  fileName);
+                            if(showDownloadProgress){
+                                notifier.createBookLoadingProgressNotification((int)contentLength,0,  fileName);
+                            }
                         }
                         InputStream content = entity.getContent();
                         if (content != null && entity.getContentLength() > 0) {
                             OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
                             if (out != null) {
                                 int read;
-                                byte[] buffer = new byte[1024];
+                                byte[] buffer = new byte[4092];
                                 while ((read = content.read(buffer)) > 0) {
                                     out.write(buffer, 0, read);
-                                    if(contentLength > 0) {
+                                    if(contentLength > 0 && showDownloadProgress && lastNotificationTime + 1000 < System.currentTimeMillis()) {
+                                        lastNotificationTime = System.currentTimeMillis();
+                                        Log.d("surprise", "GlobalWebClient handleBookLoadRequest 65: tick");
                                         notifier.createBookLoadingProgressNotification((int) contentLength,(int) newFile.length(), fileName);
                                     }
                                 }

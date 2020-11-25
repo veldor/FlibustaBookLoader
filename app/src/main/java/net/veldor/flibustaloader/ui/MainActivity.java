@@ -2,7 +2,6 @@ package net.veldor.flibustaloader.ui;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Notification;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -14,13 +13,13 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
 import androidx.documentfile.provider.DocumentFile;
@@ -32,7 +31,6 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
-import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
@@ -180,10 +178,16 @@ public class MainActivity extends BaseActivity {
         }
 
         // переключатель аппаратного ускорения
-        Switch switcher = findViewById(R.id.useHardwareAccelerationSwitcher);
+        SwitchCompat switcher = findViewById(R.id.useHardwareAccelerationSwitcher);
         if (switcher != null) {
             switcher.setChecked(MyPreferences.getInstance().isHardwareAcceleration());
             switcher.setOnCheckedChangeListener((buttonView, isChecked) -> MyPreferences.getInstance().switchHardwareAcceleration());
+        }
+        // переключатель электронной книги
+        switcher = findViewById(R.id.isEbook);
+        if (switcher != null) {
+            switcher.setChecked(MyPreferences.getInstance().isEInk());
+            switcher.setOnCheckedChangeListener((buttonView, isChecked) -> {MyPreferences.getInstance().setEInk(isChecked);recreate();});
         }
         if (App.getInstance().isExternalVpn()) {
             Log.d("surprise", "MainActivity setupUI external vpn used");

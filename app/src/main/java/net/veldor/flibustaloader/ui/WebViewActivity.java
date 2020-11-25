@@ -490,7 +490,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
             mShowLoadDialog = new GifDialog.Builder(this)
                     .setTitle(getString(R.string.load_waiting_title))
                     .setMessage(getString(R.string.load_waiting_message))
-                    .setGifResource(R.drawable.gif1)   //Pass your Gif here
+                    .setGifResource(R.drawable.loading)   //Pass your Gif here
                     .isCancellable(false)
                     .build();
         }

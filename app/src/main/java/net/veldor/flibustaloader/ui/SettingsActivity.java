@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,9 +43,13 @@ import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
 import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
 
+import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 
 public class SettingsActivity extends BaseActivity implements PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
@@ -123,7 +128,14 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                 settingsRestorePref.setOnPreferenceClickListener(preference -> {
                     Toast.makeText(getContext(), "Выберите сохранённый ранее файл с настройками.", Toast.LENGTH_LONG).show();
                     // открою окно выбота файла для восстановления
-                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    Intent intent = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                        intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    }
+                    else{
+                        intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    }
+                    intent.setFlags(FLAG_GRANT_READ_URI_PERMISSION);
                     intent.setType("application/zip");
                     if (TransportUtils.intentCanBeHandled(intent)) {
                         Toast.makeText(getContext(), "Восстанавливаю настройки.", Toast.LENGTH_LONG).show();
@@ -145,6 +157,11 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                     if (data != null) {
                         uri = data.getData();
                         if (uri != null) {
+                            // закодирую данные для передачи рабочему
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                App.getInstance().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            }
+
                             Data inputData = new Data.Builder()
                                     .putString(RestoreSettingsWorker.URI, uri.toString())
                                     .build();
@@ -155,7 +172,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                                     // настройки приложения восстановлены
                                     Toast.makeText(getContext(), "Настройки приложения восстановлены", Toast.LENGTH_SHORT).show();
                                     workState.removeObservers(ReservePreferencesFragment.this);
-                                    new Handler().postDelayed(new BaseActivity.ResetApp(), 1000);
+                                    new Handler().postDelayed(new ResetApp(), 1000);
                                 } else if (state instanceof Operation.State.FAILURE) {
                                     Toast.makeText(getContext(), "Не удалось восстановить настройки приложения", Toast.LENGTH_SHORT).show();
                                     workState.removeObservers(ReservePreferencesFragment.this);
@@ -339,7 +356,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                             Intent intent = new Intent(getContext(), FolderPicker.class);
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                                 intent.addFlags(
-                                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        FLAG_GRANT_READ_URI_PERMISSION
                                                 | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                                                 | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
                                 );
@@ -361,7 +378,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                             DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), treeUri);
                             if (dl != null && dl.isDirectory()) {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                    App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, FLAG_GRANT_READ_URI_PERMISSION);
                                     App.getInstance().getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                                 }
                                 App.getInstance().setDownloadDir(treeUri);

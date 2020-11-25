@@ -265,6 +265,9 @@ public class MyWebViewClient extends WebViewClient {
 
             // Если формат книжный, загружу книгу
             if(MimeTypes.isBookFormat(mime)){
+                Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
+                startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
+                App.getInstance().sendBroadcast(startLoadingIntent);
                 // пока что- сэмулирую загрузку по типу OPDS
                 BooksDownloadSchedule newBook = new BooksDownloadSchedule();
                 // покажу хедеры
@@ -281,12 +284,11 @@ public class MyWebViewClient extends WebViewClient {
                 newBook.link = url.substring(url.indexOf("/b"));
                 TorWebClient client = new TorWebClient();
                 client.downloadBook(newBook);
-                // отправлю сообщение о скачанном файле через broadcastReceiver
                 Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, newBook.name);
-                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, mime);
+                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, newBook.format);
                 App.getInstance().sendBroadcast(intent);
-                String message = "<H1 style='text-align:center;'>Книга загружена</H1><script>setTimeout(function(){history.back()}, 1000)</script>";
+                String message = "<H1 style='text-align:center;'>Книга загружена</H1><H2 style='text-align:center;'>Возвращаюсь на предыдущую страницу</H2><script>setTimeout(function(){history.back()}, 1000)</script>";
                 ByteArrayInputStream inputStream = null;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                     inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
@@ -297,6 +299,9 @@ public class MyWebViewClient extends WebViewClient {
                         ex.printStackTrace();
                     }
                 }
+                Intent finishLoadingIntent = new Intent(BOOK_LOAD_ACTION);
+                finishLoadingIntent.putExtra(BOOK_LOAD_EVENT, FINISH_BOOK_LOADING);
+                App.getInstance().sendBroadcast(finishLoadingIntent);
                 return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
             }
 

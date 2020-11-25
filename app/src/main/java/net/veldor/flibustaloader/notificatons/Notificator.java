@@ -14,13 +14,13 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.ui.MainActivity;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
-import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.receivers.BookActionReceiver;
+import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.receivers.MiscActionsReceiver;
 import net.veldor.flibustaloader.ui.ActivityBookDownloadSchedule;
+import net.veldor.flibustaloader.ui.MainActivity;
 import net.veldor.flibustaloader.ui.SubscriptionsActivity;
 import net.veldor.flibustaloader.utils.MimeTypes;
 
@@ -42,9 +42,7 @@ public class Notificator {
     private static final int CANCEL_CODE = 6;
     private static final int PAUSE_CODE = 7;
     private static final int OPEN_SCHEDULE_CODE = 8;
-    public static final int BOOK_LOADED_NOTIFICATION = 1;
     private static final int SUBSCRIBE_NOTIFICATION = 2;
-    private static final int BACKUP_COMPLETED_NOTIFICATION = 3;
     public static final int DOWNLOAD_PROGRESS_NOTIFICATION = 5;
     private static final int TOR_LOAD_ERROR_NOTIFICATION = 6;
     public static final int DOWNLOAD_PAUSED_NOTIFICATION = 7;
@@ -57,6 +55,7 @@ public class Notificator {
     private static final String DOWNLOADED_BOOKS_GROUP = "downloaded books";
     private static final String ERROR_DOWNLOAD_BOOKS_GROUP = "error download books";
     private static final int DONATE_REQUEST_CODE = 4;
+    private static final String BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID = "book download progress";
     private static Notificator instance;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
@@ -70,14 +69,14 @@ public class Notificator {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (mNotificationManager != null) {
                 // создам канал уведомлений о скачанных книгах
-                NotificationChannel nc = new NotificationChannel(BOOKS_CHANNEL_ID, mContext.getString(R.string.books_loaded_channel), NotificationManager.IMPORTANCE_HIGH);
+                NotificationChannel nc = new NotificationChannel(BOOKS_CHANNEL_ID, mContext.getString(R.string.books_loaded_channel), NotificationManager.IMPORTANCE_DEFAULT);
                 nc.setDescription(mContext.getString(R.string.shifts_reminder));
                 nc.enableLights(true);
                 nc.setLightColor(Color.RED);
                 nc.enableVibration(true);
                 mNotificationManager.createNotificationChannel(nc);
                 // создам канал уведомлений о скачанных книгах
-                NotificationChannel nc1 = new NotificationChannel(SUBSCRIBES_CHANNEL_ID, mContext.getString(R.string.subscribes_channel), NotificationManager.IMPORTANCE_HIGH);
+                NotificationChannel nc1 = new NotificationChannel(SUBSCRIBES_CHANNEL_ID, mContext.getString(R.string.subscribes_channel), NotificationManager.IMPORTANCE_DEFAULT);
                 nc1.setDescription(mContext.getString(R.string.subscribe_description));
                 nc1.enableLights(true);
                 nc1.setLightColor(Color.BLUE);
@@ -104,6 +103,13 @@ public class Notificator {
                 nc.setSound(null, null);
                 nc.setDescription(mContext.getString(R.string.books_download_channel_description));
                 mNotificationManager.createNotificationChannel(nc);
+                // создам канал уведомления о прогрессе скачивания книги
+                nc = new NotificationChannel(BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID, mContext.getString(R.string.books_download_progress_channel), NotificationManager.IMPORTANCE_DEFAULT);
+                nc.enableVibration(false);
+                nc.enableLights(false);
+                nc.setSound(null, null);
+                nc.setDescription(mContext.getString(R.string.books_download_progress_channel_description));
+                mNotificationManager.createNotificationChannel(nc);
             }
         }
     }
@@ -120,8 +126,8 @@ public class Notificator {
         // Добавлю группу
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
-                        .setSmallIcon(R.drawable.ic_book_black_24dp)
                         .setContentInfo("Загруженные книги")
+                        .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                         .setGroup(DOWNLOADED_BOOKS_GROUP)
                         .setGroupSummary(true);
 
@@ -242,12 +248,11 @@ public class Notificator {
         NotificationCompat.Builder downloadCompleteBuilder = new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Скачивание книг");
-                if(bookDownloadsWithErrors == 0){
-                    downloadCompleteBuilder.setContentText("Все книги успешно скачаны!");
-                }
-                else{
-                    downloadCompleteBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText("Книги скачаны, но " + bookDownloadsWithErrors + " скачать не удалось. Они оставлены в очереди скачивания."));
-                }
+        if (bookDownloadsWithErrors == 0) {
+            downloadCompleteBuilder.setContentText("Все книги успешно скачаны!");
+        } else {
+            downloadCompleteBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText("Книги скачаны, но " + bookDownloadsWithErrors + " скачать не удалось. Они оставлены в очереди скачивания."));
+        }
         mNotificationManager.notify(BOOKS_SUCCESS_NOTIFICATION, downloadCompleteBuilder.build());
     }
 
@@ -449,22 +454,23 @@ public class Notificator {
         mNotificationManager.notify(MISC_CODE, notification);
     }
 
-    public void createBookLoadingProgressNotification(int contentLength, int loaded , String name) {
+    public void createBookLoadingProgressNotification(int contentLength, int loaded, String name) {
         // пересчитаю байты в килобайты
         double total = (double) contentLength / 1024;
         double nowLoaded = (double) loaded / 1024;
         double percentDone = 0.;
-        if(loaded > 0){
+        if (loaded > 0) {
             percentDone = loaded * 100 / total / 1000;
         }
-        Notification notification = new NotificationCompat.Builder(mContext, BOOK_DOWNLOADS_CHANNEL_ID)
+        Notification notification = new NotificationCompat.Builder(mContext, BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Качаю " + name)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.loaded_message), nowLoaded, total, percentDone)))
                 .setOngoing(true)
                 .setProgress(contentLength, loaded, false)
+                .setPriority(Notification.PRIORITY_HIGH)
                 .setAutoCancel(false).build();
-                mNotificationManager.notify(BOOK_DOWNLOAD_PROGRESS, notification);
+        mNotificationManager.notify(BOOK_DOWNLOAD_PROGRESS, notification);
     }
 
     public void cancelBookLoadingProgressNotification() {

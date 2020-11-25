@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey;
 import org.jetbrains.annotations.NotNull;
 
 @Entity
-public class Bookmark {
+public class Bookmark{
     @PrimaryKey(autoGenerate = true)
     public int id;
 

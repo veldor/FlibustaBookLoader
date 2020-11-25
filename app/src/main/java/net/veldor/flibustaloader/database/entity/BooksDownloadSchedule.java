@@ -5,8 +5,10 @@ import androidx.room.PrimaryKey;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serializable;
+
 @Entity
-public class BooksDownloadSchedule {
+public class BooksDownloadSchedule{
     @PrimaryKey(autoGenerate = true)
     public int id;
 

@@ -78,8 +78,11 @@ public class RestoreSettingsWorker extends Worker {
                                 break;
                             case ReserveSettingsWorker.DOWNLOADED_BOOKS_BACKUP_NAME:
                             case ReserveSettingsWorker.READED_BOOKS_BACKUP_NAME:
+                            case ReserveSettingsWorker.BOOKMARKS_BACKUP_NAME:
+                            case ReserveSettingsWorker.DOWNLOAD_SCHEDULE_BACKUP_NAME:
                                 // преобразую файл из XML в массив значений
                                 XMLHandler.handleBackup(zin);
+                                break;
                         }
                     }
                     zin.close();
