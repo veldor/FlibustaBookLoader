@@ -13,9 +13,11 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.room.Room;
 import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
@@ -41,12 +43,14 @@ import net.veldor.flibustaloader.utils.SubscribeSequences;
 import net.veldor.flibustaloader.utils.URLHelper;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.ParseWebRequestWorker;
+import net.veldor.flibustaloader.workers.PeriodicCheckFlibustaAvailabilityWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
@@ -480,5 +484,15 @@ public class App extends Application {
         }
         // верну путь к папке загрузок
         return null;
+    }
+
+    public void startCheckWorker() {
+        // запущу периодическую проверку доступности флибы
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        // запущу рабочего, который периодически будет обновлять данные
+        PeriodicWorkRequest periodicTask = new PeriodicWorkRequest.Builder(PeriodicCheckFlibustaAvailabilityWorker.class, 15, TimeUnit.MINUTES).setConstraints(constraints).build();
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(PeriodicCheckFlibustaAvailabilityWorker.ACTION, ExistingPeriodicWorkPolicy.REPLACE, periodicTask);
     }
 }

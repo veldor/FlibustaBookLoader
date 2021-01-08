@@ -202,4 +202,10 @@
     <string name="books_download_progress_channel_description">Book download progress</string>
     <string name="is_ebook_title">This is e-book</string>
     <string name="logout">Log-out</string>
+    <string name="check_flibusta_avaliability_message">Check for Flibusta availability</string>
+    <string name="flibusta_not_availiable_message">Oops, Flibusta is not avaliable</string>
+    <string name="close_app_message">Close app</string>
+    <string name="try_connect_again_message">Connect again</string>
+    <string name="flibusta_not_avaliable_body">Flibusta don\'t respond. Close app, try again, or let me check, until server is coming back (you get notification, when it is)</string>
+    <string name="start_checker_message">Start checker</string>
 </resources>

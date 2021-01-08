@@ -23,7 +23,7 @@
     </style>
 
     <style name="ThemeOverlay.AppTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorPrimary">#CDC9C9</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>

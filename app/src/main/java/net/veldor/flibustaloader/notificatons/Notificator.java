@@ -49,6 +49,7 @@ public class Notificator {
     private static final int BOOKS_SUCCESS_NOTIFICATION = 8;
     private static final int MASS_DOWNLOAD_PAUSED_NOTIFICATION = 9;
     public static final int CHECK_SUBSCRIBES_WORKER_NOTIFICATION = 10;
+    public static final int FLIBUSTA_IS_BACK_NOTIFICATION = 12;
     private static final int RESTART_TOR_CODE = 11;
     private static final int MISC_CODE = 11;
     private static final int BOOK_DOWNLOAD_PROGRESS = 11;
@@ -475,5 +476,23 @@ public class Notificator {
 
     public void cancelBookLoadingProgressNotification() {
         mNotificationManager.cancel(BOOK_DOWNLOAD_PROGRESS);
+    }
+
+    public void notifyFlibustaIsBack() {
+        Intent contentIntent = new Intent(App.getInstance(), MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(App.getInstance(), 0,
+                contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder notificationBuilder =
+                new NotificationCompat.Builder(App.getInstance(), MISC_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
+                        .setContentTitle("Флибуста вернулась!")
+                        .setContentText("Нажмите сюда, чтобы начать сёрфить")
+                        .setColor(Color.GREEN)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setContentIntent(pendingIntent);
+
+        Notification incomingCallNotification = notificationBuilder.build();
+        mNotificationManager.notify(FLIBUSTA_IS_BACK_NOTIFICATION, incomingCallNotification);
     }
 }

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,9 +22,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.PermissionChecker;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
@@ -33,6 +37,7 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MyPreferences;
+import net.veldor.flibustaloader.view_models.StartViewModel;
 
 import java.io.File;
 import java.util.List;
@@ -40,6 +45,8 @@ import java.util.Locale;
 
 import lib.folderpicker.FolderPicker;
 
+import static androidx.work.WorkInfo.State.FAILED;
+import static androidx.work.WorkInfo.State.SUCCEEDED;
 import static net.veldor.flibustaloader.utils.BookOpener.intentCanBeHandled;
 
 public class MainActivity extends BaseActivity {
@@ -61,11 +68,13 @@ public class MainActivity extends BaseActivity {
     private boolean mReadyToStart = false;
     private boolean mActivityVisible;
     private boolean mTorLoadTooLong;
+    private StartViewModel mViewModel;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mViewModel = new ViewModelProvider(this).get(StartViewModel.class);
         setupUI();
         // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
         if (!permissionGranted()) {
@@ -118,9 +127,7 @@ public class MainActivity extends BaseActivity {
                     }
                 })
                 .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish())
-                .setNeutralButton("Да (v2)", (dialog, which) -> {
-                    showAlterDirSelectDialog();
-                });
+                .setNeutralButton("Да (v2)", (dialog, which) -> showAlterDirSelectDialog());
         if (!MainActivity.this.isFinishing()) {
             dialogBuilder.create().show();
         }
@@ -167,9 +174,9 @@ public class MainActivity extends BaseActivity {
                 try {
                     // назначу фон
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        rootView.setBackground(getDrawable(R.drawable.back_3));
+                        rootView.setBackground(ContextCompat.getDrawable(App.getInstance(), R.drawable.back_3));
                     } else {
-                        rootView.setBackground(getResources().getDrawable(R.drawable.back_3));
+                        rootView.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.back_3, getTheme()));
                     }
                 } catch (Exception e) {
                     Log.d("surprise", "MainActivity setupUI 137: can't set drawable");
@@ -187,7 +194,10 @@ public class MainActivity extends BaseActivity {
         switcher = findViewById(R.id.isEbook);
         if (switcher != null) {
             switcher.setChecked(MyPreferences.getInstance().isEInk());
-            switcher.setOnCheckedChangeListener((buttonView, isChecked) -> {MyPreferences.getInstance().setEInk(isChecked);recreate();});
+            switcher.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                MyPreferences.getInstance().setEInk(isChecked);
+                recreate();
+            });
         }
         if (App.getInstance().isExternalVpn()) {
             Log.d("surprise", "MainActivity setupUI external vpn used");
@@ -278,7 +288,7 @@ public class MainActivity extends BaseActivity {
         }
         // сбрасываю таймер. Если выбран вид приложения- запущу Activity согласно виду. Иначе- отмечу, что TOR загружен и буду ждать выбора вида
         if (App.getInstance().getView() != 0) {
-            startApp();
+            checkFlibustaAvailability();
         } else {
             mReadyToStart = true;
         }
@@ -308,13 +318,13 @@ public class MainActivity extends BaseActivity {
                     .setPositiveButton("Режим WebView", (dialog, which) -> {
                         App.getInstance().setView(App.VIEW_WEB);
                         if (mReadyToStart) {
-                            startApp();
+                            checkFlibustaAvailability();
                         }
                     })
                     .setNegativeButton("Режим OPDS", (dialog, which) -> {
                         App.getInstance().setView(App.VIEW_ODPS);
                         if (mReadyToStart) {
-                            startApp();
+                            checkFlibustaAvailability();
                         }
                     });
             dialogBuilder.create().show();
@@ -333,25 +343,10 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-    private void startApp() {
-        // проверю очередь скачивания. Если она не пуста- предложу продолжить закачку
-        // проверю, не запущено ли приложение с помощью интента. Если да- запущу программу в webView режиме
-        Intent targetActivityIntent;
-        if (mLink != null) {//check if intent is not null
-            targetActivityIntent = new Intent(this, WebViewActivity.class);
-            targetActivityIntent.setData(mLink);
-        } else {
-            // проверю, если используем ODPS- перенаправлю в другую активность
-            if (App.getInstance().getView() == App.VIEW_ODPS) {
-                //targetActivityIntent = new Intent(this, OPDSActivity.class);
-                targetActivityIntent = new Intent(this, OPDSActivity.class);
-            } else {
-                targetActivityIntent = new Intent(this, WebViewActivity.class);
-            }
-        }
-        targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(targetActivityIntent);
-        finish();
+    private void checkFlibustaAvailability() {
+        mTorLoadingStatusText.setText(getString(R.string.check_flibusta_avaliability_message));
+        handleAction(mViewModel.checkFlibustaAvailability());
+        // тут проверю доступность флибусты. Если она недоступна- перенаправлю на страницу ожидания подключения
     }
 
     private boolean permissionGranted() {
@@ -548,5 +543,43 @@ public class MainActivity extends BaseActivity {
         }
 
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void handleAction(LiveData<WorkInfo> confirmTask) {
+        // отслежу выполнение задачи, после чего обновлю информацию
+        confirmTask.observe(this, workInfo -> {
+            if (workInfo != null) {
+                if (workInfo.getState() == SUCCEEDED) {
+                    startView();
+                } else if (workInfo.getState() == FAILED) {
+                    Log.d("surprise", "MainActivity handleAction 568: flibusta is not available");
+                    startActivity(new Intent(MainActivity.this, FlibustaNotAvailableActivity.class));
+                    finish();
+                    // запущу активити, которое напишет, что флибуста недоступна и предложит попробовать позже или закрыть приложение
+
+                }
+            }
+        });
+    }
+
+    private void startView() {
+        // проверю очередь скачивания. Если она не пуста- предложу продолжить закачку
+        // проверю, не запущено ли приложение с помощью интента. Если да- запущу программу в webView режиме
+        Intent targetActivityIntent;
+        if (mLink != null) {
+            //check if intent is not null
+            targetActivityIntent = new Intent(this, WebViewActivity.class);
+            targetActivityIntent.setData(mLink);
+        } else {
+            // проверю, если используем ODPS- перенаправлю в другую активность
+            if (App.getInstance().getView() == App.VIEW_ODPS) {
+                targetActivityIntent = new Intent(this, OPDSActivity.class);
+            } else {
+                targetActivityIntent = new Intent(this, WebViewActivity.class);
+            }
+        }
+        targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(targetActivityIntent);
+        finish();
     }
 }

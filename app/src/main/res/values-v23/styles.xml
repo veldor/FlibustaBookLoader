@@ -23,12 +23,12 @@
     </style>
 
     <style name="ThemeOverlay.AppTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorPrimary">#CDC9C9</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
     <style name="MyActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
-        <item name="colorControlNormal">#ffffff</item>
+        <item name="colorControlNormal">#CDC9C9</item>
     </style>
 
     <style name="cursorColor" parent="Widget.AppCompat.AutoCompleteTextView">
