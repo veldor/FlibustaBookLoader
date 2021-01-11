@@ -494,5 +494,6 @@ public class App extends Application {
         // запущу рабочего, который периодически будет обновлять данные
         PeriodicWorkRequest periodicTask = new PeriodicWorkRequest.Builder(PeriodicCheckFlibustaAvailabilityWorker.class, 15, TimeUnit.MINUTES).setConstraints(constraints).build();
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(PeriodicCheckFlibustaAvailabilityWorker.ACTION, ExistingPeriodicWorkPolicy.REPLACE, periodicTask);
+        Log.d("surprise", "App startCheckWorker 497: CHECKER PLANNED");
     }
 }

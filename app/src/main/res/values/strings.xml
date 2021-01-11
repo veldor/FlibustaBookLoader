@@ -208,4 +208,7 @@
     <string name="try_connect_again_message">Connect again</string>
     <string name="flibusta_not_avaliable_body">Flibusta don\'t respond. Close app, try again, or let me check, until server is coming back (you get notification, when it is)</string>
     <string name="start_checker_message">Start checker</string>
+    <string name="show_main_message">Continue</string>
+    <string name="pref_check_availability" translatable="false">pref_check_availability</string>
+    <string name="check_server_on_start">Check flibusta availability when app starts</string>
 </resources>

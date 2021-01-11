@@ -31,7 +31,10 @@ public class FlibustaNotAvailableActivity extends AppCompatActivity {
             public void onClick(View v) {
                 App.getInstance().startCheckWorker();
                 Toast.makeText(FlibustaNotAvailableActivity.this, "Вы получите уведомление, когда сервер Флибусты вернётся",Toast.LENGTH_LONG).show();
-                finishActivity(0);
+                Intent startMain = new Intent(Intent.ACTION_MAIN);
+                startMain.addCategory(Intent.CATEGORY_HOME);
+                startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(startMain);
             }
         });
     }

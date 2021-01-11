@@ -45,6 +45,7 @@ import java.util.Locale;
 
 import lib.folderpicker.FolderPicker;
 
+import static androidx.work.WorkInfo.State.CANCELLED;
 import static androidx.work.WorkInfo.State.FAILED;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 import static net.veldor.flibustaloader.utils.BookOpener.intentCanBeHandled;
@@ -227,7 +228,7 @@ public class MainActivity extends BaseActivity {
         if (!MainActivity.this.isFinishing()) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setMessage("Принудительный запуск приложения. Внимание, это не значит, что приложение будет работать! Данная функция сделана исключительно для тех ситуаций, когда приложение не смогло само определить, что клиент TOR успешно запустился (проблема некоторорых китайских аппаратов). Так что используйте только если точно знаете, что делаете");
-            dialogBuilder.setPositiveButton("Да, я знаю, что делаю", (dialogInterface, i) -> torLoaded());
+            dialogBuilder.setPositiveButton("Да, я знаю, что делаю", (dialogInterface, i) -> startView());
             dialogBuilder.setNegativeButton("Нет, подождать ещё", (dialogInterface, i) -> dialogInterface.dismiss());
             dialogBuilder.show();
         }
@@ -288,7 +289,12 @@ public class MainActivity extends BaseActivity {
         }
         // сбрасываю таймер. Если выбран вид приложения- запущу Activity согласно виду. Иначе- отмечу, что TOR загружен и буду ждать выбора вида
         if (App.getInstance().getView() != 0) {
-            checkFlibustaAvailability();
+            if(MyPreferences.getInstance().isCheckAvailability()){
+                checkFlibustaAvailability();
+            }
+            else{
+                startView();
+            }
         } else {
             mReadyToStart = true;
         }
@@ -344,7 +350,12 @@ public class MainActivity extends BaseActivity {
     }
 
     private void checkFlibustaAvailability() {
-        mTorLoadingStatusText.setText(getString(R.string.check_flibusta_avaliability_message));
+        if(mTorLoadingStatusText != null){
+            mTorLoadingStatusText.setText(getString(R.string.check_flibusta_avaliability_message));
+        }
+        if(mViewModel == null){
+            mViewModel = new ViewModelProvider(this).get(StartViewModel.class);
+        }
         handleAction(mViewModel.checkFlibustaAvailability());
         // тут проверю доступность флибусты. Если она недоступна- перенаправлю на страницу ожидания подключения
     }
@@ -546,20 +557,27 @@ public class MainActivity extends BaseActivity {
     }
 
     private void handleAction(LiveData<WorkInfo> confirmTask) {
-        // отслежу выполнение задачи, после чего обновлю информацию
-        confirmTask.observe(this, workInfo -> {
-            if (workInfo != null) {
-                if (workInfo.getState() == SUCCEEDED) {
-                    startView();
-                } else if (workInfo.getState() == FAILED) {
-                    Log.d("surprise", "MainActivity handleAction 568: flibusta is not available");
-                    startActivity(new Intent(MainActivity.this, FlibustaNotAvailableActivity.class));
-                    finish();
-                    // запущу активити, которое напишет, что флибуста недоступна и предложит попробовать позже или закрыть приложение
+        if(confirmTask != null){
+            // отслежу выполнение задачи, после чего обновлю информацию
+            confirmTask.observe(this, workInfo -> {
+                Log.d("surprise", "MainActivity handleAction 553: STATE CHANGED " + workInfo);
+                if (workInfo != null) {
+                    Log.d("surprise", "MainActivity handleAction 553: CHECK STATE CHANGED " + workInfo.getState() );
+                    if (workInfo.getState() == SUCCEEDED) {
+                        startView();
+                    } else if (workInfo.getState() == FAILED || workInfo.getState() == CANCELLED) {
+                        Log.d("surprise", "MainActivity handleAction 568: flibusta is not available");
+                        startActivity(new Intent(MainActivity.this, FlibustaNotAvailableActivity.class));
+                        finish();
+                        // запущу активити, которое напишет, что флибуста недоступна и предложит попробовать позже или закрыть приложение
 
+                    }
                 }
-            }
-        });
+            });
+        }
+        else{
+            startView();
+        }
     }
 
     private void startView() {

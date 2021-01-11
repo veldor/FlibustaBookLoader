@@ -24,6 +24,7 @@ public class PeriodicCheckFlibustaAvailabilityWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 27: CHECK AVAILABILITY STARTED");
         if (!isStopped()) {
             // check availability
             try {
@@ -42,6 +43,9 @@ public class PeriodicCheckFlibustaAvailabilityWorker extends Worker {
                 Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 42: can't check availability");
                 e.printStackTrace();
             }
+        }
+        else{
+            Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 47: i m stopped");
         }
         Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 47: availability checked");
         return Result.success();

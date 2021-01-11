@@ -25,6 +25,7 @@ public class MyPreferences {
     private static final String LAST_CHANGELOG_VERSION_PREF = "last changelog version";
     private static final String BOOKS_DOWNLOAD_AUTOSTART = "download auto start";
     private static final String PREF_USE_FILTER = "use filter";
+    private static final String PREF_CHECK_AVAILABILITY = "check availability";
     private static final String PREF_ONLY_RUSSIAN = "only russian";
     private static final String AUTH_COOKIE_NAME = "auth cookie name";
     private static final String AUTH_COOKIE_VALUE = "auth cookie value";
@@ -220,5 +221,9 @@ public class MyPreferences {
 
     public void setEInk(boolean isChecked) {
         mSharedPreferences.edit().putBoolean(App.getInstance().getString(R.string.pref_is_eink), isChecked).apply();
+    }
+
+    public boolean isCheckAvailability() {
+        return mSharedPreferences.getBoolean(PREF_CHECK_AVAILABILITY, false);
     }
 }

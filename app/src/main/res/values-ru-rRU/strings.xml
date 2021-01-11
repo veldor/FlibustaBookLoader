@@ -189,4 +189,6 @@
     <string name="close_app_message">Закрыть приложение</string>
     <string name="flibusta_not_avaliable_body">Похоже, сервер Флибусты опять лёг. Мы можем попробовать подключиться ещё раз или закрыть всё и попробовать как-нибудь потом. А есть ещё вариант- нажмите кнопку \'Уведомить о доступности\' и получите уведомление, когда сервер ответит</string>
     <string name="start_checker_message">Уведомить о доступности</string>
+    <string name="show_main_message">Продолжить</string>
+    <string name="check_server_on_start">Проверять доступность Флибусты на старте приложения</string>
 </resources>
