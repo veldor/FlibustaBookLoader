@@ -41,6 +41,7 @@ import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpHeaders;
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.NameValuePair;
+import cz.msebera.android.httpclient.NoHttpResponseException;
 import cz.msebera.android.httpclient.client.HttpClient;
 import cz.msebera.android.httpclient.client.entity.UrlEncodedFormEntity;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
@@ -264,7 +265,12 @@ public class TorWebClient {
                 File file = FilesHandler.getCompatDownloadFile(book);
                 GlobalWebClient.handleBookLoadRequest(response, file);
             }
-        } catch (IOException e) {
+        }
+        catch (NoHttpResponseException e){
+            // книга недоступна для скачивания
+            throw new BookNotFoundException();
+        }
+        catch (IOException e) {
             e.printStackTrace();
             Log.d("surprise", "TorWebClient downloadBook: ошибка при сохранении");
             throw new TorNotLoadedException();

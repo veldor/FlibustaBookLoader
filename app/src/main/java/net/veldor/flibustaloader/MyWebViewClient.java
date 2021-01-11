@@ -42,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.HttpResponse;
+import cz.msebera.android.httpclient.NoHttpResponseException;
 import cz.msebera.android.httpclient.client.HttpClient;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
 import cz.msebera.android.httpclient.client.protocol.HttpClientContext;
@@ -232,7 +233,7 @@ public class MyWebViewClient extends WebViewClient {
                     }
                 }
             }
-            HttpResponse httpResponse;
+            HttpResponse httpResponse = null;
             if (App.getInstance().isExternalVpn()) {
                 httpResponse = ExternalVpnVewClient.rawRequest(url);
             } else {
@@ -248,7 +249,15 @@ public class MyWebViewClient extends WebViewClient {
                 if (authCookie != null) {
                     httpGet.setHeader("Cookie", authCookie);
                 }
-                httpResponse = httpClient.execute(httpGet, context);
+                try{
+                    httpResponse = httpClient.execute(httpGet, context);
+                }
+                catch (NoHttpResponseException e){
+                    Log.d("surprise", "MyWebViewClient handleRequest 256: ALARM, NO ANSWER!!");
+                    String message = "<H1 style='text-align:center;'>¯\\_(ツ)_/¯</H1><H1 style='text-align:center;'>Эта книга ещё недоступна</H1><H2 style='text-align:center;'>Попробуйте позднее</H2>";
+                    ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes("UTF-8"));
+                    return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+                }
             }
 
             if (httpResponse == null) {
@@ -265,6 +274,7 @@ public class MyWebViewClient extends WebViewClient {
 
             // Если формат книжный, загружу книгу
             if(MimeTypes.isBookFormat(mime)){
+                Log.d("surprise", "MyWebViewClient handleRequest 277: ADD BOOK TO QUEUE");
                 Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
                 startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
                 App.getInstance().sendBroadcast(startLoadingIntent);
@@ -274,7 +284,8 @@ public class MyWebViewClient extends WebViewClient {
                 Header[] headers = httpResponse.getAllHeaders();
                 for (Header h :
                         headers) {
-                    Log.d("surprise", "MyWebViewClient handleRequest 271: Header " + h.getValue());
+                    Log.d("surprise", "MyWebViewClient handleRequest 271: Header " + h.getName());
+                    Log.d("surprise", "MyWebViewClient handleRequest 271: Header VALUE" + h.getValue());
                     if(h.getValue().startsWith("attachment; filename=\"")){
                         newBook.name = h.getValue().substring(22, h.getValue().length() -1);
                         Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);

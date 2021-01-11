@@ -26,6 +26,7 @@ public class MimeTypes {
         put("application/epub+zip", "epub");
         put("view_models", "djvu");
         put("application/epub", "epub");
+        put("application/octet-stream", "epub");
         put("application/pdf", "pdf");
         put("application/djvu", "djvu");
         put("application/html+zip", "html.zip");
