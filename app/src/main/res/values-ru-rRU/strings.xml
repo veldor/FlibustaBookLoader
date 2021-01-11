@@ -191,4 +191,8 @@
     <string name="start_checker_message">Уведомить о доступности</string>
     <string name="show_main_message">Продолжить</string>
     <string name="check_server_on_start">Проверять доступность Флибусты на старте приложения</string>
+    <string name="disable_inspection_message">Отключить проверку</string>
+    <string name="inspection_disabled_message">Проверка отключена. Вы можете повторно включить её в настройках соединения</string>
+    <string name="error_load_page_title">Ошибка получения данных</string>
+    <string name="error_load_page_message">Что-то пошло не так. Мне очень жаль. Вы можете повторить попытку или попробовать ещё раз позднее.</string>
 </resources>

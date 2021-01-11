@@ -40,6 +40,7 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -124,6 +125,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     public static final MutableLiveData<Boolean> sNothingFound = new MutableLiveData<>();
     public static final MutableLiveData<Boolean> sNewSearch = new MutableLiveData<>();
     public static int sClickedItemIndex = -1;
+    public static final MutableLiveData<Boolean> isLoadError = new MutableLiveData<>();
 
 
     private AlertDialog mTorRestartDialog;
@@ -174,12 +176,14 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     public static Integer sElementForSelectionIndex = -1;
     private Button mShowAuthorsListActivator;
     private TextView mCnnectionTypeView;
+    private AlertDialog mPageNotLoadedDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.new_opds_activity);
         setupInterface();
+        setupObservers();
 
         // добавлю viewModel
         mViewModel = new ViewModelProvider(this).get(MainViewModel.class);
@@ -402,6 +406,31 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             Log.d("surprise", "have link");
             doSearch(link, false);
         }
+    }
+
+    @Override
+    protected void setupObservers() {
+        super.setupObservers();
+        isLoadError.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean hasError) {
+                if(hasError){
+                    // покажу окошко и сообщу, что загрузка не удалась
+                    showPageNotLoadedDialog();
+                }
+            }
+        });
+    }
+
+    private void showPageNotLoadedDialog() {
+        if(mPageNotLoadedDialog == null){
+            mPageNotLoadedDialog = new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.error_load_page_title))
+                    .setMessage(getString(R.string.error_load_page_message))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .create();
+        }
+        mPageNotLoadedDialog.show();
     }
 
     @Override

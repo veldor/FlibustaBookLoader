@@ -26,6 +26,15 @@
         android:padding="10dp"
         android:text="@string/flibusta_not_avaliable_body"
         app:layout_constraintTop_toBottomOf="@+id/textView4" />
+    <Button
+        android:id="@+id/disableInspectionButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/disable_inspection_message"
+        app:layout_constraintBottom_toTopOf="@+id/showMainWindowButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/showMainWindowButton"

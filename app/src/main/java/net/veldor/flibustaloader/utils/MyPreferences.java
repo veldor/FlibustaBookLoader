@@ -224,6 +224,10 @@ public class MyPreferences {
     }
 
     public boolean isCheckAvailability() {
-        return mSharedPreferences.getBoolean(PREF_CHECK_AVAILABILITY, false);
+        return mSharedPreferences.getBoolean(PREF_CHECK_AVAILABILITY, true);
+    }
+
+    public void setInspectionEnabled(boolean isEnabled) {
+        mSharedPreferences.edit().putBoolean(PREF_CHECK_AVAILABILITY, isEnabled).apply();
     }
 }

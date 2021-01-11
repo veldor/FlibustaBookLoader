@@ -24,7 +24,7 @@ public class StartViewModel extends ViewModel {
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
         OneTimeWorkRequest work = new OneTimeWorkRequest.Builder(CheckFlibustaAvailabilityWorker.class).addTag(CheckFlibustaAvailabilityWorker.ACTION).setConstraints(constraints).build();
-        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(CheckFlibustaAvailabilityWorker.ACTION, ExistingWorkPolicy.REPLACE, work);
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(CheckFlibustaAvailabilityWorker.ACTION, ExistingWorkPolicy.KEEP, work);
         return WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(work.getId());
     }
 }

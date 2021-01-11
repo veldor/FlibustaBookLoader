@@ -103,6 +103,10 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        if (App.getInstance().useMirror) {
+            // оповещу о невозможности скачивания книг с альтернативного зеркала
+            mNotificator.notifyDownloadFromMirror();
+        }
         ArrayList<BooksDownloadSchedule> downloadErrors = new ArrayList<>();
         // проверю, есть ли в очереди скачивания книги
         AppDatabase db = App.getInstance().mDatabase;
@@ -160,7 +164,7 @@ public class DownloadBooksWorker extends Worker {
                             // оповещу о скачанной книге
                             App.getInstance().mLiveDownloadedBookId.postValue(queuedElement.bookId);
                             // если не клянчил донаты- поклянчу :)
-                            if(!MyPreferences.getInstance().askedForDonation()){
+                            if (!MyPreferences.getInstance().askedForDonation()) {
                                 mNotificator.begDonation();
                                 MyPreferences.getInstance().setDonationBegged();
                             }

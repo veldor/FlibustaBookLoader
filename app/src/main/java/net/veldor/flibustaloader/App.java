@@ -100,6 +100,7 @@ public class App extends Application {
     public static final int VIEW_MODE_FAST = 4;
     public static final int VIEW_MODE_FAST_FAT = 5;
     public static final String BASE_URL = "http://flibustahezeous3.onion";
+    public static final String MIRROR_URL = "https://flibusta.appspot.com";
     public static final String BASE_BOOK_URL = "http://flibustahezeous3.onion/b/";
 
     public static final String TOR_FILES_LOCATION = "torfiles";
@@ -119,6 +120,7 @@ public class App extends Application {
     private static App instance;
     public boolean mDownloadUnloaded;
     public String mSelectedFormat;
+    public boolean useMirror = false;
     private Notificator sNotificator;
     public File downloadedApkFile;
     public Uri updateDownloadUri;

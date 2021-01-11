@@ -60,9 +60,13 @@ public class SearchWorker extends Worker {
                 App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                 // сделаю первый запрос по-любому
                 String answer = GlobalWebClient.request(request);
-                if (answer != null && !isStopped()) {
+                if(answer == null || answer.length() == 0){
+                    OPDSActivity.isLoadError.postValue(true);
+                }
+                if (!isStopped()) {
                     ArrayList result;
                     // получу DOM
+                    Log.d("surprise", "SearchWorker doWork 69: anser is " + answer);
                     SearchResponseParser parser = new SearchResponseParser(answer);
                     int resultType = parser.getType();
                     Log.d("surprise", "SearchWorker doWork 52: result type is " + resultType);

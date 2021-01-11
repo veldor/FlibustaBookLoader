@@ -123,8 +123,13 @@ public class TorWebClient {
 
 
     public String request(String text) {
-        Log.d("surprise", "TorWebClient request 109: request " + text);
+        if(App.getInstance().useMirror){
+            // TODO заменить зеркало
+            Log.d("surprise", "TorWebClient request 128: change mirror");
+            text = text.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
+        }
         try {
+            Log.d("surprise", "TorWebClient request 130: load " + text);
             HttpGet httpGet = new HttpGet(text);
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
             httpGet.setHeader("X-Compress", "null");
@@ -134,14 +139,20 @@ public class TorWebClient {
             is = httpResponse.getEntity().getContent();
             return inputStreamToString(is);
         } catch (IOException e) {
+            Log.d("surprise", "TorWebClient request 137: page load error");
             App.getInstance().mLoadAllStatus.postValue("Ошибка загрузки страницы");
-            broadcastTorError(e);
+            //broadcastTorError(e);
             e.printStackTrace();
         }
         return null;
     }
 
     private HttpResponse simpleGetRequest(String url) throws IOException {
+        if(App.getInstance().useMirror){
+            // TODO заменить зеркало
+            Log.d("surprise", "TorWebClient request 128: change mirror");
+            url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
+        }
         Log.d("surprise", "TorWebClient simpleGetRequest 128: request " + url);
         HttpGet httpGet = new HttpGet(url);
         httpGet.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
@@ -211,6 +222,7 @@ public class TorWebClient {
                 }
             }
             if (response == null || response.getStatusLine().getStatusCode() != 200 || response.getEntity().getContentLength() < 1) {
+                Log.d("surprise", "TorWebClient downloadBook 225: can't load from main mirror");
                 // попробую загрузку с резервного адреса
                 response = simpleGetRequest(URLHelper.getFlibustaIsUrl() + book.link);
                 if(response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1){
@@ -273,7 +285,7 @@ public class TorWebClient {
         catch (IOException e) {
             e.printStackTrace();
             Log.d("surprise", "TorWebClient downloadBook: ошибка при сохранении");
-            throw new TorNotLoadedException();
+            //throw new TorNotLoadedException();
         }
     }
 

@@ -211,4 +211,8 @@
     <string name="show_main_message">Continue</string>
     <string name="pref_check_availability" translatable="false">pref_check_availability</string>
     <string name="check_server_on_start">Check flibusta availability when app starts</string>
+    <string name="disable_inspection_message">Disable inspection</string>
+    <string name="inspection_disabled_message">Inspection disabled. You can re-enable it in connectivity settings</string>
+    <string name="error_load_page_title">Error load page</string>
+    <string name="error_load_page_message">Error connection. Sorry for this, try later or restart app</string>
 </resources>

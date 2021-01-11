@@ -22,7 +22,9 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".ui.FlibustaNotAvailableActivity"></activity>
+        <activity android:name=".ui.FlibustaNotAvailableActivity"
+            android:launchMode="singleInstance"
+            />
         <activity
             android:name=".ui.LoginActivity"
             android:launchMode="singleInstance" />
@@ -32,10 +34,6 @@
         <activity
             android:name=".ui.BookmarksActivity"
             android:launchMode="singleInstance" />
-        <activity
-            android:name=".ui.BaseActivity"
-            android:launchMode="singleInstance" />
-        <activity android:name=".ui.Loader" />
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="keyboardHidden|orientation"

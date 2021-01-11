@@ -57,6 +57,8 @@ public class Notificator {
     private static final String ERROR_DOWNLOAD_BOOKS_GROUP = "error download books";
     private static final int DONATE_REQUEST_CODE = 4;
     private static final String BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID = "book download progress";
+    private static final int MIRROR_DOWNLOAD_USING_NOTIFICATION = 13;
+    private static final int MIRROR_USING_NOTIFICATION = 14;
     private static Notificator instance;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
@@ -494,5 +496,31 @@ public class Notificator {
 
         Notification incomingCallNotification = notificationBuilder.build();
         mNotificationManager.notify(FLIBUSTA_IS_BACK_NOTIFICATION, incomingCallNotification);
+    }
+
+    public void notifyDownloadFromMirror() {
+        NotificationCompat.Builder notificationBuilder =
+                new NotificationCompat.Builder(App.getInstance(), MISC_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
+                        .setContentTitle("Используется альтернативное зеркало!")
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText("Сейчас используется зеркало, на котором доступ к большинству книг ограничен. Могут возникнуть проблемы со скачиванием!"))
+                        .setColor(Color.RED)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        Notification incomingCallNotification = notificationBuilder.build();
+        mNotificationManager.notify(MIRROR_DOWNLOAD_USING_NOTIFICATION, incomingCallNotification);
+    }
+
+    public void notifyUseMirror() {
+        NotificationCompat.Builder notificationBuilder =
+                new NotificationCompat.Builder(App.getInstance(), MISC_CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
+                        .setContentTitle("Используется альтернативное зеркало!")
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText("Нет доступа к основному зеркалу. Вы можете просматривать каталог, но со скачиванием книг скорее всего будут проблемы. Лучше зайдите попозже."))
+                        .setColor(Color.RED)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        Notification incomingCallNotification = notificationBuilder.build();
+        mNotificationManager.notify(MIRROR_USING_NOTIFICATION, incomingCallNotification);
     }
 }

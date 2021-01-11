@@ -220,6 +220,11 @@ public class MyWebViewClient extends WebViewClient {
     @SuppressWarnings("CharsetObjectCanBeUsed")
     private WebResourceResponse handleRequest(WebView view, String url) {
         Log.d("surprise", "MyWebViewClient handleRequest request " + url);
+        if(App.getInstance().useMirror){
+            // TODO заменить зеркало
+            Log.d("surprise", "TorWebClient request 128: change mirror");
+            url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
+        }
         try {
             mViewMode = App.getInstance().getViewMode();
             mNightMode = App.getInstance().getNightMode();
