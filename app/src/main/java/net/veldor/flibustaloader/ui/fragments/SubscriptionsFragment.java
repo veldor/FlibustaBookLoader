@@ -8,10 +8,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LiveData;
@@ -120,16 +120,12 @@ public class SubscriptionsFragment extends Fragment {
         mRadioContainer = mRoot.findViewById(R.id.subscribe_type);
         if(mRadioContainer != null){
             mRadioContainer.setOnCheckedChangeListener((group, checkedId) -> {
-                switch (checkedId){
-                    case R.id.searchBook:
-                        showBooks();
-                        break;
-                    case R.id.searchAuthor:
-                        showAuthors();
-                        break;
-                    case R.id.searchSequence:
-                        showSequences();
-                        break;
+                if (checkedId == R.id.searchBook) {
+                    showBooks();
+                } else if (checkedId == R.id.searchAuthor) {
+                    showAuthors();
+                } else if (checkedId == R.id.searchSequence) {
+                    showSequences();
                 }
             });
         }
@@ -144,7 +140,7 @@ public class SubscriptionsFragment extends Fragment {
         }
 
         // назначу действие переключателю автоматической подписки
-        Switch switcher = mRoot.findViewById(R.id.switchAutoCheckSubscribes);
+        SwitchCompat switcher = mRoot.findViewById(R.id.switchAutoCheckSubscribes);
         if(switcher != null){
             switcher.setChecked(MyPreferences.getInstance().isSubscriptionsAutoCheck());
             switcher.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -203,20 +199,16 @@ public class SubscriptionsFragment extends Fragment {
         String value = mSubscribeInput.getText().toString().trim();
         if(!value.isEmpty()){
             // добавлю подписку в зависимости от типа
-            switch (mRadioContainer.getCheckedRadioButtonId()){
-                case R.id.searchBook:
-                    Log.d("surprise", "SubscribeActivity addSubscribe add book");
-                    mBooksSubscribeContainer.addValue(value);
-                    break;
-                case R.id.searchAuthor:
-                    Log.d("surprise", "SubscribeActivity addSubscribe add author");
-                    mAuthorsSubscribeContainer.addValue(value);
-                    break;
-                case R.id.searchSequence:
-                    Log.d("surprise", "SubscribeActivity addSubscribe add sequence");
-                    mSequencesSubscribeContainer.addValue(value);
-                    break;
-
+            int checkedRadioButtonId = mRadioContainer.getCheckedRadioButtonId();
+            if (checkedRadioButtonId == R.id.searchBook) {
+                Log.d("surprise", "SubscribeActivity addSubscribe add book");
+                mBooksSubscribeContainer.addValue(value);
+            } else if (checkedRadioButtonId == R.id.searchAuthor) {
+                Log.d("surprise", "SubscribeActivity addSubscribe add author");
+                mAuthorsSubscribeContainer.addValue(value);
+            } else if (checkedRadioButtonId == R.id.searchSequence) {
+                Log.d("surprise", "SubscribeActivity addSubscribe add sequence");
+                mSequencesSubscribeContainer.addValue(value);
             }
             mSubscribeInput.setText("");
             Toast.makeText(getContext(), "Добавляю значение " + value, Toast.LENGTH_LONG).show();

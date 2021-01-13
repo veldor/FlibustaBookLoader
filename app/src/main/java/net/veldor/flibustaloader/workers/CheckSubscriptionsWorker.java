@@ -46,7 +46,7 @@ public class CheckSubscriptionsWorker extends Worker {
     private Notificator mNotifier;
     private String mNextPageLink;
     private ArrayList<SubscriptionItem> mSubscribes;
-    private ArrayList<FoundedBook> result = new ArrayList<>();
+    private final ArrayList<FoundedBook> result = new ArrayList<>();
     private String mLastCheckedBookId;
     private String mCheckFor;
     private boolean mStopCheck;

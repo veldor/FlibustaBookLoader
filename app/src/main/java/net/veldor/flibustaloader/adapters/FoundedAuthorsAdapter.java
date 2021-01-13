@@ -1,13 +1,12 @@
 package net.veldor.flibustaloader.adapters;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.recyclerview.widget.RecyclerView;
@@ -119,7 +118,7 @@ public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAd
                 mRootView.setBackgroundColor(App.getInstance().getResources().getColor(R.color.selected_item_background));
             }
             else{
-                mRootView.setBackground(App.getInstance().getResources().getDrawable(R.drawable.author_layout));
+                mRootView.setBackground(ResourcesCompat.getDrawable(App.getInstance().getResources(), R.drawable.author_layout, null));
             }
         }
     }

@@ -29,7 +29,6 @@ public class RequestAsyncTask extends AsyncTask<String, Integer, Integer> {
     @Override
     protected void onProgressUpdate(Integer... values) {
         super.onProgressUpdate(values);
-        Log.d("surprise", "RequestAsyncTask onProgressUpdate 16: progress is " + values);
     }
 
     @Override

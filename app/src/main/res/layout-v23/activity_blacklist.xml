@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".ui.BlacklistActivity">
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/subscriptions_layout"
@@ -16,61 +17,36 @@
             android:layout_width="match_parent"
             android:layout_height="0dp">
 
-            <Button
-                android:id="@+id/totalCheckButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/transparent_bg_bordered_button"
-                android:text="@string/check_full_subscribes_label"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <Button
-                android:id="@+id/fastCheckButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/transparent_bg_bordered_button"
-                android:text="@string/check_subscribes_label"
-                app:layout_constraintTop_toBottomOf="@+id/totalCheckButton" />
-
             <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchAutoCheckSubscribes"
+                android:layout_marginTop="10dp"
+                android:id="@+id/switchOnlyRussian"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:text="@string/title_switcher_subscribes_check_automatically"
-                app:layout_constraintTop_toBottomOf="@+id/fastCheckButton" />
+                android:text="@string/title_only_russian"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:layout_editor_absoluteX="10dp" />
+
 
             <EditText
-                android:id="@+id/subscribe_name"
+                android:id="@+id/blacklist_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
                 android:gravity="center_horizontal"
                 android:hint="@string/enter_value_message"
                 android:inputType="text"
                 android:textAlignment="center"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintTop_toBottomOf="@+id/switchAutoCheckSubscribes"
+                app:layout_constraintTop_toBottomOf="@+id/switchOnlyRussian"
                 tools:ignore="Autofill" />
 
             <TextView
                 android:id="@+id/action_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:text="@string/subscription_describe"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_name" />
+                android:text="@string/blacklist_describe"
+                app:layout_constraintTop_toBottomOf="@+id/blacklist_name" />
 
             <RadioGroup
-                android:id="@+id/subscribe_type"
+                android:id="@+id/blacklist_type"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -79,36 +55,42 @@
                 app:layout_constraintTop_toBottomOf="@+id/action_description">
 
                 <RadioButton
-                    android:id="@+id/searchBook"
+                    android:id="@+id/blacklistBook"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="5dp"
-                    android:layout_marginLeft="5dp"
                     android:layout_weight="1"
                     android:checked="true"
-                    android:text="@string/search_book_message"
+                    android:text="@string/title_name"
                     android:textColor="@color/book_name_color" />
 
 
                 <RadioButton
-                    android:id="@+id/searchAuthor"
+                    android:id="@+id/blacklistAuthor"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="5dp"
-                    android:layout_marginLeft="5dp"
                     android:layout_weight="1"
-                    android:text="@string/search_author_message"
+                    android:text="@string/title_author"
                     android:textColor="@color/author_text_color" />
 
 
                 <RadioButton
-                    android:id="@+id/searchSequence"
+                    android:id="@+id/blacklistSequence"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="5dp"
-                    android:layout_marginLeft="5dp"
                     android:layout_weight="1"
-                    android:text="@string/search_sequence_message"
+                    android:text="@string/title_sequence"
+                    android:textColor="@color/sequences_text" />
+
+                <RadioButton
+                    android:id="@+id/blacklistGenre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:text="@string/title_genre"
                     android:textColor="@color/sequences_text" />
             </RadioGroup>
 
@@ -117,13 +99,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/transparent_bg_bordered_button"
+                android:foreground="?android:attr/selectableItemBackground"
                 android:padding="10dp"
-                android:text="@string/subscribe_msg"
+                android:text="@string/add_to_blacklist_msg"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_type" />
-
+                app:layout_constraintTop_toBottomOf="@+id/blacklist_type" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/resultsList"
@@ -133,7 +115,6 @@
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/add_to_blacklist_btn" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 

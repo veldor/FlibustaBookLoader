@@ -55,6 +55,7 @@ public class LoadSubscriptionsWorker extends Worker {
             // теперь подожду, пока TOR дозагрузится
             while (!tor.isBootstrapped()) {
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(1000);
                     Log.d("surprise", "CheckSubscriptionsWorker doWork wait tor boostrap");
                 } catch (InterruptedException e) {

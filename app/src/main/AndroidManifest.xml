@@ -6,7 +6,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.READ_LOGS" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.READ_LOGS"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".App"
@@ -22,9 +25,9 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".ui.FlibustaNotAvailableActivity"
-            android:launchMode="singleInstance"
-            />
+        <activity
+            android:name=".ui.FlibustaNotAvailableActivity"
+            android:launchMode="singleInstance" />
         <activity
             android:name=".ui.LoginActivity"
             android:launchMode="singleInstance" />
@@ -36,6 +39,7 @@
             android:launchMode="singleInstance" />
         <activity
             android:name=".ui.MainActivity"
+            android:theme="@style/SplashTheme"
             android:configChanges="keyboardHidden|orientation"
             android:launchMode="singleInstance">
             <intent-filter>

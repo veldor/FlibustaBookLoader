@@ -36,6 +36,7 @@ public class Notificator {
     private static final String MISC_CHANNEL_ID = "misc";
     private static final String SUBSCRIBE_CHECK_SERVICE_CHANNEL_ID = "subscribes check";
     private static final String BOOK_DOWNLOADS_CHANNEL_ID = "book downloads";
+    private static final String FOREGROUND_CHANNEL_ID = "foreground";
     private static final int START_SHARING_REQUEST_CODE = 2;
     private static final int START_OPEN_REQUEST_CODE = 3;
     private static final int START_APP_CODE = 4;
@@ -58,6 +59,7 @@ public class Notificator {
     private static final int DONATE_REQUEST_CODE = 4;
     private static final String BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID = "book download progress";
     private static final int MIRROR_DOWNLOAD_USING_NOTIFICATION = 13;
+    public static final int CHECK_AVAILABILITY_NOTIFICATION = 15;
     private static final int MIRROR_USING_NOTIFICATION = 14;
     private static Notificator instance;
     private final Context mContext;
@@ -113,6 +115,12 @@ public class Notificator {
                 nc.setSound(null, null);
                 nc.setDescription(mContext.getString(R.string.books_download_progress_channel_description));
                 mNotificationManager.createNotificationChannel(nc);
+                // создам канал фоновых уведомлений
+                nc = new NotificationChannel(FOREGROUND_CHANNEL_ID, mContext.getString(R.string.foreground_channel_description), NotificationManager.IMPORTANCE_MIN);
+                nc.setDescription(mContext.getString(R.string.foreground_channel_description));
+                nc.enableLights(false);
+                nc.enableVibration(false);
+                mNotificationManager.createNotificationChannel(nc);
             }
         }
     }
@@ -135,8 +143,6 @@ public class Notificator {
                         .setGroupSummary(true);
 
         mNotificationManager.notify(-100, mBuilder.build());
-
-        Log.d("surprise", "Notificator sendLoadedBookNotification 118: type is " + type);
 
         // создам интент для функции отправки файла
         Intent shareIntent = new Intent(mContext, BookActionReceiver.class);
@@ -357,7 +363,11 @@ public class Notificator {
         mNotificationManager.notify(SUBSCRIBE_NOTIFICATION, notification);
     }
 
-    public void updateDownloadProgress(int mBooksCount, int currentDownload) {
+    public void updateDownloadProgress(int mBooksCount, int currentDownload, long beginingTime) {
+        long left = System.currentTimeMillis() - beginingTime;
+        long forBook = left / currentDownload;
+        long leftTime = (mBooksCount - currentDownload) * forBook / 1000;
+        Log.d("surprise", "Notificator updateDownloadProgress 372: left for download: " + leftTime);
         // при нажатии на уведомление- открою экран ожидания очереди
         Intent openWindowIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
         openWindowIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_SINGLE_TOP);
@@ -377,7 +387,7 @@ public class Notificator {
                 .setContentTitle("Скачивание книг")
                 .setOngoing(true)
                 .setContentText("Загружаю книгу " + currentDownload + " из " + mBooksCount)
-                .setProgress(mBooksCount, currentDownload, true)
+                .setProgress(mBooksCount, currentDownload, false)
                 .addAction(R.drawable.ic_list_white_24dp, "Очередь", showWindowPending)
                 .addAction(R.drawable.fp_ic_action_cancel, "Отмена", cancelMassDownloadPendingIntent)
                 .addAction(R.drawable.ic_pause_white_24dp, "Пауза", pauseMassDownloadPendingIntent)
@@ -465,6 +475,7 @@ public class Notificator {
         if (loaded > 0) {
             percentDone = loaded * 100 / total / 1000;
         }
+        Log.d("surprise", "Notificator createBookLoadingProgressNotification 480: loading, percent done: "  + percentDone);
         Notification notification = new NotificationCompat.Builder(mContext, BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Качаю " + name)
@@ -522,5 +533,14 @@ public class Notificator {
 
         Notification incomingCallNotification = notificationBuilder.build();
         mNotificationManager.notify(MIRROR_USING_NOTIFICATION, incomingCallNotification);
+    }
+
+    public Notification getCheckAvailabilityNotification() {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, FOREGROUND_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_book_black_24dp)
+                .setContentTitle(App.getInstance().getString(R.string.check_flibusta_availability_message))
+                .setProgress(0, 0, true)
+                .setOngoing(true);
+        return notificationBuilder.build();
     }
 }

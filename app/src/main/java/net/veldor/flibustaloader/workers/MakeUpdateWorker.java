@@ -45,60 +45,56 @@ public class MakeUpdateWorker extends Worker {
         HttpGet httpget = new HttpGet(Updater.GITHUB_RELEASES_URL);
         try {
             // кастомный обработчик ответов
-            ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
-
-                @Override
-                public String handleResponse(HttpResponse response){
-                    int status = response.getStatusLine().getStatusCode();
-                    if (status >= 200 && status < 300) {
-                        HttpEntity entity = response.getEntity();
-                        try {
-                            String body = EntityUtils.toString(entity);
-                            JSONObject releaseInfo = new JSONObject(body);
-                            String lastVersion = releaseInfo.getString(Updater.GITHUB_APP_VERSION);
-                            String currentVersion = BuildConfig.VERSION_NAME;
-                            if(!lastVersion.equals(currentVersion)){
-                                // версии отличаются
-                                // получу ссылку на скачивание
-                                JSONObject releaseAssets = releaseInfo.getJSONArray("assets").getJSONObject(0);
-                                String downloadLink = releaseAssets.getString(Updater.GITHUB_DOWNLOAD_LINK);
-                                String downloadName = releaseAssets.getString(Updater.GITHUB_APP_NAME);
-                                String downloadedApkFilePath = mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/" + downloadName;
-                                File downloadedApkFile = new File(downloadedApkFilePath);
-                                Uri downloadUri = Uri.parse("file://" + downloadedApkFile);
-                                App.getInstance().updateDownloadUri = downloadUri;
-                                if (downloadedApkFile.exists()) {
-                                    boolean deleteResult = downloadedApkFile.delete();
-                                    if(!deleteResult){
-                                        Log.d("surprise", "MakeUpdateWorker handleResponse: Не смог удалить предыдущий файл");
-                                    }
-                                }
-                                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadLink));
-                                request.setTitle(mContext.getString(R.string.update_file_name));
-                                request.setDestinationUri(downloadUri);
-                                DownloadManager manager = (DownloadManager) mContext.getSystemService(
-                                        Context.DOWNLOAD_SERVICE);
-                                if(manager != null){
-                                    long startedDownloadId = manager.enqueue(request);
-                                    // загрузка начата, отправлю идентификатор загрузки менеджеру
-                                    Updater.updateDownloadIdentification.postValue(startedDownloadId);
-                                    App.getInstance().downloadedApkFile = downloadedApkFile;
-                                    // запущу сервис отслеживания окончания загрузки
-                                    mContext.startService(new Intent(mContext, UpdateWaitService.class));
+            ResponseHandler<String> responseHandler = response -> {
+                int status = response.getStatusLine().getStatusCode();
+                if (status >= 200 && status < 300) {
+                    HttpEntity entity = response.getEntity();
+                    try {
+                        String body = EntityUtils.toString(entity);
+                        JSONObject releaseInfo = new JSONObject(body);
+                        String lastVersion = releaseInfo.getString(Updater.GITHUB_APP_VERSION);
+                        String currentVersion = BuildConfig.VERSION_NAME;
+                        if(!lastVersion.equals(currentVersion)){
+                            // версии отличаются
+                            // получу ссылку на скачивание
+                            JSONObject releaseAssets = releaseInfo.getJSONArray("assets").getJSONObject(0);
+                            String downloadLink = releaseAssets.getString(Updater.GITHUB_DOWNLOAD_LINK);
+                            String downloadName = releaseAssets.getString(Updater.GITHUB_APP_NAME);
+                            String downloadedApkFilePath = mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) + "/" + downloadName;
+                            File downloadedApkFile = new File(downloadedApkFilePath);
+                            Uri downloadUri = Uri.parse("file://" + downloadedApkFile);
+                            App.getInstance().updateDownloadUri = downloadUri;
+                            if (downloadedApkFile.exists()) {
+                                boolean deleteResult = downloadedApkFile.delete();
+                                if(!deleteResult){
+                                    Log.d("surprise", "MakeUpdateWorker handleResponse: Не смог удалить предыдущий файл");
                                 }
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadLink));
+                            request.setTitle(mContext.getString(R.string.update_file_name));
+                            request.setDestinationUri(downloadUri);
+                            DownloadManager manager = (DownloadManager) mContext.getSystemService(
+                                    Context.DOWNLOAD_SERVICE);
+                            if(manager != null){
+                                long startedDownloadId = manager.enqueue(request);
+                                // загрузка начата, отправлю идентификатор загрузки менеджеру
+                                Updater.updateDownloadIdentification.postValue(startedDownloadId);
+                                App.getInstance().downloadedApkFile = downloadedApkFile;
+                                // запущу сервис отслеживания окончания загрузки
+                                mContext.startService(new Intent(mContext, UpdateWaitService.class));
+                            }
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                    else{
-                        // неверный ответ с сервера
-                        Log.d("surprise", "CheckUpdateWorker handleResponse: wrong update server answer");
-                    }
-                    return null;
                 }
+                else{
+                    // неверный ответ с сервера
+                    Log.d("surprise", "CheckUpdateWorker handleResponse: wrong update server answer");
+                }
+                return null;
             };
             // выполню запрос
             httpclient.execute(httpget, responseHandler);

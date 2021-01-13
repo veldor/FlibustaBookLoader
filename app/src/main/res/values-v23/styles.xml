@@ -34,4 +34,10 @@
     <style name="cursorColor" parent="Widget.AppCompat.AutoCompleteTextView">
         <item name="android:textCursorDrawable">@drawable/cursor</item>
     </style>
+    <style name="MyDialogStyle" parent="Theme.AppCompat.DayNight.Dialog.Alert"/>
+
+    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <!-- loader -->
+        <item name="android:windowBackground">@drawable/loader_background_splash</item>
+    </style>
 </resources>

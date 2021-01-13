@@ -1,16 +1,22 @@
 package net.veldor.flibustaloader.workers;
 
+import android.app.Notification;
 import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.work.ForegroundInfo;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
+
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.TorWebClient;
+import net.veldor.flibustaloader.notificatons.Notificator;
+import net.veldor.flibustaloader.utils.MyPreferences;
 
 public class PeriodicCheckFlibustaAvailabilityWorker extends Worker {
 
@@ -24,30 +30,65 @@ public class PeriodicCheckFlibustaAvailabilityWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 27: CHECK AVAILABILITY STARTED");
-        if (!isStopped()) {
-            // check availability
-            try {
-                TorWebClient webClient = new TorWebClient();
-                String answer = webClient.request(App.BASE_URL);
-                if (answer.length() > 0) {
-                    answer = webClient.request(App.BASE_URL + "/opds/");
-                    if (answer.length() > 0) {
-                        // флибуста снова с нами!
-                        App.getInstance().getNotificator().notifyFlibustaIsBack();
-                        WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(ACTION);
-                        WorkManager.getInstance(App.getInstance()).cancelUniqueWork(ACTION);
-                    }
+        if(MyPreferences.getInstance().isCheckAvailability() && !App.getInstance().isExternalVpn()){
+            Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 32: START CHECK AVAIL");
+            // помечу рабочего важным
+            // Mark the Worker as important
+            setForegroundAsync(createForegroundInfo());
+
+            AndroidOnionProxyManager tor = App.getInstance().mLoadedTor.getValue();
+            while (tor == null) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+                tor = App.getInstance().mLoadedTor.getValue();
+            }
+            // теперь подожду, пока TOR дозагрузится
+            while (!tor.isBootstrapped()) {
+                try {
+                    //noinspection BusyWait
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // готово, проверю доступность
+            TorWebClient webClient = null;
+            try {
+                webClient = new TorWebClient();
             } catch (TorNotLoadedException e) {
-                Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 42: can't check availability");
                 e.printStackTrace();
+            }
+            if (webClient == null) {
+                return Result.success();
+            }
+
+            String url = "http://flibustahezeous3.onion";
+
+            String answer = webClient.requestNoMirror(url);
+
+            if (answer != null && answer.length() > 0) {
+                App.getInstance().getNotificator().notifyFlibustaIsBack();
+                WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(ACTION);
+                WorkManager.getInstance(App.getInstance()).cancelUniqueWork(ACTION);
             }
         }
         else{
-            Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 47: i m stopped");
+            WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(ACTION);
+            WorkManager.getInstance(App.getInstance()).cancelUniqueWork(ACTION);
         }
-        Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 47: availability checked");
         return Result.success();
+    }
+
+    @NonNull
+    private ForegroundInfo createForegroundInfo() {
+        // Build a notification using bytesRead and contentLength
+
+        Notification notification = Notificator.getInstance().getCheckAvailabilityNotification();
+
+        return new ForegroundInfo(Notificator.CHECK_AVAILABILITY_NOTIFICATION, notification);
     }
 }

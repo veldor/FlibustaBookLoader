@@ -66,22 +66,19 @@ public class SubscribesAdapter extends RecyclerView.Adapter<SubscribesAdapter.Vi
             View container = mBinding.getRoot();
             View deleteBtn = container.findViewById(R.id.deleteItemBtn);
             if(deleteBtn != null){
-                deleteBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        switch (item.type) {
-                            case "book":
-                                App.getInstance().getBooksSubscribe().deleteValue(item.name);
-                                break;
-                            case "author":
-                                App.getInstance().getAuthorsSubscribe().deleteValue(item.name);
-                                break;
-                            case "sequence":
-                                App.getInstance().getSequencesSubscribe().deleteValue(item.name);
-                                break;
-                        }
-
+                deleteBtn.setOnClickListener(v -> {
+                    switch (item.type) {
+                        case "book":
+                            App.getInstance().getBooksSubscribe().deleteValue(item.name);
+                            break;
+                        case "author":
+                            App.getInstance().getAuthorsSubscribe().deleteValue(item.name);
+                            break;
+                        case "sequence":
+                            App.getInstance().getSequencesSubscribe().deleteValue(item.name);
+                            break;
                     }
+
                 });
             }
         }

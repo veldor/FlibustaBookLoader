@@ -1,13 +1,11 @@
 package net.veldor.flibustaloader.ui;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,28 +28,25 @@ import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.FilesHandler;
-import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.TransportUtils;
 import net.veldor.flibustaloader.workers.ReserveSettingsWorker;
 import net.veldor.flibustaloader.workers.RestoreSettingsWorker;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.Objects;
 
 import lib.folderpicker.FolderPicker;
 
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 import static androidx.work.WorkInfo.State.SUCCEEDED;
 
+
+@SuppressWarnings({"unused", "RedundantSuppression"})
 public class SettingsActivity extends BaseActivity implements PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
 
     @Override
@@ -128,7 +123,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                 settingsRestorePref.setOnPreferenceClickListener(preference -> {
                     Toast.makeText(getContext(), "Выберите сохранённый ранее файл с настройками.", Toast.LENGTH_LONG).show();
                     // открою окно выбота файла для восстановления
-                    Intent intent = null;
+                    Intent intent;
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                         intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                     }
@@ -348,7 +343,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
             Log.d("surprise", "SettingsActivity.java 331 showAlterDirSelectDialog: start select");
             FragmentActivity activity = getActivity();
             if(activity != null){
-                new AlertDialog.Builder(activity)
+                new AlertDialog.Builder(activity, R.style.MyDialogStyle)
                         .setTitle("Альтернативный выбор папки")
                         .setMessage("На случай, если папка для скачивания не выбирается основным методом. Только для совместимости, никаких преимуществ этот способ не даёт, также выбранная папка может сбрасываться при перезагрузке смартфона и её придётся выбирать заново")
                         .setCancelable(true)

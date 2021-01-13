@@ -11,7 +11,7 @@ import android.view.View;
 import java.io.IOException;
 
 public class GIFView extends View {
-    private Movie movie;
+    private final Movie movie;
     private long movie_start;
     public GIFView(Context context) throws IOException {
         super(context);

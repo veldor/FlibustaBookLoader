@@ -27,7 +27,6 @@ public class MyPreferences {
     private static final String PREF_USE_FILTER = "use filter";
     private static final String PREF_CHECK_AVAILABILITY = "check availability";
     private static final String PREF_ONLY_RUSSIAN = "only russian";
-    private static final String AUTH_COOKIE_NAME = "auth cookie name";
     private static final String AUTH_COOKIE_VALUE = "auth cookie value";
     private static final String PREF_BEG_DONATION = "beg donation";
     private static MyPreferences instance;

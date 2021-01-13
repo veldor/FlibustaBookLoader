@@ -162,7 +162,7 @@
     <string name="pref_create_author_folder" translatable="false">create author folder</string>
     <string name="pref_create_sequence_folder" translatable="false">create sequence folder</string>
     <string name="navigation_header_text">Stay home. read books</string>
-    <string name="show_authors_list_buton">Show authors list</string>
+    <string name="show_authors_list_button">Show authors list</string>
     <string name="pref_autostart_search" translatable="false">autostart search</string>
     <string name="pref_custom_flibusta_mirror" translatable="false">custom flibusta mirror</string>
     <string name="add_bookmark">Add bookmark</string>
@@ -192,7 +192,7 @@
     <string name="message_prepare_request">Prepare request</string>
     <string name="send_request_message">Send request</string>
     <string name="success_login_message">Success login</string>
-    <string name="response_received_message">Responce received</string>
+    <string name="response_received_message">Response received</string>
     <string name="pref_download_location_alt" translatable="false">download location alt</string>
     <string name="title_change_download_folder_alt">Change download folder(alternative)</string>
     <string name="tor_title">TOR</string>
@@ -202,11 +202,11 @@
     <string name="books_download_progress_channel_description">Book download progress</string>
     <string name="is_ebook_title">This is e-book</string>
     <string name="logout">Log-out</string>
-    <string name="check_flibusta_avaliability_message">Check for Flibusta availability</string>
-    <string name="flibusta_not_availiable_message">Oops, Flibusta is not avaliable</string>
+    <string name="check_flibusta_availability_message">Check for Flibusta availability</string>
+    <string name="flibusta_not_available_message">Oops, Flibusta is not available</string>
     <string name="close_app_message">Close app</string>
     <string name="try_connect_again_message">Connect again</string>
-    <string name="flibusta_not_avaliable_body">Flibusta don\'t respond. Close app, try again, or let me check, until server is coming back (you get notification, when it is)</string>
+    <string name="flibusta_not_available_body">Flibusta don\'t respond. Close app, try again, or let me check, until server is coming back (you get notification, when it is)</string>
     <string name="start_checker_message">Start checker</string>
     <string name="show_main_message">Continue</string>
     <string name="pref_check_availability" translatable="false">pref_check_availability</string>
@@ -215,4 +215,13 @@
     <string name="inspection_disabled_message">Inspection disabled. You can re-enable it in connectivity settings</string>
     <string name="error_load_page_title">Error load page</string>
     <string name="error_load_page_message">Error connection. Sorry for this, try later or restart app</string>
+    <string name="foreground_channel_description">foreground notifications</string>
+    <string name="option_re_enabled_message">Option can be re-enabled in connectivity settings</string>
+    <string name="bookmark_name_item">bookmark name</string>
+    <string name="disable_connectivity_check_message">Disable inspection</string>
+    <string name="check_too_long_message">Check is too long. You can skip it, disable it or wait more</string>
+    <string name="skip_inspection_item">Skip inspection</string>
+    <string name="wait_more_item">Wait more</string>
+    <string name="enable_wifi_title">Enable Wi-Fi</string>
+    <string name="wifi_enable_message">Looks like wi-fi disabled. You can enable it for surfing</string>
 </resources>

@@ -39,35 +39,31 @@ public class CheckUpdateWorker extends Worker {
         HttpGet httpget = new HttpGet(Updater.GITHUB_RELEASES_URL);
         try {
         // кастомный обработчик ответов
-        ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
-
-            @Override
-            public String handleResponse(HttpResponse response){
-                int status = response.getStatusLine().getStatusCode();
-                if (status >= 200 && status < 300) {
-                    HttpEntity entity = response.getEntity();
-                    try {
-                        String body = EntityUtils.toString(entity);
-                        JSONObject releaseInfo = new JSONObject(body);
-                        String lastVersion = releaseInfo.getString(Updater.GITHUB_APP_VERSION);
-                        String currentVersion = BuildConfig.VERSION_NAME;
-                        if(!lastVersion.equals(currentVersion)){
-                            // версии отличаются
-                            Updater.newVersion.postValue(true);
-                            Log.d("surprise", "CheckUpdateWorker handleResponse 57: have new version");
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+        ResponseHandler<String> responseHandler = response -> {
+            int status = response.getStatusLine().getStatusCode();
+            if (status >= 200 && status < 300) {
+                HttpEntity entity = response.getEntity();
+                try {
+                    String body = EntityUtils.toString(entity);
+                    JSONObject releaseInfo = new JSONObject(body);
+                    String lastVersion = releaseInfo.getString(Updater.GITHUB_APP_VERSION);
+                    String currentVersion = BuildConfig.VERSION_NAME;
+                    if(!lastVersion.equals(currentVersion)){
+                        // версии отличаются
+                        Updater.newVersion.postValue(true);
+                        Log.d("surprise", "CheckUpdateWorker handleResponse 57: have new version");
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-                else{
-                    // неверный ответ с сервера
-                    Log.d("surprise", "CheckUpdateWorker handleResponse: wrong update server answer");
-                }
-                return null;
             }
+            else{
+                // неверный ответ с сервера
+                Log.d("surprise", "CheckUpdateWorker handleResponse: wrong update server answer");
+            }
+            return null;
         };
         // выполню запрос
             httpclient.execute(httpget, responseHandler);

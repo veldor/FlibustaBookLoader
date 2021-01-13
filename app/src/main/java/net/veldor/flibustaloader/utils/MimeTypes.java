@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 public class MimeTypes {
 
-    public static final String MIME_TYPE = "mime_type";
     public static final String[] MIMES_LIST = new String[]{"fb2", "mobi", "epub", "pdf", "djvu", "html", "txt", "rtf"};
 
     private static final HashMap<String, String> MIMES = new HashMap<String, String>() {{
@@ -107,9 +106,6 @@ public class MimeTypes {
     }
 
     public static boolean isBookFormat(String mime) {
-        if(DOWNLOAD_MIMES.containsKey(mime)){
-            return true;
-        }
-        return false;
+        return DOWNLOAD_MIMES.containsKey(mime);
     }
 }

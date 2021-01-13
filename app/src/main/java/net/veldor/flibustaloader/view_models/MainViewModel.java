@@ -51,11 +51,6 @@ public class MainViewModel extends GlobalViewModel implements MyViewModelInterfa
         App.getInstance().switchViewMode(type);
     }
 
-    // загрузка ядра TOR
-    public LiveData<AndroidOnionProxyManager> getTor() {
-        return App.getInstance().mTorManager;
-    }
-
     public LiveData<Boolean> startCheckUpdate() {
         return Updater.checkUpdate();
     }

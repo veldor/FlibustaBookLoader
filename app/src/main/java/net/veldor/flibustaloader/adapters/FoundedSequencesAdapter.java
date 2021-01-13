@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.recyclerview.widget.RecyclerView;
@@ -117,7 +118,7 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
                 mRootView.setBackgroundColor(App.getInstance().getResources().getColor(R.color.selected_item_background));
             }
             else{
-                mRootView.setBackground(App.getInstance().getResources().getDrawable(R.drawable.sequence_layout));
+                mRootView.setBackground(ResourcesCompat.getDrawable(App.getInstance().getResources(), R.drawable.sequence_layout, null));
             }
         }
     }

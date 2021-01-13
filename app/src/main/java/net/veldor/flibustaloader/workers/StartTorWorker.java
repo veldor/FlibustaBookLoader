@@ -35,7 +35,6 @@ public class StartTorWorker extends Worker {
             try {
                 Log.d("surprise", "StartTorWorker doWork: start tor, try # " + App.sTorStartTry);
                 startTor();
-                Log.d("surprise", "StartTorWorker doWork: tor success start");
                 // обнулю счётчик попыток
                 App.sTorStartTry = 0;
                 return Result.success();

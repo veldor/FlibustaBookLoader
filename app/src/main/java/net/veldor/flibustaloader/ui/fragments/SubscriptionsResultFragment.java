@@ -8,12 +8,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -117,7 +117,7 @@ public class SubscriptionsResultFragment extends Fragment {
     private void showDownloadsDialog(ArrayList<DownloadLink> downloadLinks) {
         LayoutInflater inflate = getLayoutInflater();
         @SuppressLint("InflateParams") View view = inflate.inflate(R.layout.confirm_book_type_select, null);
-        Switch checker = view.findViewById(R.id.save_only_selected);
+        SwitchCompat checker = view.findViewById(R.id.save_only_selected);
         if (checker != null) {
             checker.setChecked(App.getInstance().isSaveOnlySelected());
             checker.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -167,7 +167,7 @@ public class SubscriptionsResultFragment extends Fragment {
         dialogBuilder.setItems(linksArray, (dialogInterface, i) -> {
             // проверю, выбрано ли сохранение формата загрузки
             Dialog dialog = (Dialog) dialogInterface;
-            Switch switcher = dialog.findViewById(R.id.save_type_selection);
+            SwitchCompat switcher = dialog.findViewById(R.id.save_type_selection);
             if (switcher.isChecked()) {
                 // запомню выбор формата
                 App.getInstance().saveFavoriteMime(linksArray[i]);

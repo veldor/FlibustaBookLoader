@@ -106,13 +106,9 @@ public class GifDialog {
             if (positiveBtnText != null) {
                 pBtn.setText(positiveBtnText);
 
-                pBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        if (pListener != null) pListener.OnClick();
-                        dialog.dismiss();
-                    }
-
+                pBtn.setOnClickListener(view -> {
+                    if (pListener != null) pListener.OnClick();
+                    dialog.dismiss();
                 });
             } else {
                 pBtn.setVisibility(View.GONE);

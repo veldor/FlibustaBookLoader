@@ -48,7 +48,7 @@
     <string name="download_books_title">Загрузка началась</string>
     <string name="download_books_msg">Загружаю все выбранные книги. Процесс может быть долгим, потерпите.</string>
     <string name="sort_list">Сортировка</string>
-    <string name="force_start">Принудительный запуск</string>
+    <string name="force_start">Пропустить</string>
     <string name="clear_search_history_message">Удалить автозаполнение поиска</string>
     <string name="subscribe_msg">Подписаться</string>
     <string name="download_folder_changed_message_new">Папка загрузок изменена</string>
@@ -150,7 +150,7 @@
     <string name="title_check_update_now">Проверить обновление сейчас</string>
     <string name="view_preferences">Внешний вид</string>
     <string name="navigation_header_text">Сидите дома,читайте книги</string>
-    <string name="show_authors_list_buton">Показать список авторов</string>
+    <string name="show_authors_list_button">Показать список авторов</string>
     <string name="navigation_go_bookmarks">Закладки</string>
     <string name="add_bookmark">Добавить закладку</string>
     <string name="message_create_author_folder">Создавать папки авторов</string>
@@ -183,11 +183,11 @@
     <string name="books_download_progress_channel_description">Тут выводится сообщение с прогрессом загрузки книги</string>
     <string name="is_ebook_title">У меня читалка</string>
     <string name="logout">Разлогиниться</string>
-    <string name="check_flibusta_avaliability_message">Проверяю доступность Флибусты</string>
-    <string name="flibusta_not_availiable_message">Ой, Флибуста недоступна</string>
+    <string name="check_flibusta_availability_message">Проверяю доступность Флибусты</string>
+    <string name="flibusta_not_available_message">Ой, Флибуста недоступна</string>
     <string name="try_connect_again_message">Попробовать подключиться ещё раз</string>
     <string name="close_app_message">Закрыть приложение</string>
-    <string name="flibusta_not_avaliable_body">Похоже, сервер Флибусты опять лёг. Мы можем попробовать подключиться ещё раз или закрыть всё и попробовать как-нибудь потом. А есть ещё вариант- нажмите кнопку \'Уведомить о доступности\' и получите уведомление, когда сервер ответит</string>
+    <string name="flibusta_not_available_body">Похоже, сервер Флибусты опять лёг. Мы можем попробовать подключиться ещё раз или закрыть всё и попробовать как-нибудь потом. А есть ещё вариант- нажмите кнопку \'Уведомить о доступности\' и получите уведомление, когда сервер ответит</string>
     <string name="start_checker_message">Уведомить о доступности</string>
     <string name="show_main_message">Продолжить</string>
     <string name="check_server_on_start">Проверять доступность Флибусты на старте приложения</string>
@@ -195,4 +195,11 @@
     <string name="inspection_disabled_message">Проверка отключена. Вы можете повторно включить её в настройках соединения</string>
     <string name="error_load_page_title">Ошибка получения данных</string>
     <string name="error_load_page_message">Что-то пошло не так. Мне очень жаль. Вы можете повторить попытку или попробовать ещё раз позднее.</string>
+    <string name="disable_connectivity_check_message">Отключить проверку</string>
+    <string name="check_too_long_message">Проверка доступности сервера занимает больше времени, чем обычно. Вы можете подождать ещё(возможно, у вас медленное соединение), пропустить проверку или отключить проверку</string>
+    <string name="foreground_channel_description">Фоновые уведомления</string>
+    <string name="option_re_enabled_message">Проверку можно снова активировать в настройках соединения</string>
+    <string name="bookmark_name_item">Имя закладки</string>
+    <string name="wait_more_item">Нет, подождать ещё</string>
+    <string name="skip_inspection_item">Пропустить проверку</string>
 </resources>

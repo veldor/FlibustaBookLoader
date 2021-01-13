@@ -69,14 +69,11 @@ public class DownloadScheduleAdapter extends RecyclerView.Adapter<DownloadSchedu
             View container = mBinding.getRoot();
             View deleteItem = container.findViewById(R.id.deleteItemBtn);
             if(deleteItem != null){
-                deleteItem.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        // найду в очереди данную книгу и удалю её из очереди
-                            DownloadBooksWorker.removeFromQueue(scheduleItem);
-                            //DownloadScheduleAdapter.this.notifyDataSetChanged();
-                            Toast.makeText(App.getInstance(), "Книга удалена из очереди скачивания", Toast.LENGTH_LONG).show();
-                    }
+                deleteItem.setOnClickListener(view -> {
+                    // найду в очереди данную книгу и удалю её из очереди
+                        DownloadBooksWorker.removeFromQueue(scheduleItem);
+                        //DownloadScheduleAdapter.this.notifyDataSetChanged();
+                        Toast.makeText(App.getInstance(), "Книга удалена из очереди скачивания", Toast.LENGTH_LONG).show();
                 });
             }
         }

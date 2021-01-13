@@ -6,7 +6,6 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import net.veldor.flibustaloader.database.entity.Bookmark;
-import net.veldor.flibustaloader.database.entity.ReadedBooks;
 
 import java.util.List;
 

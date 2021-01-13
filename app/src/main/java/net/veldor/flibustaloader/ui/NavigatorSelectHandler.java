@@ -28,55 +28,53 @@ public class NavigatorSelectHandler implements NavigationView.OnNavigationItemSe
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         Log.d("surprise", "OPDSActivityNew onNavigationItemSelected 62: click navigation");
         int itemId = item.getItemId();
-        switch (itemId){
-            case R.id.goToWebView:
-                App.getInstance().setView(App.VIEW_WEB);
-                Intent intent = new Intent(mContext, WebViewActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                mContext.startActivity(intent);
-                mContext.finish();
-                break;
-            case R.id.goToOPDS:
-                App.getInstance().setView(App.VIEW_ODPS);
-                intent = new Intent(mContext, OPDSActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                mContext.startActivity(intent);
-                mContext.finish();
-                break;
-            case R.id.goToDownloadsList:
-                intent = new Intent(mContext, ActivityBookDownloadSchedule.class);
-                mContext.startActivity(intent);
-                tryCloseDrawer();
-                break;
-            case R.id.goToSubscriptions:
-                intent = new Intent(mContext, SubscriptionsActivity.class);
-                mContext.startActivity(intent);
-                tryCloseDrawer();
-                break;
-            case R.id.goToBookmarks:
-                intent = new Intent(mContext, BookmarksActivity.class);
-                mContext.startActivity(intent);
-                tryCloseDrawer();
-                break;
-            case R.id.goToBlacklist:
-                intent = new Intent(mContext, BlacklistActivity.class);
-                mContext.startActivity(intent);
-                tryCloseDrawer();
-                break;
-            case R.id.goToSettings:
-                intent = new Intent(mContext, SettingsActivity.class);
-                mContext.startActivity(intent);
-                tryCloseDrawer();
-                break;
-            case R.id.buyCoffee:
-                new DonationDialog.Builder(mContext).build().show();
-                tryCloseDrawer();
-                break;
-            case R.id.testAppInvite:
-                Log.d("surprise", "NavigatorSelectHandler onNavigationItemSelected 66: selected append test");
-                intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
-                mContext.startActivity(intent);
+        if (itemId == R.id.goToWebView) {
+            App.getInstance().setView(App.VIEW_WEB);
+            Intent intent = new Intent(mContext, WebViewActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            mContext.startActivity(intent);
+            mContext.finish();
+        } else if (itemId == R.id.goToOPDS) {
+            Intent intent;
+            App.getInstance().setView(App.VIEW_ODPS);
+            intent = new Intent(mContext, OPDSActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            mContext.startActivity(intent);
+            mContext.finish();
+        } else if (itemId == R.id.goToDownloadsList) {
+            Intent intent;
+            intent = new Intent(mContext, ActivityBookDownloadSchedule.class);
+            mContext.startActivity(intent);
+            tryCloseDrawer();
+        } else if (itemId == R.id.goToSubscriptions) {
+            Intent intent;
+            intent = new Intent(mContext, SubscriptionsActivity.class);
+            mContext.startActivity(intent);
+            tryCloseDrawer();
+        } else if (itemId == R.id.goToBookmarks) {
+            Intent intent;
+            intent = new Intent(mContext, BookmarksActivity.class);
+            mContext.startActivity(intent);
+            tryCloseDrawer();
+        } else if (itemId == R.id.goToBlacklist) {
+            Intent intent;
+            intent = new Intent(mContext, BlacklistActivity.class);
+            mContext.startActivity(intent);
+            tryCloseDrawer();
+        } else if (itemId == R.id.goToSettings) {
+            Intent intent;
+            intent = new Intent(mContext, SettingsActivity.class);
+            mContext.startActivity(intent);
+            tryCloseDrawer();
+        } else if (itemId == R.id.buyCoffee) {
+            new DonationDialog.Builder(mContext).build().show();
+            tryCloseDrawer();
+        } else if (itemId == R.id.testAppInvite) {
+            Intent intent;
+            Log.d("surprise", "NavigatorSelectHandler onNavigationItemSelected 66: selected append test");
+            intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
+            mContext.startActivity(intent);
         }
         return false;
     }

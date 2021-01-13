@@ -6,12 +6,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.RadioGroup;
-import android.widget.Switch;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -70,19 +69,14 @@ public class BlacklistActivity extends BaseActivity {
         mRadioContainer = findViewById(R.id.blacklist_type);
         if (mRadioContainer != null) {
             mRadioContainer.setOnCheckedChangeListener((group, checkedId) -> {
-                switch (checkedId) {
-                    case R.id.blacklistBook:
-                        showBooks();
-                        break;
-                    case R.id.blacklistAuthor:
-                        showAuthors();
-                        break;
-                    case R.id.blacklistSequence:
-                        showSequences();
-                        break;
-                    case R.id.blacklistGenre:
-                        showGenres();
-                        break;
+                if (checkedId == R.id.blacklistBook) {
+                    showBooks();
+                } else if (checkedId == R.id.blacklistAuthor) {
+                    showAuthors();
+                } else if (checkedId == R.id.blacklistSequence) {
+                    showSequences();
+                } else if (checkedId == R.id.blacklistGenre) {
+                    showGenres();
                 }
             });
         }
@@ -92,7 +86,7 @@ public class BlacklistActivity extends BaseActivity {
             subscribeBtn.setOnClickListener(this::addToBlacklist);
         }
 
-        Switch switchOnlyRussian = findViewById(R.id.switchOnlyRussian);
+        SwitchCompat switchOnlyRussian = findViewById(R.id.switchOnlyRussian);
         switchOnlyRussian.setChecked(MyPreferences.getInstance().isOnlyRussian());
         switchOnlyRussian.setOnCheckedChangeListener((buttonView, isChecked) -> MyPreferences.getInstance().setOnlyRussian(isChecked));
     }
@@ -101,20 +95,15 @@ public class BlacklistActivity extends BaseActivity {
         String value = mInput.getText().toString().trim();
         if (!value.isEmpty()) {
             // добавлю подписку в зависимости от типа
-            switch (mRadioContainer.getCheckedRadioButtonId()) {
-                case R.id.blacklistBook:
-                    mBooksBlacklistContainer.addValue(value);
-                    break;
-                case R.id.blacklistAuthor:
-                    mAuthorsBlacklistContainer.addValue(value);
-                    break;
-                case R.id.blacklistSequence:
-                    mSequencesBlacklistContainer.addValue(value);
-                    break;
-                case R.id.blacklistGenre:
-                    mGenresBlacklistContainer.addValue(value);
-                    break;
-
+            int checkedRadioButtonId = mRadioContainer.getCheckedRadioButtonId();
+            if (checkedRadioButtonId == R.id.blacklistBook) {
+                mBooksBlacklistContainer.addValue(value);
+            } else if (checkedRadioButtonId == R.id.blacklistAuthor) {
+                mAuthorsBlacklistContainer.addValue(value);
+            } else if (checkedRadioButtonId == R.id.blacklistSequence) {
+                mSequencesBlacklistContainer.addValue(value);
+            } else if (checkedRadioButtonId == R.id.blacklistGenre) {
+                mGenresBlacklistContainer.addValue(value);
             }
             mInput.setText("");
             Toast.makeText(this, "Добавляю значение " + value, Toast.LENGTH_LONG).show();

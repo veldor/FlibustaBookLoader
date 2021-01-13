@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import static net.veldor.flibustaloader.workers.CheckSubscriptionsWorker.PERIODIC_CHECK_TAG;
 
+@SuppressWarnings("SameReturnValue")
 public class SubscriptionsViewModel extends ViewModel {
 
     public static final MutableLiveData<Boolean> sSubscriptionsChecked = new MutableLiveData<>();

@@ -16,8 +16,6 @@ import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.io.IOException;
 
-import cz.msebera.android.httpclient.conn.ConnectTimeoutException;
-
 public class CheckFlibustaAvailabilityWorker extends Worker {
 
 
@@ -55,6 +53,8 @@ public class CheckFlibustaAvailabilityWorker extends Worker {
                     outputDataBuilder.putBoolean(AVAILABILITY_STATE, true);
                 }
                 else{
+                    // запущу периодическую проверку доступности зеркала
+                    App.getInstance().startCheckWorker();
                     // попробую использовать резервное подключение
                     url = "https://flibusta.appspot.com/";
                     if(inspect(url)){

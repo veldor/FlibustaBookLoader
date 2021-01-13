@@ -78,13 +78,10 @@ public class FilesHandler {
             // сравню полученный формат с настоящим. Если полученный отличается от настоящего- поменяю исходный
             String extension = Grammar.getExtension(book.name);
             if(!extension.equals(trueFormatExtension)){
-                Log.d("surprise", "FilesHandler getDownloadFile 81: realExtension " + extension + " not equal real extension " + trueFormatExtension);
                 book.format = trueFormat;
                 book.name = Grammar.changeExtension(book.name, trueFormatExtension);
             }
         }
-        Log.d("surprise", "FilesHandler getDownloadFile 76: requested format " + book.format);
-        Log.d("surprise", "FilesHandler getDownloadFile 76: requested name " + book.name);
             // получу имя файла
             DocumentFile downloadsDir = App.getInstance().getDownloadDir();
             if(MyPreferences.getInstance().isCreateSequencesDir() && book.reservedSequenceName != null){

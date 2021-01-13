@@ -3,22 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/back_3">
+    android:theme="@style/Theme.AppCompat.DayNight"
+    android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/textView5"
+        android:textStyle="bold"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:shadowColor="#000000"
-        android:shadowDx="3"
-        android:shadowDy="3"
-        android:shadowRadius="3"
         android:text="@string/initialize_tor_message"
-        android:textColor="@color/white"
         android:textSize="20sp"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBottom_toTopOf="@+id/progressTorLoadStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/progressTorLoadStatus"
@@ -26,25 +25,21 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:paddingStart="30dp"
+        android:textStyle="bold"
         android:paddingEnd="30dp"
-        android:shadowColor="#000000"
-        android:shadowDx="1.5"
-        android:shadowDy="1.3"
-        android:shadowRadius="1.6"
-        android:textColor="@color/white"
         android:textSize="15sp"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/app_version"
+        android:textStyle="bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:shadowColor="#000000"
-        android:shadowDx="3"
-        android:shadowDy="3"
-        android:shadowRadius="3"
         android:text="@string/default_app_version"
-        android:textColor="@color/white"
         app:layout_constraintBottom_toTopOf="@+id/testStartApp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -52,16 +47,12 @@
 
     <Button
         android:id="@+id/testStartApp"
+        android:textStyle="bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/transparent_bg_bordered_button"
         android:padding="10dp"
-        android:shadowColor="#000000"
-        android:shadowDx="3"
-        android:shadowDy="3"
-        android:shadowRadius="3"
         android:text="@string/force_start"
-        android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -72,44 +63,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/use_hardware_acceleration_title"
-        android:textColor="@color/dark_gray"
         app:layout_constraintBottom_toTopOf="@+id/app_version"
         app:layout_constraintEnd_toEndOf="parent"
+        android:textStyle="bold"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/isEbook"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/is_ebook_title"
-        android:textColor="@color/dark_gray"
-        app:layout_constraintBottom_toTopOf="@+id/useHardwareAccelerationSwitcher"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent" />
 
     <ProgressBar
         android:id="@+id/progressBarCircle"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="300dp"
-        android:layout_height="match_parent"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:background="@drawable/drawable_circle_dark_blue"
         android:indeterminate="false"
+        android:padding="20dp"
         android:max="300"
         android:progress="100"
-        android:progressDrawable="@drawable/drawable_circle_yellow"
-        android:rotation="-90"
-        android:shadowColor="#000000"
-        android:shadowDx="3"
-        android:shadowDy="3"
-        android:shadowRadius="3"
-        android:textColor="@color/background_color"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/progressTorLoadStatus" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

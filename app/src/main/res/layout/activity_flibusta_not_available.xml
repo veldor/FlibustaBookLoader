@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="@string/flibusta_not_availiable_message"
+        android:text="@string/flibusta_not_available_message"
         android:textColor="#ff0000"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:text="@string/flibusta_not_avaliable_body"
+        android:text="@string/flibusta_not_available_body"
         app:layout_constraintTop_toBottomOf="@+id/textView4" />
     <Button
         android:id="@+id/disableInspectionButton"

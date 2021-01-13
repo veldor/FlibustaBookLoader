@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp">
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:layout_marginTop="10dp"
                 android:id="@+id/switchOnlyRussian"
                 android:layout_width="match_parent"
@@ -103,7 +103,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/transparent_bg_bordered_button"
-                android:foreground="?android:attr/selectableItemBackground"
                 android:padding="10dp"
                 android:text="@string/add_to_blacklist_msg"
                 app:layout_constraintEnd_toEndOf="parent"

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/save_type_selection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,7 +16,7 @@
         android:padding="10dp"
         android:gravity="center_horizontal" />
 
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/save_only_selected"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toBottomOf="@+id/save_type_selection"
         android:gravity="center_horizontal" />
 
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/reDownload"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

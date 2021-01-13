@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
@@ -29,7 +28,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,10 +35,11 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -66,7 +65,6 @@ import net.veldor.flibustaloader.dialogs.GifDialog;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.Author;
-import net.veldor.flibustaloader.selections.BlacklistItem;
 import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
@@ -175,7 +173,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     // индекс последнего элемента, по которому кликал пользователь
     public static Integer sElementForSelectionIndex = -1;
     private Button mShowAuthorsListActivator;
-    private TextView mCnnectionTypeView;
+    private TextView mConnectionTypeView;
     private AlertDialog mPageNotLoadedDialog;
 
     @Override
@@ -196,12 +194,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mShowAuthorsListActivator = findViewById(R.id.showAuthorsListButton);
 
         if (mShowAuthorsListActivator != null) {
-            mShowAuthorsListActivator.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    doSearch(URLHelper.getBaseOPDSUrl() + "/opds/authorsindex", false);
-                }
-            });
+            mShowAuthorsListActivator.setOnClickListener(v -> doSearch(URLHelper.getBaseOPDSUrl() + "/opds/authorsindex", false));
         }
 
         // определю кнопки прыжков по результатам
@@ -411,20 +404,17 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void setupObservers() {
         super.setupObservers();
-        isLoadError.observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean hasError) {
-                if(hasError){
-                    // покажу окошко и сообщу, что загрузка не удалась
-                    showPageNotLoadedDialog();
-                }
+        isLoadError.observe(this, hasError -> {
+            if (hasError) {
+                // покажу окошко и сообщу, что загрузка не удалась
+                showPageNotLoadedDialog();
             }
         });
     }
 
     private void showPageNotLoadedDialog() {
-        if(mPageNotLoadedDialog == null){
-            mPageNotLoadedDialog = new AlertDialog.Builder(this)
+        if (mPageNotLoadedDialog == null) {
+            mPageNotLoadedDialog = new AlertDialog.Builder(this, R.style.MyDialogStyle)
                     .setTitle(getString(R.string.error_load_page_title))
                     .setMessage(getString(R.string.error_load_page_message))
                     .setPositiveButton(android.R.string.ok, null)
@@ -445,19 +435,14 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void checkSearchType() {
         // получу выбранный тип поиска
-        switch (mSearchRadioContainer.getCheckedRadioButtonId()) {
-            case R.id.searchBook:
-                sSearchType = SEARCH_TYPE_BOOKS;
-                break;
-            case R.id.searchAuthor:
-                sSearchType = SEARCH_TYPE_AUTHORS;
-                break;
-            case R.id.searchSequence:
-                sSearchType = SEARCH_TYPE_SEQUENCES;
-                break;
-            case R.id.searchGenre:
-                sSearchType = SEARCH_TYPE_GENRE;
-                break;
+        if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchBook) {
+            sSearchType = SEARCH_TYPE_BOOKS;
+        } else if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchAuthor) {
+            sSearchType = SEARCH_TYPE_AUTHORS;
+        } else if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchSequence) {
+            sSearchType = SEARCH_TYPE_SEQUENCES;
+        } else if (mSearchRadioContainer.getCheckedRadioButtonId() == R.id.searchGenre) {
+            sSearchType = SEARCH_TYPE_GENRE;
         }
     }
 
@@ -491,7 +476,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showReDownloadDialog() {
         if (!OPDSActivity.this.isFinishing()) {
-            new AlertDialog.Builder(OPDSActivity.this)
+            new AlertDialog.Builder(OPDSActivity.this, R.style.MyDialogStyle)
                     .setTitle(R.string.re_download_dialog_header_message)
                     .setMessage(R.string.re_download_dialog_body_message)
                     .setCancelable(true)
@@ -511,7 +496,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         super.setupInterface();
 
         // определю тип соединения
-        mCnnectionTypeView = findViewById(R.id.connectionType);
+        mConnectionTypeView = findViewById(R.id.connectionType);
 
         // скрою переход на данное активити
         Menu menuNav = mNavigationView.getMenu();
@@ -537,14 +522,15 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mRootView = findViewById(R.id.rootView);
 
         if (mRootView != null) {
-            if (isEInk() || MyPreferences.getInstance().isEInk()) {
+            if (MyPreferences.getInstance().isEInk()) {
                 //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
+                Log.d("surprise", "OPDSActivity setupInterface 529: use reader");
             } else {
                 // назначу фон
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    mRootView.setBackground(getDrawable(R.drawable.back_2));
+                    mRootView.setBackground(ContextCompat.getDrawable(this, R.drawable.back_2));
                 } else {
-                    mRootView.setBackground(getResources().getDrawable(R.drawable.back_2));
+                    mRootView.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.back_2, null));
                 }
             }
         }
@@ -560,7 +546,6 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         View downloadAllButton = findViewById(R.id.fabDownloadAll);
         if (downloadAllButton != null) {
             downloadAllButton.setOnClickListener(view -> {
-                Log.d("surprise", "OPDSActivity onClick initiate download all");
                 String favoriteFormat = App.getInstance().getFavoriteMime();
                 if (favoriteFormat != null && !favoriteFormat.isEmpty()) {
                     downloadAllBooks();
@@ -652,7 +637,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                     variants[counter] = String.format(Locale.ENGLISH, "%s \n %s \n %s \n", fb.name, fb.format, (fb.translate.isEmpty() ? "" : fb.translate));
                     counter++;
                 }
-                mDownloadSelectedDialog = new AlertDialog.Builder(this)
+                mDownloadSelectedDialog = new AlertDialog.Builder(this, R.style.MyDialogStyle)
                         .setTitle(R.string.select_books_for_download_message)
                         .setMultiChoiceItems(variants, null, (dialogInterface, i, b) -> {
                         })
@@ -752,7 +737,6 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         // отслеживание загруженной книги
         LiveData<String> downloadedBook = App.getInstance().mLiveDownloadedBookId;
         downloadedBook.observe(this, downloadedBookId -> {
-            Log.d("surprise", "OPDSActivity addObservers 642: book downloaded");
             if (downloadedBookId != null && mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
                 ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).bookDownloaded(downloadedBookId);
             }
@@ -820,7 +804,6 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 }
                 App.sSearchType = SEARCH_AUTHORS;
             }
-            Log.d("surprise", "OPDSActivity addObservers 630: found authors " + authors);
             hideLoadingButtons();
             // найденные авторы сброшены
             if (mResultsRecycler.getAdapter() != null) {
@@ -838,7 +821,6 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         });
 
         sLiveBooksFound.observe(this, books -> {
-            Log.d("surprise", "OPDSActivity addObservers 656: books HERE " + books);
             if (books != null) {
                 if (!mSearchBooksButton.isChecked()) {
                     mSearchBooksButton.setChecked(true);
@@ -875,7 +857,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         selectedBook.observe(this, book -> {
             if (book != null) {
                 Log.d("surprise", "OPDSActivity onChanged show book info");
-                BookInfoDialog = new AlertDialog.Builder(OPDSActivity.this)
+                BookInfoDialog = new AlertDialog.Builder(OPDSActivity.this, R.style.MyDialogStyle)
                         .setTitle(book.name)
                         .setMessage(Grammar.textFromHtml(book.bookInfo))
                         .setCancelable(true)
@@ -894,7 +876,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             final FoundedBook book = foundedBook;
             if (foundedBook != null) {
                 // покажу контекстное меню
-                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(OPDSActivity.this);
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(OPDSActivity.this, R.style.MyDialogStyle);
                 String[] items = new String[]{"Пометить книгу как прочитанную", "Показать страницу книги"};
                 dialogBuilder.setItems(items, (dialog, which) -> {
                     switch (which) {
@@ -996,7 +978,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void showPreview(FoundedBook foundedBook) {
         if (!OPDSActivity.this.isFinishing()) {
             Log.d("surprise", "OPDSActivity showPreview: preview url is " + foundedBook.previewUrl);
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
             LayoutInflater inflater = getLayoutInflater();
             @SuppressLint("InflateParams") View dialogLayout = inflater.inflate(R.layout.book_cover, null);
             ImageView imageContainer = dialogLayout.findViewById(R.id.cover_view);
@@ -1053,14 +1035,14 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void showSequenceSelectDialog(final ArrayList<FoundedSequence> sequences) {
         if (mSelectSequencesDialog == null) {
             // создам диалоговое окно
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
             dialogBuilder.setTitle(R.string.select_sequences_choose_message);
             mSelectSequencesDialog = dialogBuilder;
         }
         // получу сисок серий
         Iterator<FoundedSequence> iterator = sequences.iterator();
         ArrayList<String> sequencesList = new ArrayList<>();
-        for (; iterator.hasNext(); ) {
+        while (iterator.hasNext()) {
             FoundedSequence s = iterator.next();
             sequencesList.add(s.title);
 
@@ -1113,14 +1095,13 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void onResume() {
         super.onResume();
-        if(mCnnectionTypeView != null){
-            if(App.getInstance().isExternalVpn()){
-                mCnnectionTypeView.setText(getString(R.string.vpn_title));
-                mCnnectionTypeView.setBackgroundColor(Color.parseColor("#03A9F4"));
-            }
-            else{
-                mCnnectionTypeView.setText(getString(R.string.tor_title));
-                mCnnectionTypeView.setBackgroundColor(Color.parseColor("#4CAF50"));
+        if (mConnectionTypeView != null) {
+            if (App.getInstance().isExternalVpn()) {
+                mConnectionTypeView.setText(getString(R.string.vpn_title));
+                mConnectionTypeView.setBackgroundColor(Color.parseColor("#03A9F4"));
+            } else {
+                mConnectionTypeView.setText(getString(R.string.tor_title));
+                mConnectionTypeView.setBackgroundColor(Color.parseColor("#4CAF50"));
             }
         }
         if (mResultsRecycler != null && mResultsRecycler.getAdapter() instanceof MyAdapterInterface) {
@@ -1154,12 +1135,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         new Handler().postDelayed(() -> {
-            Log.d("surprise", "OPDSActivity onMenuOpened 1034: menu opened");
             if (sSearchType.equals(SEARCH_TYPE_BOOKS) || sSearchType.equals(SEARCH_TYPE_AUTHORS)) {
-                Log.d("surprise", "OPDSActivity onMenuOpened 1036: showing search");
                 mSearchView.setVisibility(View.VISIBLE);
             } else {
-                Log.d("surprise", "OPDSActivity onMenuOpened 1040: hide search");
                 mSearchView.setVisibility(View.INVISIBLE);
             }
         }, 100);
@@ -1169,7 +1147,6 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     @SuppressLint("RestrictedApi")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.d("surprise", "OPDSActivity.java 1118 onCreateOptionsMenu: create menu");
         getMenuInflater().inflate(R.menu.odps_menu, menu);
 
         // включу отображение иконок в раскрывающемся меню
@@ -1258,7 +1235,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                     sortingOptions = otherSortOptions;
             }
 
-            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this, R.style.MyDialogStyle);
             dialog.setTitle("Выберите тип сортировки")
                     .setItems(sortingOptions, (dialog1, which) -> sortList(which));
             // покажу список типов сортировки
@@ -1302,123 +1279,130 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_new:
-                showNewDialog();
-                return true;
-            case R.id.action_bookmark:
-                addBookmark();
-                return true;
-            case R.id.clearSearchHistory:
-                clearHistory();
-                return true;
-            case R.id.menuUseDarkMode:
-                mViewModel.switchNightMode();
-                new Handler().postDelayed(new ResetApp(), 100);
-                return true;
-            case R.id.hideReadSwitcher:
-                App.getInstance().switchHideRead();
-                // скрою книги, если они есть
-                if (App.getInstance().isHideRead()) {
-                    Toast.makeText(OPDSActivity.this, "Скрываю прочитанные книги", Toast.LENGTH_SHORT).show();
-                    hideReadedBooks();
-                } else {
-                    Toast.makeText(OPDSActivity.this, "Отображаю прочитанные книги", Toast.LENGTH_SHORT).show();
-                    showReadedBooks();
-                }
-                invalidateMenu();
-                return true;
-            case R.id.action_sort_by:
-                selectSorting();
-                return true;
-            case R.id.discardFavoriteType:
-                App.getInstance().discardFavoriteType();
-                Toast.makeText(this, "Выбранный тип загрузок сброшен", Toast.LENGTH_SHORT).show();
-                return true;
-            case R.id.showPreviews:
-                App.getInstance().switchShowPreviews();
-                invalidateMenu();
-                return true;
-            case R.id.switchLayout:
-                App.getInstance().switchLayout();
-                recreate();
-            case R.id.hideDigests:
-                MyPreferences.getInstance().switchDigestsHide();
-                invalidateMenu();
-                if (MyPreferences.getInstance().isDigestsHide()) {
-                    Toast.makeText(OPDSActivity.this, "Скрываю книги, у которых больше 3 авторов", Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            case R.id.menuCreateAuthorDir:
-                MyPreferences.getInstance().setCreateAuthorsDir(!item.isChecked());
-                invalidateMenu();
-                if (MyPreferences.getInstance().isCreateAuthorsDir()) {
-                    Toast.makeText(OPDSActivity.this, "Создаю папки для отдельных авторов", Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    Toast.makeText(OPDSActivity.this, "Не создаю папки для отдельных авторов", Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            case R.id.menuCreateSequenceDir:
-                MyPreferences.getInstance().setCreateSequencesDir(!item.isChecked());
-                invalidateMenu();
-                if (MyPreferences.getInstance().isCreateSequencesDir()) {
-                    Toast.makeText(OPDSActivity.this, "Создаю папки для отдельных серий", Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    Toast.makeText(OPDSActivity.this, "Не создаю папки для отдельных серий", Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            case R.id.hideDownloadedSwitcher:
-                MyPreferences.getInstance().switchDownloadedHide();
-                invalidateMenu();
-                if (MyPreferences.getInstance().isDownloadedHide()) {
-                    Toast.makeText(OPDSActivity.this, "Скрываю ранее скачанные книги", Toast.LENGTH_SHORT).show();
-                    hideDownloadedBooks();
-                } else {
-                    Toast.makeText(OPDSActivity.this, "Показываю ранее скачанные книги", Toast.LENGTH_SHORT).show();
-                    showDownloadedBooks();
-                }
-                return true;
-            case R.id.useFilter:
-                MyPreferences.getInstance().setUseFilter(!item.isChecked());
-                invalidateMenu();
-                if (MyPreferences.getInstance().isUseFilter()) {
-                    startActivity(new Intent(this, BlacklistActivity.class));
-                } else {
-                    Toast.makeText(OPDSActivity.this, "Фильтрация результатов не применяется", Toast.LENGTH_SHORT).show();
-                    showDownloadedBooks();
-                }
-                return true;
-
+        int id = item.getItemId();
+        if (id == R.id.action_new) {
+            showNewDialog();
+            return true;
+        }
+        if (id == R.id.action_bookmark) {
+            addBookmark();
+            return true;
+        }
+        if (id == R.id.menuUseDarkMode) {
+            mViewModel.switchNightMode();
+            new Handler().postDelayed(new ResetApp(), 100);
+            return true;
+        }
+        if (id == R.id.hideReadSwitcher) {
+            App.getInstance().switchHideRead();
+            // скрою книги, если они есть
+            if (App.getInstance().isHideRead()) {
+                Toast.makeText(OPDSActivity.this, "Скрываю прочитанные книги", Toast.LENGTH_SHORT).show();
+                hideReadedBooks();
+            } else {
+                Toast.makeText(OPDSActivity.this, "Отображаю прочитанные книги", Toast.LENGTH_SHORT).show();
+                showReadedBooks();
+            }
+            invalidateMenu();
+            return true;
+        }
+        if (id == R.id.action_sort_by) {
+            selectSorting();
+            return true;
+        }
+        if (id == R.id.clearSearchHistory) {
+            clearHistory();
+            return true;
+        }
+        if (id == R.id.discardFavoriteType) {
+            App.getInstance().discardFavoriteType();
+            Toast.makeText(this, "Выбранный тип загрузок сброшен", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        if (id == R.id.showPreviews) {
+            App.getInstance().switchShowPreviews();
+            invalidateMenu();
+            return true;
+        }
+        if (id == R.id.switchLayout) {
+            App.getInstance().switchLayout();
+            recreate();
+        }
+        if (id == R.id.hideDigests) {
+            MyPreferences.getInstance().switchDigestsHide();
+            invalidateMenu();
+            if (MyPreferences.getInstance().isDigestsHide()) {
+                Toast.makeText(OPDSActivity.this, "Скрываю книги, у которых больше 3 авторов", Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        }
+        if (id == R.id.menuCreateAuthorDir) {
+            MyPreferences.getInstance().setCreateAuthorsDir(!item.isChecked());
+            invalidateMenu();
+            if (MyPreferences.getInstance().isCreateAuthorsDir()) {
+                Toast.makeText(OPDSActivity.this, "Создаю папки для отдельных авторов", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(OPDSActivity.this, "Не создаю папки для отдельных авторов", Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        }
+        if (id == R.id.menuCreateSequenceDir) {
+            MyPreferences.getInstance().setCreateSequencesDir(!item.isChecked());
+            invalidateMenu();
+            if (MyPreferences.getInstance().isCreateSequencesDir()) {
+                Toast.makeText(OPDSActivity.this, "Создаю папки для отдельных серий", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(OPDSActivity.this, "Не создаю папки для отдельных серий", Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        }
+        if (id == R.id.hideDownloadedSwitcher) {
+            MyPreferences.getInstance().switchDownloadedHide();
+            invalidateMenu();
+            if (MyPreferences.getInstance().isDownloadedHide()) {
+                Toast.makeText(OPDSActivity.this, "Скрываю ранее скачанные книги", Toast.LENGTH_SHORT).show();
+                hideDownloadedBooks();
+            } else {
+                Toast.makeText(OPDSActivity.this, "Показываю ранее скачанные книги", Toast.LENGTH_SHORT).show();
+                showDownloadedBooks();
+            }
+            return true;
+        }
+        if (id == R.id.useFilter) {
+            MyPreferences.getInstance().setUseFilter(!item.isChecked());
+            invalidateMenu();
+            if (MyPreferences.getInstance().isUseFilter()) {
+                startActivity(new Intent(this, BlacklistActivity.class));
+            } else {
+                Toast.makeText(OPDSActivity.this, "Фильтрация результатов не применяется", Toast.LENGTH_SHORT).show();
+                showDownloadedBooks();
+            }
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void addBookmark() {
         // покажу диалоговое окно с предложением подтвердить название закладки
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
         View view = getLayoutInflater().inflate(R.layout.dialog_bookmark_name, null);
         EditText input = view.findViewById(R.id.bookmarkNameInput);
         input.setText(sBookmarkName);
         dialogBuilder.setTitle("Название закладки")
                 .setView(view)
-                .setPositiveButton("Сохранить", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String bookmarkText = input.getText().toString();
-                        String link = History.getInstance().showLastPage();
-                        if (!bookmarkText.isEmpty() && link != null) {
-                            // сохраню закладку
-                            Bookmark bookmark = new Bookmark();
-                            bookmark.link = link;
-                            Log.d("surprise", "onClick: add link " + link);
-                            bookmark.name = bookmarkText;
-                            App.getInstance().mDatabase.bookmarksDao().insert(bookmark);
-                            Toast.makeText(OPDSActivity.this, "Закладка добавлена", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(OPDSActivity.this, "Нужно заполнить имя закладки и произвести поиск", Toast.LENGTH_LONG).show();
-                        }
+                .setPositiveButton("Сохранить", (dialog, which) -> {
+                    String bookmarkText = input.getText().toString();
+                    String link = History.getInstance().showLastPage();
+                    if (!bookmarkText.isEmpty() && link != null) {
+                        // сохраню закладку
+                        Bookmark bookmark = new Bookmark();
+                        bookmark.link = link;
+                        Log.d("surprise", "onClick: add link " + link);
+                        bookmark.name = bookmarkText;
+                        App.getInstance().mDatabase.bookmarksDao().insert(bookmark);
+                        Toast.makeText(OPDSActivity.this, "Закладка добавлена", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(OPDSActivity.this, "Нужно заполнить имя закладки и произвести поиск", Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton(android.R.string.no, null)
@@ -1468,7 +1452,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void selectBookTypeDialog() {
         LayoutInflater inflate = getLayoutInflater();
         @SuppressLint("InflateParams") View view = inflate.inflate(R.layout.confirm_book_type_select, null);
-        Switch checker = view.findViewById(R.id.save_only_selected);
+        SwitchCompat checker = view.findViewById(R.id.save_only_selected);
         checker.setChecked(App.getInstance().isSaveOnlySelected());
         checker = view.findViewById(R.id.reDownload);
         checker.setChecked(App.getInstance().isReDownload());
@@ -1477,8 +1461,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         dialogBuilder.setTitle("Выберите формат скачивания")
                 .setItems(MimeTypes.MIMES_LIST, (dialogInterface, i) -> {
                     Dialog dialog = (Dialog) dialogInterface;
-                    Switch switcher = dialog.findViewById(R.id.save_type_selection);
-                    Log.d("surprise", "OPDSActivity onClick: switcher is " + switcher);
+                    SwitchCompat switcher = dialog.findViewById(R.id.save_type_selection);
                     if (switcher.isChecked()) {
                         // запомню выбор формата
                         Toast.makeText(OPDSActivity.this, "Предпочтительный формат для скачивания сохранён(" + MimeTypes.getFullMime(MimeTypes.MIMES_LIST[i]) + "). Вы можете сбросить его в настройки +> разное.", Toast.LENGTH_LONG).show();
@@ -1503,13 +1486,12 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showMultiplyDownloadDialog() {
         if (mMultiplyDownloadDialog == null) {
-            if (isEInk() || MyPreferences.getInstance().isEInk()) {
-                mMultiplyDownloadDialog = new AlertDialog.Builder(this)
+            if (MyPreferences.getInstance().isEInk()) {
+                mMultiplyDownloadDialog = new AlertDialog.Builder(this, R.style.MyDialogStyle)
                         .setTitle(getString(R.string.download_books_title))
                         .setMessage(getString(R.string.download_books_msg))
                         .setPositiveButton("Отменить", (dialog, which) -> {
                             if (App.getInstance().mProcess != null) {
-                                Log.d("surprise", "OPDSActivity OnClick kill process");
                                 WorkManager.getInstance(OPDSActivity.this).cancelWorkById(App.getInstance().mProcess.getId());
                             }
                             if (mMultiplyDownloadDialog != null) {
@@ -1550,7 +1532,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void showNewDialog() {
         if (!OPDSActivity.this.isFinishing()) {
             String[] newCategory = new String[]{"Все новинки", "Новые книги по жанрам", "Новые книги по авторам", "Новые книги по сериям"};
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
             dialogBuilder.setTitle(R.string.showNewDialogTitle)
                     .setItems(newCategory, (dialog, which) -> {
                         // сброшу ранее загруженное
@@ -1649,10 +1631,11 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void showLoadWaitingDialog() {
         if (mShowLoadDialog == null) {
-            if (isEInk() || MyPreferences.getInstance().isEInk()) {
-                mShowLoadDialog = new AlertDialog.Builder(this)
+            if (MyPreferences.getInstance().isEInk()) {
+                View view = getLayoutInflater().inflate(R.layout.dialog_waiting_e_ink, null, false);
+                mShowLoadDialog = new AlertDialog.Builder(this, R.style.MyDialogStyle)
                         .setTitle(getString(R.string.download_books_title))
-                        .setMessage(getString(R.string.download_books_msg))
+                        .setView(view)
                         .setPositiveButton("Отменить", (dialog, which) -> {
                             // отменю операцию поиска
                             WorkManager.getInstance(OPDSActivity.this).cancelUniqueWork(SearchWorker.WORK_TAG);
@@ -1687,12 +1670,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         // получу идентификатор автора
         if (mSelectAuthorViewDialog == null) {
             // создам диалоговое окно
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
             dialogBuilder.setTitle(R.string.select_author_view_message)
-                    .setItems(mAuthorViewTypes, (dialog, which) -> {
-                        loadAuthor(which, mSelectedAuthor.uri, mSelectedAuthor.name);
-
-                    })
+                    .setItems(mAuthorViewTypes, (dialog, which) -> loadAuthor(which, mSelectedAuthor.uri, mSelectedAuthor.name))
             ;
             mSelectAuthorViewDialog = dialogBuilder.create();
         }
@@ -1712,7 +1692,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         // получу сисок имён авторов
         Iterator<Author> iterator = authors.iterator();
         ArrayList<String> authorsList = new ArrayList<>();
-        for (; iterator.hasNext(); ) {
+        while (iterator.hasNext()) {
             Author a = iterator.next();
             authorsList.add(a.name);
 
@@ -1774,9 +1754,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         hideWaitingDialog();
         if (mTorRestartDialog == null) {
             // создам диалоговое окно
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
             dialogBuilder.setTitle(R.string.tor_is_stopped)
-                    .setMessage(R.string.tor_restart_dialog_message + errorDetails)
+                    .setMessage(getString(R.string.tor_restart_dialog_message) + errorDetails)
                     .setPositiveButton(R.string.restart_tor_message, (dialog, which) -> {
                         App.getInstance().startTor();
                         dialog.dismiss();
@@ -1847,12 +1827,12 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void showDownloadsDialog(final ArrayList<DownloadLink> downloadLinks) {
         LayoutInflater inflate = getLayoutInflater();
         @SuppressLint("InflateParams") View view = inflate.inflate(R.layout.confirm_book_type_select, null);
-        Switch checker = view.findViewById(R.id.save_only_selected);
+        SwitchCompat checker = view.findViewById(R.id.save_only_selected);
         checker.setChecked(App.getInstance().isSaveOnlySelected());
         checker = view.findViewById(R.id.reDownload);
         checker.setChecked(App.getInstance().isReDownload());
 
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
         dialogBuilder.setTitle(R.string.downloads_dialog_header);
         // получу список типов данных
         int linksLength = downloadLinks.size();
@@ -1864,14 +1844,10 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             linksArray[counter] = MimeTypes.getMime(mime);
             counter++;
         }
-        for (String s :
-                linksArray) {
-            Log.d("surprise", "OPDSActivity showDownloadsDialog: " + s);
-        }
         dialogBuilder.setItems(linksArray, (dialogInterface, i) -> {
             // проверю, выбрано ли сохранение формата загрузки
             Dialog dialog = (Dialog) dialogInterface;
-            Switch switcher = dialog.findViewById(R.id.save_type_selection);
+            SwitchCompat switcher = dialog.findViewById(R.id.save_type_selection);
             if (switcher.isChecked()) {
                 // запомню выбор формата
                 Toast.makeText(OPDSActivity.this, "Предпочтительный формат для скачивания сохранён (" + MimeTypes.getFullMime(linksArray[i]) + "). Вы можете сбросить его в настройки +> разное.", Toast.LENGTH_LONG).show();

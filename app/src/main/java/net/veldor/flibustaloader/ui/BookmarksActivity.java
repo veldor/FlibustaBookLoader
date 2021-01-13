@@ -1,13 +1,11 @@
 package net.veldor.flibustaloader.ui;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;

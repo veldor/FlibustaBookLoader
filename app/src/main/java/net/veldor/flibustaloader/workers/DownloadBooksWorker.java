@@ -26,7 +26,6 @@ import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.ui.BaseActivity;
-import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.util.ArrayList;
@@ -38,6 +37,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class DownloadBooksWorker extends Worker {
     private final Notificator mNotificator;
+    private long mStartTime;
 
     public DownloadBooksWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -103,6 +103,7 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        mStartTime = System.currentTimeMillis();
         if (App.getInstance().useMirror) {
             // оповещу о невозможности скачивания книг с альтернативного зеркала
             mNotificator.notifyDownloadFromMirror();
@@ -122,8 +123,8 @@ public class DownloadBooksWorker extends Worker {
                 ForegroundInfo info = createForegroundInfo();
                 setForegroundAsync(info);
                 // создам уведомление о скачивании
-                //mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount, 0, true);
-                //mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
+                mNotificator.mDownloadScheduleBuilder.setProgress(mBooksCount, 0, true);
+                mNotificator.mNotificationManager.notify(DOWNLOAD_PROGRESS_NOTIFICATION, mNotificator.mDownloadScheduleBuilder.build());
                 BooksDownloadSchedule queuedElement;
                 // начну скачивание
                 // периодически удостовериваюсь, что работа не отменена
@@ -136,9 +137,7 @@ public class DownloadBooksWorker extends Worker {
                 int downloadCounter = 1;
                 // пока есть книги в очереди скачивания и работа не остановлена
                 while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()) {
-                    //mNotificator.updateDownloadProgress(dao.getQueueSize() + downloadCounter - 1, downloadCounter);
-                    // освежу уведомление
-                    //updateDownloadStatusNotification(downloadCounter);
+                    mNotificator.updateDownloadProgress(dao.getQueueSize() + downloadCounter - 1, downloadCounter, mStartTime);
                     // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
                     if (!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null) {
                         dao.delete(queuedElement);

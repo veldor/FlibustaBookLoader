@@ -156,11 +156,6 @@ public class BaseActivity extends AppCompatActivity {
     }
 
 
-    public boolean isEInk() {
-        return getWindowManager().getDefaultDisplay().getRefreshRate() < 25.0;
-    }
-
-
     public static class ResetApp implements Runnable {
         @Override
         public void run() {

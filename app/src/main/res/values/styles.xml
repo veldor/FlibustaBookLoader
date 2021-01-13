@@ -27,4 +27,9 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
+    <style name="MyDialogStyle" parent="Theme.AppCompat.DayNight.Dialog.Alert"/>
+    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <!-- loader -->
+        <item name="android:windowBackground">@drawable/loader_background_splash</item>
+    </style>
 </resources>

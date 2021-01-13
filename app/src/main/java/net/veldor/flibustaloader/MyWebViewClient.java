@@ -238,7 +238,7 @@ public class MyWebViewClient extends WebViewClient {
                     }
                 }
             }
-            HttpResponse httpResponse = null;
+            HttpResponse httpResponse;
             if (App.getInstance().isExternalVpn()) {
                 httpResponse = ExternalVpnVewClient.rawRequest(url);
             } else {
@@ -261,7 +261,7 @@ public class MyWebViewClient extends WebViewClient {
                     Log.d("surprise", "MyWebViewClient handleRequest 256: ALARM, NO ANSWER!!");
                     String message = "<H1 style='text-align:center;'>¯\\_(ツ)_/¯</H1><H1 style='text-align:center;'>Эта книга ещё недоступна</H1><H2 style='text-align:center;'>Попробуйте позднее</H2>";
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes("UTF-8"));
-                    return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+                    return new WebResourceResponse("application/zip", ENCODING_UTF_8, inputStream);
                 }
             }
 
@@ -318,7 +318,7 @@ public class MyWebViewClient extends WebViewClient {
                 Intent finishLoadingIntent = new Intent(BOOK_LOAD_ACTION);
                 finishLoadingIntent.putExtra(BOOK_LOAD_EVENT, FINISH_BOOK_LOADING);
                 App.getInstance().sendBroadcast(finishLoadingIntent);
-                return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+                return new WebResourceResponse("application/zip", ENCODING_UTF_8, inputStream);
             }
 
             // если загружена страница- добавлю её как последнюю загруженную

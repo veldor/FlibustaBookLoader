@@ -1,9 +1,6 @@
 package net.veldor.flibustaloader.parsers;
 
-import android.util.Log;
-
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 
 import org.w3c.dom.Document;
@@ -42,6 +39,7 @@ public class SearchResponseParser {
         mEntries = (NodeList) mXpath.evaluate("/feed/entry", document, XPathConstants.NODESET);
     }
 
+    @SuppressWarnings("rawtypes")
     public ArrayList parseResponse(String reservedSequenceName) throws XPathExpressionException {
         // получу сущности
         if (mEntries != null && mEntries.getLength() > 0) {

@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.utils;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 
+@SuppressWarnings("SameReturnValue")
 public class URLHelper {
 
     public static String getBaseUrl() {
@@ -49,11 +50,4 @@ public class URLHelper {
         return urlConstructor.toString();
     }
 
-    public static boolean isAuthorRequest(String request) {
-        return request.contains("search?searchType=authors");
-    }
-
-    public static boolean isBookRequest(String request) {
-        return request.contains("search?searchType=books") || request.contains("http://flibustahezeous3.onion/opds/new/") || request.contains("/alphabet");
-    }
 }

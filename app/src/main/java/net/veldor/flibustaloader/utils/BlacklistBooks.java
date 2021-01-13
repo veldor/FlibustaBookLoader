@@ -4,7 +4,6 @@ import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 
-import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.BlacklistItem;
 
 import org.w3c.dom.Document;
@@ -110,7 +109,7 @@ public class BlacklistBooks {
             elem.appendChild(text);
             mDom.getDocumentElement().insertBefore(elem, mDom.getDocumentElement().getFirstChild());
             MyFileReader.saveBooksBlacklist(getStringFromDocument(mDom));
-            App.getInstance().getBooksBlacklist().mListRefreshed.postValue(true);
+            BlacklistBooks.mListRefreshed.postValue(true);
         }
     }
 
@@ -129,7 +128,7 @@ public class BlacklistBooks {
                 counter++;
             }
             MyFileReader.saveBooksBlacklist(getStringFromDocument(mDom));
-            App.getInstance().getBooksBlacklist().mListRefreshed.postValue(true);
+            BlacklistBooks.mListRefreshed.postValue(true);
         }
     }
 }

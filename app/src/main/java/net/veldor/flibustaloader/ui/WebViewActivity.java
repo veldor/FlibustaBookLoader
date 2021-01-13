@@ -29,8 +29,6 @@ import androidx.appcompat.widget.SearchView;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -136,13 +134,10 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
 
         // буду отслеживать событие логина
         LiveData<Boolean> cookieObserver = App.sResetLoginCookie;
-        cookieObserver.observe(this, new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean aBoolean) {
-                if(aBoolean){
-                    Toast.makeText(WebViewActivity.this, "Данные для входа устарели, придётся войти ещё раз", Toast.LENGTH_SHORT).show();
-                    invalidateOptionsMenu();
-                }
+        cookieObserver.observe(this, aBoolean -> {
+            if(aBoolean){
+                Toast.makeText(WebViewActivity.this, "Данные для входа устарели, придётся войти ещё раз", Toast.LENGTH_SHORT).show();
+                invalidateOptionsMenu();
             }
         });
     }
@@ -274,12 +269,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         menuItem.setChecked(mMyViewModel.getNightModeEnabled());
 
         menuItem = menu.findItem(R.id.logOut);
-        if(MyPreferences.getInstance().getAuthCookie() == null){
-            menuItem.setVisible(false);
-        }
-        else{
-            menuItem.setVisible(true);
-        }
+        menuItem.setVisible(MyPreferences.getInstance().getAuthCookie() != null);
 
         menuItem = menu.findItem(R.id.login);
         if(MyPreferences.getInstance().getAuthCookie() != null){
@@ -291,39 +281,34 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menuUseLightStyle:
-            case R.id.menuUseLightFastStyle:
-            case R.id.menuUseLightFatStyle:
-            case R.id.menuUseNormalStyle:
-            case R.id.menuUseFatFastStyle:
-                mMyViewModel.switchViewMode(item.getItemId());
-                invalidateOptionsMenu();
-                mWebView.reload();
-                return true;
-            case R.id.goHome:
-                mWebView.loadUrl(URLHelper.getBaseOPDSUrl());
-                return true;
-            case R.id.showNew:
-                mWebView.loadUrl(App.NEW_BOOKS);
-                return true;
-            case R.id.randomBook:
-                mWebView.loadUrl(mMyViewModel.getRandomBookUrl());
-                return true;
-            case R.id.shareLink:
-                mMyViewModel.shareLink(mWebView);
-                return true;
-            case R.id.login:
-                showLoginDialog();
-                return true;
-            case R.id.clearSearchHistory:
-                clearHistory();
-                return true;
-            case R.id.logOut:
-                // удалю куку
-                MyPreferences.getInstance().removeAuthCookie();
-                recreate();
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.menuUseLightStyle || itemId == R.id.menuUseLightFastStyle || itemId == R.id.menuUseLightFatStyle || itemId == R.id.menuUseNormalStyle || itemId == R.id.menuUseFatFastStyle) {
+            mMyViewModel.switchViewMode(item.getItemId());
+            invalidateOptionsMenu();
+            mWebView.reload();
+            return true;
+        } else if (itemId == R.id.goHome) {
+            mWebView.loadUrl(URLHelper.getBaseOPDSUrl());
+            return true;
+        } else if (itemId == R.id.showNew) {
+            mWebView.loadUrl(App.NEW_BOOKS);
+            return true;
+        } else if (itemId == R.id.randomBook) {
+            mWebView.loadUrl(mMyViewModel.getRandomBookUrl());
+            return true;
+        } else if (itemId == R.id.shareLink) {
+            mMyViewModel.shareLink(mWebView);
+            return true;
+        } else if (itemId == R.id.login) {
+            showLoginDialog();
+            return true;
+        } else if (itemId == R.id.clearSearchHistory) {
+            clearHistory();
+            return true;
+        } else if (itemId == R.id.logOut) {// удалю куку
+            MyPreferences.getInstance().removeAuthCookie();
+            recreate();
+            return true;
         }
         if (item.getItemId() == R.id.menuUseDarkMode) {
             mMyViewModel.switchNightMode();
@@ -467,7 +452,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
     }
         if (mTorRestartDialog == null) {
             // создам диалоговое окно
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
             dialogBuilder.setTitle(R.string.tor_is_stopped)
                     .setMessage(R.string.tor_restart_dialog_message + errorDetails)
                     .setPositiveButton(R.string.restart_tor_message, (dialog, which) -> {

@@ -16,8 +16,9 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 class AuthorsParser {
+    @SuppressWarnings("rawtypes")
     public static ArrayList parse(NodeList entries, XPath xPath) throws XPathExpressionException {
-        ArrayList<Author> result = new ArrayList<Author>();
+        ArrayList<Author> result = new ArrayList<>();
         int counter = 0;
         Node entry;
         Author author;

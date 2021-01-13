@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.util.Log;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -12,6 +11,7 @@ import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedItem;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
+import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.workers.LoadSubscriptionsWorker;
 
 import org.jsoup.Jsoup;
@@ -22,7 +22,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +33,6 @@ import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -64,11 +62,11 @@ public class XMLParser {
             dBuilder = dbFactory.newDocumentBuilder();
             InputSource is = new InputSource(new StringReader(rawText));
             return dBuilder.parse(is);
-        } catch (ParserConfigurationException|IOException|SAXException e) {
+        } catch (Exception e) {
             // ошибка поиска, предположу, что страница недоступна
             // отправлю оповещение об ошибке загрузки TOR
             Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
-            finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
+            finishLoadingIntent.putExtra(ERROR_DETAILS, "Ошибка обработки переданных данных");
             App.getInstance().sendBroadcast(finishLoadingIntent);
             e.printStackTrace();
         }

@@ -39,10 +39,10 @@ public class SearchWorker extends Worker {
     public Result doWork() {
         String reservedSequenceName = null;
         // если есть имя серии- сохраню книги в папку с данным имененм
-        if(sSequenceName != null){
+        if (sSequenceName != null) {
             reservedSequenceName = Grammar.clearDirName(sSequenceName);
             sSequenceName = null;
-            if(reservedSequenceName.startsWith("Все книги серии ")){
+            if (reservedSequenceName.startsWith("Все книги серии ")) {
                 reservedSequenceName = reservedSequenceName.substring(16);
             }
         }
@@ -60,19 +60,18 @@ public class SearchWorker extends Worker {
                 App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                 // сделаю первый запрос по-любому
                 String answer = GlobalWebClient.request(request);
-                if(answer == null || answer.length() == 0){
+                if (answer == null || answer.length() == 0) {
                     OPDSActivity.isLoadError.postValue(true);
                 }
                 if (!isStopped()) {
                     ArrayList result;
                     // получу DOM
-                    Log.d("surprise", "SearchWorker doWork 69: anser is " + answer);
                     SearchResponseParser parser = new SearchResponseParser(answer);
                     int resultType = parser.getType();
                     Log.d("surprise", "SearchWorker doWork 52: result type is " + resultType);
                     result = parser.parseResponse(reservedSequenceName);
                     if (!isStopped()) {
-                        if(result == null || result.size() == 0){
+                        if (result == null || result.size() == 0) {
                             // Ничего не найдено, уведомлю об этом
                             OPDSActivity.sNothingFound.postValue(true);
                         }
@@ -204,7 +203,7 @@ public class SearchWorker extends Worker {
         } catch (Exception e) {
             e.printStackTrace();
             Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
-            finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
+            finishLoadingIntent.putExtra(ERROR_DETAILS, " Не удалось обработать полученные данные. Проблемы с соединением или сервером Флибусты");
             App.getInstance().sendBroadcast(finishLoadingIntent);
             return Result.failure();
         }

@@ -146,6 +146,25 @@ public class TorWebClient {
         }
         return null;
     }
+    public String requestNoMirror(String text) {
+        try {
+            Log.d("surprise", "TorWebClient request 130: load " + text);
+            HttpGet httpGet = new HttpGet(text);
+            httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
+            httpGet.setHeader("X-Compress", "null");
+            HttpResponse httpResponse = mHttpClient.execute(httpGet, mContext);
+            App.getInstance().mLoadAllStatus.postValue("Данные получены");
+            InputStream is;
+            is = httpResponse.getEntity().getContent();
+            return inputStreamToString(is);
+        } catch (IOException e) {
+            Log.d("surprise", "TorWebClient request 137: page load error");
+            App.getInstance().mLoadAllStatus.postValue("Ошибка загрузки страницы");
+            //broadcastTorError(e);
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     private HttpResponse simpleGetRequest(String url) throws IOException {
         if(App.getInstance().useMirror){
@@ -186,11 +205,9 @@ public class TorWebClient {
         return null;
     }
 
-    public void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, TorNotLoadedException {
+    public void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException {
         try {
-            Log.d("surprise", "TorWebClient downloadBook 179: start receiving book " + System.currentTimeMillis());
             HttpResponse response = simpleGetRequest(URLHelper.getBaseOPDSUrl() + book.link);
-            Log.d("surprise", "TorWebClient downloadBook 179: finish receiving book " + System.currentTimeMillis());
             // проверю, что запрос выполнен и файл не пуст. Если это не так- попорбую загрузить книгу с основного домена
             if(response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1){
                 boolean result = false;
@@ -259,6 +276,7 @@ public class TorWebClient {
                 try{
                     DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                     if (newFile != null) {
+                        Log.d("surprise", "TorWebClient downloadBook 276: HERE");
                         GlobalWebClient.handleBookLoadRequest(response, newFile);
                     }
                 }
@@ -353,17 +371,7 @@ public class TorWebClient {
         return null;
     }
 
-    private static Map<String, String> getQueryMap(String query) {
-        String[] params = query.split("&");
-        Map<String, String> map = new HashMap<>();
-        for (String param : params) {
-            String name = param.split("=")[0];
-            String value = param.split("=")[1];
-            map.put(name, value);
-        }
-        return map;
-    }
-
+    @SuppressWarnings("SameParameterValue")
     private HttpResponse executeRequest(String url, Map<String, String> headers, UrlEncodedFormEntity params) throws Exception {
         try {
             AndroidOnionProxyManager tor = App.getInstance().mTorManager.getValue();

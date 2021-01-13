@@ -1,10 +1,7 @@
 package net.veldor.flibustaloader.utils;
 
-import android.util.Log;
-
 import androidx.lifecycle.MutableLiveData;
 
-import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.BlacklistItem;
 
 import org.w3c.dom.Document;

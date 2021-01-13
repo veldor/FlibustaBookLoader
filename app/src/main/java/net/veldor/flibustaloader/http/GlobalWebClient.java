@@ -1,6 +1,5 @@
 package net.veldor.flibustaloader.http;
 
-import android.content.Intent;
 import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
@@ -9,7 +8,6 @@ import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.notificatons.Notificator;
-import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.io.File;
@@ -65,11 +63,9 @@ public class GlobalWebClient {
                                     out.write(buffer, 0, read);
                                     if(contentLength > 0 && showDownloadProgress && lastNotificationTime + 1000 < System.currentTimeMillis()) {
                                         lastNotificationTime = System.currentTimeMillis();
-                                        Log.d("surprise", "GlobalWebClient handleBookLoadRequest 65: tick");
                                         notifier.createBookLoadingProgressNotification((int) contentLength,(int) newFile.length(), fileName);
                                     }
                                 }
-                                Log.d("surprise", "GlobalWebClient handleBookLoadRequestNoContentLength 114: finish parse content " + System.currentTimeMillis());
                                 out.close();
                                 content.close();
                                 notifier.cancelBookLoadingProgressNotification();
@@ -86,7 +82,6 @@ public class GlobalWebClient {
         }
         // если что-то пошло не так- удалю файл и покажу ошибку скачивания
         newFile.delete();
-        Log.d("surprise", "TorWebClient downloadBook: книга не найдена");
         throw new BookNotFoundException();
     }
 
@@ -116,9 +111,7 @@ public class GlobalWebClient {
                             out.close();
                             content.close();
                             notifier.cancelBookLoadingProgressNotification();
-                            Log.d("surprise", "TorWebClient downloadBook 188: created file length is " + newFile.length());
                             if (newFile.length() > 0) {
-                                Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getAbsolutePath());
                                 return;
                             }
                         }
@@ -133,7 +126,7 @@ public class GlobalWebClient {
         Log.d("surprise", "TorWebClient downloadBook: книга не найдена, статус удаления файла: " + deleteResult);
         throw new BookNotFoundException();
     }
-    public static boolean handleBookLoadRequestNoContentLength(HttpResponse response, DocumentFile newFile) throws BookNotFoundException {
+    public static boolean handleBookLoadRequestNoContentLength(HttpResponse response, DocumentFile newFile) {
         try {
             if (response != null) {
                 int status = response.getStatusLine().getStatusCode();
@@ -173,7 +166,7 @@ public class GlobalWebClient {
         return false;
     }
 
-    public static boolean handleBookLoadRequestNoContentLength(HttpResponse response, File newFile) throws BookNotFoundException {
+    public static boolean handleBookLoadRequestNoContentLength(HttpResponse response, File newFile) {
         try {
             if (response != null) {
                 int status = response.getStatusLine().getStatusCode();

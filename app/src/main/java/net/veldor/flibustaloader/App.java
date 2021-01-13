@@ -57,7 +57,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 public class App extends Application {
     //todo switch to false on release
     public static final boolean isTestVersion = true;
-    public static MutableLiveData<Boolean> sResetLoginCookie = new MutableLiveData<>();
+    public static final MutableLiveData<Boolean> sResetLoginCookie = new MutableLiveData<>();
 
     // хранилище статуса HTTP запроса
     public final MutableLiveData<String> RequestStatus = new MutableLiveData<>();
@@ -206,7 +206,6 @@ public class App extends Application {
                     // получу сведения о состоянии загрузки
                     WorkInfo info = workInfos.get(0);
                     if (info != null) {
-                        Log.d("surprise", "App onChanged: status is " + info.getState());
                         switch (info.getState()) {
                             case ENQUEUED:
                                 // ожидаем запуска скачивания, покажу уведомление
@@ -262,22 +261,16 @@ public class App extends Application {
 
     public void switchViewMode(int type) {
         int mode = 1;
-        switch (type) {
-            case R.id.menuUseNormalStyle:
-                mode = VIEW_MODE_NORMAL;
-                break;
-            case R.id.menuUseLightStyle:
-                mode = VIEW_MODE_LIGHT;
-                break;
-            case R.id.menuUseLightFastStyle:
-                mode = VIEW_MODE_FAST;
-                break;
-            case R.id.menuUseLightFatStyle:
-                mode = VIEW_MODE_FAT;
-                break;
-            case R.id.menuUseFatFastStyle:
-                mode = VIEW_MODE_FAST_FAT;
-                break;
+        if (type == R.id.menuUseNormalStyle) {
+            mode = VIEW_MODE_NORMAL;
+        } else if (type == R.id.menuUseLightStyle) {
+            mode = VIEW_MODE_LIGHT;
+        } else if (type == R.id.menuUseLightFastStyle) {
+            mode = VIEW_MODE_FAST;
+        } else if (type == R.id.menuUseLightFatStyle) {
+            mode = VIEW_MODE_FAT;
+        } else if (type == R.id.menuUseFatFastStyle) {
+            mode = VIEW_MODE_FAST_FAT;
         }
         mSharedPreferences.edit().putInt(PREFERENCE_VIEW_MODE, mode).apply();
     }

@@ -5,15 +5,19 @@
       <w>,c.unshift</w>
       <w>?e:r</w>
       <w>affero</w>
+      <w>apng</w>
       <w>atob</w>
       <w>authorsequenceless</w>
       <w>authorsequences</w>
+      <w>authorsindex</w>
       <w>autocheck</w>
       <w>autofill</w>
       <w>autofocus</w>
       <w>autoplay</w>
       <w>autostart</w>
+      <w>avif</w>
       <w>beforeunload</w>
+      <w>bendaf</w>
       <w>bhtml</w>
       <w>bjson</w>
       <w>bookscomp</w>
@@ -26,9 +30,11 @@
       <w>dblclick</w>
       <w>divabio</w>
       <w>djvu</w>
+      <w>documentfile</w>
       <w>docx</w>
       <w>ebook</w>
       <w>ecmascript</w>
+      <w>eink</w>
       <w>epub</w>
       <w>etag</w>
       <w>expando</w>
@@ -45,11 +51,13 @@
       <w>focusoutblur</w>
       <w>fout</w>
       <w>fxshow</w>
+      <w>ggzip</w>
       <w>inet</w>
       <w>infos</w>
       <w>inprogress</w>
       <w>inversed</w>
       <w>ismap</w>
+      <w>ivxdt</w>
       <w>jehy</w>
       <w>jsonp</w>
       <w>keydown</w>
@@ -105,6 +113,7 @@
       <w>scrollbox</w>
       <w>sequencebooks</w>
       <w>sequencesindex</w>
+      <w>sess</w>
       <w>snackbar</w>
       <w>socksaddr</w>
       <w>sublicenses</w>

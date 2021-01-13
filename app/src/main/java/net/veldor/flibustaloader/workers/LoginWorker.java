@@ -14,7 +14,6 @@ import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.http.TorWebClient;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 
 public class LoginWorker extends Worker {
 
