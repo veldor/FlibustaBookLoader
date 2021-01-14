@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <SwitchPreference
+    <SwitchPreferenceCompat
         app:key="@string/pref_is_eink"
         android:defaultValue="false"
         android:summary="Отключены фоновые изображения и GIF"
         android:summaryOff="Обычный вид"
         android:title="Электронная книга" />
-    <SwitchPreference
+    <SwitchPreferenceCompat
         app:key="@string/pref_autostart_search"
         android:defaultValue="true"
         android:summary="Автофокус на строке ввода"

@@ -32,36 +32,31 @@ public class CheckFlibustaAvailabilityWorker extends Worker {
         Data.Builder outputDataBuilder = new Data.Builder();
 
         // проверю доступность интернета в принципе
-        String url = "http://ya.ru/";
-        if(inspect(url)){
-            // теперь проверю подключение к основному серверу
-            if(MyPreferences.getInstance().isCustomMirror()){
-                url = MyPreferences.getInstance().getCustomMirror();
-                if(inspect(url)){
-                    outputDataBuilder.putBoolean(AVAILABILITY_STATE, true);
-                }
+        String url;
+        // теперь проверю подключение к основному серверу
+        if (MyPreferences.getInstance().isCustomMirror()) {
+            url = MyPreferences.getInstance().getCustomMirror();
+            if (inspect(url)) {
+                outputDataBuilder.putBoolean(AVAILABILITY_STATE, true);
             }
-            else if(App.getInstance().isExternalVpn()){
-                url = "http://flibusta.is/";
-                if(inspect(url)){
-                    outputDataBuilder.putBoolean(AVAILABILITY_STATE, true);
-                }
+        } else if (App.getInstance().isExternalVpn()) {
+            url = "http://flibusta.is/";
+            if (inspect(url)) {
+                outputDataBuilder.putBoolean(AVAILABILITY_STATE, true);
             }
-            else{
-                url = "http://flibustahezeous3.onion/";
-                if(inspect(url)){
+        } else {
+            url = "http://flibustahezeous3.onion/";
+            if (inspect(url)) {
+                outputDataBuilder.putBoolean(AVAILABILITY_STATE, true);
+            } else {
+                // запущу периодическую проверку доступности зеркала
+                App.getInstance().startCheckWorker();
+                // попробую использовать резервное подключение
+                url = "https://flibusta.appspot.com/";
+                if (inspect(url)) {
+                    App.getInstance().useMirror = true;
+                    Notificator.getInstance().notifyUseMirror();
                     outputDataBuilder.putBoolean(AVAILABILITY_STATE, true);
-                }
-                else{
-                    // запущу периодическую проверку доступности зеркала
-                    App.getInstance().startCheckWorker();
-                    // попробую использовать резервное подключение
-                    url = "https://flibusta.appspot.com/";
-                    if(inspect(url)){
-                        App.getInstance().useMirror = true;
-                        Notificator.getInstance().notifyUseMirror();
-                        outputDataBuilder.putBoolean(AVAILABILITY_STATE, true);
-                    }
                 }
             }
         }
@@ -69,10 +64,10 @@ public class CheckFlibustaAvailabilityWorker extends Worker {
         return Result.success(outputDataBuilder.build());
     }
 
-    private boolean inspect(String url){
+    private boolean inspect(String url) {
         try {
             String answer = GlobalWebClient.request(url);
-            if(answer != null && answer.length() > 0){
+            if (answer != null && answer.length() > 0) {
                 Log.d("surprise", "CheckFlibustaAvailabilityWorker inspect 49: check success");
                 return true;
             }

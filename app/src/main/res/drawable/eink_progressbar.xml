@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@android:id/background"
+        android:gravity="center_vertical|fill_horizontal">
+        <shape android:shape="rectangle">
+            <corners android:radius="10dp"/>
+            <size android:height="20dp"/>
+            <solid android:color="@color/eink_progress_back"/>
+        </shape>
+    </item>
+    <item
+        android:id="@android:id/progress"
+        android:gravity="center_vertical|fill_horizontal">
+        <scale android:scaleWidth="100%">
+            <shape android:shape="rectangle">
+                <size android:height="20dp"/>
+                <corners android:topLeftRadius="6dp" android:topRightRadius="0.1dp"
+                    android:bottomLeftRadius="6dp" android:bottomRightRadius="0.1dp"/>
+                <solid android:color="@color/eink_progress"/>
+            </shape>
+        </scale>
+    </item>
+</layer-list>

@@ -179,7 +179,11 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.new_opds_activity);
+        if (MyPreferences.getInstance().isEInk()) {
+            setContentView(R.layout.new_eink_opds_activity);
+        } else {
+            setContentView(R.layout.new_opds_activity);
+        }
         setupInterface();
         setupObservers();
 
@@ -523,6 +527,15 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
         if (mRootView != null) {
             if (MyPreferences.getInstance().isEInk()) {
+                // назначу действия кнопкам перемотки вверх и вниз
+                Button upwardBtn = findViewById(R.id.goUp);
+                Button downwardBtn = findViewById(R.id.goDown);
+                if (downwardBtn != null) {
+                    downwardBtn.setOnClickListener(v -> mScrollView.scrollTo(0, mScrollView.getScrollY() + mViewModel.getHeight()));
+                }
+                if (upwardBtn != null) {
+                    upwardBtn.setOnClickListener(v -> mScrollView.scrollTo(0, mScrollView.getScrollY() - mViewModel.getHeight()));
+                }
                 //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
                 Log.d("surprise", "OPDSActivity setupInterface 529: use reader");
             } else {
@@ -1179,7 +1192,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             });
 
             mSearchAutoComplete = mSearchView.findViewById(R.id.search_src_text);
-            mSearchAutoComplete.setTextColor(Color.WHITE);
+            if (!MyPreferences.getInstance().isEInk()) {
+                mSearchAutoComplete.setTextColor(Color.WHITE);
+            }
             mSearchAutoComplete.setDropDownBackgroundResource(R.color.background_color);
             mSearchAutoComplete.setThreshold(0);
             mSearchAutoComplete.setDropDownHeight(WRAP_CONTENT);

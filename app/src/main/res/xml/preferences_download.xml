@@ -10,35 +10,35 @@
 
     <PreferenceCategory android:title="Настройки для OPDS">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="download auto start"
             android:defaultValue="true"
             android:summary="Автоматический старт загрузки книг при добавлении в очередь."
             android:title="Загружать книги автоматически" />
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="show download progress"
             android:defaultValue="false"
             android:summary="Отображать прогресс загрузки книги в уведомлении."
             android:title="Уведомление прогресса загрузки" />
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="re download"
             android:defaultValue="true"
             android:summary="Если отключено- файлы, которые были загружены раньше не будут загружены повторно."
             android:title="Повторная загрузка файлов" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="save only selected"
             android:defaultValue="false"
             android:summary="Файлы будут скачаны в выбранном формате или пропущены"
             android:summaryOff="Если файл недоступен в выбранном формате- он будет скачан в доступном"
             android:title="Скачивать файлы только в выбранном формате" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="@string/pref_create_author_folder"
             android:defaultValue="false"
             android:title="Создавать папки для различных авторов" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="@string/pref_create_sequence_folder"
             android:defaultValue="false"
             android:title="Создавать папки для различных серий" />

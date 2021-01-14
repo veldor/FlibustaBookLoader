@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.view_models;
 
 import android.app.Application;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 
@@ -146,5 +147,11 @@ public class MainViewModel extends GlobalViewModel implements MyViewModelInterfa
             return mClickedItemsStack.pop();
         }
         return -1;
+    }
+
+    public int getHeight() {
+        DisplayMetrics displayMetrics = App.getInstance().getResources().getDisplayMetrics();
+        int dpHeight = (int) (displayMetrics.heightPixels / displayMetrics.density);
+        return dpHeight - 50;
     }
 }

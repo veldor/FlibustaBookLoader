@@ -40,8 +40,7 @@
         <activity
             android:name=".ui.MainActivity"
             android:theme="@style/SplashTheme"
-            android:configChanges="keyboardHidden|orientation"
-            android:launchMode="singleInstance">
+            android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -74,8 +73,7 @@
             android:parentActivityName=".ui.OPDSActivity"
             android:theme="@style/OldAppTheme" />
         <activity
-            android:name=".ui.SettingsActivity"
-            android:launchMode="singleInstance" />
+            android:name=".ui.SettingsActivity"/>
         <activity
             android:name=".ui.SubscriptionsActivity"
             android:launchMode="singleInstance" />

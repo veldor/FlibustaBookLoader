@@ -1,6 +1,5 @@
 package net.veldor.flibustaloader;
 
-import android.app.Application;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
@@ -11,6 +10,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.multidex.MultiDexApplication;
 import androidx.room.Room;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 
 import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
-public class App extends Application {
+public class App extends MultiDexApplication {
     //todo switch to false on release
     public static final boolean isTestVersion = true;
     public static final MutableLiveData<Boolean> sResetLoginCookie = new MutableLiveData<>();

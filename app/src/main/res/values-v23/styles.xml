@@ -27,12 +27,21 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
+
     <style name="MyActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
         <item name="colorControlNormal">#CDC9C9</item>
+    </style>
+    <style name="MyEinkActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
+        <item name="colorControlNormal">#000000</item>
+        <item name="android:textColorPrimary">#000000</item>
+        <item name="autoCompleteTextViewStyle">@style/eInkCursorColor</item>
     </style>
 
     <style name="cursorColor" parent="Widget.AppCompat.AutoCompleteTextView">
         <item name="android:textCursorDrawable">@drawable/cursor</item>
+    </style>
+    <style name="eInkCursorColor" parent="Widget.AppCompat.AutoCompleteTextView">
+        <item name="android:textCursorDrawable">@drawable/cursor_eink</item>
     </style>
     <style name="MyDialogStyle" parent="Theme.AppCompat.DayNight.Dialog.Alert"/>
 

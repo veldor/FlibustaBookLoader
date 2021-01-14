@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -237,7 +238,9 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         });
 
         mSearchAutocomplete = mSearchView.findViewById(R.id.search_src_text);
-
+        if(!MyPreferences.getInstance().isEInk()){
+            mSearchAutocomplete.setTextColor(Color.WHITE);
+        }
         mSearchAutocomplete.setDropDownBackgroundResource(android.R.color.white);
         mSearchAutocomplete.setDropDownAnchor(R.id.action_search);
         mSearchAutocomplete.setThreshold(0);

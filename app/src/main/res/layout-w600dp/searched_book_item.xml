@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="book"
+            type="net.veldor.flibustaloader.selections.FoundedBook" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/sequences_background"
+        android:padding="5dp"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:id="@+id/blacklist_item_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{book.name}"
+            android:textAlignment="center"
+            android:textColor="@color/book_name_color"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/menuButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:gravity="center_horizontal" />
+
+        <ImageButton
+            android:id="@+id/menuButton"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:contentDescription="@string/book_menu"
+            android:src="@drawable/ic_more_vert_black_24dp"
+            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/authorBlock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/blacklist_item_name"
+            android:layout_marginTop="5dp">
+
+            <TextView
+                android:id="@+id/author_name"
+                android:layout_width="0dp"
+                android:gravity="center"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@{book.author}"
+                android:textAlignment="center"
+                android:textColor="@drawable/author_text_color"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/translator_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_weight="1"
+                android:text="@{book.translate}"
+                android:textAlignment="center"
+                android:textColor="@color/translator_text_color"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/detailsBlock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/authorBlock"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp">
+
+            <TextView
+                android:id="@+id/genre"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@{book.genreComplex}"
+                android:textAlignment="center"
+                android:textColor="@drawable/genre_text_color"
+                android:textSize="14sp"
+                android:gravity="center_horizontal" />
+
+            <TextView
+                android:id="@+id/sequence"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@{book.sequenceComplex}"
+                android:textAlignment="center"
+                android:textColor="@drawable/sequence_text_color"
+                android:textSize="12sp"
+                android:gravity="center_horizontal" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/downloads_count"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{book.downloadsCount}"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/detailsBlock" />
+
+        <TextView
+            android:id="@+id/book_size"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="11dp"
+            android:layout_marginLeft="11dp"
+            android:text="@{book.size}"
+            app:layout_constraintStart_toEndOf="@+id/downloads_count"
+            app:layout_constraintTop_toBottomOf="@+id/detailsBlock" />
+
+        <TextView
+            android:id="@+id/book_format"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="11dp"
+            android:layout_marginLeft="11dp"
+            android:text="@{book.format}"
+            app:layout_constraintStart_toEndOf="@+id/book_size"
+            app:layout_constraintTop_toBottomOf="@+id/detailsBlock" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrier3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="book_format,downloads_count,book_size"
+            tools:layout_editor_absoluteY="81dp" />
+
+        <Button
+            android:id="@+id/downloadBookBtn"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:background="@drawable/transparent_bg_bordered_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/download_message"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            android:textColor="@color/book_name_color"
+            app:layout_constraintTop_toBottomOf="@+id/barrier3"/>
+
+        <ImageButton
+            android:id="@+id/book_read"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_readed_24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/downloadBookBtn"
+            android:visibility="gone"
+            android:contentDescription="@string/book_readed_message" />
+
+        <ImageButton
+            android:id="@+id/book_downloaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_downloaded_24dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@+id/book_read"
+            app:layout_constraintTop_toBottomOf="@+id/downloadBookBtn"
+            android:contentDescription="@string/book_downloaded_message" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

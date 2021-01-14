@@ -18,4 +18,7 @@
     <color name="selected_item_background">#8A00BCD4</color>
     <color name="gray">#BEBCBC</color>
     <color name="dark_gray">#9F9E9E</color>
+    <color name="yellow">#FFEB3B</color>
+    <color name="eink_progress_back">#000000</color>
+    <color name="eink_progress">#FFFFFF</color>
 </resources>

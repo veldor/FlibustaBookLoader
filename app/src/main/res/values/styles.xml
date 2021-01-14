@@ -10,6 +10,7 @@
         <item name="android:windowBackground">@color/background_color</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="autoCompleteTextViewStyle">@style/cursorColor</item>
     </style>
 
     <style name="OldAppTheme" parent="Theme.AppCompat.DayNight">
@@ -20,6 +21,32 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="autoCompleteTextViewStyle">@style/cursorColor</item>
+    </style>
+    <style name="EInkAppTheme" parent="Theme.AppCompat.DayNight">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.AppTheme.ActionBar</item>
+        <item name="colorAccent">@color/black</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowBackground">@color/white</item>
+        <item name="background">@color/white</item>
+        <item name="windowNoTitle">true</item>
+        <item name="autoCompleteTextViewStyle">@style/eInkCursorColor</item>
+    </style>
+
+    <style name="MyEinkActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
+        <item name="android:textColorPrimary">#000000</item>
+        <item name="colorControlNormal">#000000</item>
+        <item name="autoCompleteTextViewStyle">@style/eInkCursorColor</item>
+    </style>
+
+    <style name="cursorColor" parent="Widget.AppCompat.AutoCompleteTextView">
+        <item name="android:textCursorDrawable">@drawable/cursor</item>
+    </style>
+    <style name="eInkCursorColor" parent="Widget.AppCompat.AutoCompleteTextView">
+        <item name="android:textCursorDrawable">@drawable/cursor_eink</item>
     </style>
 
     <style name="ThemeOverlay.AppTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
@@ -32,4 +59,6 @@
         <!-- loader -->
         <item name="android:windowBackground">@drawable/loader_background_splash</item>
     </style>
+
+    <color name="black">#000000</color>
 </resources>

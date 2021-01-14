@@ -67,6 +67,12 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("surprise", "SettingsActivity onDestroy 72: DESTROYED");
+    }
+
+    @Override
     protected void setupInterface() {
         super.setupInterface();
         // скрою переход на данное активити

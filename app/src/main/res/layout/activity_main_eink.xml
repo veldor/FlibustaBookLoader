@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootView"
     android:layout_width="match_parent"
-    android:theme="@style/Theme.AppCompat.DayNight"
+    android:theme="@style/EInkAppTheme"
+    android:background="@color/white"
     android:layout_height="match_parent">
 
     <TextView
@@ -77,6 +78,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:indeterminate="false"
+        android:progressDrawable="@drawable/eink_progressbar"
         android:padding="20dp"
         android:max="300"
         android:progress="100"
