@@ -22,7 +22,6 @@ import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.utils.FilesHandler;
 import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.URLHelper;
-import net.veldor.flibustaloader.workers.StartTorWorker;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,7 +31,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,34 +63,35 @@ public class TorWebClient {
     private HttpClientContext mContext;
 
     public TorWebClient() throws TorNotLoadedException {
-
-        while (App.sTorStartTry < 4) {
-            // есть три попытки, если все три неудачны- верну ошибку
+        while (App.getInstance().torInitInProgress) {
             try {
-                //Log.d("surprise", "StartTorWorker doWork: start tor, try # " + App.sTorStartTry);
-                StartTorWorker.startTor();
-                Log.d("surprise", "StartTorWorker doWork: tor success start");
-                // обнулю счётчик попыток
-                App.sTorStartTry = 0;
-                break;
-            } catch (TorNotLoadedException | IOException | InterruptedException e) {
-                // попытка неудачна, плюсую счётчик попыток
-                App.sTorStartTry++;
-                Log.d("surprise", "StartTorWorker doWork: tor wrong start try");
+                //noinspection BusyWait
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
-        // если счётчик больше 3- не удалось запустить TOR, вызову исключение
+        App.getInstance().torInitInProgress = true;
+        // попробую стартовать TOR
+        TorStarter starter = new TorStarter();
+        App.sTorStartTry = 0;
+        while (App.sTorStartTry < 4) {
+            // есть три попытки, если все три неудачны- верну ошибку
+            if (starter.startTor()) {
+                App.sTorStartTry = 0;
+                break;
+            } else {
+                App.sTorStartTry++;
+            }
+        }
+        App.getInstance().torInitInProgress = false;
+// если счётчик больше 3- не удалось запустить TOR, вызову исключение
         if (App.sTorStartTry > 3) {
             throw new TorNotLoadedException();
         }
-
         try {
             mHttpClient = getNewHttpClient();
-            AndroidOnionProxyManager onionProxyManager = App.getInstance().mTorManager.getValue();
-            if (onionProxyManager == null) {
-                // верну ошибочный результат
-                throw new TorNotLoadedException();
-            }
+            AndroidOnionProxyManager onionProxyManager = starter.getTor();
             int port = onionProxyManager.getIPv4LocalHostSocksPort();
             InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
             mContext = HttpClientContext.create();
@@ -123,7 +122,7 @@ public class TorWebClient {
 
 
     public String request(String text) {
-        if(App.getInstance().useMirror){
+        if (App.getInstance().useMirror) {
             // TODO заменить зеркало
             Log.d("surprise", "TorWebClient request 128: change mirror");
             text = text.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
@@ -146,6 +145,7 @@ public class TorWebClient {
         }
         return null;
     }
+
     public String requestNoMirror(String text) {
         try {
             Log.d("surprise", "TorWebClient request 130: load " + text);
@@ -167,7 +167,7 @@ public class TorWebClient {
     }
 
     private HttpResponse simpleGetRequest(String url) throws IOException {
-        if(App.getInstance().useMirror){
+        if (App.getInstance().useMirror) {
             // TODO заменить зеркало
             Log.d("surprise", "TorWebClient request 128: change mirror");
             url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
@@ -209,22 +209,20 @@ public class TorWebClient {
         try {
             HttpResponse response = simpleGetRequest(URLHelper.getBaseOPDSUrl() + book.link);
             // проверю, что запрос выполнен и файл не пуст. Если это не так- попорбую загрузить книгу с основного домена
-            if(response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1){
+            if (response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1) {
                 boolean result = false;
                 // тут может быть загрузка книги без указания длины контента, попробую загрузить
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    try{
+                    try {
                         DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                         if (newFile != null) {
                             result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, newFile);
                         }
-                    }
-                    catch (Exception e){
-                        try{
+                    } catch (Exception e) {
+                        try {
                             File file = FilesHandler.getCompatDownloadFile(book);
                             result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
-                        }
-                        catch (Exception e1){
+                        } catch (Exception e1) {
                             // скачаю файл просто в папку загрузок
                             File file = FilesHandler.getBaseDownloadFile(book);
                             result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
@@ -234,7 +232,7 @@ public class TorWebClient {
                     File file = FilesHandler.getCompatDownloadFile(book);
                     result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
                 }
-                if(result){
+                if (result) {
                     return;
                 }
             }
@@ -242,22 +240,20 @@ public class TorWebClient {
                 Log.d("surprise", "TorWebClient downloadBook 225: can't load from main mirror");
                 // попробую загрузку с резервного адреса
                 response = simpleGetRequest(URLHelper.getFlibustaIsUrl() + book.link);
-                if(response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1){
+                if (response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1) {
                     boolean result = false;
                     // тут может быть загрузка книги без указания длины контента, попробую загрузить
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        try{
+                        try {
                             DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                             if (newFile != null) {
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, newFile);
                             }
-                        }
-                        catch (Exception e){
-                            try{
+                        } catch (Exception e) {
+                            try {
                                 File file = FilesHandler.getCompatDownloadFile(book);
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
-                            }
-                            catch (Exception e1){
+                            } catch (Exception e1) {
                                 // скачаю файл просто в папку загрузок
                                 File file = FilesHandler.getBaseDownloadFile(book);
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
@@ -267,25 +263,23 @@ public class TorWebClient {
                         File file = FilesHandler.getCompatDownloadFile(book);
                         result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
                     }
-                    if(result){
+                    if (result) {
                         return;
                     }
                 }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                try{
+                try {
                     DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                     if (newFile != null) {
                         Log.d("surprise", "TorWebClient downloadBook 276: HERE");
                         GlobalWebClient.handleBookLoadRequest(response, newFile);
                     }
-                }
-                catch (Exception e){
-                    try{
+                } catch (Exception e) {
+                    try {
                         File file = FilesHandler.getCompatDownloadFile(book);
                         GlobalWebClient.handleBookLoadRequest(response, file);
-                    }
-                    catch (Exception e1){
+                    } catch (Exception e1) {
                         // скачаю файл просто в папку загрузок
                         File file = FilesHandler.getBaseDownloadFile(book);
                         GlobalWebClient.handleBookLoadRequest(response, file);
@@ -295,12 +289,10 @@ public class TorWebClient {
                 File file = FilesHandler.getCompatDownloadFile(book);
                 GlobalWebClient.handleBookLoadRequest(response, file);
             }
-        }
-        catch (NoHttpResponseException e){
+        } catch (NoHttpResponseException e) {
             // книга недоступна для скачивания
             throw new BookNotFoundException();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             Log.d("surprise", "TorWebClient downloadBook: ошибка при сохранении");
             //throw new TorNotLoadedException();
@@ -374,7 +366,7 @@ public class TorWebClient {
     @SuppressWarnings("SameParameterValue")
     private HttpResponse executeRequest(String url, Map<String, String> headers, UrlEncodedFormEntity params) throws Exception {
         try {
-            AndroidOnionProxyManager tor = App.getInstance().mTorManager.getValue();
+            AndroidOnionProxyManager tor = App.getInstance().mLoadedTor.getValue();
             if (tor != null) {
                 HttpClient httpClient = getNewHttpClient();
                 int port = tor.getIPv4LocalHostSocksPort();

@@ -49,6 +49,10 @@
         <item name="android:textCursorDrawable">@drawable/cursor_eink</item>
     </style>
 
+    <style name="MyActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
+        <item name="colorControlNormal">@color/app_bar_icons_color</item>
+    </style>
+
     <style name="ThemeOverlay.AppTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="android:textColorPrimary">#CDC9C9</item>
         <item name="windowActionBar">false</item>
@@ -59,6 +63,4 @@
         <!-- loader -->
         <item name="android:windowBackground">@drawable/loader_background_splash</item>
     </style>
-
-    <color name="black">#000000</color>
 </resources>

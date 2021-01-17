@@ -2,6 +2,14 @@ package net.veldor.flibustaloader.utils;
 
 import android.os.Environment;
 
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
+import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.workers.SendLogWorker;
+import net.veldor.flibustaloader.workers.StartTorWorker;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -14,38 +22,56 @@ import java.util.Locale;
  * <p/>
  * Created by bendaf on 2016-04-28
  */
-public class LogHandler{
+public class LogHandler {
     private static final boolean shouldLog = true; //TODO: set to false in final version of the app
 
     private static LogHandler mInstance;
 
-    private LogHandler(){}
+    private LogHandler() {
+    }
 
-    public static LogHandler getInstance(){
-        if(mInstance == null){
+    public static LogHandler getInstance() {
+        if (mInstance == null) {
             mInstance = new LogHandler();
         }
         return mInstance;
     }
 
-    public void initLog(){
+    public void initLog() {
         boolean isLogStarted = false;
-        if(!isLogStarted && shouldLog){
+        if (!isLogStarted && shouldLog) {
             SimpleDateFormat dF = new SimpleDateFormat("yy-MM-dd_HH_mm''ss", Locale.getDefault());
-            String fileName = "logcat_" + dF.format(new Date()) + ".txt";
-            File outputFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/logcat/");
-            if(outputFile.mkdirs() || outputFile.isDirectory()){
+            String fileName = "fb_logcat" + dF.format(new Date()) + ".txt";
+            File outputFile = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/flibusta_logcat/");
+            if (outputFile.mkdirs() || outputFile.isDirectory()) {
+                // удалю старые файлы
+                File[] existentFiles = outputFile.listFiles();
+                if (existentFiles.length > 0) {
+                    long time = System.currentTimeMillis();
+                    for (File f :
+                            existentFiles) {
+                        if (f.isFile() && f.lastModified() < time - 3600000) {
+                            //noinspection ResultOfMethodCallIgnored
+                            f.delete();
+                        }
+                    }
+                }
                 String logFileAbsolutePath = outputFile.getAbsolutePath() + "/" + fileName;
-               // startLog();
+                // startLog();
                 // clear the previous logcat and then write the new one to the file
                 try {
                     Runtime.getRuntime().exec("logcat -c");
                     Runtime.getRuntime().exec("logcat -f " + logFileAbsolutePath);
-                } catch ( IOException e ) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
     }
 
+    public void sendLogs() {
+        // запущу рабочего, который подготовит лог и отправит его
+        OneTimeWorkRequest work = new OneTimeWorkRequest.Builder(SendLogWorker.class).build();
+        WorkManager.getInstance(App.getInstance()).enqueue(work);
+    }
 }

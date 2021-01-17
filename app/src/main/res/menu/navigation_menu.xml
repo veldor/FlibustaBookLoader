@@ -37,6 +37,10 @@
             android:id="@+id/goToSettings"
             android:icon="@drawable/ic_baseline_settings_black_24"
             android:title="@string/navigation_go_settings" />
+        <item
+            android:id="@+id/exitApp"
+            android:icon="@drawable/ic_close_grayscale_24dp"
+            android:title="@string/navigation_close_app" />
     </group>
 
     <item android:title="@string/actions">

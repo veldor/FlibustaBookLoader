@@ -29,6 +29,7 @@ public class MyPreferences {
     private static final String PREF_ONLY_RUSSIAN = "only russian";
     private static final String AUTH_COOKIE_VALUE = "auth cookie value";
     private static final String PREF_BEG_DONATION = "beg donation";
+    private static final String PREF_SKIP_MAIN_SCREEN = "skip load screen";
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
@@ -228,5 +229,9 @@ public class MyPreferences {
 
     public void setInspectionEnabled(boolean isEnabled) {
         mSharedPreferences.edit().putBoolean(PREF_CHECK_AVAILABILITY, isEnabled).apply();
+    }
+
+    public boolean isSkipMainScreen() {
+        return mSharedPreferences.getBoolean(PREF_SKIP_MAIN_SCREEN, false);
     }
 }

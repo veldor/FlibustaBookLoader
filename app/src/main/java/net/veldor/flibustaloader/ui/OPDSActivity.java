@@ -531,10 +531,10 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 Button upwardBtn = findViewById(R.id.goUp);
                 Button downwardBtn = findViewById(R.id.goDown);
                 if (downwardBtn != null) {
-                    downwardBtn.setOnClickListener(v -> mScrollView.scrollTo(0, mScrollView.getScrollY() + mViewModel.getHeight()));
+                    downwardBtn.setOnClickListener(v -> scrollUp());
                 }
                 if (upwardBtn != null) {
-                    upwardBtn.setOnClickListener(v -> mScrollView.scrollTo(0, mScrollView.getScrollY() - mViewModel.getHeight()));
+                    upwardBtn.setOnClickListener(v -> scrollDown());
                 }
                 //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
                 Log.d("surprise", "OPDSActivity setupInterface 529: use reader");
@@ -623,6 +623,14 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
 
         showChangesList();
+    }
+
+    private void scrollDown() {
+        mScrollView.scrollTo(0, mScrollView.getScrollY() - mViewModel.getHeight());
+    }
+
+    private void scrollUp() {
+        mScrollView.scrollTo(0, mScrollView.getScrollY() + mViewModel.getHeight());
     }
 
     private void showChangesList() {
@@ -1174,6 +1182,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
         mSearchView = (SearchView) searchMenuItem.getActionView();
         if (mSearchView != null) {
+            if (MyPreferences.getInstance().isEInk()) {
+                mSearchView.setQueryHint("");
+            }
             mSearchView.setInputType(InputType.TYPE_CLASS_TEXT);
             mSearchView.setOnQueryTextListener(this);
 
@@ -1799,6 +1810,16 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (MyPreferences.getInstance().isEInk()) {
+            Log.d("surprise", "OPDSActivity onKeyDown 1814: pressed " + keyCode);
+            if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_PAGE_UP) {
+                scrollUp();
+                return true;
+            } else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_PAGE_DOWN) {
+                scrollDown();
+                return true;
+            }
+        }
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (mCoverPreviewDialog != null && mCoverPreviewDialog.isShowing()) {
                 mBookTypeDialog.dismiss();

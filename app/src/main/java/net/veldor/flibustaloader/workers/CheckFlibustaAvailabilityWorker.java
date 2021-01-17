@@ -66,7 +66,7 @@ public class CheckFlibustaAvailabilityWorker extends Worker {
 
     private boolean inspect(String url) {
         try {
-            String answer = GlobalWebClient.request(url);
+            String answer = GlobalWebClient.requestNoMirror(url);
             if (answer != null && answer.length() > 0) {
                 Log.d("surprise", "CheckFlibustaAvailabilityWorker inspect 49: check success");
                 return true;

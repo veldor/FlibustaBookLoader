@@ -10,6 +10,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -76,6 +77,12 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(MyPreferences.getInstance().isSkipMainScreen()){
+            Toast.makeText(this, getString(R.string.lockscreen_scipped_message),Toast.LENGTH_LONG).show();
+            startView();
+            finish();
+            return;
+        }
         mViewModel = new ViewModelProvider(this).get(StartViewModel.class);
         setupUI();
         // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
@@ -174,26 +181,6 @@ public class MainActivity extends BaseActivity {
             // пропускаю дальше
             startView();
         } else {
-//            View rootView = findViewById(R.id.rootView);
-//            if (rootView != null) {
-//                // если это читалка- фон не назначаю
-//                if (MyPreferences.getInstance().isEInk()) {
-//                    //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
-//                    Log.d("surprise", "MainActivity setupUI 178: i use eInk");
-//                } else {
-//                    try {
-//                        // назначу фон
-//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//                            rootView.setBackground(ContextCompat.getDrawable(App.getInstance(), R.drawable.back_3));
-//                        } else {
-//                            rootView.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.back_3, getTheme()));
-//                        }
-//                    } catch (Exception e) {
-//                        Log.d("surprise", "MainActivity setupUI 137: can't set drawable");
-//                    }
-//                }
-//            }
-
             // переключатель аппаратного ускорения
             SwitchCompat switcher = findViewById(R.id.useHardwareAccelerationSwitcher);
             if (switcher != null) {
@@ -271,6 +258,7 @@ public class MainActivity extends BaseActivity {
     }
 
     protected void setupObservers() {
+        Log.d("surprise", "MainActivity setupObservers 260: setUp observers here");
         if (!App.getInstance().isExternalVpn()) {
             // зарегистрирую отслеживание загружающегося TOR
             LiveData<AndroidOnionProxyManager> loadedTor = App.getInstance().mLoadedTor;
@@ -437,7 +425,14 @@ public class MainActivity extends BaseActivity {
 
     private void startTimer() {
         int waitingTime = TOR_LOAD_MAX_TIME * 1000; // 3 minute in milli seconds
-        if (mProgressCounter == 0) {
+        int checkAvailabilityLimit;
+        if(MyPreferences.getInstance().isEInk()){
+            checkAvailabilityLimit = 60;
+        }
+        else{
+            checkAvailabilityLimit = 30;
+        }
+        if (mProgressCounter == 0 && mTorLoadingProgressIndicator != null) {
             mProgressCounter = 1;
             mCdt = new CountDownTimer(waitingTime, 1000) {
                 public void onTick(long millisUntilFinished) {
@@ -446,7 +441,7 @@ public class MainActivity extends BaseActivity {
                     CharSequence text = mTorLoadingStatusText.getText();
                     if (text != null && text.length() > 0 && text.toString().equals(getString(R.string.check_flibusta_availability_message))) {
                         FlibustaCheckCounter++;
-                        if (FlibustaCheckCounter == 20) {
+                        if (FlibustaCheckCounter == checkAvailabilityLimit) {
                             showCheckTooLongDialog();
                         }
                     } else {
@@ -480,9 +475,11 @@ public class MainActivity extends BaseActivity {
 
     private void stopTimer() {
         mProgressCounter = 0;
-        mTorLoadingProgressIndicator.setProgress(0);
-        if (mCdt != null) {
-            mCdt.cancel();
+        if(mTorLoadingProgressIndicator != null){
+            mTorLoadingProgressIndicator.setProgress(0);
+            if (mCdt != null) {
+                mCdt.cancel();
+            }
         }
     }
 

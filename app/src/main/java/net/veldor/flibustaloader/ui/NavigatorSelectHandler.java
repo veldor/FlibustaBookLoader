@@ -75,6 +75,8 @@ public class NavigatorSelectHandler implements NavigationView.OnNavigationItemSe
             intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
             mContext.startActivity(intent);
+        }else if (itemId == R.id.exitApp) {
+            System.exit(0);
         }
         return false;
     }

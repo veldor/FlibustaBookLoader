@@ -9,6 +9,8 @@ import android.widget.Toast;
 import androidx.work.WorkManager;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.notificatons.Notificator;
+import net.veldor.flibustaloader.utils.LogHandler;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
 import static net.veldor.flibustaloader.notificatons.Notificator.DOWNLOAD_PAUSED_NOTIFICATION;
@@ -22,6 +24,7 @@ public class MiscActionsReceiver extends BroadcastReceiver {
     public static final String ACTION_REPEAT_DOWNLOAD = "repeat download";
     public static final String ACTION_SKIP_BOOK = "skip book";
     public static final String ACTION_RESTART_TOR = "restart tor";
+    public static final String ACTION_SEND_LOGS = "send logs";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -62,6 +65,12 @@ public class MiscActionsReceiver extends BroadcastReceiver {
                     App.sTorStartTry = 0;
                     App.getInstance().startTor();
                     break;
+                case ACTION_SEND_LOGS:
+                    App.getInstance().getNotificator().mNotificationManager.cancel(Notificator.IS_TEST_VERSION_NOTIFICATION);
+                    Intent it = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+                    context.sendBroadcast(it);
+                    LogHandler.getInstance().sendLogs();
+
             }
         }
     }

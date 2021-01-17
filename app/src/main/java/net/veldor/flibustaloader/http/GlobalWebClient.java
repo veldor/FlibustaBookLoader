@@ -29,8 +29,14 @@ public class GlobalWebClient {
                 return EntityUtils.toString(response.getEntity());
             }
         } else {
-            TorWebClient webClient = new TorWebClient();
-            return webClient.request(requestString);
+            String response = (new MirrorRequestClient()).request(requestString);
+            if (response == null) {
+                // сначала попробую запросить инфу с зеркала
+                TorWebClient webClient = new TorWebClient();
+                return webClient.request(requestString);
+            }
+            return response;
+
         }
         return null;
     }
@@ -47,10 +53,10 @@ public class GlobalWebClient {
                         long lastNotificationTime = System.currentTimeMillis();
                         String fileName = newFile.getName();
                         Notificator notifier = App.getInstance().getNotificator();
-                        if(contentLength > 0){
+                        if (contentLength > 0) {
                             // создам уведомление, в котором буду показывать прогресс скачивания
-                            if(showDownloadProgress){
-                                notifier.createBookLoadingProgressNotification((int)contentLength,0,  fileName);
+                            if (showDownloadProgress) {
+                                notifier.createBookLoadingProgressNotification((int) contentLength, 0, fileName);
                             }
                         }
                         InputStream content = entity.getContent();
@@ -61,9 +67,9 @@ public class GlobalWebClient {
                                 byte[] buffer = new byte[4092];
                                 while ((read = content.read(buffer)) > 0) {
                                     out.write(buffer, 0, read);
-                                    if(contentLength > 0 && showDownloadProgress && lastNotificationTime + 1000 < System.currentTimeMillis()) {
+                                    if (contentLength > 0 && showDownloadProgress && lastNotificationTime + 1000 < System.currentTimeMillis()) {
                                         lastNotificationTime = System.currentTimeMillis();
-                                        notifier.createBookLoadingProgressNotification((int) contentLength,(int) newFile.length(), fileName);
+                                        notifier.createBookLoadingProgressNotification((int) contentLength, (int) newFile.length(), fileName);
                                     }
                                 }
                                 out.close();
@@ -95,9 +101,9 @@ public class GlobalWebClient {
                         long contentLength = entity.getContentLength();
                         String fileName = newFile.getName();
                         Notificator notifier = App.getInstance().getNotificator();
-                        if(contentLength > 0){
+                        if (contentLength > 0) {
                             // создам уведомление, в котором буду показывать прогресс скачивания
-                            notifier.createBookLoadingProgressNotification((int)contentLength,0,  fileName);
+                            notifier.createBookLoadingProgressNotification((int) contentLength, 0, fileName);
                         }
                         InputStream content = entity.getContent();
                         if (content != null && entity.getContentLength() > 0) {
@@ -106,7 +112,7 @@ public class GlobalWebClient {
                             byte[] buffer = new byte[1024];
                             while ((read = content.read(buffer)) > 0) {
                                 out.write(buffer, 0, read);
-                                notifier.createBookLoadingProgressNotification((int) contentLength,(int) newFile.length(), fileName);
+                                notifier.createBookLoadingProgressNotification((int) contentLength, (int) newFile.length(), fileName);
                             }
                             out.close();
                             content.close();
@@ -126,6 +132,7 @@ public class GlobalWebClient {
         Log.d("surprise", "TorWebClient downloadBook: книга не найдена, статус удаления файла: " + deleteResult);
         throw new BookNotFoundException();
     }
+
     public static boolean handleBookLoadRequestNoContentLength(HttpResponse response, DocumentFile newFile) {
         try {
             if (response != null) {
@@ -201,4 +208,19 @@ public class GlobalWebClient {
         return false;
     }
 
+    public static String requestNoMirror(String requestString) throws TorNotLoadedException, IOException {
+        // если используется внешний VPN- выполню поиск в нём, иначае- в TOR
+        if (App.getInstance().isExternalVpn()) {
+            HttpResponse response = ExternalVpnVewClient.rawRequest(requestString);
+            if (response != null) {
+                return EntityUtils.toString(response.getEntity());
+            }
+        } else {
+            // сначала попробую запросить инфу с зеркала
+            Log.d("surprise", "GlobalWebClient request 33: TRY REQUEST MIRROR");
+            TorWebClient webClient = new TorWebClient();
+            return webClient.requestNoMirror(requestString);
+        }
+        return null;
+    }
 }

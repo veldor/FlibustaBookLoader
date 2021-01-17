@@ -10,4 +10,6 @@
     <color name="author_text_color">#B2BBFF</color>
     <color name="book_name_color">#f59214</color>
     <color name="translator_text_color">#BFD3FF</color>
+
+    <color name="app_bar_icons_color">#AFAEAE</color>
 </resources>

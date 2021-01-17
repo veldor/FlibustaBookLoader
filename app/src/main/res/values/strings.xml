@@ -224,4 +224,9 @@
     <string name="wait_more_item">Wait more</string>
     <string name="enable_wifi_title">Enable Wi-Fi</string>
     <string name="wifi_enable_message">Looks like wi-fi disabled. You can enable it for surfing</string>
+    <string name="skip_load_screen_message">Skip load screen</string>
+    <string name="skip_load_screen_summary">Very alpha! Skip load screen and dot\'t wait for TOR load on start</string>
+    <string name="lockscreen_scipped_message">Load screen skipped. You can enable it in connectivity settings</string>
+    <string name="navigation_close_app">Close app</string>
+    <string name="test_version_message">This is test version</string>
 </resources>

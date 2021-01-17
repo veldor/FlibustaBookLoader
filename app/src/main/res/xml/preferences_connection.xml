@@ -5,6 +5,11 @@
         app:key="check availability"
         android:title="@string/check_server_on_start"
         android:defaultValue="true"/>
+    <SwitchPreferenceCompat
+        app:key="skip load screen"
+        android:title="@string/skip_load_screen_message"
+        android:summary="@string/skip_load_screen_summary"
+        android:defaultValue="false"/>
     <CheckBoxPreference
         android:defaultValue="false"
         android:summary="Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно."

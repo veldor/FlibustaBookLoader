@@ -34,7 +34,7 @@ class ImageLoadHandler {
             try {
                 HttpClient httpClient = getNewHttpClient();
                 int port;
-                AndroidOnionProxyManager onionProxyManager = App.getInstance().mTorManager.getValue();
+                AndroidOnionProxyManager onionProxyManager = App.getInstance().mLoadedTor.getValue();
                 assert onionProxyManager != null;
                 port = onionProxyManager.getIPv4LocalHostSocksPort();
                 InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);

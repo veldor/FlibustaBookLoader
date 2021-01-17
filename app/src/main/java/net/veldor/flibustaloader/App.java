@@ -108,9 +108,6 @@ public class App extends MultiDexApplication {
     private static final String PREFERENCE_LAST_LOADED_URL = "last_loaded_url";
     public static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";
 
-    // место для хранения TOR клиента
-    public final MutableLiveData<AndroidOnionProxyManager> mTorManager = new MutableLiveData<>();
-
     // место для хранения выбранного писателя
     public final MutableLiveData<Author> mSelectedAuthor = new MutableLiveData<>();
 
@@ -155,19 +152,22 @@ public class App extends MultiDexApplication {
     private BlacklistAuthors mAuthorsBlacklist;
     private BlacklistSequences mSequencesBlacklist;
     private BlacklistGenres mGenresBlacklist;
+    public boolean torInitInProgress = false;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
-        //todo удалить в релизной версии
-        LogHandler.getInstance().initLog();
+        instance = this;
+        sNotificator = Notificator.getInstance();
+        if(isTestVersion){
+            LogHandler.getInstance().initLog();
+            sNotificator.showTestVersionNotification();
+        }
 
         // читаю настройки sharedPreferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        instance = this;
 
-        sNotificator = Notificator.getInstance();
 
         startTor();
 
@@ -240,14 +240,18 @@ public class App extends MultiDexApplication {
     }
 
     public void startTor() {
+        Log.d("surprise", "App startTor 246: Tor start initiated");
         // если используется внешний VPN- TOR не нужен
         if(!isExternalVpn()){
-            Constraints constraints = new Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build();
-            // запускаю tor
-            OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
-            WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
+            // если рабочий ещё не запущен- запущу. Если уже работает- проигнорирую
+            if(!torInitInProgress){
+                Constraints constraints = new Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build();
+                // запускаю tor
+                OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
+                WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
+            }
         }
     }
 
@@ -261,9 +265,7 @@ public class App extends MultiDexApplication {
 
     public void switchViewMode(int type) {
         int mode = 1;
-        if (type == R.id.menuUseNormalStyle) {
-            mode = VIEW_MODE_NORMAL;
-        } else if (type == R.id.menuUseLightStyle) {
+        if (type == R.id.menuUseLightStyle) {
             mode = VIEW_MODE_LIGHT;
         } else if (type == R.id.menuUseLightFastStyle) {
             mode = VIEW_MODE_FAST;

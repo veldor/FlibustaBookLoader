@@ -14,6 +14,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.http.TorStarter;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.utils.MyPreferences;
@@ -36,24 +37,28 @@ public class PeriodicCheckFlibustaAvailabilityWorker extends Worker {
             // Mark the Worker as important
             setForegroundAsync(createForegroundInfo());
 
-            AndroidOnionProxyManager tor = App.getInstance().mLoadedTor.getValue();
-            while (tor == null) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                tor = App.getInstance().mLoadedTor.getValue();
-            }
-            // теперь подожду, пока TOR дозагрузится
-            while (!tor.isBootstrapped()) {
+            while (App.getInstance().torInitInProgress) {
                 try {
                     //noinspection BusyWait
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+            App.getInstance().torInitInProgress = true;
+            // попробую стартовать TOR
+            TorStarter starter = new TorStarter();
+            App.sTorStartTry = 0;
+            while (App.sTorStartTry < 4) {
+                // есть три попытки, если все три неудачны- верну ошибку
+                if (starter.startTor()) {
+                    App.sTorStartTry = 0;
+                    break;
+                } else {
+                    App.sTorStartTry++;
+                }
+            }
+            App.getInstance().torInitInProgress = false;
 
             // готово, проверю доступность
             TorWebClient webClient = null;

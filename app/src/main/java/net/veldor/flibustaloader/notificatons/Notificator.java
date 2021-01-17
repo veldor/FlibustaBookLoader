@@ -60,6 +60,7 @@ public class Notificator {
     private static final String BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID = "book download progress";
     private static final int MIRROR_DOWNLOAD_USING_NOTIFICATION = 13;
     public static final int CHECK_AVAILABILITY_NOTIFICATION = 15;
+    public static final int IS_TEST_VERSION_NOTIFICATION = 16;
     private static final int MIRROR_USING_NOTIFICATION = 14;
     private static Notificator instance;
     private final Context mContext;
@@ -542,5 +543,19 @@ public class Notificator {
                 .setProgress(0, 0, true)
                 .setOngoing(true);
         return notificationBuilder.build();
+    }
+
+    public void showTestVersionNotification() {
+        // интент отправки логов
+        Intent sendLogsIntent = new Intent(mContext, MiscActionsReceiver.class);
+        sendLogsIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_SEND_LOGS);
+        PendingIntent sendLogsPendingIntent = PendingIntent.getBroadcast(mContext, CANCEL_CODE, sendLogsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, FOREGROUND_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
+                .setContentTitle(App.getInstance().getString(R.string.test_version_message))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText("Спасибо, что помогаете с тестированием. Теперь можно отправить логи прямо отсюда- нажмите на кнопку"))
+                .addAction(R.drawable.ic_baseline_bookmark_24, "Send log", sendLogsPendingIntent);
+
+        mNotificationManager.notify(IS_TEST_VERSION_NOTIFICATION, notificationBuilder.build());
     }
 }

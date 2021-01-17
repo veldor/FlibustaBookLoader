@@ -14,6 +14,7 @@
         android:layout_height="150dp"
         android:drawableBottom="@drawable/ic_baseline_arrow_downward_24"
         android:layout_marginLeft="-10dp"
+        android:text=""
         android:background="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,6 +23,7 @@
 
     <Button
         android:id="@+id/goUp"
+        android:text=""
         android:layout_width="20dp"
         android:layout_height="150dp"
         android:drawableTop="@drawable/ic_baseline_arrow_upward_24"

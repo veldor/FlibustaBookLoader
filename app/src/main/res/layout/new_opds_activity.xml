@@ -24,7 +24,6 @@
                 app:titleTextColor="#D6D6D6"
                 android:background="@color/colorPrimary"
                 android:theme="@style/MyActionBar">
-
             </androidx.appcompat.widget.Toolbar>
         </com.google.android.material.appbar.AppBarLayout>
 

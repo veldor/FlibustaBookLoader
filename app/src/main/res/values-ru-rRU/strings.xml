@@ -202,4 +202,11 @@
     <string name="bookmark_name_item">Имя закладки</string>
     <string name="wait_more_item">Нет, подождать ещё</string>
     <string name="skip_inspection_item">Пропустить проверку</string>
+    <string name="enable_wifi_title">Активация Wi-Fi</string>
+    <string name="wifi_enable_message">Похоже, Wi-Fi отключен. Включить его?</string>
+    <string name="skip_load_screen_message">Отключить экран загрузки</string>
+    <string name="skip_load_screen_summary">Осторожно! Тестовая версия! Пропускает экран загрузки на старте приложения, не дожидаясь загрузки TOR и не проводя проверки. Поведение приложения может стать непредсказуемым</string>
+    <string name="navigation_close_app">Закрыть приложение</string>
+    <string name="lockscreen_scipped_message">Экран загрузки пропущен. Вы можете включить его заново в настройках соединения</string>
+    <string name="test_version_message">Тестовая версия приложения</string>
 </resources>

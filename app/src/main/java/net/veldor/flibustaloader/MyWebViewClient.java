@@ -19,6 +19,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
+import net.veldor.flibustaloader.http.TorStarter;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
 import net.veldor.flibustaloader.utils.MimeTypes;
@@ -55,7 +56,6 @@ import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManage
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
 import static net.veldor.flibustaloader.http.TorWebClient.ERROR_DETAILS;
-import static net.veldor.flibustaloader.workers.StartTorWorker.startTor;
 
 public class MyWebViewClient extends WebViewClient {
 
@@ -95,12 +95,12 @@ public class MyWebViewClient extends WebViewClient {
     private static final String HTML_TYPE = "text/html";
     private static final String AJAX_REQUEST = "http://flibustahezeous3.onion/makebooklist?";
 
-    private final AndroidOnionProxyManager onionProxyManager;
+    private AndroidOnionProxyManager onionProxyManager;
     private int mViewMode;
     private boolean mNightMode;
 
     MyWebViewClient() {
-        this.onionProxyManager = App.getInstance().mTorManager.getValue();
+        onionProxyManager = App.getInstance().mLoadedTor.getValue();
     }
 
     @Override
@@ -118,20 +118,32 @@ public class MyWebViewClient extends WebViewClient {
     }
 
 
-    private HttpClient getNewHttpClient() {
-
+    private HttpClient getNewHttpClient() throws TorNotLoadedException {
+        while (App.getInstance().torInitInProgress) {
+            try {
+                //noinspection BusyWait
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        App.getInstance().torInitInProgress = true;
         // попробую стартовать TOR
+        TorStarter starter = new TorStarter();
+        App.sTorStartTry = 0;
         while (App.sTorStartTry < 4) {
             // есть три попытки, если все три неудачны- верну ошибку
-            try {
-                startTor();
-                // обнулю счётчик попыток
+            if (starter.startTor()) {
                 App.sTorStartTry = 0;
                 break;
-            } catch (TorNotLoadedException | IOException | InterruptedException e) {
-                // попытка неудачна, плюсую счётчик попыток
+            } else {
                 App.sTorStartTry++;
             }
+        }
+        App.getInstance().torInitInProgress = false;
+        // если счётчик больше 3- не удалось запустить TOR, вызову исключение
+        if (App.sTorStartTry > 3) {
+            throw new TorNotLoadedException();
         }
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new MyConnectionSocketFactory())
@@ -220,7 +232,7 @@ public class MyWebViewClient extends WebViewClient {
     @SuppressWarnings("CharsetObjectCanBeUsed")
     private WebResourceResponse handleRequest(WebView view, String url) {
         Log.d("surprise", "MyWebViewClient handleRequest request " + url);
-        if(App.getInstance().useMirror){
+        if (App.getInstance().useMirror) {
             // TODO заменить зеркало
             Log.d("surprise", "TorWebClient request 128: change mirror");
             url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
@@ -243,6 +255,12 @@ public class MyWebViewClient extends WebViewClient {
                 httpResponse = ExternalVpnVewClient.rawRequest(url);
             } else {
                 HttpClient httpClient = getNewHttpClient();
+                if (onionProxyManager == null) {
+                    onionProxyManager = App.getInstance().mLoadedTor.getValue();
+                }
+                if (onionProxyManager == null) {
+                    return null;
+                }
                 int port = onionProxyManager.getIPv4LocalHostSocksPort();
                 InetSocketAddress socksaddr = new InetSocketAddress("127.0.0.1", port);
                 HttpClientContext context = HttpClientContext.create();
@@ -254,10 +272,9 @@ public class MyWebViewClient extends WebViewClient {
                 if (authCookie != null) {
                     httpGet.setHeader("Cookie", authCookie);
                 }
-                try{
+                try {
                     httpResponse = httpClient.execute(httpGet, context);
-                }
-                catch (NoHttpResponseException e){
+                } catch (NoHttpResponseException e) {
                     Log.d("surprise", "MyWebViewClient handleRequest 256: ALARM, NO ANSWER!!");
                     String message = "<H1 style='text-align:center;'>¯\\_(ツ)_/¯</H1><H1 style='text-align:center;'>Эта книга ещё недоступна</H1><H2 style='text-align:center;'>Попробуйте позднее</H2>";
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes("UTF-8"));
@@ -278,7 +295,7 @@ public class MyWebViewClient extends WebViewClient {
             Log.d("surprise", "MyWebViewClient handleRequest 262: mime is " + mime);
 
             // Если формат книжный, загружу книгу
-            if(MimeTypes.isBookFormat(mime)){
+            if (MimeTypes.isBookFormat(mime)) {
                 Log.d("surprise", "MyWebViewClient handleRequest 277: ADD BOOK TO QUEUE");
                 Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
                 startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
@@ -291,8 +308,8 @@ public class MyWebViewClient extends WebViewClient {
                         headers) {
                     Log.d("surprise", "MyWebViewClient handleRequest 271: Header " + h.getName());
                     Log.d("surprise", "MyWebViewClient handleRequest 271: Header VALUE" + h.getValue());
-                    if(h.getValue().startsWith("attachment; filename=\"")){
-                        newBook.name = h.getValue().substring(22, h.getValue().length() -1);
+                    if (h.getValue().startsWith("attachment; filename=\"")) {
+                        newBook.name = h.getValue().substring(22, h.getValue().length() - 1);
                         Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);
                     }
                 }
