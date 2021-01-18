@@ -39,6 +39,11 @@
     <style name="MyEinkActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
         <item name="android:textColorPrimary">#000000</item>
         <item name="colorControlNormal">#000000</item>
+        <item name="android:textColorSecondary">#000000</item>
+        <item name="tint">#000000</item>
+        <item name="colorButtonNormal">#000000</item>
+        <item name="color">#000000</item>
+        <item name="iconTint">#000000</item>
         <item name="autoCompleteTextViewStyle">@style/eInkCursorColor</item>
     </style>
 
@@ -51,6 +56,7 @@
 
     <style name="MyActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
         <item name="colorControlNormal">@color/app_bar_icons_color</item>
+        <item name="color">@color/app_bar_icons_color</item>
     </style>
 
     <style name="ThemeOverlay.AppTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
@@ -62,5 +68,9 @@
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
         <!-- loader -->
         <item name="android:windowBackground">@drawable/loader_background_splash</item>
+    </style>
+
+    <style name="preferencesStyle"  parent="Theme.AppCompat.DayNight">
+        <item name="android:tint">@color/icon_text_color</item>
     </style>
 </resources>

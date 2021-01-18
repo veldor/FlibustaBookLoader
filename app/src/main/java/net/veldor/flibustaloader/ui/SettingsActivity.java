@@ -75,6 +75,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
     @Override
     protected void setupInterface() {
         super.setupInterface();
+        setTheme(R.style.preferencesStyle);
         // скрою переход на данное активити
         Menu menuNav = mNavigationView.getMenu();
         MenuItem item = menuNav.findItem(R.id.goToSettings);
@@ -132,8 +133,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                     Intent intent;
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                         intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                    }
-                    else{
+                    } else {
                         intent = new Intent(Intent.ACTION_GET_CONTENT);
                     }
                     intent.setFlags(FLAG_GRANT_READ_URI_PERMISSION);
@@ -160,7 +160,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                         if (uri != null) {
                             // закодирую данные для передачи рабочему
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                App.getInstance().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                                App.getInstance().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                             }
 
                             Data inputData = new Data.Builder()
@@ -261,6 +261,22 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences_view, rootKey);
         }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+
+            Log.d("surprise", "ViewPreferencesFragment onCreate 270: create view preferences");
+            Preference switchViewPref = findPreference(getString(R.string.pref_is_eink));
+
+            if (switchViewPref != null) {
+                switchViewPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    new Handler().postDelayed(new ResetApp(), 100);
+                    return true;
+                });
+
+            }
+        }
     }
 
     public static class UpdatePreferencesFragment extends PreferenceFragmentCompat {
@@ -337,7 +353,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
             }
 
             Preference changeDownloadFolderAltPreference = findPreference(getString(R.string.pref_download_location_alt));
-            if(changeDownloadFolderAltPreference != null){
+            if (changeDownloadFolderAltPreference != null) {
                 changeDownloadFolderAltPreference.setOnPreferenceClickListener(preference -> {
                     showAlterDirSelectDialog();
                     return false;
@@ -348,7 +364,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
         private void showAlterDirSelectDialog() {
             Log.d("surprise", "SettingsActivity.java 331 showAlterDirSelectDialog: start select");
             FragmentActivity activity = getActivity();
-            if(activity != null){
+            if (activity != null) {
                 new AlertDialog.Builder(activity, R.style.MyDialogStyle)
                         .setTitle("Альтернативный выбор папки")
                         .setMessage("На случай, если папка для скачивания не выбирается основным методом. Только для совместимости, никаких преимуществ этот способ не даёт, также выбранная папка может сбрасываться при перезагрузке смартфона и её придётся выбирать заново")

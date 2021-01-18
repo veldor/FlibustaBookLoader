@@ -229,4 +229,5 @@
     <string name="lockscreen_scipped_message">Load screen skipped. You can enable it in connectivity settings</string>
     <string name="navigation_close_app">Close app</string>
     <string name="test_version_message">This is test version</string>
+    <string name="send_log_message">Send log</string>
 </resources>

@@ -16,6 +16,7 @@
     <ProgressBar
         android:id="@+id/pageLoadedProgressBar"
         style="?android:attr/progressBarStyleHorizontal"
+        android:progressDrawable="@drawable/eink_progressbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"

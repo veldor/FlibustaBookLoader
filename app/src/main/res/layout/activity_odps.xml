@@ -84,7 +84,7 @@
             android:textColor="@color/sequences_text" />
     </RadioGroup>
 
-    <androidx.core.widget.NestedScrollView
+    <ScrollView
         android:id="@+id/subscriptions_layout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -165,7 +165,7 @@
                 app:layout_constraintEnd_toStartOf="@+id/forward_btn"
                 app:layout_constraintStart_toEndOf="@+id/backward_btn" />
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.core.widget.NestedScrollView>
+    </ScrollView>
 
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/floatingMenu"

@@ -28,16 +28,17 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -138,7 +139,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private final String[] mAuthorViewTypes = new String[]{"Книги по сериям", "Книги вне серий", "Книги по алфавиту", "Книги по дате поступления"};
     private AlertDialog mSelectAuthorViewDialog;
     private AlertDialog.Builder mSelectAuthorsDialog;
-    private RecyclerView mResultsRecycler;
+    private RecyclerView mResultsRecycler = null;
     private TextView mSearchTitle;
     private AlertDialog.Builder mSelectSequencesDialog;
 
@@ -165,7 +166,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     public static String sNextPage;
     private boolean mAddToLoaded;
     private static boolean sFirstLoad = true;
-    private NestedScrollView mScrollView;
+    private ScrollView mScrollView;
     private RadioButton mSearchBooksButton;
     private RadioButton mSearchAuthorsButton;
     private SwitchCompat mMassLoadSwitcher;
@@ -207,38 +208,41 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         // кнопка перехода вперёд
         mForwardBtn = findViewById(R.id.forward_btn);
         mBackwardBtn = findViewById(R.id.backward_btn);
-
-        mBackwardBtn.setOnClickListener(v -> {
-            if (History.getInstance().isEmpty()) {
-                String lastPage = History.getInstance().getLastPage();
-                if (lastPage != null) {
-                    doSearch(lastPage, false);
-                    return;
+        if (mBackwardBtn != null) {
+            mBackwardBtn.setOnClickListener(v -> {
+                if (History.getInstance().isEmpty()) {
+                    String lastPage = History.getInstance().getLastPage();
+                    if (lastPage != null) {
+                        doSearch(lastPage, false);
+                        return;
+                    }
                 }
-            }
-            if (mConfirmExit != 0) {
-                if (mConfirmExit > System.currentTimeMillis() - 3000) {
-                    // выйду из приложения
-                    Log.d("surprise", "OPDSActivity onKeyDown exit");
-                    OPDSActivity.this.finishAffinity();
+                if (mConfirmExit != 0) {
+                    if (mConfirmExit > System.currentTimeMillis() - 3000) {
+                        // выйду из приложения
+                        Log.d("surprise", "OPDSActivity onKeyDown exit");
+                        OPDSActivity.this.finishAffinity();
+                    } else {
+                        Toast.makeText(OPDSActivity.this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                        mConfirmExit = System.currentTimeMillis();
+                    }
                 } else {
                     Toast.makeText(OPDSActivity.this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                     mConfirmExit = System.currentTimeMillis();
                 }
-            } else {
-                Toast.makeText(OPDSActivity.this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
-                mConfirmExit = System.currentTimeMillis();
-            }
-        });
+            });
+        }
 
-        mForwardBtn.setOnClickListener(v -> {
-            scrollToTop();
-            if (sNextPage != null && !sNextPage.isEmpty()) {
-                doSearch(sNextPage, false);
-            } else {
-                Toast.makeText(OPDSActivity.this, "Результаты закончились", Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (mForwardBtn != null) {
+            mForwardBtn.setOnClickListener(v -> {
+                scrollToTop();
+                if (sNextPage != null && !sNextPage.isEmpty()) {
+                    doSearch(sNextPage, false);
+                } else {
+                    Toast.makeText(OPDSActivity.this, "Результаты закончились", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
         // зарегистрирую получатель ошибки подключения к TOR
         IntentFilter filter = new IntentFilter();
@@ -250,12 +254,14 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         // создам тестовый массив строк для автозаполнения
         autocompleteStrings = mViewModel.getSearchAutocomplete();
 
-        // при нажатии кнопки назад- убираем последний элемент истории и переходим на предпоследний
-        mLoadMoreBtn.setOnClickListener(view -> {
-            // загружаю следующую страницу
-            mAddToLoaded = true;
-            doSearch(sNextPage, false);
-        });
+        if (mLoadMoreBtn != null) {
+            // при нажатии кнопки назад- убираем последний элемент истории и переходим на предпоследний
+            mLoadMoreBtn.setOnClickListener(view -> {
+                // загружаю следующую страницу
+                mAddToLoaded = true;
+                doSearch(sNextPage, false);
+            });
+        }
         // добавлю отслеживание изменения ваианта поиска
 
         mSearchBooksButton = findViewById(R.id.searchBook);
@@ -327,10 +333,12 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         LiveData<String> searchTitle = App.getInstance().mSearchTitle;
         searchTitle.observe(this, s -> {
             if (s != null) {
-                mSearchTitle.setVisibility(View.VISIBLE);
-                mSearchTitle.setText(s);
-                changeTitle(s);
-            } else {
+                if (mSearchTitle != null) {
+                    mSearchTitle.setVisibility(View.VISIBLE);
+                    mSearchTitle.setText(s);
+                    changeTitle(s);
+                }
+            } else if (mSearchTitle != null) {
                 mSearchTitle.setVisibility(View.GONE);
             }
         });
@@ -512,6 +520,22 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mScrollView = findViewById(R.id.subscriptions_layout);
         // рециклеры
         mResultsRecycler = findViewById(R.id.resultsList);
+        mResultsRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                // проверю последний видимый элемент
+                if (App.getInstance().isLinearLayout()) {
+                    LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
+                    int position = manager.findLastCompletelyVisibleItemPosition();
+                    if (position == mResultsRecycler.getAdapter().getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
+                        // подгружу результаты
+                        mAddToLoaded = true;
+                        doSearch(sNextPage, false);
+                    }
+                }
+            }
+        });
         if (App.getInstance().isLinearLayout()) {
             mResultsRecycler.setLayoutManager(new LinearLayoutManager(OPDSActivity.this));
         } else {
@@ -527,15 +551,6 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
         if (mRootView != null) {
             if (MyPreferences.getInstance().isEInk()) {
-                // назначу действия кнопкам перемотки вверх и вниз
-                Button upwardBtn = findViewById(R.id.goUp);
-                Button downwardBtn = findViewById(R.id.goDown);
-                if (downwardBtn != null) {
-                    downwardBtn.setOnClickListener(v -> scrollUp());
-                }
-                if (upwardBtn != null) {
-                    upwardBtn.setOnClickListener(v -> scrollDown());
-                }
                 //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
                 Log.d("surprise", "OPDSActivity setupInterface 529: use reader");
             } else {
@@ -625,12 +640,33 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         showChangesList();
     }
 
-    private void scrollDown() {
-        mScrollView.scrollTo(0, mScrollView.getScrollY() - mViewModel.getHeight());
+    private void scrollUp() {
+        if (App.getInstance().isLinearLayout()) {
+            LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
+            int position = manager.findFirstCompletelyVisibleItemPosition();
+            if (position > 0) {
+                manager.scrollToPositionWithOffset(position - 1, 10);
+            }
+        }
     }
 
-    private void scrollUp() {
-        mScrollView.scrollTo(0, mScrollView.getScrollY() + mViewModel.getHeight());
+    private void scrollDown() {
+        if (App.getInstance().isLinearLayout()) {
+            LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
+            int position = manager.findFirstCompletelyVisibleItemPosition();
+            @SuppressWarnings("rawtypes") RecyclerView.Adapter adapter = mResultsRecycler.getAdapter();
+            if (adapter != null) {
+                if (position < adapter.getItemCount() - 1) {
+                    manager.scrollToPositionWithOffset(position + 1, 10);
+                    position = manager.findLastCompletelyVisibleItemPosition();
+                    if (position == adapter.getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
+                        // подгружу результаты
+                        mAddToLoaded = true;
+                        doSearch(sNextPage, false);
+                    }
+                }
+            }
+        }
     }
 
     private void showChangesList() {
@@ -862,9 +898,15 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             if (books != null && books.size() > 0) {
                 mFab.setVisibility(View.VISIBLE);
                 if (!App.getInstance().isDownloadAll() && sNextPage != null) {
-                    mLoadMoreBtn.setVisibility(View.VISIBLE);
-                    mForwardBtn.setVisibility(View.VISIBLE);
-                    mBackwardBtn.setVisibility(View.VISIBLE);
+                    if (mLoadMoreBtn != null) {
+                        mLoadMoreBtn.setVisibility(View.VISIBLE);
+                    }
+                    if (mForwardBtn != null) {
+                        mForwardBtn.setVisibility(View.VISIBLE);
+                    }
+                    if (mBackwardBtn != null) {
+                        mBackwardBtn.setVisibility(View.VISIBLE);
+                    }
                 } else {
                     hideLoadingButtons();
                 }
@@ -991,9 +1033,15 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     }
 
     private void hideLoadingButtons() {
-        mLoadMoreBtn.setVisibility(View.GONE);
-        mForwardBtn.setVisibility(View.GONE);
-        mBackwardBtn.setVisibility(View.GONE);
+        if (mLoadMoreBtn != null) {
+            mLoadMoreBtn.setVisibility(View.GONE);
+        }
+        if (mForwardBtn != null) {
+            mForwardBtn.setVisibility(View.GONE);
+        }
+        if (mBackwardBtn != null) {
+            mBackwardBtn.setVisibility(View.GONE);
+        }
     }
 
     private void showPreview(FoundedBook foundedBook) {
@@ -1125,8 +1173,11 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 mConnectionTypeView.setBackgroundColor(Color.parseColor("#4CAF50"));
             }
         }
-        if (mResultsRecycler != null && mResultsRecycler.getAdapter() instanceof MyAdapterInterface) {
-            mResultsRecycler.getAdapter().notifyDataSetChanged();
+        if (mResultsRecycler != null) {
+            mResultsRecycler.performClick();
+            if (mResultsRecycler.getAdapter() instanceof MyAdapterInterface) {
+                mResultsRecycler.getAdapter().notifyDataSetChanged();
+            }
         }
         mActivityVisible = true;
     }
@@ -1808,10 +1859,10 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         }
     }
 
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (MyPreferences.getInstance().isEInk()) {
-            Log.d("surprise", "OPDSActivity onKeyDown 1814: pressed " + keyCode);
             if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_PAGE_UP) {
                 scrollUp();
                 return true;

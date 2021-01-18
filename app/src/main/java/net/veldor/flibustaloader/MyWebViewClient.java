@@ -16,6 +16,9 @@ import androidx.documentfile.provider.DocumentFile;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.MyConnectionSocketFactory;
+import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
@@ -65,7 +68,6 @@ public class MyWebViewClient extends WebViewClient {
     public static final int START_BOOK_LOADING = 1;
     public static final int FINISH_BOOK_LOADING = 2;
     private static final String ENCODING_UTF_8 = "UTF-8";
-    private static final String BOOK_FORMAT = "application/octet-stream";
     private static final String FB2_FORMAT = "application/zip";
     private static final String PDF_FORMAT = "application/pdf";
     private static final String CSS_FORMAT = "text/css";
@@ -292,8 +294,26 @@ public class MyWebViewClient extends WebViewClient {
             InputStream input = httpResponse.getEntity().getContent();
             String encoding = ENCODING_UTF_8;
             String mime = httpResponse.getEntity().getContentType().getValue();
-            Log.d("surprise", "MyWebViewClient handleRequest 262: mime is " + mime);
+            Log.d("surprise", "MyWebViewClient handleRequest 262: mime is " + mime + " request is " + url);
 
+            // todo разобраться с application/octet-stream
+            if(mime.equals("application/octet-stream")){
+                Log.d("surprise", "MyWebViewClient handleRequest 298: HAVE OCTET-STREAM");
+                // придётся ориентироваться по имени файла и определять, что это книга
+                // костыль, конечно, но что делать
+
+                // покажу хедеры
+                Header[] headers = httpResponse.getAllHeaders();
+                for (Header h :
+                        headers) {
+                    if(h.getName().equals("Content-Disposition")){
+                        // похоже на книгу
+                        Log.d("surprise", "MyWebViewClient handleRequest 310: LOOKS LIKE ITS BOOK");
+                        // Тут пока что грязный хак, скажу, что это epub
+                        mime = "application/epub";
+                    }
+                }
+            }
             // Если формат книжный, загружу книгу
             if (MimeTypes.isBookFormat(mime)) {
                 Log.d("surprise", "MyWebViewClient handleRequest 277: ADD BOOK TO QUEUE");
@@ -309,7 +329,11 @@ public class MyWebViewClient extends WebViewClient {
                     Log.d("surprise", "MyWebViewClient handleRequest 271: Header " + h.getName());
                     Log.d("surprise", "MyWebViewClient handleRequest 271: Header VALUE" + h.getValue());
                     if (h.getValue().startsWith("attachment; filename=\"")) {
-                        newBook.name = h.getValue().substring(22, h.getValue().length() - 1);
+                        newBook.name = h.getValue().substring(22);
+                        Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);
+                    }
+                    else if(h.getValue().startsWith("attachment;")) {
+                        newBook.name = h.getValue().substring(21);
                         Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);
                     }
                 }
@@ -392,7 +416,7 @@ public class MyWebViewClient extends WebViewClient {
                 encoding = arr[1];
             }
 
-            if (mime.equals(BOOK_FORMAT) || mime.equals(FB2_FORMAT) || mime.equals(PDF_FORMAT)) {
+            if (mime.equals(FB2_FORMAT) || mime.equals(PDF_FORMAT)) {
                 Context activityContext = view.getContext();
                 Header header = httpResponse.getFirstHeader(HEADER_CONTENT_DISPOSITION);
                 String name = header.getValue().split(FILENAME_DELIMITER)[1];

@@ -69,7 +69,7 @@ public class MyPreferences {
 
     public File getDownloadDir() {
         String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, null);
-        Log.d("surprise", "MyPreferences getDownloadDir 62: dir is " + PREFERENCE_DOWNLOAD_LOCATION);
+        Log.d("surprise", "MyPreferences getDownloadDir 62: dir is " + download_location);
         if (download_location != null) {
             File file = new File(download_location);
             if (file.isDirectory()) {

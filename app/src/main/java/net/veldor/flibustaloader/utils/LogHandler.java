@@ -46,7 +46,7 @@ public class LogHandler {
             if (outputFile.mkdirs() || outputFile.isDirectory()) {
                 // удалю старые файлы
                 File[] existentFiles = outputFile.listFiles();
-                if (existentFiles.length > 0) {
+                if (existentFiles != null && existentFiles.length > 0) {
                     long time = System.currentTimeMillis();
                     for (File f :
                             existentFiles) {

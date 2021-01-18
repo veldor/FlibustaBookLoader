@@ -77,7 +77,11 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         // проверю куку
         Log.d("surprise", "WebViewActivity.java 77 onCreate: cookie is " + MyPreferences.getInstance().getAuthCookie());
 
-        setContentView(R.layout.new_webview_activity);
+        if (MyPreferences.getInstance().isEInk()) {
+            setContentView(R.layout.new_eink_webview_activity);
+        } else {
+            setContentView(R.layout.new_webview_activity);
+        }
 
         setupInterface();
 

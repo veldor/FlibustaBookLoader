@@ -65,7 +65,7 @@
             android:name=".ui.WebViewActivity"
             android:configChanges="uiMode"
             android:label="@string/title_activity_webview"
-            android:launchMode="singleTask" />
+            android:launchMode="singleInstance" />
         <activity
             android:name=".ui.ActivityBookDownloadSchedule"
             android:label="@string/title_activity_download_schedule"

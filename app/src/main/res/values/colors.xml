@@ -22,5 +22,6 @@
     <color name="eink_progress_back">#000000</color>
     <color name="eink_progress">#FFFFFF</color>
     <color name="black">#000000</color>
+    <color name="icon_text_color">#000000</color>
     <color name="app_bar_icons_color">#FFFFFF</color>
 </resources>

@@ -553,8 +553,8 @@ public class Notificator {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, FOREGROUND_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
                 .setContentTitle(App.getInstance().getString(R.string.test_version_message))
-                .setStyle(new NotificationCompat.BigTextStyle().bigText("Спасибо, что помогаете с тестированием. Теперь можно отправить логи прямо отсюда- нажмите на кнопку"))
-                .addAction(R.drawable.ic_baseline_bookmark_24, "Send log", sendLogsPendingIntent);
+                .setStyle(new NotificationCompat.BigTextStyle().bigText("Спасибо, что помогаете с тестированием. Если у вас возникли проблемы- вы можете отправить мне логи приложения, нажав кнопку ниже."))
+                .addAction(R.drawable.ic_baseline_bookmark_24, App.getInstance().getString(R.string.send_log_message), sendLogsPendingIntent);
 
         mNotificationManager.notify(IS_TEST_VERSION_NOTIFICATION, notificationBuilder.build());
     }
