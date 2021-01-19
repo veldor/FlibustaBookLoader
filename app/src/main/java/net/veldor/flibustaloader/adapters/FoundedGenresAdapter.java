@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -115,7 +116,11 @@ public class FoundedGenresAdapter extends RecyclerView.Adapter<FoundedGenresAdap
             mBinding.setVariable(BR.genre, foundedGenre);
             mBinding.executePendingBindings();
             if(OPDSActivity.sElementForSelectionIndex >= 0 && mGenres.size() > OPDSActivity.sElementForSelectionIndex && mGenres.indexOf(mGenre) == OPDSActivity.sElementForSelectionIndex){
+                Log.d("surprise", "ViewHolder bind 118: mark selected");
                 mRootView.setBackgroundColor(App.getInstance().getResources().getColor(R.color.selected_item_background));
+
+                // очищу переменную с элементом
+                OPDSActivity.sElementForSelectionIndex = -1;
             }
             else{
                 mRootView.setBackground(ResourcesCompat.getDrawable(App.getInstance().getResources(), R.drawable.genre_layout, null));

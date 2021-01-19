@@ -116,6 +116,8 @@ public class FoundedAuthorsAdapter extends RecyclerView.Adapter<FoundedAuthorsAd
             mAuthor = foundedAuthor;
             if(OPDSActivity.sElementForSelectionIndex >= 0 && mAuthors.size() > OPDSActivity.sElementForSelectionIndex && mAuthors.indexOf(mAuthor) == OPDSActivity.sElementForSelectionIndex){
                 mRootView.setBackgroundColor(App.getInstance().getResources().getColor(R.color.selected_item_background));
+                // очищу переменную с элементом
+                OPDSActivity.sElementForSelectionIndex = -1;
             }
             else{
                 mRootView.setBackground(ResourcesCompat.getDrawable(App.getInstance().getResources(), R.drawable.author_layout, null));

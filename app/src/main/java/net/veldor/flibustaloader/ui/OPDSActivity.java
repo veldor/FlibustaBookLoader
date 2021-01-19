@@ -765,12 +765,19 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             if (!aBoolean) {
 
                 new Handler().postDelayed(() -> {
-                    if (sElementForSelectionIndex >= 0 && mResultsRecycler.getAdapter() != null && mResultsRecycler.getAdapter().getItemCount() > sElementForSelectionIndex && mResultsRecycler.getLayoutManager() != null) {
-                        float y = mResultsRecycler.getY() + mResultsRecycler.getChildAt(sElementForSelectionIndex).getY();
-                        mScrollView.smoothScrollTo(0, (int) y);
+                    if (sElementForSelectionIndex >= 0 && mResultsRecycler != null && mResultsRecycler.getAdapter() != null && mResultsRecycler.getAdapter().getItemCount() > sElementForSelectionIndex && mResultsRecycler.getLayoutManager() != null) {
+                        Log.d("surprise", "OPDSActivity addObservers 769: element index: " + sElementForSelectionIndex);
+//                        float y = mResultsRecycler.getY() + mResultsRecycler.getChildAt(sElementForSelectionIndex).getY();
+//                        if (mScrollView != null) {
+//                            mScrollView.smoothScrollTo(0, (int) y);
+//                        } else if (mResultsRecycler != null) {
+//                            mResultsRecycler.smoothScrollBy(0, (int) y - 200);
+//                        }
+                        if (App.getInstance().isLinearLayout()) {
+                            LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
+                                manager.scrollToPositionWithOffset(sElementForSelectionIndex - 1, 10);
+                        }
                     }
-                    // очищу переменную с элементом
-                    sElementForSelectionIndex = -1;
                 }, 500);
             }
 

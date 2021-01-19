@@ -116,6 +116,8 @@ public class FoundedSequencesAdapter extends RecyclerView.Adapter<FoundedSequenc
             mBinding.executePendingBindings();
             if(OPDSActivity.sElementForSelectionIndex >= 0 && mSequences.size() > OPDSActivity.sElementForSelectionIndex && mSequences.indexOf(mSequence) == OPDSActivity.sElementForSelectionIndex){
                 mRootView.setBackgroundColor(App.getInstance().getResources().getColor(R.color.selected_item_background));
+                // очищу переменную с элементом
+                OPDSActivity.sElementForSelectionIndex = -1;
             }
             else{
                 mRootView.setBackground(ResourcesCompat.getDrawable(App.getInstance().getResources(), R.drawable.sequence_layout, null));
