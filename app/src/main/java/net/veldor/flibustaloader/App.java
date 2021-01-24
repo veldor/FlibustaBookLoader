@@ -26,6 +26,7 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 import net.veldor.flibustaloader.database.AppDatabase;
 import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
+import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.selections.Author;
 import net.veldor.flibustaloader.selections.DownloadLink;
@@ -252,6 +253,10 @@ public class App extends MultiDexApplication {
                 OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
                 WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
             }
+        }
+        else{
+            Log.d("surprise", "App startTor 257: tor initiation skipped, use external VPN");
+            GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED);
         }
     }
 

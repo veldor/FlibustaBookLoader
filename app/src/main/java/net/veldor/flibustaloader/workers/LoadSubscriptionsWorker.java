@@ -1,7 +1,9 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
+
 import android.util.Log;
 
 import androidx.work.Worker;
@@ -10,6 +12,7 @@ import androidx.work.WorkerParameters;
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.selections.FoundedBook;
@@ -34,7 +37,7 @@ public class LoadSubscriptionsWorker extends Worker {
         ArrayList<SubscriptionItem> subscribes = App.getInstance().getBooksSubscribe().getSubscribes();
         ArrayList<SubscriptionItem> authorSubscribes = App.getInstance().getAuthorsSubscribe().getSubscribes();
         ArrayList<SubscriptionItem> sequenceSubscribes = App.getInstance().getSequencesSubscribe().getSubscribes();
-        if ((subscribes != null && subscribes.size() > 0 ) || (authorSubscribes != null && authorSubscribes.size() > 0 )|| (sequenceSubscribes != null && sequenceSubscribes.size() > 0)) {
+        if ((subscribes != null && subscribes.size() > 0) || (authorSubscribes != null && authorSubscribes.size() > 0) || (sequenceSubscribes != null && sequenceSubscribes.size() > 0)) {
             // получу последний проверенный ID
             String lastCheckedId = App.getInstance().getLastCheckedBookId();
             String firstCheckedId = null;
@@ -70,11 +73,9 @@ public class LoadSubscriptionsWorker extends Worker {
             TorWebClient webClient = null;
             try {
                 webClient = new TorWebClient();
-            } catch (TorNotLoadedException e) {
+            } catch (ConnectionLostException e) {
                 e.printStackTrace();
-            }
-            if(webClient == null){
-                return Result.failure();
+                return Result.success();
             }
             ArrayList<FoundedItem> result = new ArrayList<>();
             String answer = webClient.request(App.BASE_URL + "/opds/new/0/new");
@@ -91,8 +92,9 @@ public class LoadSubscriptionsWorker extends Worker {
                     Log.d("surprise", "LoadSubscriptionsWorker doWork load next results page");
                     try {
                         webClient = new TorWebClient();
-                    } catch (TorNotLoadedException e) {
+                    } catch (ConnectionLostException e) {
                         e.printStackTrace();
+                        return Result.success();
                     }
                     answer = webClient.request(App.BASE_URL + sNextPage);
                     XMLParser.handleSearchResults(result, answer);
@@ -104,7 +106,7 @@ public class LoadSubscriptionsWorker extends Worker {
                 Log.d("surprise", "CheckSubscriptionsWorker doWork найдены книги, проверяю");
                 for (FoundedItem book : result) {
                     realBook = (FoundedBook) book;
-                    if(subscribes != null){
+                    if (subscribes != null) {
                         // сравню название книги со всеми подписками
                         for (SubscriptionItem needle : subscribes) {
                             if (realBook.name.toLowerCase().contains(needle.name.toLowerCase())) {
@@ -114,7 +116,7 @@ public class LoadSubscriptionsWorker extends Worker {
                             }
                         }
                     }
-                    if(authorSubscribes != null){
+                    if (authorSubscribes != null) {
                         // сравню название книги со всеми подписками
                         for (SubscriptionItem needle : authorSubscribes) {
                             // если есть автор
@@ -127,7 +129,7 @@ public class LoadSubscriptionsWorker extends Worker {
                             }
                         }
                     }
-                    if(sequenceSubscribes != null){
+                    if (sequenceSubscribes != null) {
                         // сравню название книги со всеми подписками
                         for (SubscriptionItem needle : sequenceSubscribes) {
                             // если есть автор
@@ -149,7 +151,7 @@ public class LoadSubscriptionsWorker extends Worker {
                 App.getInstance().mSubscribeResults.postValue(booksResult);
                 Log.d("surprise", "LoadSubscriptionsWorker doWork список книг отправлен");
             }
-            if(firstCheckedId != null){
+            if (firstCheckedId != null) {
                 App.getInstance().setLastCheckedBook(firstCheckedId);
             }
         } else {

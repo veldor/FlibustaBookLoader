@@ -14,6 +14,7 @@ import androidx.documentfile.provider.DocumentFile;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.R;
+import net.veldor.flibustaloader.selections.Book;
 
 import java.io.File;
 
@@ -133,5 +134,9 @@ public class BookSharer {
         } else {
             Toast.makeText(context, "Упс, не нашлось приложения, которое могло бы это сделать.", Toast.LENGTH_LONG).show();
         }
+    }
+
+    public static void shareBook(Book book) {
+
     }
 }

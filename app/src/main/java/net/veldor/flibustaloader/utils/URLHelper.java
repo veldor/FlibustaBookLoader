@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.utils;
 
+import android.util.Log;
+
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ui.OPDSActivity;
 
@@ -15,6 +17,7 @@ public class URLHelper {
             return MyPreferences.getInstance().getCustomMirror();
         }
         if (App.getInstance().isExternalVpn()) {
+            Log.d("surprise", "URLHelper getBaseOPDSUrl 18: use external vpn");
             return "http://flibusta.is";
         }
         return "http://flibustahezeous3.onion";

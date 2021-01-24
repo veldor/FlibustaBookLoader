@@ -12,6 +12,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.http.TorWebClient;
@@ -96,9 +97,9 @@ public class CheckSubscriptionsWorker extends Worker {
                         // создам новый экземпляр веб-клиента
                         try {
                             webClient = new TorWebClient();
-                        } catch (TorNotLoadedException e) {
+                        } catch (ConnectionLostException e) {
                             e.printStackTrace();
-                            return Result.failure();
+                            return Result.success();
                         }
                         if (!isStopped()) {
                             answer = webClient.request(App.BASE_URL + mNextPageLink);

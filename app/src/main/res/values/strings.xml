@@ -230,4 +230,12 @@
     <string name="navigation_close_app">Close app</string>
     <string name="test_version_message">This is test version</string>
     <string name="send_log_message">Send log</string>
+    <string name="connection_lost_message">Connection lost</string>
+    <string name="reload_page_message">Reload page</string>
+    <string name="navigation_go_filelist">File list</string>
+    <string name="books_options_message">Book options</string>
+    <string name="open_with_menu_item">Open with…</string>
+    <string name="item_deleted_message">Item deleted</string>
+    <string name="delete_item_message">Delete book</string>
+    <string name="app_restart_message">Now app will restart for apply changes</string>
 </resources>

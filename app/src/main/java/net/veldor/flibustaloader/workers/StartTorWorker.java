@@ -8,6 +8,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.http.TorStarter;
 
 public class StartTorWorker extends Worker {
@@ -30,6 +31,7 @@ public class StartTorWorker extends Worker {
             TorStarter starter = new TorStarter();
             Log.d("surprise", "StartTorWorker doWork: start tor, try # " + App.sTorStartTry);
             if (starter.startTor()) {
+                GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED);
                 // success try
                 Log.d("surprise", "StartTorWorker doWork 51:tor initiated");
                 App.getInstance().torInitInProgress = false;

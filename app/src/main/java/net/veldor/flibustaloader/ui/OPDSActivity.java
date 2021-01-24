@@ -63,6 +63,7 @@ import net.veldor.flibustaloader.database.entity.Bookmark;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.dialogs.ChangelogDialog;
 import net.veldor.flibustaloader.dialogs.GifDialog;
+import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface;
 import net.veldor.flibustaloader.selections.Author;
@@ -176,6 +177,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private Button mShowAuthorsListActivator;
     private TextView mConnectionTypeView;
     private AlertDialog mPageNotLoadedDialog;
+    private Snackbar mDisconnectedSnackbar;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -422,6 +424,30 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 showPageNotLoadedDialog();
             }
         });
+
+        // добавлю отслеживание статуса сети
+        LiveData<Integer> connectionState = GlobalWebClient.mConnectionState;
+        connectionState.observe(this, state -> {
+            if (state.equals(GlobalWebClient.CONNECTED)) {
+                // соединение установлено.
+                // провожу действие только если до этого было заявлено о потере соединения
+                if (mDisconnectedSnackbar != null && mDisconnectedSnackbar.isShown()) {
+                    Toast.makeText(OPDSActivity.this, "Connected", Toast.LENGTH_LONG).show();
+                    mDisconnectedSnackbar.dismiss();
+                }
+            } else if (state.equals(GlobalWebClient.DISCONNECTED)) {
+                // скрою диалоговое окно загрузки
+                hideWaitingDialog();
+                showDisconnectedStateSnackbar();
+            }
+        });
+    }
+
+    private void showDisconnectedStateSnackbar() {
+        if (mDisconnectedSnackbar == null) {
+            mDisconnectedSnackbar = Snackbar.make(mRootView, "Connection lost", Snackbar.LENGTH_INDEFINITE);
+        }
+        mDisconnectedSnackbar.show();
     }
 
     private void showPageNotLoadedDialog() {
@@ -527,11 +553,16 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 // проверю последний видимый элемент
                 if (App.getInstance().isLinearLayout()) {
                     LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
-                    int position = manager.findLastCompletelyVisibleItemPosition();
-                    if (position == mResultsRecycler.getAdapter().getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
-                        // подгружу результаты
-                        mAddToLoaded = true;
-                        doSearch(sNextPage, false);
+                    if (manager != null) {
+                        @SuppressWarnings("rawtypes") RecyclerView.Adapter adapter = mResultsRecycler.getAdapter();
+                        if (adapter != null) {
+                            int position = manager.findLastCompletelyVisibleItemPosition();
+                            if (position == adapter.getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
+                                // подгружу результаты
+                                mAddToLoaded = true;
+                                doSearch(sNextPage, false);
+                            }
+                        }
                     }
                 }
             }
@@ -643,9 +674,11 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void scrollUp() {
         if (App.getInstance().isLinearLayout()) {
             LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
-            int position = manager.findFirstCompletelyVisibleItemPosition();
-            if (position > 0) {
-                manager.scrollToPositionWithOffset(position - 1, 10);
+            if (manager != null) {
+                int position = manager.findFirstCompletelyVisibleItemPosition();
+                if (position > 0) {
+                    manager.scrollToPositionWithOffset(position - 1, 10);
+                }
             }
         }
     }
@@ -653,16 +686,18 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void scrollDown() {
         if (App.getInstance().isLinearLayout()) {
             LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
-            int position = manager.findFirstCompletelyVisibleItemPosition();
-            @SuppressWarnings("rawtypes") RecyclerView.Adapter adapter = mResultsRecycler.getAdapter();
-            if (adapter != null) {
-                if (position < adapter.getItemCount() - 1) {
-                    manager.scrollToPositionWithOffset(position + 1, 10);
-                    position = manager.findLastCompletelyVisibleItemPosition();
-                    if (position == adapter.getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
-                        // подгружу результаты
-                        mAddToLoaded = true;
-                        doSearch(sNextPage, false);
+            if (manager != null) {
+                int position = manager.findFirstCompletelyVisibleItemPosition();
+                @SuppressWarnings("rawtypes") RecyclerView.Adapter adapter = mResultsRecycler.getAdapter();
+                if (adapter != null) {
+                    if (position < adapter.getItemCount() - 1) {
+                        manager.scrollToPositionWithOffset(position + 1, 10);
+                        position = manager.findLastCompletelyVisibleItemPosition();
+                        if (position == adapter.getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
+                            // подгружу результаты
+                            mAddToLoaded = true;
+                            doSearch(sNextPage, false);
+                        }
                     }
                 }
             }
@@ -775,7 +810,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 //                        }
                         if (App.getInstance().isLinearLayout()) {
                             LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
-                                manager.scrollToPositionWithOffset(sElementForSelectionIndex - 1, 10);
+                            manager.scrollToPositionWithOffset(sElementForSelectionIndex - 1, 10);
                         }
                     }
                 }, 500);

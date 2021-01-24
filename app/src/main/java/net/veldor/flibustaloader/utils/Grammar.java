@@ -68,4 +68,14 @@ public class Grammar {
     public static String changeExtension(String name, String trueFormatExtension) {
         return name.substring(0, name.lastIndexOf(".")) + "." + trueFormatExtension;
     }
+
+    public static String getLiteralSize(long length) {
+        if(length > 1024 * 1024){
+            return length / 1024 / 1024 + " мб.";
+        }
+        if(length > 1024){
+            return length / 1024 + " кб.";
+        }
+        return length + " байт";
+    }
 }

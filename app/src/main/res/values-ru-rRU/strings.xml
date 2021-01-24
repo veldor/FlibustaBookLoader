@@ -149,7 +149,7 @@
     <string name="title_favorite_format_preference">Предпочитаемый формат</string>
     <string name="title_check_update_now">Проверить обновление сейчас</string>
     <string name="view_preferences">Внешний вид</string>
-    <string name="navigation_header_text">Сидите дома,читайте книги</string>
+    <string name="navigation_header_text">#free_navalny</string>
     <string name="show_authors_list_button">Показать список авторов</string>
     <string name="navigation_go_bookmarks">Закладки</string>
     <string name="add_bookmark">Добавить закладку</string>
@@ -210,4 +210,12 @@
     <string name="lockscreen_scipped_message">Экран загрузки пропущен. Вы можете включить его заново в настройках соединения</string>
     <string name="test_version_message">Тестовая версия приложения</string>
     <string name="send_log_message">Отправить лог</string>
+    <string name="navigation_go_filelist">Список скачанного</string>
+    <string name="connection_lost_message">Соединение потеряно</string>
+    <string name="reload_page_message">Перезагрузить</string>
+    <string name="item_deleted_message">Книга удалена</string>
+    <string name="open_with_menu_item">Открыть</string>
+    <string name="books_options_message">Действия</string>
+    <string name="delete_item_message">Удалить книгу</string>
+    <string name="app_restart_message">Приложение будет перезапущено для применения настроек</string>
 </resources>

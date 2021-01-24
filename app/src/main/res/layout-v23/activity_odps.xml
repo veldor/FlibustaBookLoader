@@ -37,7 +37,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:checked="true"
             android:text="@string/search_book_message"
@@ -48,7 +47,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:text="@string/search_author_message"
             android:textColor="@color/author_text_color" />
@@ -58,7 +56,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:text="@string/search_genre_message"
             android:textColor="@color/genre_text_color" />
@@ -68,7 +65,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:layout_marginLeft="5dp"
             android:layout_weight="1"
             android:text="@string/search_sequence_message"
             android:textColor="@color/sequences_text" />
@@ -100,10 +96,10 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/resultsList"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginBottom="50dp"
         app:layout_constraintTop_toBottomOf="@+id/showAllSwitcher" />
 
     <com.github.clans.fab.FloatingActionMenu
@@ -111,7 +107,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:padding="8dp"
         fab:menu_animationDelayPerItem="0"

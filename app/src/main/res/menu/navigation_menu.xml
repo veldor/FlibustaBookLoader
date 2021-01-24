@@ -34,6 +34,11 @@
             app:actionViewClass="android.widget.TextView"
             android:title="@string/navigation_go_blacklist" />
         <item
+            android:id="@+id/goToFileList"
+            android:icon="@drawable/ic_book_black_24dp"
+            app:actionViewClass="android.widget.TextView"
+            android:title="@string/navigation_go_filelist" />
+        <item
             android:id="@+id/goToSettings"
             android:icon="@drawable/ic_baseline_settings_black_24"
             android:title="@string/navigation_go_settings" />

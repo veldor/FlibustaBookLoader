@@ -40,6 +40,7 @@ import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.dialogs.ChangelogDialog;
 import net.veldor.flibustaloader.dialogs.GifDialog;
+import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.URLHelper;
@@ -52,7 +53,7 @@ import java.util.ArrayList;
 
 import static net.veldor.flibustaloader.ui.MainActivity.START_TOR;
 
-public class WebViewActivity extends BaseActivity implements SearchView.OnQueryTextListener{
+public class WebViewActivity extends BaseActivity implements SearchView.OnQueryTextListener {
 
     public static final String CALLED = "activity_called";
     public static final int CODE_REQUEST_LOGIN = 1;
@@ -69,6 +70,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
     private Dialog mShowLoadDialog;
     private SearchView.SearchAutoComplete mSearchAutocomplete;
     private boolean mIsActivityCalled;
+    private Snackbar mDisconnectedSnackbar;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -140,16 +142,44 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         // буду отслеживать событие логина
         LiveData<Boolean> cookieObserver = App.sResetLoginCookie;
         cookieObserver.observe(this, aBoolean -> {
-            if(aBoolean){
+            if (aBoolean) {
                 Toast.makeText(WebViewActivity.this, "Данные для входа устарели, придётся войти ещё раз", Toast.LENGTH_SHORT).show();
                 invalidateOptionsMenu();
             }
         });
+
+        // добавлю отслеживание статуса сети
+        LiveData<Integer> connectionState = GlobalWebClient.mConnectionState;
+        connectionState.observe(this, state -> {
+            if (state.equals(GlobalWebClient.CONNECTED)) {
+                // соединение установлено.
+                // провожу действие только если до этого было заявлено о потере соединения
+                if (mDisconnectedSnackbar != null && mDisconnectedSnackbar.isShown()) {
+                    Toast.makeText(WebViewActivity.this, "Connected", Toast.LENGTH_LONG).show();
+                    mDisconnectedSnackbar.dismiss();
+                }
+            } else if (state.equals(GlobalWebClient.DISCONNECTED)) {
+                showDisconnectedStateSnackbar();
+            }
+        });
+    }
+
+
+    private void showDisconnectedStateSnackbar() {
+        if (mDisconnectedSnackbar == null) {
+            mDisconnectedSnackbar = Snackbar.make(mRootView, getString(R.string.connection_lost_message), Snackbar.LENGTH_INDEFINITE);
+            mDisconnectedSnackbar.setAction(getString(R.string.reload_page_message), v -> {
+                mDisconnectedSnackbar.dismiss();
+                mWebView.reload();
+            });
+        }
+        mDisconnectedSnackbar.show();
+        hideBookLoadingDialog();
     }
 
     private void showChangesList() {
         // покажу список изменений, если он ещё не показан для этой версии
-        if(MyPreferences.getInstance().isShowChanges()){
+        if (MyPreferences.getInstance().isShowChanges()) {
             new ChangelogDialog.Builder(this).build().show();
             MyPreferences.getInstance().setChangesViewed();
         }
@@ -215,7 +245,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
 
         getMenuInflater().inflate(R.menu.main_menu, menu);
 
-        if(menu instanceof MenuBuilder){
+        if (menu instanceof MenuBuilder) {
             MenuBuilder m = (MenuBuilder) menu;
             //noinspection RestrictedApi
             m.setOptionalIconsVisible(true);
@@ -242,7 +272,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         });
 
         mSearchAutocomplete = mSearchView.findViewById(R.id.search_src_text);
-        if(!MyPreferences.getInstance().isEInk()){
+        if (!MyPreferences.getInstance().isEInk()) {
             mSearchAutocomplete.setTextColor(Color.WHITE);
         }
         mSearchAutocomplete.setDropDownBackgroundResource(android.R.color.white);
@@ -279,7 +309,7 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         menuItem.setVisible(MyPreferences.getInstance().getAuthCookie() != null);
 
         menuItem = menu.findItem(R.id.login);
-        if(MyPreferences.getInstance().getAuthCookie() != null){
+        if (MyPreferences.getInstance().getAuthCookie() != null) {
             menuItem.setVisible(false);
         }
         return true;
@@ -345,14 +375,12 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
             // перезагружу страницу
             mWebView.setup();
             mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
-        }
-        else if(requestCode == CODE_REQUEST_LOGIN){
-            if(resultCode == RESULT_OK){
+        } else if (requestCode == CODE_REQUEST_LOGIN) {
+            if (resultCode == RESULT_OK) {
                 invalidateOptionsMenu();
                 mWebView.loadUrl(App.getInstance().getLastLoadedUrl());
             }
-        }
-        else {
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
@@ -454,9 +482,9 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
     }
 
     private void showTorRestartDialog(String errorDetails) {
-        if(errorDetails == null){
-        errorDetails = "";
-    }
+        if (errorDetails == null) {
+            errorDetails = "";
+        }
         if (mTorRestartDialog == null) {
             // создам диалоговое окно
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);

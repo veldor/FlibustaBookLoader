@@ -16,12 +16,10 @@ import androidx.documentfile.provider.DocumentFile;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
-import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.MyConnectionSocketFactory;
-import net.veldor.flibustaloader.MySSLConnectionSocketFactory;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
-import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
+import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.http.TorStarter;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
@@ -46,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.HttpResponse;
-import cz.msebera.android.httpclient.NoHttpResponseException;
 import cz.msebera.android.httpclient.client.HttpClient;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
 import cz.msebera.android.httpclient.client.protocol.HttpClientContext;
@@ -57,8 +54,6 @@ import cz.msebera.android.httpclient.conn.socket.ConnectionSocketFactory;
 import cz.msebera.android.httpclient.impl.client.HttpClients;
 import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
 import cz.msebera.android.httpclient.ssl.SSLContexts;
-
-import static net.veldor.flibustaloader.http.TorWebClient.ERROR_DETAILS;
 
 public class MyWebViewClient extends WebViewClient {
 
@@ -120,7 +115,7 @@ public class MyWebViewClient extends WebViewClient {
     }
 
 
-    private HttpClient getNewHttpClient() throws TorNotLoadedException {
+    private HttpClient getNewHttpClient() {
         while (App.getInstance().torInitInProgress) {
             try {
                 //noinspection BusyWait
@@ -136,6 +131,7 @@ public class MyWebViewClient extends WebViewClient {
         while (App.sTorStartTry < 4) {
             // есть три попытки, если все три неудачны- верну ошибку
             if (starter.startTor()) {
+                GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED);
                 App.sTorStartTry = 0;
                 break;
             } else {
@@ -145,7 +141,10 @@ public class MyWebViewClient extends WebViewClient {
         App.getInstance().torInitInProgress = false;
         // если счётчик больше 3- не удалось запустить TOR, вызову исключение
         if (App.sTorStartTry > 3) {
-            throw new TorNotLoadedException();
+//            throw new TorNotLoadedException();
+            // сделаю по новому- уведомлю, что не удалось установить соединение
+            GlobalWebClient.mConnectionState.postValue(GlobalWebClient.DISCONNECTED);
+            return null;
         }
         Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", new MyConnectionSocketFactory())
@@ -233,10 +232,8 @@ public class MyWebViewClient extends WebViewClient {
 
     @SuppressWarnings("CharsetObjectCanBeUsed")
     private WebResourceResponse handleRequest(WebView view, String url) {
-        Log.d("surprise", "MyWebViewClient handleRequest request " + url);
+        Log.d("surprise", "MyWebViewClient handleRequest 235: request " + url);
         if (App.getInstance().useMirror) {
-            // TODO заменить зеркало
-            Log.d("surprise", "TorWebClient request 128: change mirror");
             url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
         }
         try {
@@ -257,6 +254,10 @@ public class MyWebViewClient extends WebViewClient {
                 httpResponse = ExternalVpnVewClient.rawRequest(url);
             } else {
                 HttpClient httpClient = getNewHttpClient();
+                // если вернулся null- значит, не удалось получить клиент, скажу об ошибке соединения
+                if (httpClient == null) {
+                    return getConnectionError();
+                }
                 if (onionProxyManager == null) {
                     onionProxyManager = App.getInstance().mLoadedTor.getValue();
                 }
@@ -276,19 +277,13 @@ public class MyWebViewClient extends WebViewClient {
                 }
                 try {
                     httpResponse = httpClient.execute(httpGet, context);
-                } catch (NoHttpResponseException e) {
-                    Log.d("surprise", "MyWebViewClient handleRequest 256: ALARM, NO ANSWER!!");
-                    String message = "<H1 style='text-align:center;'>¯\\_(ツ)_/¯</H1><H1 style='text-align:center;'>Эта книга ещё недоступна</H1><H2 style='text-align:center;'>Попробуйте позднее</H2>";
-                    ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes("UTF-8"));
-                    return new WebResourceResponse("application/zip", ENCODING_UTF_8, inputStream);
+                } catch (Exception e) {
+                    return getConnectionError();
                 }
             }
 
             if (httpResponse == null) {
-                Log.d("surprise", "MyWebViewClient handleRequest: no response");
-                return super.shouldInterceptRequest(view, url);
-            } else {
-                Log.d("surprise", "MyWebViewClient handleRequest: have response");
+                return getConnectionError();
             }
 
             InputStream input = httpResponse.getEntity().getContent();
@@ -297,7 +292,7 @@ public class MyWebViewClient extends WebViewClient {
             Log.d("surprise", "MyWebViewClient handleRequest 262: mime is " + mime + " request is " + url);
 
             // todo разобраться с application/octet-stream
-            if(mime.equals("application/octet-stream")){
+            if (mime.equals("application/octet-stream")) {
                 Log.d("surprise", "MyWebViewClient handleRequest 298: HAVE OCTET-STREAM");
                 // придётся ориентироваться по имени файла и определять, что это книга
                 // костыль, конечно, но что делать
@@ -306,7 +301,7 @@ public class MyWebViewClient extends WebViewClient {
                 Header[] headers = httpResponse.getAllHeaders();
                 for (Header h :
                         headers) {
-                    if(h.getName().equals("Content-Disposition")){
+                    if (h.getName().equals("Content-Disposition")) {
                         // похоже на книгу
                         Log.d("surprise", "MyWebViewClient handleRequest 310: LOOKS LIKE ITS BOOK");
                         // Тут пока что грязный хак, скажу, что это epub
@@ -331,15 +326,19 @@ public class MyWebViewClient extends WebViewClient {
                     if (h.getValue().startsWith("attachment; filename=\"")) {
                         newBook.name = h.getValue().substring(22);
                         Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);
-                    }
-                    else if(h.getValue().startsWith("attachment;")) {
+                    } else if (h.getValue().startsWith("attachment;")) {
                         newBook.name = h.getValue().substring(21);
                         Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);
                     }
                 }
+                TorWebClient client;
                 // создам файл
                 newBook.link = url.substring(url.indexOf("/b"));
-                TorWebClient client = new TorWebClient();
+                try {
+                    client = new TorWebClient();
+                } catch (ConnectionLostException e) {
+                    return getConnectionError();
+                }
                 client.downloadBook(newBook);
                 Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
                 intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, newBook.name);
@@ -503,32 +502,29 @@ public class MyWebViewClient extends WebViewClient {
             return new WebResourceResponse(mime, encoding, input);
         } catch (Exception e) {
             e.printStackTrace();
-            if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
-                // отправлю оповещение об ошибке загрузки TOR
-                Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
-                finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
-                App.getInstance().sendBroadcast(finishLoadingIntent);
-                // отображу сообщение о невозможности загрузки
-                String message = "<H1 style='text-align:center;'>Ошибка подключения к сети</H1>";
-                ByteArrayInputStream inputStream = null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                    inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
-                } else {
-                    try {
-                        inputStream = new ByteArrayInputStream(message.getBytes(ENCODING_UTF_8));
-                    } catch (UnsupportedEncodingException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-                return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
-            } else {
-                Log.d("surprise", "MyWebViewClient handleRequest page loading error");
-                Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
-                finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
-                App.getInstance().sendBroadcast(finishLoadingIntent);
-            }
-
+            return getConnectionError();
         }
-        return super.shouldInterceptRequest(view, url);
+    }
+
+    /**
+     * Сообщу об ошибке соединения и верну заглушку
+     */
+    private WebResourceResponse getConnectionError() {
+        GlobalWebClient.mConnectionState.postValue(GlobalWebClient.DISCONNECTED);
+        String message = "<H1 style='text-align:center;'>Ошибка подключения к сети</H1>";
+
+        ByteArrayInputStream inputStream = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+        } else {
+            try {
+                //noinspection CharsetObjectCanBeUsed
+                inputStream = new ByteArrayInputStream(message.getBytes(ENCODING_UTF_8));
+            } catch (UnsupportedEncodingException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
+
     }
 }

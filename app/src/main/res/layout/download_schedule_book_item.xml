@@ -17,7 +17,7 @@
         android:padding="10dp">
 
         <TextView
-            android:id="@+id/blacklist_item_name"
+            android:id="@+id/book_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@{book.name}"
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:text="@string/waiting_download_message"
             android:textColor="@drawable/genre_text_color"
-            app:layout_constraintTop_toBottomOf="@+id/blacklist_item_name"
+            app:layout_constraintTop_toBottomOf="@+id/book_name"
             tools:layout_editor_absoluteX="10dp" />
 
         <TextView

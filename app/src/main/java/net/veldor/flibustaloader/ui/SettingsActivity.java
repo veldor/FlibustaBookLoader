@@ -160,7 +160,7 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                         if (uri != null) {
                             // закодирую данные для передачи рабочему
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                App.getInstance().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                                App.getInstance().getContentResolver().takePersistableUriPermission(uri, FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                             }
 
                             Data inputData = new Data.Builder()
@@ -200,12 +200,14 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
                                     Log.d("surprise", "ReservePreferencesFragment onActivityResult 174: state is " + state);
                                     if (state.getState() == SUCCEEDED) {
                                         Log.d("surprise", "ReservePreferencesFragment onActivityResult 173: here");
-                                        // отправка файла
-                                        DocumentFile zip = ReserveSettingsWorker.sBackupFile;
-                                        Log.d("surprise", "ReservePreferencesFragment onActivityResult 177: zip is " + zip);
-                                        if (zip != null && zip.isFile()) {
-                                            Toast.makeText(getContext(), "Настройки сохранены. Вот файл с ними", Toast.LENGTH_SHORT).show();
-                                            FilesHandler.shareFile(zip);
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                            // отправка файла
+                                            DocumentFile zip = ReserveSettingsWorker.sBackupFile;
+                                            Log.d("surprise", "ReservePreferencesFragment onActivityResult 177: zip is " + zip);
+                                            if (zip != null && zip.isFile()) {
+                                                Toast.makeText(getContext(), "Настройки сохранены. Вот файл с ними", Toast.LENGTH_SHORT).show();
+                                                FilesHandler.shareFile(zip);
+                                            }
                                         }
                                         workStatus.removeObservers(ReservePreferencesFragment.this);
                                     }
@@ -268,13 +270,24 @@ public class SettingsActivity extends BaseActivity implements PreferenceFragment
 
             Log.d("surprise", "ViewPreferencesFragment onCreate 270: create view preferences");
             Preference switchViewPref = findPreference(getString(R.string.pref_is_eink));
+            Preference switchNightModePref = findPreference("night mode");
 
             if (switchViewPref != null) {
                 switchViewPref.setOnPreferenceChangeListener((preference, newValue) -> {
-                    new Handler().postDelayed(new ResetApp(), 100);
+                    Toast.makeText(getContext(), getContext().getString(R.string.app_restart_message), Toast.LENGTH_LONG).show();
+                    new Handler().postDelayed(new ResetApp(), 1000);
                     return true;
                 });
-
+            }
+            if (switchNightModePref != null) {
+                switchNightModePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    public boolean onPreferenceChange(Preference preference, Object newValue) {
+                        Toast.makeText(getContext(), getContext().getString(R.string.app_restart_message), Toast.LENGTH_LONG).show();
+                        new Handler().postDelayed(new ResetApp(), 1000);
+                        return true;
+                    }
+                });
             }
         }
     }

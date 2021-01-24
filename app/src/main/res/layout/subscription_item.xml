@@ -17,7 +17,7 @@
         android:padding="10dp">
 
         <TextView
-            android:id="@+id/blacklist_item_name"
+            android:id="@+id/book_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@{subscriptions.name}"

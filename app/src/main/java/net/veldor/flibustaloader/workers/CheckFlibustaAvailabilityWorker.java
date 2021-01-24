@@ -9,7 +9,6 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.utils.MyPreferences;
@@ -71,7 +70,7 @@ public class CheckFlibustaAvailabilityWorker extends Worker {
                 Log.d("surprise", "CheckFlibustaAvailabilityWorker inspect 49: check success");
                 return true;
             }
-        } catch (TorNotLoadedException | IOException e) {
+        } catch (IOException e) {
             Log.d("surprise", "CheckFlibustaAvailabilityWorker inspect 57: check failed");
             //e.printStackTrace();
         }

@@ -20,7 +20,7 @@
         android:padding="5dp">
 
         <TextView
-            android:id="@+id/blacklist_item_name"
+            android:id="@+id/book_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
@@ -41,7 +41,7 @@
             android:contentDescription="@string/preview_image"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/blacklist_item_name"/>
+            app:layout_constraintTop_toBottomOf="@+id/book_name"/>
 
         <LinearLayout
             android:id="@+id/linearLayout2"
@@ -50,7 +50,7 @@
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/previewImage"
-            app:layout_constraintTop_toBottomOf="@+id/blacklist_item_name">
+            app:layout_constraintTop_toBottomOf="@+id/book_name">
 
             <LinearLayout
                 android:id="@+id/authorBlock"

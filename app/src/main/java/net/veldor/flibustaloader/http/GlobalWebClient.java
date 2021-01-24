@@ -3,10 +3,11 @@ package net.veldor.flibustaloader.http;
 import android.util.Log;
 
 import androidx.documentfile.provider.DocumentFile;
+import androidx.lifecycle.MutableLiveData;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
-import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
@@ -21,7 +22,12 @@ import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.util.EntityUtils;
 
 public class GlobalWebClient {
-    public static String request(String requestString) throws TorNotLoadedException, IOException {
+
+    public static final MutableLiveData<Integer> mConnectionState = new MutableLiveData<>();
+    public static final Integer CONNECTED = 1;
+    public static final Integer DISCONNECTED = 2;
+
+    public static String request(String requestString) throws IOException {
         // если используется внешний VPN- выполню поиск в нём, иначае- в TOR
         if (App.getInstance().isExternalVpn()) {
             HttpResponse response = ExternalVpnVewClient.rawRequest(requestString);
@@ -32,7 +38,12 @@ public class GlobalWebClient {
             String response = (new MirrorRequestClient()).request(requestString);
             if (response == null) {
                 // сначала попробую запросить инфу с зеркала
-                TorWebClient webClient = new TorWebClient();
+                TorWebClient webClient;
+                try {
+                    webClient = new TorWebClient();
+                } catch (ConnectionLostException e) {
+                    return null;
+                }
                 return webClient.request(requestString);
             }
             return response;
@@ -208,7 +219,7 @@ public class GlobalWebClient {
         return false;
     }
 
-    public static String requestNoMirror(String requestString) throws TorNotLoadedException, IOException {
+    public static String requestNoMirror(String requestString) throws IOException {
         // если используется внешний VPN- выполню поиск в нём, иначае- в TOR
         if (App.getInstance().isExternalVpn()) {
             HttpResponse response = ExternalVpnVewClient.rawRequest(requestString);
@@ -218,7 +229,12 @@ public class GlobalWebClient {
         } else {
             // сначала попробую запросить инфу с зеркала
             Log.d("surprise", "GlobalWebClient request 33: TRY REQUEST MIRROR");
-            TorWebClient webClient = new TorWebClient();
+            TorWebClient webClient;
+            try {
+                webClient = new TorWebClient();
+            } catch (ConnectionLostException e) {
+                return null;
+            }
             return webClient.requestNoMirror(requestString);
         }
         return null;

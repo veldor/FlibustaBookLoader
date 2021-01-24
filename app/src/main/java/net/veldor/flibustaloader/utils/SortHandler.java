@@ -1,7 +1,10 @@
 package net.veldor.flibustaloader.utils;
 
+import android.os.Build;
+
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.selections.Author;
+import net.veldor.flibustaloader.selections.Book;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.selections.Genre;
@@ -164,5 +167,41 @@ public class SortHandler {
                 }
             });
         }
+    }
+
+    public static void sortLoadedBooks(ArrayList<Book> mItems, int which, boolean isInvert) {
+        Collections.sort(mItems, (lhs, rhs) -> {
+            if(isInvert){
+                // поменяю переменные местами
+                Book temp =  lhs;
+                lhs = rhs;
+                rhs = temp;
+            }
+            switch (which){
+                case 0:
+                    // сортирую по названию книги
+                    return lhs.name.compareTo(rhs.name);
+                case 1:
+                    // сортирую по размеру
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        return lhs.file.length() < rhs.file.length() ? 1 : -1;
+                    }
+                    return lhs.fileCompat.length() < rhs.fileCompat.length() ? 1 : -1;
+                case 3:
+                    // отсортирую по формату
+                    return lhs.extension.compareTo(rhs.extension);
+                case 4:
+                    // отсортирую по формату
+                    return lhs.author.compareTo(rhs.author);
+                case 5:
+                    // отсортирую по времени добавления
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        return lhs.file.lastModified() < rhs.file.lastModified() ? 1 : -1;
+                    }
+                    return lhs.fileCompat.lastModified() < rhs.fileCompat.lastModified() ? 1 : -1;
+            }
+            return 0;
+        });
     }
 }

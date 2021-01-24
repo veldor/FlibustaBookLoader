@@ -207,7 +207,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             mRoot = mBinding.getRoot();
 
             // добавлю отображение информации о книге при клике на название книги
-            TextView bookNameView = mRoot.findViewById(R.id.blacklist_item_name);
+            TextView bookNameView = mRoot.findViewById(R.id.book_name);
             if (bookNameView != null) {
                 bookNameView.setOnClickListener(v -> App.getInstance().mSelectedBook.postValue(mBook));
             }

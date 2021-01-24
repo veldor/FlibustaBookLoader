@@ -21,6 +21,7 @@ import net.veldor.flibustaloader.database.dao.DownloadedBooksDao;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.database.entity.DownloadedBooks;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.http.TorWebClient;
@@ -232,9 +233,9 @@ public class DownloadBooksWorker extends Worker {
             try {
                 TorWebClient client = new TorWebClient();
                 client.downloadBook(book);
-            } catch (TorNotLoadedException e) {
-                // оповещу об ошибке загрузки TOR-а
+            } catch (ConnectionLostException e) {
                 mNotificator.showTorNotLoadedNotification();
+                e.printStackTrace();
                 throw new TorNotLoadedException();
             }
         }

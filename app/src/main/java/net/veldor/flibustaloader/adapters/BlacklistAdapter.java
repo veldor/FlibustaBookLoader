@@ -65,7 +65,7 @@ public class BlacklistAdapter extends RecyclerView.Adapter<BlacklistAdapter.View
             mBinding.setVariable(BR.blacklists, item);
             mBinding.executePendingBindings();
             View container = mBinding.getRoot();
-            TextView name = container.findViewById(R.id.blacklist_item_name);
+            TextView name = container.findViewById(R.id.book_name);
                     switch (item.type){
                         case "book":
                         name.setTextColor(App.getInstance().getResources().getColor(R.color.book_name_color));

@@ -1,13 +1,11 @@
 package net.veldor.flibustaloader.http;
 
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.documentfile.provider.DocumentFile;
-import androidx.work.WorkManager;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
@@ -18,7 +16,7 @@ import net.veldor.flibustaloader.MyWebViewClient;
 import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
-import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
 import net.veldor.flibustaloader.utils.FilesHandler;
 import net.veldor.flibustaloader.utils.MyPreferences;
 import net.veldor.flibustaloader.utils.URLHelper;
@@ -53,7 +51,6 @@ import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManage
 import cz.msebera.android.httpclient.message.BasicNameValuePair;
 import cz.msebera.android.httpclient.ssl.SSLContexts;
 
-import static net.veldor.flibustaloader.MyWebViewClient.TOR_CONNECT_ERROR_ACTION;
 import static net.veldor.flibustaloader.MyWebViewClient.TOR_NOT_RUNNING_ERROR;
 
 public class TorWebClient {
@@ -62,7 +59,7 @@ public class TorWebClient {
     private HttpClient mHttpClient;
     private HttpClientContext mContext;
 
-    public TorWebClient() throws TorNotLoadedException {
+    public TorWebClient() throws ConnectionLostException {
         while (App.getInstance().torInitInProgress) {
             try {
                 //noinspection BusyWait
@@ -78,6 +75,7 @@ public class TorWebClient {
         while (App.sTorStartTry < 4) {
             // есть три попытки, если все три неудачны- верну ошибку
             if (starter.startTor()) {
+                GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED);
                 App.sTorStartTry = 0;
                 break;
             } else {
@@ -87,7 +85,7 @@ public class TorWebClient {
         App.getInstance().torInitInProgress = false;
 // если счётчик больше 3- не удалось запустить TOR, вызову исключение
         if (App.sTorStartTry > 3) {
-            throw new TorNotLoadedException();
+            getConnectionError();
         }
         try {
             mHttpClient = getNewHttpClient();
@@ -99,25 +97,20 @@ public class TorWebClient {
         } catch (IOException e) {
             e.printStackTrace();
             if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
-                // отправлю оповещение об ошибке загрузки TOR
-                broadcastTorError(e);
+
+                getConnectionError();
             }
         } catch (RuntimeException e) {
             e.printStackTrace();
             if (e.getMessage() != null && e.getMessage().equals(TOR_NOT_RUNNING_ERROR)) {
-                // отправлю оповещение об ошибке загрузки TOR
-                broadcastTorError(e);
+                getConnectionError();
             }
         }
     }
 
-    private static void broadcastTorError(Exception e) {
-        // остановлю все задачи
-        WorkManager.getInstance(App.getInstance()).cancelAllWork();
-        // отправлю оповещение об ошибке загрузки TOR
-        Intent finishLoadingIntent = new Intent(TOR_CONNECT_ERROR_ACTION);
-        finishLoadingIntent.putExtra(ERROR_DETAILS, e.getMessage());
-        App.getInstance().sendBroadcast(finishLoadingIntent);
+    private void getConnectionError() throws ConnectionLostException {
+        GlobalWebClient.mConnectionState.postValue(GlobalWebClient.DISCONNECTED);
+        throw new ConnectionLostException();
     }
 
 
@@ -269,20 +262,22 @@ public class TorWebClient {
                 }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                try {
-                    DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
-                    if (newFile != null) {
-                        Log.d("surprise", "TorWebClient downloadBook 276: HERE");
-                        GlobalWebClient.handleBookLoadRequest(response, newFile);
-                    }
-                } catch (Exception e) {
+                if (response != null) {
                     try {
-                        File file = FilesHandler.getCompatDownloadFile(book);
-                        GlobalWebClient.handleBookLoadRequest(response, file);
-                    } catch (Exception e1) {
-                        // скачаю файл просто в папку загрузок
-                        File file = FilesHandler.getBaseDownloadFile(book);
-                        GlobalWebClient.handleBookLoadRequest(response, file);
+                        DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
+                        if (newFile != null) {
+                            Log.d("surprise", "TorWebClient downloadBook 276: HERE");
+                            GlobalWebClient.handleBookLoadRequest(response, newFile);
+                        }
+                    } catch (Exception e) {
+                        try {
+                            File file = FilesHandler.getCompatDownloadFile(book);
+                            GlobalWebClient.handleBookLoadRequest(response, file);
+                        } catch (Exception e1) {
+                            // скачаю файл просто в папку загрузок
+                            File file = FilesHandler.getBaseDownloadFile(book);
+                            GlobalWebClient.handleBookLoadRequest(response, file);
+                        }
                     }
                 }
             } else {

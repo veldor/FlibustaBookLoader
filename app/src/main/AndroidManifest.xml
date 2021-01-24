@@ -6,9 +6,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.READ_LOGS"
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission
+        android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
 
     <application
@@ -25,6 +26,7 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
+        <activity android:name=".ui.ShowDownloadFolderContentActivity"></activity>
         <activity
             android:name=".ui.FlibustaNotAvailableActivity"
             android:launchMode="singleInstance" />
@@ -39,8 +41,8 @@
             android:launchMode="singleInstance" />
         <activity
             android:name=".ui.MainActivity"
-            android:theme="@style/SplashTheme"
-            android:configChanges="keyboardHidden|orientation">
+            android:configChanges="keyboardHidden|orientation"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -72,8 +74,7 @@
             android:launchMode="singleInstance"
             android:parentActivityName=".ui.OPDSActivity"
             android:theme="@style/OldAppTheme" />
-        <activity
-            android:name=".ui.SettingsActivity"/>
+        <activity android:name=".ui.SettingsActivity" />
         <activity
             android:name=".ui.SubscriptionsActivity"
             android:launchMode="singleInstance" />

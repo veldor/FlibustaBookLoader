@@ -10,10 +10,8 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
-
 import net.veldor.flibustaloader.App;
-import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException;
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
 import net.veldor.flibustaloader.http.TorStarter;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
@@ -31,7 +29,7 @@ public class PeriodicCheckFlibustaAvailabilityWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        if(MyPreferences.getInstance().isCheckAvailability() && !App.getInstance().isExternalVpn()){
+        if (MyPreferences.getInstance().isCheckAvailability() && !App.getInstance().isExternalVpn()) {
             Log.d("surprise", "PeriodicCheckFlibustaAvailabilityWorker doWork 32: START CHECK AVAIL");
             // помечу рабочего важным
             // Mark the Worker as important
@@ -64,7 +62,7 @@ public class PeriodicCheckFlibustaAvailabilityWorker extends Worker {
             TorWebClient webClient = null;
             try {
                 webClient = new TorWebClient();
-            } catch (TorNotLoadedException e) {
+            } catch (ConnectionLostException e) {
                 e.printStackTrace();
             }
             if (webClient == null) {
@@ -80,8 +78,7 @@ public class PeriodicCheckFlibustaAvailabilityWorker extends Worker {
                 WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(ACTION);
                 WorkManager.getInstance(App.getInstance()).cancelUniqueWork(ACTION);
             }
-        }
-        else{
+        } else {
             WorkManager.getInstance(App.getInstance()).cancelAllWorkByTag(ACTION);
             WorkManager.getInstance(App.getInstance()).cancelUniqueWork(ACTION);
         }

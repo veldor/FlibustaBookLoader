@@ -3,6 +3,7 @@ package net.veldor.flibustaloader.ui;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -61,6 +62,11 @@ public class NavigatorSelectHandler implements NavigationView.OnNavigationItemSe
             intent = new Intent(mContext, BlacklistActivity.class);
             mContext.startActivity(intent);
             tryCloseDrawer();
+        } else if (itemId == R.id.goToFileList) {
+            Intent intent;
+            intent = new Intent(mContext, ShowDownloadFolderContentActivity.class);
+            mContext.startActivity(intent);
+            tryCloseDrawer();
         } else if (itemId == R.id.goToSettings) {
             Intent intent;
             intent = new Intent(mContext, SettingsActivity.class);
@@ -76,7 +82,14 @@ public class NavigatorSelectHandler implements NavigationView.OnNavigationItemSe
             intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
             mContext.startActivity(intent);
         }else if (itemId == R.id.exitApp) {
-            System.exit(0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mContext.finishAndRemoveTask();
+                System.exit(0);
+            }
+            else{
+                mContext.finishAffinity();
+                System.exit(0);
+            }
         }
         return false;
     }
