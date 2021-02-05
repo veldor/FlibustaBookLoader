@@ -29,8 +29,9 @@ public class MiscActionsReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String mainAction = intent.getAction();
-        Log.d("surprise", "MiscActionsReceiver onReceive 29: receiver action is " + mainAction);
         String action = intent.getStringExtra(EXTRA_ACTION_TYPE);
+        Log.d("surprise", "MiscActionsReceiver onReceive 33: receiver action is " + mainAction);
+        Log.d("surprise", "MiscActionsReceiver onReceive 43: receiver action is " + action);
         if(action != null){
             switch (action) {
                 case ACTION_CANCEL_MASS_DOWNLOAD:

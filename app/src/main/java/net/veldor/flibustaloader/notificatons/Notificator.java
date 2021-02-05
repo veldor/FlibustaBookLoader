@@ -62,6 +62,7 @@ public class Notificator {
     public static final int CHECK_AVAILABILITY_NOTIFICATION = 15;
     public static final int IS_TEST_VERSION_NOTIFICATION = 16;
     private static final int MIRROR_USING_NOTIFICATION = 14;
+    private static final int SEND_LOG_CODE = 5;
     private static Notificator instance;
     private final Context mContext;
     public final NotificationManager mNotificationManager;
@@ -549,7 +550,7 @@ public class Notificator {
         // интент отправки логов
         Intent sendLogsIntent = new Intent(mContext, MiscActionsReceiver.class);
         sendLogsIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_SEND_LOGS);
-        PendingIntent sendLogsPendingIntent = PendingIntent.getBroadcast(mContext, CANCEL_CODE, sendLogsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent sendLogsPendingIntent = PendingIntent.getBroadcast(mContext, SEND_LOG_CODE, sendLogsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, FOREGROUND_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
                 .setContentTitle(App.getInstance().getString(R.string.test_version_message))

@@ -87,10 +87,12 @@ public class ShowDownloadFolderContentActivity extends BaseActivity {
                     if (value != null) {
                         bookItem = new Book();
                         // получу имя автора- это значение до первого слеша
-                        value1 = value.substring(0, value.indexOf("_"));
-                        if (!value1.isEmpty()) {
+                        int index = value.indexOf("_");
+                        int lastIndex = value.lastIndexOf("_");
+                        if(index > 0 && lastIndex > 0 && index != lastIndex){
+                            value1 = value.substring(0, index);
                             bookItem.author = prefix + value1;
-                            value1 = value.substring(value.indexOf("_") + 1, value.lastIndexOf("_"));
+                            value1 = value.substring(index + 1, lastIndex);
                             bookItem.name = value1;
                         } else {
                             bookItem.author = prefix + "Неизвестно";
@@ -121,10 +123,12 @@ public class ShowDownloadFolderContentActivity extends BaseActivity {
                     if (value != null) {
                         bookItem = new Book();
                         // получу имя автора- это значение до первого слеша
-                        value1 = value.substring(0, value.indexOf("_"));
-                        if (!value1.isEmpty()) {
+                        int index = value.indexOf("_");
+                        int lastIndex = value.lastIndexOf("_");
+                        if(index > 0 && lastIndex > 0 && index != lastIndex){
+                            value1 = value.substring(0, index);
                             bookItem.author = prefix + value1;
-                            value1 = value.substring(value.indexOf("_") + 1, value.lastIndexOf("_"));
+                            value1 = value.substring(index + 1, lastIndex);
                             bookItem.name = value1;
                         } else {
                             bookItem.author = prefix + "Неизвестно";
