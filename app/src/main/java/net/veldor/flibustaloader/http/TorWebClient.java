@@ -121,7 +121,6 @@ public class TorWebClient {
             text = text.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
         }
         try {
-            Log.d("surprise", "TorWebClient request 130: load " + text);
             HttpGet httpGet = new HttpGet(text);
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
             httpGet.setHeader("X-Compress", "null");
@@ -141,7 +140,6 @@ public class TorWebClient {
 
     public String requestNoMirror(String text) {
         try {
-            Log.d("surprise", "TorWebClient request 130: load " + text);
             HttpGet httpGet = new HttpGet(text);
             httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
             httpGet.setHeader("X-Compress", "null");
@@ -151,7 +149,6 @@ public class TorWebClient {
             is = httpResponse.getEntity().getContent();
             return inputStreamToString(is);
         } catch (IOException e) {
-            Log.d("surprise", "TorWebClient request 137: page load error");
             App.getInstance().mLoadAllStatus.postValue("Ошибка загрузки страницы");
             //broadcastTorError(e);
             e.printStackTrace();
@@ -210,20 +207,32 @@ public class TorWebClient {
                         DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                         if (newFile != null) {
                             result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, newFile);
+                            if(newFile.isFile() && newFile.length() > 0){
+                                book.loaded = true;
+                            }
                         }
                     } catch (Exception e) {
                         try {
                             File file = FilesHandler.getCompatDownloadFile(book);
                             result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                            if(file.isFile() && file.length() > 0){
+                                book.loaded = true;
+                            }
                         } catch (Exception e1) {
                             // скачаю файл просто в папку загрузок
                             File file = FilesHandler.getBaseDownloadFile(book);
                             result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                            if(file.isFile() && file.length() > 0){
+                                book.loaded = true;
+                            }
                         }
                     }
                 } else {
                     File file = FilesHandler.getCompatDownloadFile(book);
                     result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                    if(file.isFile() && file.length() > 0){
+                        book.loaded = true;
+                    }
                 }
                 if (result) {
                     return;
@@ -241,20 +250,33 @@ public class TorWebClient {
                             DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                             if (newFile != null) {
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, newFile);
+                                if(newFile.isFile() && newFile.length() > 0){
+                                    book.loaded = true;
+                                }
                             }
                         } catch (Exception e) {
                             try {
                                 File file = FilesHandler.getCompatDownloadFile(book);
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+
+                                if(file.isFile() && file.length() > 0){
+                                    book.loaded = true;
+                                }
                             } catch (Exception e1) {
                                 // скачаю файл просто в папку загрузок
                                 File file = FilesHandler.getBaseDownloadFile(book);
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                                if(file.isFile() && file.length() > 0){
+                                    book.loaded = true;
+                                }
                             }
                         }
                     } else {
                         File file = FilesHandler.getCompatDownloadFile(book);
                         result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
+                        if(file.isFile() && file.length() > 0){
+                            book.loaded = true;
+                        }
                     }
                     if (result) {
                         return;
@@ -266,23 +288,35 @@ public class TorWebClient {
                     try {
                         DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                         if (newFile != null) {
-                            Log.d("surprise", "TorWebClient downloadBook 276: HERE");
+                            Log.d("surprise", "TorWebClient downloadBook 276: HERE " + newFile.getName());
                             GlobalWebClient.handleBookLoadRequest(response, newFile);
+                            if(newFile.isFile() && newFile.length() > 0){
+                                book.loaded = true;
+                            }
                         }
                     } catch (Exception e) {
                         try {
                             File file = FilesHandler.getCompatDownloadFile(book);
                             GlobalWebClient.handleBookLoadRequest(response, file);
+                            if(file.isFile() && file.length() > 0){
+                                book.loaded = true;
+                            }
                         } catch (Exception e1) {
                             // скачаю файл просто в папку загрузок
                             File file = FilesHandler.getBaseDownloadFile(book);
                             GlobalWebClient.handleBookLoadRequest(response, file);
+                            if(file.isFile() && file.length() > 0){
+                                book.loaded = true;
+                            }
                         }
                     }
                 }
             } else {
                 File file = FilesHandler.getCompatDownloadFile(book);
                 GlobalWebClient.handleBookLoadRequest(response, file);
+                if(file.isFile() && file.length() > 0){
+                    book.loaded = true;
+                }
             }
         } catch (NoHttpResponseException e) {
             // книга недоступна для скачивания

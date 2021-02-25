@@ -26,7 +26,7 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".ui.ShowDownloadFolderContentActivity"></activity>
+        <activity android:name=".ui.ShowDownloadFolderContentActivity"/>
         <activity
             android:name=".ui.FlibustaNotAvailableActivity"
             android:launchMode="singleInstance" />

@@ -258,7 +258,6 @@ public class MainActivity extends BaseActivity {
     }
 
     protected void setupObservers() {
-        Log.d("surprise", "MainActivity setupObservers 260: setUp observers here");
         if (!App.getInstance().isExternalVpn()) {
             // зарегистрирую отслеживание загружающегося TOR
             LiveData<AndroidOnionProxyManager> loadedTor = App.getInstance().mLoadedTor;
@@ -363,17 +362,17 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-    private void showPermissionDialog() {
-        if (!MainActivity.this.isFinishing()) {
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
-            dialogBuilder.setTitle("Необходимо предоставить разрешения")
-                    .setMessage("Для загрузки книг необходимо предоставить доступ к памяти устройства")
-                    .setCancelable(false)
-                    .setPositiveButton("Предоставить разрешение", (dialog, which) -> ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_WRITE_READ))
-                    .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish());
-            dialogBuilder.create().show();
+        private void showPermissionDialog() {
+            if (!MainActivity.this.isFinishing()) {
+                AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
+                dialogBuilder.setTitle("Необходимо предоставить разрешения")
+                        .setMessage("Для загрузки книг необходимо предоставить доступ к памяти устройства")
+                        .setCancelable(false)
+                        .setPositiveButton("Предоставить разрешение", (dialog, which) -> ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_WRITE_READ))
+                        .setNegativeButton("Нет, закрыть приложение", (dialog, which) -> finish());
+                dialogBuilder.create().show();
+            }
         }
-    }
 
     private void checkFlibustaAvailability() {
         if (mTorLoadingStatusText != null) {

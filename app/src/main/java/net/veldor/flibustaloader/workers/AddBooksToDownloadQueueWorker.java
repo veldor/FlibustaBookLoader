@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.workers;
 
 import android.content.Context;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 
 import androidx.annotation.NonNull;
@@ -48,6 +49,9 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         SparseBooleanArray selectedBooksList = App.getInstance().mDownloadSelectedBooks;
         // получу весь список книг
         ArrayList<FoundedBook> mBooks = OPDSActivity.sBooksForDownload;
+
+        Log.d("surprise", "AddBooksToDownloadQueueWorker doWork 52: adding " + mBooks.size());
+
         // проверю, что книги есть и готовы к загрузке
         if (mBooks == null || mBooks.size() == 0) {
             return Result.success();
@@ -83,6 +87,7 @@ public class AddBooksToDownloadQueueWorker extends Worker {
         BooksDownloadScheduleDao dao = database.booksDownloadScheduleDao();
         // проверю правило загружать строго выбранный формат
         Boolean loadOnlySelectedFormat = App.getInstance().isSaveOnlySelected();
+
         for (FoundedBook book1 : prepareForDownload) {
             // проверю, есть ли предпочтительная ссылка на скачивание книги
             ArrayList<DownloadLink> links = book1.downloadLinks;
@@ -90,18 +95,23 @@ public class AddBooksToDownloadQueueWorker extends Worker {
                 DownloadLink link = null;
                 DownloadLink fb2Link = null;
                 if (links.size() == 1 && links.get(0).mime.contains(preferredFormat)) {
+                    Log.d("surprise", "AddBooksToDownloadQueueWorker doWork 98: add to direct link: " + book1.name);
                     link = links.get(0);
                 } else {
                     int counter = 0;
                     while (counter < links.size()) {
                         if (links.get(counter).mime.contains(preferredFormat)) {
                             link = links.get(counter);
+                            Log.d("surprise", "AddBooksToDownloadQueueWorker doWork 105: add link for counter " + book1.name);
                             break;
                         }
                         if (links.get(counter).mime.equals(MimeTypes.getFullMime("fb2"))) {
                             fb2Link = links.get(counter);
                         }
                         counter++;
+                    }
+                    if(counter == links.size() - 1){
+                        Log.d("surprise", "AddBooksToDownloadQueueWorker doWork 114: search all links but not found target");
                     }
                 }
                 // если не найдена предпочтительная ссылка на книгу и разрешено загружать книги вне выбранного формата
@@ -116,11 +126,15 @@ public class AddBooksToDownloadQueueWorker extends Worker {
                 }
                 // если ссылка всё-же не найдена- перехожу к следующей книге
                 if (link == null) {
+                    Log.d("surprise", "AddBooksToDownloadQueueWorker doWork 129: not found link for " + book1.name);
                     continue;
                 }
                 addDownloadLink(dao, link);
                 // уведомлю, что размер списка закачек изменился
                 BaseActivity.sLiveDownloadScheduleCount.postValue(true);
+            }
+            else{
+                Log.d("surprise", "AddBooksToDownloadQueueWorker doWork 131: Have no link for " + book1.name);
             }
         }
         return Result.success();

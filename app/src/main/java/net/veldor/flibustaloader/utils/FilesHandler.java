@@ -14,6 +14,7 @@ import androidx.annotation.RequiresApi;
 import androidx.documentfile.provider.DocumentFile;
 
 import net.veldor.flibustaloader.App;
+import net.veldor.flibustaloader.R;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 
 import java.io.BufferedReader;
@@ -115,7 +116,7 @@ public class FilesHandler {
 
     public static String getChangeText() {
         try {
-            InputStream textFileStream = App.getInstance().getAssets().open("changes.txt");
+            InputStream textFileStream = App.getInstance().getAssets().open("   changes.txt");
             BufferedReader r = new BufferedReader(new InputStreamReader(textFileStream));
             StringBuilder total = new StringBuilder();
             for (String line; (line = r.readLine()) != null; ) {
@@ -203,8 +204,24 @@ public class FilesHandler {
         }
         Log.d("surprise", "FilesHandler getDownloadFile load to dir " + downloadsDir.getUri());
         // проверю, нет ли ещё файла с таким именем, если есть- удалю
-        DocumentFile existentFile = downloadsDir.findFile(book.name + "." + book.format);
+        DocumentFile[] files = downloadsDir.listFiles();
+        int fileCounter = 0;
+        DocumentFile oneFile;
+        if(files != null && files.length > 0){
+            while (fileCounter < files.length - 1){
+                fileCounter++;
+                oneFile = files[fileCounter];
+                Log.d("surprise", "n " + book.name);
+                if(oneFile.isFile()){
+                    if(oneFile.getName().startsWith(book.name)){
+                        oneFile.delete();
+                    }
+                }
+            }
+        }
+        DocumentFile existentFile = downloadsDir.findFile(book.name);
         if (existentFile != null) {
+            Log.d("surprise", "FilesHandler getDownloadFile 209: have dublicate file");
             existentFile.delete();
         }
         return downloadsDir.createFile(book.format, book.name);
@@ -237,7 +254,7 @@ public class FilesHandler {
 
     public static void openFile(DocumentFile file) {
         String mime = getMimeType(file.getName());
-        if(mime != null){
+        if (mime != null) {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(file.getUri(), mime);
             intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
@@ -247,5 +264,53 @@ public class FilesHandler {
                 Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    public static boolean isBookDownloaded(BooksDownloadSchedule newBook) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            DocumentFile downloadsDir = App.getInstance().getDownloadDir();
+            if (MyPreferences.getInstance().isCreateSequencesDir() && newBook.reservedSequenceName != null) {
+                if (MyPreferences.getInstance().isCreateAdditionalDir()) {
+                    DocumentFile sequencesDir = downloadsDir.findFile("Серии");
+                    if (sequencesDir != null && sequencesDir.exists()) {
+                        downloadsDir = sequencesDir;
+                    }
+                }
+                downloadsDir = downloadsDir.findFile(newBook.reservedSequenceName);
+            } else {
+                if (MyPreferences.getInstance().isCreateAuthorsDir() && newBook.authorDirName != null && !newBook.authorDirName.isEmpty()) {
+                    DocumentFile sequencesDir = downloadsDir.findFile("Авторы");
+                    if (sequencesDir != null && sequencesDir.exists()) {
+                        downloadsDir = sequencesDir;
+                    }
+                    downloadsDir = downloadsDir.findFile(newBook.authorDirName);
+                }
+                if (MyPreferences.getInstance().isCreateSequencesDir() && downloadsDir != null && newBook.sequenceDirName != null && newBook.reservedSequenceName != null &&  !newBook.reservedSequenceName.isEmpty()) {
+                    downloadsDir = downloadsDir.findFile(newBook.sequenceDirName);
+                }
+            }
+            if (downloadsDir != null) {
+                DocumentFile file = downloadsDir.findFile(newBook.name);
+                if (file != null && file.isFile() && file.canRead() && file.length() > 0) {
+                    Log.d("surprise", "FilesHandler isBookDownloaded 292: WOW, BOOK LOADED, I CHECK IT");
+                    return true;
+                }
+            }
+        } else {
+            File dd = MyPreferences.getInstance().getDownloadDir();
+            if (MyPreferences.getInstance().isCreateAuthorsDir() && newBook.authorDirName != null && !newBook.authorDirName.isEmpty()) {
+                dd = new File(dd, newBook.authorDirName);
+            }
+            if (MyPreferences.getInstance().isCreateSequencesDir() && newBook.sequenceDirName != null && !newBook.sequenceDirName.isEmpty()) {
+                dd = new File(dd, newBook.sequenceDirName);
+            }
+            File file = new File(dd, newBook.name);
+            if (file.isFile() && file.canRead() && file.length() > 0) {
+                Log.d("surprise", "FilesHandler isBookDownloaded 292: WOW, BOOK LOADED, I CHECK IT");
+                return true;
+            }
+        }
+        Log.d("surprise", "FilesHandler isBookDownloaded 293: book not loaded, too sad");
+        return false;
     }
 }

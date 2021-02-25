@@ -18,8 +18,7 @@ public class MirrorRequestClient {
 
     public String request(String requestString) {
         ResponseString = null;
-        requestString = requestString.replace(App.BASE_URL, App.MIRROR_URL);
-        Log.d("surprise", "MirrorRequestClient request 22: request mirror " + requestString);
+        //requestString = requestString.replace(App.BASE_URL, App.MIRROR_URL);
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet httpget = new HttpGet(requestString);
         try {

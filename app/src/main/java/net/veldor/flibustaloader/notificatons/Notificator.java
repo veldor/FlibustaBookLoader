@@ -477,7 +477,6 @@ public class Notificator {
         if (loaded > 0) {
             percentDone = loaded * 100 / total / 1000;
         }
-        Log.d("surprise", "Notificator createBookLoadingProgressNotification 480: loading, percent done: "  + percentDone);
         Notification notification = new NotificationCompat.Builder(mContext, BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Качаю " + name)

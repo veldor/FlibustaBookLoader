@@ -55,9 +55,7 @@ public class SearchWorker extends Worker {
             // получу данные поиска
             Data data = getInputData();
             String request = data.getString(REQUEST);
-            Log.d("surprise", "doWork: load " + request);
             if (request != null) {
-                App.getInstance().mLoadAllStatus.postValue("Загружаю страницу " + pageCounter);
                 // сделаю первый запрос по-любому
                 String answer = GlobalWebClient.request(request);
                 if (answer == null || answer.length() == 0) {
@@ -68,7 +66,6 @@ public class SearchWorker extends Worker {
                     // получу DOM
                     SearchResponseParser parser = new SearchResponseParser(answer);
                     int resultType = parser.getType();
-                    Log.d("surprise", "SearchWorker doWork 52: result type is " + resultType);
                     result = parser.parseResponse(reservedSequenceName);
                     if (!isStopped()) {
                         if (result == null || result.size() == 0) {

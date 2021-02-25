@@ -23,6 +23,7 @@ import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.http.TorStarter;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
+import net.veldor.flibustaloader.utils.FilesHandler;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
@@ -340,11 +341,19 @@ public class MyWebViewClient extends WebViewClient {
                     return getConnectionError();
                 }
                 client.downloadBook(newBook);
-                Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
-                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, newBook.name);
-                intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, newBook.format);
-                App.getInstance().sendBroadcast(intent);
-                String message = "<H1 style='text-align:center;'>Книга загружена</H1><H2 style='text-align:center;'>Возвращаюсь на предыдущую страницу</H2><script>setTimeout(function(){history.back()}, 1000)</script>";
+                // проверю, что книга загружена. Если да- оповещу об этом, если нет-
+                // о том, что не удалось загрузить
+                String message;
+                if(FilesHandler.isBookDownloaded(newBook)){
+                    Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
+                    intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, newBook.name);
+                    intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, newBook.format);
+                    App.getInstance().sendBroadcast(intent);
+                    message = "<H1 style='text-align:center;'>Книга загружена</H1><H2 style='text-align:center;'>Возвращаюсь на предыдущую страницу</H2><script>setTimeout(function(){history.back()}, 1000)</script>";
+                }
+                else{
+                    message = "<H1 style='text-align:center;'>Книгу загрузить не удалось, попробуйте позднее</H1><H2 style='text-align:center;'>Возвращаюсь на предыдущую страницу</H2><script>setTimeout(function(){history.back()}, 1000)</script>";
+                }
                 ByteArrayInputStream inputStream = null;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                     inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));

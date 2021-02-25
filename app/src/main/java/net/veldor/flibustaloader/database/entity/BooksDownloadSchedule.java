@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.database.entity;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,4 +29,7 @@ public class BooksDownloadSchedule{
     public String sequenceDirName = "";
 
     public String reservedSequenceName = "";
+
+    @Ignore
+    public boolean loaded;
 }

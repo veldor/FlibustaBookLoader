@@ -111,11 +111,17 @@ public class ExternalVpnVewClient {
                     // запрошу данные
                     Log.d("surprise", "TorWebClient downloadBook: request " + book.link + " of book " + book.name);
                     GlobalWebClient.handleBookLoadRequest(response, newFile);
+                    if(newFile.isFile() && newFile.length() > 0){
+                        book.loaded = true;
+                    }
                 }
             } catch (Exception e) {
                 try {
                     File file = FilesHandler.getCompatDownloadFile(book);
                     GlobalWebClient.handleBookLoadRequest(response, file);
+                    if(file.isFile() && file.length() > 0){
+                        book.loaded = true;
+                    }
                 } catch (Exception e1) {
                     // скачаю файл просто в папку загрузок
                     File file = FilesHandler.getBaseDownloadFile(book);
@@ -125,6 +131,9 @@ public class ExternalVpnVewClient {
         } else {
             File file = FilesHandler.getCompatDownloadFile(book);
             GlobalWebClient.handleBookLoadRequest(response, file);
+            if(file.isFile() && file.length() > 0){
+                book.loaded = true;
+            }
         }
     }
 

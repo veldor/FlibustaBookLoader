@@ -178,6 +178,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private TextView mConnectionTypeView;
     private AlertDialog mPageNotLoadedDialog;
     private Snackbar mDisconnectedSnackbar;
+    private boolean mFirstGoBack = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -201,7 +202,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mShowAuthorsListActivator = findViewById(R.id.showAuthorsListButton);
 
         if (mShowAuthorsListActivator != null) {
-            mShowAuthorsListActivator.setOnClickListener(v -> doSearch(URLHelper.getBaseOPDSUrl() + "/opds/authorsindex", false));
+            mShowAuthorsListActivator.setOnClickListener(v -> doSearch(URLHelper.getBaseOPDSUrl() + "/opds/authorsindex", false, true));
         }
 
         // определю кнопки прыжков по результатам
@@ -212,10 +213,13 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mBackwardBtn = findViewById(R.id.backward_btn);
         if (mBackwardBtn != null) {
             mBackwardBtn.setOnClickListener(v -> {
-                if (History.getInstance().isEmpty()) {
-                    String lastPage = History.getInstance().getLastPage();
+                if (!History.getInstance().isEmpty()) {
+                    String lastPage = History.getInstance().getLastPage(mFirstGoBack);
+                    if (mFirstGoBack) {
+                        mFirstGoBack = false;
+                    }
                     if (lastPage != null) {
-                        doSearch(lastPage, false);
+                        doSearch(lastPage, false, true);
                         return;
                     }
                 }
@@ -239,7 +243,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             mForwardBtn.setOnClickListener(v -> {
                 scrollToTop();
                 if (sNextPage != null && !sNextPage.isEmpty()) {
-                    doSearch(sNextPage, false);
+                    doSearch(sNextPage, false, true);
                 } else {
                     Toast.makeText(OPDSActivity.this, "Результаты закончились", Toast.LENGTH_SHORT).show();
                 }
@@ -261,7 +265,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             mLoadMoreBtn.setOnClickListener(view -> {
                 // загружаю следующую страницу
                 mAddToLoaded = true;
-                doSearch(sNextPage, false);
+                doSearch(sNextPage, false, false);
             });
         }
         // добавлю отслеживание изменения ваианта поиска
@@ -311,7 +315,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 mSearchView.setVisibility(View.INVISIBLE);
             }
             showLoadWaitingDialog();
-            doSearch(URLHelper.getSearchRequest(SEARCH_TYPE_GENRE, "genres"), false);
+            doSearch(URLHelper.getSearchRequest(SEARCH_TYPE_GENRE, "genres"), false, true);
             scrollToTop();
             mFab.setVisibility(View.GONE);
         });
@@ -326,7 +330,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 mSearchView.setVisibility(View.INVISIBLE);
             }
             showLoadWaitingDialog();
-            doSearch(URLHelper.getSearchRequest(SEARCH_TYPE_SEQUENCES, "sequencesindex"), false);
+            doSearch(URLHelper.getSearchRequest(SEARCH_TYPE_SEQUENCES, "sequencesindex"), false, true);
             scrollToTop();
             mFab.setVisibility(View.GONE);
         });
@@ -374,7 +378,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             if (author != null) {
                 // если выбран конкретный автор- отображу выбор показа его книг, если выбрана группа авторов- загружу следующую страницу выбора
                 if (author.id != null && author.id.startsWith("tag:authors")) {
-                    doSearch(URLHelper.getBaseOPDSUrl() + author.uri, false);
+                    doSearch(URLHelper.getBaseOPDSUrl() + author.uri, false, true);
                 } else {
                     mSelectedAuthor = author;
                     showAuthorViewSelect();
@@ -396,7 +400,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             if (foundedSequence != null) {
                 scrollToTop();
                 SearchWorker.sSequenceName = foundedSequence.title;
-                doSearch(URLHelper.getBaseOPDSUrl() + foundedSequence.link, false);
+                doSearch(URLHelper.getBaseOPDSUrl() + foundedSequence.link, false, true);
             }
         });
 
@@ -411,7 +415,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         String link = intent.getStringExtra(TARGET_LINK);
         if (link != null) {
             Log.d("surprise", "have link");
-            doSearch(link, false);
+            doSearch(link, false, true);
         }
     }
 
@@ -467,7 +471,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         String link = intent.getStringExtra(TARGET_LINK);
         if (link != null) {
             Log.d("surprise", "have link");
-            doSearch(link, false);
+            doSearch(link, false, true);
         }
     }
 
@@ -560,7 +564,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                             if (position == adapter.getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
                                 // подгружу результаты
                                 mAddToLoaded = true;
-                                doSearch(sNextPage, false);
+                                doSearch(sNextPage, false, false);
                             }
                         }
                     }
@@ -696,7 +700,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                         if (position == adapter.getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
                             // подгружу результаты
                             mAddToLoaded = true;
-                            doSearch(sNextPage, false);
+                            doSearch(sNextPage, false, false);
                         }
                     }
                 }
@@ -810,6 +814,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 //                        }
                         if (App.getInstance().isLinearLayout()) {
                             LinearLayoutManager manager = (LinearLayoutManager) mResultsRecycler.getLayoutManager();
+                            Log.d("surprise", "OPDSActivity addObservers 813: scroll to previous position " + sElementForSelectionIndex);
                             manager.scrollToPositionWithOffset(sElementForSelectionIndex - 1, 10);
                         }
                     }
@@ -855,7 +860,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         // получена прямая ссылка для поиска
         sLiveSearchLink.observe(this, s -> {
             if (s != null && !s.isEmpty()) {
-                doSearch(URLHelper.getBaseOPDSUrl() + s, false);
+                doSearch(URLHelper.getBaseOPDSUrl() + s, false, true);
             }
         });
 
@@ -1008,7 +1013,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         LiveData<Author> authorNewBooks = App.getInstance().mAuthorNewBooks;
         authorNewBooks.observe(this, author -> {
             if (author != null)
-                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/new/0/newauthors/" + author.id.substring(22), false);
+                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/new/0/newauthors/" + author.id.substring(22), false, true);
         });
 
         // отслеживание статуса загрузки книг
@@ -1243,6 +1248,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private void hideWaitingDialog() {
         if (mShowLoadDialog != null) {
             mShowLoadDialog.dismiss();
+            App.getInstance().mLoadAllStatus.setValue("Ожидание");
         }
     }
 
@@ -1659,16 +1665,16 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                         switch (which) {
                             case 0:
                                 App.sSearchType = SEARCH_BOOKS;
-                                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/new/0/new", false);
+                                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/new/0/new", false, true);
                                 break;
                             case 1:
-                                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/newgenres", false);
+                                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/newgenres", false, true);
                                 break;
                             case 2:
-                                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/newauthors", false);
+                                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/newauthors", false, true);
                                 break;
                             case 3:
-                                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/newsequences", false);
+                                doSearch(URLHelper.getBaseOPDSUrl() + "/opds/newsequences", false, true);
                                 break;
                         }
                     })
@@ -1702,7 +1708,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             sBookmarkName = s;
         }
         String searchString = URLEncoder.encode(s, "utf-8").replace("+", "%20");
-        doSearch(URLHelper.getSearchRequest(sSearchType, searchString), false);
+        doSearch(URLHelper.getSearchRequest(sSearchType, searchString), false, true);
     }
 
     private void addValueToAutocompleteList(String s) {
@@ -1716,7 +1722,10 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         }
     }
 
-    private void doSearch(String s, boolean searchOnBackPressed) {
+    private void doSearch(String s, boolean searchOnBackPressed, boolean addToHistory) {
+        if (!searchOnBackPressed) {
+            mFirstGoBack = true;
+        }
         mFab.setVisibility(View.GONE);
         if (s != null && !s.isEmpty()) {
             if (mSearchView != null) {
@@ -1725,7 +1734,10 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             // сохраню последнюю загруженную страницу
             MyPreferences.getInstance().saveLastLoadedPage(s);
             // очищу историю поиска и положу туда начальное значение
-            History.getInstance().addToHistory(s);
+            if (addToHistory) {
+                Log.d("surprise", "OPDSActivity doSearch 1730: add to HISTORY");
+                History.getInstance().addToHistory(s);
+            }
             showLoadWaitingDialog();
             if (!searchOnBackPressed) {
                 // сохраню порядковый номер элемента по которому был клик, если он был
@@ -1848,7 +1860,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         }
         if (url != null) {
             scrollToTop();
-            doSearch(URLHelper.getBaseOPDSUrl() + url, false);
+            doSearch(URLHelper.getBaseOPDSUrl() + url, false, true);
         }
     }
 
@@ -1919,13 +1931,16 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 return true;
             }
             // если доступен возврат назад- возвращаюсь, если нет- закрываю приложение
-            if (History.getInstance().isEmpty()) {
-                String lastPage = History.getInstance().getLastPage();
+            if (!History.getInstance().isEmpty()) {
+                String lastPage = History.getInstance().getLastPage(mFirstGoBack);
                 if (lastPage != null) {
+                    if (mFirstGoBack) {
+                        mFirstGoBack = false;
+                    }
                     // получу значение элемента, по которому кликнули в предыдущем поиске
                     sElementForSelectionIndex = mViewModel.getLastClickedElement();
                     Log.d("surprise", "OPDSActivity onKeyDown 1637: set last clicked element by " + sElementForSelectionIndex);
-                    doSearch(lastPage, true);
+                    doSearch(lastPage, true, false);
                     return true;
                 }
             }

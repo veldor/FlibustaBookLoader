@@ -27,6 +27,7 @@ import net.veldor.flibustaloader.http.ExternalVpnVewClient;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.ui.BaseActivity;
+import net.veldor.flibustaloader.utils.FilesHandler;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
 import java.util.ArrayList;
@@ -38,7 +39,6 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class DownloadBooksWorker extends Worker {
     private final Notificator mNotificator;
-    private long mStartTime;
 
     public DownloadBooksWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -104,10 +104,12 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        mStartTime = System.currentTimeMillis();
+        long downloadStartTime = System.currentTimeMillis();
+        Log.d("surprise", "DownloadBooksWorker doWork 108: start download in " + downloadStartTime);
         if (App.getInstance().useMirror) {
             // оповещу о невозможности скачивания книг с альтернативного зеркала
             mNotificator.notifyDownloadFromMirror();
+            Log.d("surprise", "DownloadBooksWorker doWork 112: download using alter mirror");
         }
         ArrayList<BooksDownloadSchedule> downloadErrors = new ArrayList<>();
         // проверю, есть ли в очереди скачивания книги
@@ -120,6 +122,7 @@ public class DownloadBooksWorker extends Worker {
             int mBooksCount = dao.getQueueSize();
             int bookDownloadsWithErrors = 0;
             if (mBooksCount > 0) {
+                Log.d("surprise", "DownloadBooksWorker doWork 125: books in schedule on start: " + mBooksCount);
                 // помечу рабочего важным
                 ForegroundInfo info = createForegroundInfo();
                 setForegroundAsync(info);
@@ -130,15 +133,17 @@ public class DownloadBooksWorker extends Worker {
                 // начну скачивание
                 // периодически удостовериваюсь, что работа не отменена
                 if (isStopped()) {
+                    Log.d("surprise", "DownloadBooksWorker doWork 136: worker is stopped");
                     // немедленно прекращаю работу
                     mNotificator.cancelBookLoadNotification();
-
                     return Result.success();
                 }
                 int downloadCounter = 1;
                 // пока есть книги в очереди скачивания и работа не остановлена
                 while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()) {
-                    mNotificator.updateDownloadProgress(dao.getQueueSize() + downloadCounter - 1, downloadCounter, mStartTime);
+                    queuedElement.name = queuedElement.name.replaceAll("\\p{C}", "");
+                    Log.d("surprise", "DownloadBooksWorker doWork 144: NAME IS " + queuedElement.name);
+                    mNotificator.updateDownloadProgress(dao.getQueueSize() + downloadCounter - 1, downloadCounter, downloadStartTime);
                     // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
                     if (!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null) {
                         dao.delete(queuedElement);
@@ -149,24 +154,34 @@ public class DownloadBooksWorker extends Worker {
                     }
                     // загружу книгу
                     try {
+                        Log.d("surprise", "DownloadBooksWorker doWork 155: downloading " + queuedElement.name + " in " + queuedElement.format);
                         downloadBook(queuedElement);
                         if (!isStopped()) {
-                            // отмечу книгу как скачанную
-                            DownloadedBooks downloadedBook = new DownloadedBooks();
-                            downloadedBook.bookId = queuedElement.bookId;
-                            downloadBooksDao.insert(downloadedBook);
-                            // удалю книгу из очереди скачивания
-                            // покажу уведомление о успешной загрузке
-                            mNotificator.sendLoadedBookNotification(queuedElement);
-                            dao.delete(queuedElement);
-                            // уведомлю, что размер списка закачек изменился
-                            BaseActivity.sLiveDownloadScheduleCount.postValue(true);
-                            // оповещу о скачанной книге
-                            App.getInstance().mLiveDownloadedBookId.postValue(queuedElement.bookId);
-                            // если не клянчил донаты- поклянчу :)
-                            if (!MyPreferences.getInstance().askedForDonation()) {
-                                mNotificator.begDonation();
-                                MyPreferences.getInstance().setDonationBegged();
+                            if (queuedElement.loaded) {
+                                Log.d("surprise", "DownloadBooksWorker doWork 159: book successful load");
+                                // отмечу книгу как скачанную
+                                DownloadedBooks downloadedBook = new DownloadedBooks();
+                                downloadedBook.bookId = queuedElement.bookId;
+                                downloadBooksDao.insert(downloadedBook);
+                                // удалю книгу из очереди скачивания
+                                // покажу уведомление о успешной загрузке
+                                mNotificator.sendLoadedBookNotification(queuedElement);
+                                dao.delete(queuedElement);
+                                // уведомлю, что размер списка закачек изменился
+                                BaseActivity.sLiveDownloadScheduleCount.postValue(true);
+                                // оповещу о скачанной книге
+                                App.getInstance().mLiveDownloadedBookId.postValue(queuedElement.bookId);
+                                // если не клянчил донаты- поклянчу :)
+                                if (!MyPreferences.getInstance().askedForDonation()) {
+                                    mNotificator.begDonation();
+                                    MyPreferences.getInstance().setDonationBegged();
+                                }
+                            } else {
+                                Log.d("surprise", "DownloadBooksWorker doWork 178: book not loaded or loaded with zero size");
+                                mNotificator.sendBookNotFoundInCurrentFormatNotification(queuedElement);
+                                bookDownloadsWithErrors++;
+                                downloadErrors.add(queuedElement);
+                                dao.delete(queuedElement);
                             }
                         }
                     } catch (BookNotFoundException e) {

@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException;
 import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
+import net.veldor.flibustaloader.ecxeptions.ZeroBookSizeException;
 import net.veldor.flibustaloader.notificatons.Notificator;
 import net.veldor.flibustaloader.utils.MyPreferences;
 
@@ -169,6 +170,9 @@ public class GlobalWebClient {
                                 if (newFile.length() > 0) {
                                     Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getUri());
                                     return true;
+                                }
+                                else{
+                                    throw new ZeroBookSizeException();
                                 }
                             }
                         }
