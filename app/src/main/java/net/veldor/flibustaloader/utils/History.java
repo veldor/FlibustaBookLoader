@@ -30,24 +30,32 @@ public class History {
         return mHistory.size() == 0;
     }
 
-    public String getLastPage(boolean firstBackward) {
-        Log.d("surprise", "History getLastPage 34: first backward? " + firstBackward);
-        if (mHistory.size() > 1) {
-            if (firstBackward && mHistory.size() > 2) {
-                mHistory.pop();
-                Log.d("surprise", "History getLastPage 38: delete item from history");
-            }
-            String item = mHistory.pop();
-            Log.d("surprise", "History getLastPage 36: left history size " + mHistory.size() + " " + firstBackward);
-            return item;
-        }
-        else if(mHistory.size() == 1 && !firstBackward){
-            return mHistory.peek();
+    public String getLastPage() {
+        if(mHistory.size() > 0){
+            return mHistory.pop();
         }
         return null;
+//        Log.d("surprise", "History getLastPage 34: first backward? " + firstBackward + ", history size is " + mHistory.size());
+//        if (mHistory.size() > 1) {
+//            mHistory.pop();
+//            Log.d("surprise", "History getLastPage 38: delete item from history");
+//            String item = mHistory.pop();
+//            Log.d("surprise", "History getLastPage 36: left history size " + mHistory.size() + " " + firstBackward);
+//            return item;
+//        } else if (mHistory.size() == 1 && !firstBackward) {
+//            return mHistory.peek();
+//        }
+//        else if(mHistory.size() > 0){
+//            return mHistory.pop();
+//        }
+//        return null;
     }
 
     public String showLastPage() {
         return mHistory.peek();
+    }
+
+    public boolean isOneElementInQueue() {
+        return mHistory.size() == 1;
     }
 }

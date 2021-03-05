@@ -128,6 +128,7 @@ public class MainViewModel extends GlobalViewModel implements MyViewModelInterfa
     }
 
     public UUID request(String s) {
+        Log.d("surprise", "MainViewModel request 131: load " + s);
         Data inputData = new Data.Builder()
                 .putString(SearchWorker.REQUEST, s)
                 .build();
