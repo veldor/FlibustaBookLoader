@@ -61,7 +61,7 @@ public class GlobalWebClient {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
                         boolean showDownloadProgress = MyPreferences.getInstance().isShowDownloadProgress();
-                        long contentLength = entity.getContentLength();
+                            long contentLength = entity.getContentLength();
                         long lastNotificationTime = System.currentTimeMillis();
                         String fileName = newFile.getName();
                         Notificator notifier = App.getInstance().getNotificator();

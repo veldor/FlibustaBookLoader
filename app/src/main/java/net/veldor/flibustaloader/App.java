@@ -57,7 +57,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class App extends MultiDexApplication {
     //todo switch to false on release
-    public static final boolean isTestVersion = true;
+    public static final boolean isTestVersion = false;
     public static final MutableLiveData<Boolean> sResetLoginCookie = new MutableLiveData<>();
 
     // хранилище статуса HTTP запроса

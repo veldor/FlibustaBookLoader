@@ -1944,24 +1944,24 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                     return true;
                 }
             }
-            if (mConfirmExit != 0) {
-                if (mConfirmExit > System.currentTimeMillis() - 3000) {
-                    // выйду из приложения
-                    Log.d("surprise", "OPDSActivity onKeyDown exit");
-                    // this.finishAffinity();
-                    Intent startMain = new Intent(Intent.ACTION_MAIN);
-                    startMain.addCategory(Intent.CATEGORY_HOME);
-                    startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(startMain);
+                if (mConfirmExit != 0) {
+                    if (mConfirmExit > System.currentTimeMillis() - 3000) {
+                        // выйду из приложения
+                        Log.d("surprise", "OPDSActivity onKeyDown exit");
+                        // this.finishAffinity();
+                        Intent startMain = new Intent(Intent.ACTION_MAIN);
+                        startMain.addCategory(Intent.CATEGORY_HOME);
+                        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(startMain);
+                    } else {
+                        Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                        mConfirmExit = System.currentTimeMillis();
+                    }
                 } else {
                     Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                     mConfirmExit = System.currentTimeMillis();
                 }
-            } else {
-                Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
-                mConfirmExit = System.currentTimeMillis();
-            }
-            return true;
+                return true;
 
         }
         return super.onKeyDown(keyCode, event);
