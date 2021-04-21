@@ -41,6 +41,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -126,6 +127,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     public static final MutableLiveData<Boolean> sNewSearch = new MutableLiveData<>();
     public static int sClickedItemIndex = -1;
     public static final MutableLiveData<Boolean> isLoadError = new MutableLiveData<>();
+    public static MutableLiveData<Boolean> sLoadNextPage = new MutableLiveData<>();
 
 
     private AlertDialog mTorRestartDialog;
@@ -179,10 +181,12 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     private TextView mConnectionTypeView;
     private AlertDialog mPageNotLoadedDialog;
     private Snackbar mDisconnectedSnackbar;
+    private int mCurrentPage = 0;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sLoadNextPage.setValue(false);
         if (MyPreferences.getInstance().isEInk()) {
             setContentView(R.layout.new_eink_opds_activity);
         } else {
@@ -419,7 +423,26 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
     @Override
     protected void setupObservers() {
         super.setupObservers();
-        isLoadError.observe(this, hasError -> {
+        // Отслежу команду на загрузку страницы из адаптера
+        sLoadNextPage.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean doLoad) {
+                if (doLoad && sNextPage != null) {
+                    mAddToLoaded = true;
+                    doSearch(sNextPage, false);
+                } else {
+                    Toast.makeText(OPDSActivity.this, "Все книги загружены", Toast.LENGTH_SHORT).show();
+                    @SuppressWarnings("rawtypes") RecyclerView.Adapter adapter = mResultsRecycler.getAdapter();
+                    if (adapter != null) {
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+            }
+        });
+
+        isLoadError.observe(this, hasError ->
+
+        {
             if (hasError) {
                 // покажу окошко и сообщу, что загрузка не удалась
                 showPageNotLoadedDialog();
@@ -428,7 +451,9 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
         // добавлю отслеживание статуса сети
         LiveData<Integer> connectionState = GlobalWebClient.mConnectionState;
-        connectionState.observe(this, state -> {
+        connectionState.observe(this, state ->
+
+        {
             if (state.equals(GlobalWebClient.CONNECTED)) {
                 // соединение установлено.
                 // провожу действие только если до этого было заявлено о потере соединения
@@ -558,7 +583,8 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                         @SuppressWarnings("rawtypes") RecyclerView.Adapter adapter = mResultsRecycler.getAdapter();
                         if (adapter != null) {
                             int position = manager.findLastCompletelyVisibleItemPosition();
-                            if (position == adapter.getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
+                            if (position == adapter.getItemCount() - 1 && !MyPreferences.getInstance().isShowLoadMoreBtn() && !App.getInstance().isDownloadAll() && sNextPage != null) {
+                                Log.d("surprise", "OPDSActivity onScrollStateChanged 562: load next page which is " + sNextPage);
                                 // подгружу результаты
                                 mAddToLoaded = true;
                                 doSearch(sNextPage, false);
@@ -697,6 +723,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                         if (position == adapter.getItemCount() - 1 && !App.getInstance().isDownloadAll() && sNextPage != null) {
                             // подгружу результаты
                             mAddToLoaded = true;
+                            mCurrentPage += 1;
                             doSearch(sNextPage, false);
                         }
                     }
@@ -826,7 +853,11 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 Toast.makeText(OPDSActivity.this, "Ничего не найдено", Toast.LENGTH_SHORT).show();
                 if (mResultsRecycler.getAdapter() != null) {
                     if (mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
-                        ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).setContent(null, false);
+                        if (mAddToLoaded) {
+                            mFab.setVisibility(View.VISIBLE);
+                        } else {
+                            ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).setContent(null, false);
+                        }
                     } else if (mResultsRecycler.getAdapter() instanceof FoundedAuthorsAdapter) {
                         ((FoundedAuthorsAdapter) mResultsRecycler.getAdapter()).setContent(null);
                     }
@@ -931,6 +962,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             // найденные книги сброшены
             if (mResultsRecycler.getAdapter() != null) {
                 if (mResultsRecycler.getAdapter() instanceof FoundedBooksAdapter) {
+                    Log.d("surprise", "OPDSActivity addObservers 965: next page " + sNextPage);
                     ((FoundedBooksAdapter) mResultsRecycler.getAdapter()).setContent(books, mAddToLoaded);
                     mAddToLoaded = false;
                 } else {
@@ -1685,6 +1717,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         if (!TextUtils.isEmpty(s.trim())) {
             // ищу введённое значение
             try {
+                mAddToLoaded = false;
                 scrollToTop();
                 makeSearch(s);
             } catch (UnsupportedEncodingException e) {
@@ -1721,7 +1754,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
     private void doSearch(String s, boolean searchOnBackPressed) {
         mFab.setVisibility(View.GONE);
-
+        mCurrentPage = 0;
         if (s != null && !s.isEmpty()) {
             if (mSearchView != null) {
                 mSearchView.onActionViewCollapsed();
@@ -1729,7 +1762,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             // сохраню последнюю загруженную страницу
             MyPreferences.getInstance().saveLastLoadedPage(s);
             if (!searchOnBackPressed) {
-                if(mLastLoadedPageUrl != null){
+                if (mLastLoadedPageUrl != null) {
                     Log.d("surprise", "OPDSActivity doSearch 1733: add to history: " + mLastLoadedPageUrl);
                     History.getInstance().addToHistory(mLastLoadedPageUrl);
                 }
@@ -1879,6 +1912,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             String errorDetails = intent.getStringExtra(TorWebClient.ERROR_DETAILS);
             showTorRestartDialog(errorDetails);
         }
+
     }
 
     private void showTorRestartDialog(String errorDetails) {
@@ -1944,24 +1978,24 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                     return true;
                 }
             }
-                if (mConfirmExit != 0) {
-                    if (mConfirmExit > System.currentTimeMillis() - 3000) {
-                        // выйду из приложения
-                        Log.d("surprise", "OPDSActivity onKeyDown exit");
-                        // this.finishAffinity();
-                        Intent startMain = new Intent(Intent.ACTION_MAIN);
-                        startMain.addCategory(Intent.CATEGORY_HOME);
-                        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(startMain);
-                    } else {
-                        Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
-                        mConfirmExit = System.currentTimeMillis();
-                    }
+            if (mConfirmExit != 0) {
+                if (mConfirmExit > System.currentTimeMillis() - 3000) {
+                    // выйду из приложения
+                    Log.d("surprise", "OPDSActivity onKeyDown exit");
+                    // this.finishAffinity();
+                    Intent startMain = new Intent(Intent.ACTION_MAIN);
+                    startMain.addCategory(Intent.CATEGORY_HOME);
+                    startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(startMain);
                 } else {
                     Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
                     mConfirmExit = System.currentTimeMillis();
                 }
-                return true;
+            } else {
+                Toast.makeText(this, "Нечего загружать. Нажмите ещё раз для выхода", Toast.LENGTH_SHORT).show();
+                mConfirmExit = System.currentTimeMillis();
+            }
+            return true;
 
         }
         return super.onKeyDown(keyCode, event);

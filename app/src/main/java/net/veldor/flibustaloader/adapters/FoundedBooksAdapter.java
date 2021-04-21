@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.Group;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.recyclerview.widget.RecyclerView;
@@ -62,7 +63,21 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
 
     @Override
     public void onBindViewHolder(@NonNull FoundedBooksAdapter.ViewHolder viewHolder, int i) {
-        viewHolder.bind(mBooks.get(i));
+        if ((i == mBooks.size() && MyPreferences.getInstance().isShowLoadMoreBtn()) || (i == mBooks.size() - 1 && !MyPreferences.getInstance().isShowLoadMoreBtn())){
+            RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) viewHolder.itemView.getLayoutParams();
+            params.bottomMargin = 300;
+            viewHolder.itemView.setLayoutParams(params);
+        }
+        else{
+            RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) viewHolder.itemView.getLayoutParams();
+            params.bottomMargin = 30;
+            viewHolder.itemView.setLayoutParams(params);
+        }
+        if (i < mBooks.size()) {
+            viewHolder.bind(mBooks.get(i));
+        } else {
+            viewHolder.bindLoadMoreBtn();
+        }
     }
 
     @Override
@@ -74,6 +89,9 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
     @Override
     public int getItemCount() {
         if (mBooks != null) {
+            if (MyPreferences.getInstance().isShowLoadMoreBtn() && !App.getInstance().isDownloadAll() && OPDSActivity.sNextPage != null) {
+                return mBooks.size() + 1;
+            }
             return mBooks.size();
         }
         return 0;
@@ -101,7 +119,12 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
                 int previousArrayLen = mBooks.size();
                 mBooks.addAll(newData);
                 OPDSActivity.sBooksForDownload = mBooks;
-                notifyItemRangeInserted(previousArrayLen, newData.size());
+                if(OPDSActivity.sNextPage != null){
+                    notifyItemRangeInserted(previousArrayLen, newData.size());
+                }
+                else{
+                    notifyDataSetChanged();
+                }
             } else {
                 mBooks = newData;
                 OPDSActivity.sBooksForDownload = mBooks;
@@ -115,11 +138,10 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
                 mBooks) {
             if (f != null && f.id.equals(bookId)) {
                 f.downloaded = true;
-                if(MyPreferences.getInstance().isDownloadedHide()){
+                if (MyPreferences.getInstance().isDownloadedHide()) {
                     mBooks.remove(f);
                     notifyItemRemoved(mBooks.lastIndexOf(f));
-                }
-                else{
+                } else {
                     notifyItemChanged(mBooks.lastIndexOf(f));
                 }
                 break;
@@ -199,12 +221,24 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
         private final ViewDataBinding mBinding;
         private FoundedBook mBook;
         private final View mRoot;
+        private final ImageButton readView;
+        private final Group group;
+        private final ImageButton downloadedView;
 
         ViewHolder(ViewDataBinding binding) {
             super(binding.getRoot());
             mBinding = binding;
 
             mRoot = mBinding.getRoot();
+            readView = mRoot.findViewById(R.id.book_read);
+            group = mRoot.findViewById(R.id.contentGroup);
+            if (readView != null) {
+                readView.setOnClickListener(view -> Toast.makeText(App.getInstance(), "Книга отмечена как прочитанная", Toast.LENGTH_LONG).show());
+            }
+            downloadedView = mRoot.findViewById(R.id.book_downloaded);
+            if (downloadedView != null) {
+                downloadedView.setOnClickListener(view -> Toast.makeText(App.getInstance(), "Книга уже скачивалась", Toast.LENGTH_LONG).show());
+            }
 
             // добавлю отображение информации о книге при клике на название книги
             TextView bookNameView = mRoot.findViewById(R.id.book_name);
@@ -221,35 +255,6 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
                     App.getInstance().mContextBook.postValue(mBook);
                 });
             }
-
-            Button downloadButton = mRoot.findViewById(R.id.downloadBookBtn);
-            if (downloadButton != null) {
-                downloadButton.setOnClickListener(view -> {
-                    Log.d("surprise", "ViewHolder ViewHolder 227: founded links for download " + mBook.downloadLinks);
-                    // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
-                    if (mBook.downloadLinks.size() > 1) {
-                        String savedMime = App.getInstance().getFavoriteMime();
-                        if (savedMime != null && !savedMime.isEmpty()) {
-                            // проверю, нет ли в списке выбранного формата
-                            for (DownloadLink dl : mBook.downloadLinks) {
-                                mCurrentLink = dl;
-                                if (dl.mime.contains(savedMime)) {
-                                    ArrayList<DownloadLink> result = new ArrayList<>();
-                                    result.add(mCurrentLink);
-                                    App.getInstance().mDownloadLinksList.postValue(result);
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                    App.getInstance().mDownloadLinksList.postValue(mBook.downloadLinks);
-                });
-                downloadButton.setOnLongClickListener(v -> {
-                    // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
-                    App.getInstance().mDownloadLinksList.postValue(mBook.downloadLinks);
-                    return true;
-                });
-            }
             // добавлю действие на нажатие на автора
             TextView authorsView = mRoot.findViewById(R.id.author_name);
             if (authorsView != null) {
@@ -257,7 +262,7 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
                     // если автор один- вывожу диалог выбора отображения, если несколько- вывожу диалог выбора автора
                     if (mBook.authors.size() > 1) {
                         App.getInstance().mSelectedAuthors.postValue(mBook.authors);
-                    } else if(mBook.authors.size() == 1){
+                    } else if (mBook.authors.size() == 1) {
                         App.getInstance().mSelectedAuthor.postValue(mBook.authors.get(0));
                     }
                 });
@@ -296,49 +301,109 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
             mBook = foundedBook;
             mBinding.setVariable(BR.book, mBook);
             mBinding.executePendingBindings();
+            if (group != null) {
+                group.setVisibility(View.VISIBLE);
+            }
+
+            Button downloadButton = mRoot.findViewById(R.id.downloadBookBtn);
+            if (downloadButton != null) {
+                downloadButton.setText("Загрузить");
+                downloadButton.setTextColor(App.getInstance().getResources().getColor(R.color.book_name_color));
+                downloadButton.setOnClickListener(view -> {
+                    Log.d("surprise", "ViewHolder ViewHolder 227: founded links for download " + mBook.downloadLinks);
+                    // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
+                    if (mBook.downloadLinks.size() > 1) {
+                        String savedMime = App.getInstance().getFavoriteMime();
+                        if (savedMime != null && !savedMime.isEmpty()) {
+                            // проверю, нет ли в списке выбранного формата
+                            for (DownloadLink dl : mBook.downloadLinks) {
+                                mCurrentLink = dl;
+                                if (dl.mime.contains(savedMime)) {
+                                    ArrayList<DownloadLink> result = new ArrayList<>();
+                                    result.add(mCurrentLink);
+                                    App.getInstance().mDownloadLinksList.postValue(result);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    App.getInstance().mDownloadLinksList.postValue(mBook.downloadLinks);
+                });
+                downloadButton.setOnLongClickListener(v -> {
+                    // если ссылка на скачивание одна- скачаю книгу, если несколько- выдам диалоговое окно со списком форматов для скачивания
+                    App.getInstance().mDownloadLinksList.postValue(mBook.downloadLinks);
+                    return true;
+                });
+            }
 
             ImageView imageContainer = mRoot.findViewById(R.id.previewImage);
             if (imageContainer != null) {
+                Log.d("surprise", "ViewHolder bind 341: " + "https://nina-dot-flibusta.appspot.com/" + foundedBook.previewUrl);
                 // если включено отображение превью книг и превью существует
                 if (App.getInstance().isPreviews() && foundedBook.previewUrl != null) {
                     imageContainer.setVisibility(View.VISIBLE);
                     // загружу изображение с помощью GLIDE
                     Glide
                             .with(imageContainer)
-                            .load("https://flibusta.appspot.com" + foundedBook.previewUrl)
+                            .load("https://cn815.mooo.com/ad/common" + foundedBook.previewUrl)
                             .into(imageContainer);
                 } else {
                     imageContainer.setVisibility(View.GONE);
                 }
             }
-
             (new Handler()).post(() -> {
                 // проверю, если книга прочитана- покажу это
                 if (mReadDao.getBookById(foundedBook.id) != null) {
-                    ImageButton readView = mRoot.findViewById(R.id.book_read);
                     if (readView != null) {
                         readView.setVisibility(View.VISIBLE);
-                        readView.setOnClickListener(view -> Toast.makeText(App.getInstance(), "Книга отмечена как прочитанная", Toast.LENGTH_LONG).show());
+                    }
+                } else {
+                    if (readView != null) {
+                        readView.setVisibility(View.GONE);
                     }
                 }
                 // проверю, если книга прочитана- покажу это
                 if (mDao.getBookById(foundedBook.id) != null) {
-                    ImageButton downloadedView = mRoot.findViewById(R.id.book_downloaded);
                     if (downloadedView != null) {
                         downloadedView.setVisibility(View.VISIBLE);
-                        downloadedView.setOnClickListener(view -> Toast.makeText(App.getInstance(), "Книга уже скачивалась", Toast.LENGTH_LONG).show());
+                    }
+                } else {
+                    if (downloadedView != null) {
+                        downloadedView.setVisibility(View.GONE);
                     }
                 }
             });
         }
 
         void cancelImageLoad() {
-            if (App.getInstance().isPreviews() && mBook.previewUrl != null) {
+            if (App.getInstance().isPreviews() && mBook != null && mBook.previewUrl != null) {
                 ImageView imageContainer = mRoot.findViewById(R.id.previewImage);
                 if (imageContainer != null) {
                     Glide.with(imageContainer)
                             .clear(imageContainer);
                 }
+            }
+        }
+
+        public void bindLoadMoreBtn() {
+            if (group != null) {
+                group.setVisibility(View.GONE);
+            }
+            if (readView != null) {
+                readView.setVisibility(View.GONE);
+            }
+            if (downloadedView != null) {
+                downloadedView.setVisibility(View.GONE);
+            }
+            ImageView imageContainer = mRoot.findViewById(R.id.previewImage);
+            if (imageContainer != null) {
+                imageContainer.setVisibility(View.GONE);
+            }
+            Button downloadBtn = mRoot.findViewById(R.id.downloadBookBtn);
+            if (downloadBtn != null) {
+                downloadBtn.setTextColor(App.getInstance().getResources().getColor(R.color.genre_text_color));
+                downloadBtn.setText("Загрузить следующую страницу");
+                downloadBtn.setOnClickListener(v -> OPDSActivity.sLoadNextPage.postValue(true));
             }
         }
     }

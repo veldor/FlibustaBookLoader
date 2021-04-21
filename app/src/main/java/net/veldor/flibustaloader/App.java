@@ -37,6 +37,7 @@ import net.veldor.flibustaloader.utils.BlacklistAuthors;
 import net.veldor.flibustaloader.utils.BlacklistBooks;
 import net.veldor.flibustaloader.utils.BlacklistGenres;
 import net.veldor.flibustaloader.utils.BlacklistSequences;
+import net.veldor.flibustaloader.utils.Grammar;
 import net.veldor.flibustaloader.utils.LogHandler;
 import net.veldor.flibustaloader.utils.SubscribeAuthors;
 import net.veldor.flibustaloader.utils.SubscribeBooks;
@@ -101,7 +102,7 @@ public class App extends MultiDexApplication {
     public static final int VIEW_MODE_FAST = 4;
     public static final int VIEW_MODE_FAST_FAT = 5;
     public static final String BASE_URL = "http://flibustahezeous3.onion";
-    public static final String MIRROR_URL = "https://flibusta.appspot.com";
+    public static final String MIRROR_URL = "http://flisland.net/";
     public static final String BASE_BOOK_URL = "http://flibustahezeous3.onion/b/";
 
     public static final String TOR_FILES_LOCATION = "torfiles";
@@ -165,10 +166,9 @@ public class App extends MultiDexApplication {
             LogHandler.getInstance().initLog();
             sNotificator.showTestVersionNotification();
         }
-
         // читаю настройки sharedPreferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
+        Log.d("surprise", "App onCreate 162: app version is " + Grammar.getAppVersion());
 
         startTor();
 
@@ -438,7 +438,7 @@ public class App extends MultiDexApplication {
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
         OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
-        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.REPLACE, downloadAllWorker);
+        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.KEEP, downloadAllWorker);
         App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
     }
 

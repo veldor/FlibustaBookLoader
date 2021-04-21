@@ -8,6 +8,12 @@
         android:summaryOff="Обычный вид"
         android:title="Ночной режим" />
     <SwitchPreferenceCompat
+        app:key="show more btn"
+        android:defaultValue="false"
+        android:summary="Следующая страница будет грузиться после нажатия на кнопку внизу списка книг"
+        android:summaryOff="Следующая страница грузится автоматически при пролистывании списка книг до конца"
+        android:title="Показывать кнопку загрузки следующей страницы" />
+    <SwitchPreferenceCompat
         app:key="@string/pref_is_eink"
         android:defaultValue="false"
         android:summary="Отключены фоновые изображения и GIF"

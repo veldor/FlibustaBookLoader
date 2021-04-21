@@ -41,10 +41,10 @@
             android:contentDescription="@string/preview_image"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/book_name"/>
+            app:layout_constraintTop_toBottomOf="@+id/book_name" />
 
         <LinearLayout
-            android:id="@+id/linearLayout2"
+            android:id="@+id/authorLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -117,7 +117,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/linearLayout"
+            android:id="@+id/statsBlock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -164,7 +164,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+            app:layout_constraintTop_toBottomOf="@+id/statsBlock" />
 
         <ImageButton
             android:id="@+id/menuButton"
@@ -184,7 +184,7 @@
             android:contentDescription="@string/book_readed_message"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <ImageButton
             android:id="@+id/book_downloaded"
@@ -194,16 +194,24 @@
             android:contentDescription="@string/book_downloaded_message"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/book_read" />
+            app:layout_constraintStart_toEndOf="@+id/book_read" />
 
         <androidx.constraintlayout.widget.Barrier
             android:id="@+id/barrier"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:barrierDirection="bottom"
-            app:constraint_referenced_ids="previewImage,linearLayout2"
+            app:constraint_referenced_ids="previewImage,authorLayout"
             tools:layout_editor_absoluteX="5dp"
             tools:layout_editor_absoluteY="115dp" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/contentGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="authorLayout,statsBlock,book_name,menuButton"
+            tools:layout_editor_absoluteX="5dp"
+            tools:layout_editor_absoluteY="5dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

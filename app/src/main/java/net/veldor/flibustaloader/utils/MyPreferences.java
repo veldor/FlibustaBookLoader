@@ -30,6 +30,7 @@ public class MyPreferences {
     private static final String AUTH_COOKIE_VALUE = "auth cookie value";
     private static final String PREF_BEG_DONATION = "beg donation";
     private static final String PREF_SKIP_MAIN_SCREEN = "skip load screen";
+    private static final String PREF_SHOW_LOAD_MORE_BTN = "show more btn";
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
@@ -234,4 +235,10 @@ public class MyPreferences {
     public boolean isSkipMainScreen() {
         return mSharedPreferences.getBoolean(PREF_SKIP_MAIN_SCREEN, false);
     }
+
+    public boolean isShowLoadMoreBtn() {
+        return mSharedPreferences.getBoolean(PREF_SHOW_LOAD_MORE_BTN, false);
+    }
+
+
 }
