@@ -77,10 +77,13 @@ public class NavigatorSelectHandler implements NavigationView.OnNavigationItemSe
             tryCloseDrawer();
         } else if (itemId == R.id.testAppInvite) {
             Intent intent;
-            Log.d("surprise", "NavigatorSelectHandler onNavigationItemSelected 66: selected append test");
             intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://t.me/flibusta_downloader_beta"));
             mContext.startActivity(intent);
+        } else if (itemId == R.id.shareApp) {
+            // get link for latest release
+            App.getInstance().shareLatestRelease();
+            tryCloseDrawer();
         }else if (itemId == R.id.exitApp) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mContext.finishAndRemoveTask();

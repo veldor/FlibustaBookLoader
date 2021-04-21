@@ -58,6 +58,10 @@
                 android:id="@+id/buyCoffee"
                 android:icon="@drawable/ic_donate_black_24"
                 android:title="@string/buy_me_coffee" />
+            <item
+                android:id="@+id/shareApp"
+                android:icon="@drawable/ic_share_white_24dp"
+                android:title="@string/share_app_menu" />
         </menu>
     </item>
 

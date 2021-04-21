@@ -238,4 +238,8 @@
     <string name="item_deleted_message">Item deleted</string>
     <string name="delete_item_message">Delete book</string>
     <string name="app_restart_message">Now app will restart for apply changes</string>
+    <string name="share_app_menu">Share app</string>
+    <string name="share_app_message">Share app</string>
+    <string name="share_app_link_title">Share app link</string>
+    <string name="latest_release_here_template">Latest Flibusta downloader can be found here: %s</string>
 </resources>

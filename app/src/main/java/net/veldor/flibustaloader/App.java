@@ -2,6 +2,8 @@ package net.veldor.flibustaloader;
 
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -33,6 +35,7 @@ import net.veldor.flibustaloader.selections.DownloadLink;
 import net.veldor.flibustaloader.selections.FoundedBook;
 import net.veldor.flibustaloader.selections.FoundedSequence;
 import net.veldor.flibustaloader.ui.OPDSActivity;
+import net.veldor.flibustaloader.updater.Updater;
 import net.veldor.flibustaloader.utils.BlacklistAuthors;
 import net.veldor.flibustaloader.utils.BlacklistBooks;
 import net.veldor.flibustaloader.utils.BlacklistGenres;
@@ -46,13 +49,25 @@ import net.veldor.flibustaloader.utils.URLHelper;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 import net.veldor.flibustaloader.workers.ParseWebRequestWorker;
 import net.veldor.flibustaloader.workers.PeriodicCheckFlibustaAvailabilityWorker;
+import net.veldor.flibustaloader.workers.ShareLastReleaseWorker;
 import net.veldor.flibustaloader.workers.StartTorWorker;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import cz.msebera.android.httpclient.HttpEntity;
+import cz.msebera.android.httpclient.client.ResponseHandler;
+import cz.msebera.android.httpclient.client.methods.HttpGet;
+import cz.msebera.android.httpclient.impl.client.CloseableHttpClient;
+import cz.msebera.android.httpclient.impl.client.HttpClients;
+import cz.msebera.android.httpclient.util.EntityUtils;
 
 import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNLOAD;
 
@@ -162,7 +177,7 @@ public class App extends MultiDexApplication {
         super.onCreate();
         instance = this;
         sNotificator = Notificator.getInstance();
-        if(isTestVersion){
+        if (isTestVersion) {
             LogHandler.getInstance().initLog();
             sNotificator.showTestVersionNotification();
         }
@@ -243,9 +258,9 @@ public class App extends MultiDexApplication {
     public void startTor() {
         Log.d("surprise", "App startTor 246: Tor start initiated");
         // если используется внешний VPN- TOR не нужен
-        if(!isExternalVpn()){
+        if (!isExternalVpn()) {
             // если рабочий ещё не запущен- запущу. Если уже работает- проигнорирую
-            if(!torInitInProgress){
+            if (!torInitInProgress) {
                 Constraints constraints = new Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.CONNECTED)
                         .build();
@@ -253,8 +268,7 @@ public class App extends MultiDexApplication {
                 OneTimeWorkRequest startTorWork = new OneTimeWorkRequest.Builder(StartTorWorker.class).addTag(START_TOR).setConstraints(constraints).build();
                 WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
             }
-        }
-        else{
+        } else {
             Log.d("surprise", "App startTor 257: tor initiation skipped, use external VPN");
             GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED);
         }
@@ -354,6 +368,7 @@ public class App extends MultiDexApplication {
         }
         return mAuthorsSubscribe;
     }
+
     public BlacklistAuthors getAuthorsBlacklist() {
         if (mAuthorsBlacklist == null) {
             mAuthorsBlacklist = new BlacklistAuthors();
@@ -401,7 +416,7 @@ public class App extends MultiDexApplication {
 
     public String getFavoriteMime() {
         String favoriteFormat = mSharedPreferences.getString(PREFERENCE_FAVORITE_MIME, null);
-        if(favoriteFormat == null || favoriteFormat.isEmpty()){
+        if (favoriteFormat == null || favoriteFormat.isEmpty()) {
             return null;
         }
         return favoriteFormat;
@@ -465,7 +480,6 @@ public class App extends MultiDexApplication {
     }
 
 
-
     public void setDownloadDir(Uri uri) {
         mSharedPreferences.edit().putString(PREFERENCE_DOWNLOAD_LOCATION, uri.toString()).apply();
     }
@@ -473,14 +487,13 @@ public class App extends MultiDexApplication {
     public DocumentFile getDownloadDir() {
         // возвращу папку для закачек
         String download_location = mSharedPreferences.getString(PREFERENCE_DOWNLOAD_LOCATION, null);
-        if(download_location != null){
-            try{
+        if (download_location != null) {
+            try {
                 DocumentFile dl = DocumentFile.fromTreeUri(App.getInstance(), Uri.parse(download_location));
-                if(dl != null && dl.isDirectory()){
+                if (dl != null && dl.isDirectory()) {
                     return dl;
                 }
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 return null;
             }
         }
@@ -497,5 +510,14 @@ public class App extends MultiDexApplication {
         PeriodicWorkRequest periodicTask = new PeriodicWorkRequest.Builder(PeriodicCheckFlibustaAvailabilityWorker.class, 15, TimeUnit.MINUTES).setConstraints(constraints).build();
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(PeriodicCheckFlibustaAvailabilityWorker.ACTION, ExistingPeriodicWorkPolicy.REPLACE, periodicTask);
         Log.d("surprise", "App startCheckWorker 497: CHECKER PLANNED");
+    }
+
+    public void shareLatestRelease() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        // запущу рабочего, который периодически будет обновлять данные
+        OneTimeWorkRequest task = new OneTimeWorkRequest.Builder(ShareLastReleaseWorker.class).setConstraints(constraints).build();
+        WorkManager.getInstance(this).enqueue(task);
     }
 }

@@ -60,7 +60,7 @@
     <string name="remember_format">Запомнить выбранный формат для дальнейших загрузок</string>
     <string name="download_only_this_format">Загружать только в выбранном формате</string>
     <string name="do_not_re_download">Загружать ранее сохранённые файлы</string>
-    <string name="go_to_test_message">Тестирование</string>
+    <string name="go_to_test_message">Бета-версии</string>
     <string name="enter_value_message">Введите значение</string>
     <string name="backward">Назад</string>
     <string name="begin_tor_init_msg">Начинаю инициализацию</string>
@@ -218,4 +218,8 @@
     <string name="books_options_message">Действия</string>
     <string name="delete_item_message">Удалить книгу</string>
     <string name="app_restart_message">Приложение будет перезапущено для применения настроек</string>
+    <string name="share_app_menu">Поделиться программой</string>
+    <string name="share_app_message">Поделиться приложением</string>
+    <string name="share_app_link_title">Ссылка на приложение</string>
+    <string name="latest_release_here_template">Последний релиз Flibusta downloader можно скачать по ссылке: %s</string>
 </resources>
