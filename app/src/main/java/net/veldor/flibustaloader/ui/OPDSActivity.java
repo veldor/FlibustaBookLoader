@@ -612,11 +612,13 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
                 //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
                 Log.d("surprise", "OPDSActivity setupInterface 529: use reader");
             } else {
-                // назначу фон
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    mRootView.setBackground(ContextCompat.getDrawable(this, R.drawable.back_2));
-                } else {
-                    mRootView.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.back_2, null));
+                if (!MyPreferences.getInstance().isPicHide()) {
+                    // назначу фон
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        mRootView.setBackground(ContextCompat.getDrawable(this, R.drawable.back_2));
+                    } else {
+                        mRootView.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.back_2, null));
+                    }
                 }
             }
         }
@@ -1130,7 +1132,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
             Glide
                     .with(imageContainer)
-                    .load("https://flibusta.appspot.com" + foundedBook.previewUrl)
+                    .load("https://cn815.mooo.com/ad/common" + foundedBook.previewUrl)
                     .into(imageContainer);
 
             dialogBuilder

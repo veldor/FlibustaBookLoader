@@ -469,18 +469,32 @@ public class Notificator {
         mNotificationManager.notify(MISC_CODE, notification);
     }
 
-    public void createBookLoadingProgressNotification(int contentLength, int loaded, String name) {
+    public void createBookLoadingProgressNotification(int contentLength, int loaded, String name, long startTime) {
         // пересчитаю байты в килобайты
         double total = (double) contentLength / 1024;
         double nowLoaded = (double) loaded / 1024;
         double percentDone = 0.;
         if (loaded > 0) {
-            percentDone = loaded * 100 / total / 1000;
+            percentDone = (double) loaded / (double) contentLength * 100;
+        }
+        int timeLeftInMillis = 0;
+        long left = System.currentTimeMillis() - startTime;
+        if (percentDone >= 1) {
+            int timeForPercent = (int) left / (int) percentDone;
+            int percentsLeft = 100 - (int) percentDone;
+            timeLeftInMillis = percentsLeft * timeForPercent;
+        }
+        int timeLeftInSeconds = timeLeftInMillis / 1000;
+        String textLeft;
+        if (timeLeftInSeconds / 60 > 0) {
+            textLeft = (timeLeftInSeconds / 60) + " мин. " + (timeLeftInSeconds % 60) + " сек.";
+        } else {
+            textLeft = (timeLeftInSeconds % 60) + " сек.";
         }
         Notification notification = new NotificationCompat.Builder(mContext, BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
                 .setContentTitle("Качаю " + name)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.loaded_message), nowLoaded, total, percentDone)))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(String.format(Locale.ENGLISH, App.getInstance().getString(R.string.loaded_message), nowLoaded, total, percentDone, textLeft)))
                 .setOngoing(true)
                 .setProgress(contentLength, loaded, false)
                 .setPriority(Notification.PRIORITY_HIGH)

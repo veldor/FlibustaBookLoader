@@ -31,6 +31,7 @@ public class MyPreferences {
     private static final String PREF_BEG_DONATION = "beg donation";
     private static final String PREF_SKIP_MAIN_SCREEN = "skip load screen";
     private static final String PREF_SHOW_LOAD_MORE_BTN = "show more btn";
+    private static final String PREF_HIDE_PICS = "clear view";
     private static MyPreferences instance;
     private final SharedPreferences mSharedPreferences;
 
@@ -241,4 +242,7 @@ public class MyPreferences {
     }
 
 
+    public boolean isPicHide() {
+        return mSharedPreferences.getBoolean(PREF_HIDE_PICS, false);
+    }
 }

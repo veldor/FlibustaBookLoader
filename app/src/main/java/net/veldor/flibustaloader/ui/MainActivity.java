@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -22,7 +23,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.PermissionChecker;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
@@ -94,6 +97,18 @@ public class MainActivity extends BaseActivity {
                 showSelectDownloadFolderDialog();
             } else {
                 handleStart();
+            }
+        }
+        Log.d("surprise", "onCreate:  hide pictures " + MyPreferences.getInstance().isPicHide());
+        if (!MyPreferences.getInstance().isPicHide()) {
+            View rootView = findViewById(R.id.rootView);
+            if(rootView != null){
+                // назначу фон
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    rootView.setBackground(ContextCompat.getDrawable(this, R.drawable.back_3));
+                } else {
+                    rootView.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.back_3, null));
+                }
             }
         }
     }
@@ -192,6 +207,10 @@ public class MainActivity extends BaseActivity {
             if (switcher != null) {
                 switcher.setChecked(MyPreferences.getInstance().isEInk());
                 switcher.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if(isChecked){
+                        Log.d("surprise", "setupUI: show dialog");
+                        showEinkEnabledDialog();
+                    }
                     MyPreferences.getInstance().setEInk(isChecked);
                     recreate();
                 });
@@ -216,8 +235,13 @@ public class MainActivity extends BaseActivity {
                 startView();
             });
         }
+    }
 
-
+    private void showEinkEnabledDialog() {
+        new AlertDialog.Builder(this, R.style.MyDialogStyle)
+                .setTitle("Enabled e-ink theme")
+                .setMessage("It not support night mode and can be switched off here or on settings screen")
+                .show();
     }
 
     private void checkWiFiEnabled() {

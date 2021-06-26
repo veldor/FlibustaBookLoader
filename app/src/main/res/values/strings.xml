@@ -197,10 +197,10 @@
     <string name="title_change_download_folder_alt">Change download folder(alternative)</string>
     <string name="tor_title">TOR</string>
     <string name="vpn_title">VPN</string>
-    <string name="loaded_message">Loaded %.0f of %.0f Kb (%.2f%%)</string>
+    <string name="loaded_message">Loaded %.0f of %.0f Kb (%.2f%%)\n Left: %s</string>
     <string name="books_download_progress_channel">Book download progress</string>
     <string name="books_download_progress_channel_description">Book download progress</string>
-    <string name="is_ebook_title">This is e-book</string>
+    <string name="is_ebook_title">E-Ink theme</string>
     <string name="logout">Log-out</string>
     <string name="check_flibusta_availability_message">Check for Flibusta availability</string>
     <string name="flibusta_not_available_message">Oops, Flibusta is not available</string>
@@ -242,4 +242,5 @@
     <string name="share_app_message">Share app</string>
     <string name="share_app_link_title">Share app link</string>
     <string name="latest_release_here_template">Latest Flibusta downloader can be found here: %s</string>
+    <string name="pref_clear_view" translatable="false">clear view</string>
 </resources>

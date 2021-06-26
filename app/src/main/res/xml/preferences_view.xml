@@ -12,7 +12,7 @@
         android:defaultValue="false"
         android:summary="Следующая страница будет грузиться после нажатия на кнопку внизу списка книг"
         android:summaryOff="Следующая страница грузится автоматически при пролистывании списка книг до конца"
-        android:title="Показывать кнопку загрузки следующей страницы" />
+        android:title="Кнопка следующей страницы" />
     <SwitchPreferenceCompat
         app:key="@string/pref_is_eink"
         android:defaultValue="false"
@@ -24,4 +24,10 @@
         android:defaultValue="true"
         android:summary="Автофокус на строке ввода"
         android:title="Автоматически открывать окно ввода, когда переключен тип поиска" />
+    <SwitchPreferenceCompat
+        app:key="@string/pref_clear_view"
+        android:defaultValue="false"
+        android:summary="Фон и GIF не отображаются"
+        android:summaryOff="Фон и GIF отображаются"
+        android:title="Скрыть картинки" />
 </PreferenceScreen>

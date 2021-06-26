@@ -120,7 +120,7 @@ public class App extends MultiDexApplication {
     public static final String MIRROR_URL = "http://flisland.net/";
     public static final String BASE_BOOK_URL = "http://flibustahezeous3.onion/b/";
 
-    public static final String TOR_FILES_LOCATION = "torfiles";
+        public static final String TOR_FILES_LOCATION = "torfiles";
     private static final String PREFERENCE_NIGHT_MODE_ENABLED = "night mode";
     private static final String PREFERENCE_LAST_LOADED_URL = "last_loaded_url";
     public static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";

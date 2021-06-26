@@ -178,10 +178,10 @@
     <string name="message_prepare_request">Подготавливаю запрос</string>
     <string name="tor_title">TOR</string>
     <string name="vpn_title">VPN</string>
-    <string name="loaded_message">Загружено %.0f из %.0f Кб (%.2f%%)</string>
+    <string name="loaded_message">Загружено %.0f из %.0f Кб (%.2f%%)\n Осталось: %s</string>
     <string name="books_download_progress_channel">Прогресс скачивания книги</string>
     <string name="books_download_progress_channel_description">Тут выводится сообщение с прогрессом загрузки книги</string>
-    <string name="is_ebook_title">Это электронная книга</string>
+    <string name="is_ebook_title">Тема для E-Ink</string>
     <string name="logout">Разлогиниться</string>
     <string name="check_flibusta_availability_message">Проверяю доступность Флибусты</string>
     <string name="flibusta_not_available_message">Ой, Флибуста недоступна</string>

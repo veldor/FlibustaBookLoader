@@ -61,14 +61,15 @@ public class GlobalWebClient {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
                         boolean showDownloadProgress = MyPreferences.getInstance().isShowDownloadProgress();
-                            long contentLength = entity.getContentLength();
+                        long contentLength = entity.getContentLength();
+                        long startTime = System.currentTimeMillis();
                         long lastNotificationTime = System.currentTimeMillis();
                         String fileName = newFile.getName();
                         Notificator notifier = App.getInstance().getNotificator();
                         if (contentLength > 0) {
                             // создам уведомление, в котором буду показывать прогресс скачивания
                             if (showDownloadProgress) {
-                                notifier.createBookLoadingProgressNotification((int) contentLength, 0, fileName);
+                                notifier.createBookLoadingProgressNotification((int) contentLength, 0, fileName, startTime);
                             }
                         }
                         InputStream content = entity.getContent();
@@ -81,7 +82,7 @@ public class GlobalWebClient {
                                     out.write(buffer, 0, read);
                                     if (contentLength > 0 && showDownloadProgress && lastNotificationTime + 1000 < System.currentTimeMillis()) {
                                         lastNotificationTime = System.currentTimeMillis();
-                                        notifier.createBookLoadingProgressNotification((int) contentLength, (int) newFile.length(), fileName);
+                                        notifier.createBookLoadingProgressNotification((int) contentLength, (int) newFile.length(), fileName, startTime);
                                     }
                                 }
                                 out.close();
@@ -111,11 +112,12 @@ public class GlobalWebClient {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
                         long contentLength = entity.getContentLength();
+                        long startTime = System.currentTimeMillis();
                         String fileName = newFile.getName();
                         Notificator notifier = App.getInstance().getNotificator();
                         if (contentLength > 0) {
                             // создам уведомление, в котором буду показывать прогресс скачивания
-                            notifier.createBookLoadingProgressNotification((int) contentLength, 0, fileName);
+                            notifier.createBookLoadingProgressNotification((int) contentLength, 0, fileName, startTime);
                         }
                         InputStream content = entity.getContent();
                         if (content != null && entity.getContentLength() > 0) {
@@ -124,7 +126,7 @@ public class GlobalWebClient {
                             byte[] buffer = new byte[1024];
                             while ((read = content.read(buffer)) > 0) {
                                 out.write(buffer, 0, read);
-                                notifier.createBookLoadingProgressNotification((int) contentLength, (int) newFile.length(), fileName);
+                                notifier.createBookLoadingProgressNotification((int) contentLength, (int) newFile.length(), fileName, startTime);
                             }
                             out.close();
                             content.close();
@@ -138,6 +140,7 @@ public class GlobalWebClient {
             }
         } catch (Exception e) {
             Log.d("surprise", "GlobalWebClient handleBookLoadRequest 103: have error " + e.getMessage());
+            e.printStackTrace();
         }
         // если что-то пошло не так- удалю файл и покажу ошибку скачивания
         boolean deleteResult = newFile.delete();
@@ -170,8 +173,7 @@ public class GlobalWebClient {
                                 if (newFile.length() > 0) {
                                     Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getUri());
                                     return true;
-                                }
-                                else{
+                                } else {
                                     throw new ZeroBookSizeException();
                                 }
                             }

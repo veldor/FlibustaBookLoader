@@ -14,12 +14,12 @@
             app:key="download auto start"
             android:defaultValue="true"
             android:summary="Автоматический старт загрузки книг при добавлении в очередь."
-            android:title="Загружать книги автоматически" />
+            android:title="Загружать автоматически" />
         <SwitchPreferenceCompat
             app:key="show download progress"
             android:defaultValue="false"
             android:summary="Отображать прогресс загрузки книги в уведомлении."
-            android:title="Уведомление прогресса загрузки" />
+            android:title="Прогресс загрузки" />
         <SwitchPreferenceCompat
             app:key="re download"
             android:defaultValue="true"
@@ -31,17 +31,22 @@
             android:defaultValue="false"
             android:summary="Файлы будут скачаны в выбранном формате или пропущены"
             android:summaryOff="Если файл недоступен в выбранном формате- он будет скачан в доступном"
-            android:title="Скачивать файлы только в выбранном формате" />
+            android:title="Только выбранный формат" />
 
         <SwitchPreferenceCompat
             app:key="@string/pref_create_author_folder"
             android:defaultValue="false"
-            android:title="Создавать папки для различных авторов" />
+            android:title="Папки авторов"
+            android:summary="Будут созданы отдельные папки под каждого автора"
+            android:summaryOff="Отдельные папки для авторов не создаются"
+            />
 
         <SwitchPreferenceCompat
             app:key="@string/pref_create_sequence_folder"
             android:defaultValue="false"
-            android:title="Создавать папки для различных серий" />
+            android:title="Папки серий"
+            android:summary="Будут созданы отдельные папки под каждой серии"
+            android:summaryOff="Отдельные папки для серий не создаются" />
 
         <SwitchPreferenceCompat
             app:key="@string/pref_create_additional_folders"
