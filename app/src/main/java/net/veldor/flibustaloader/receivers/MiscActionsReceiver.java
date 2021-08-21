@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.receivers;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +12,7 @@ import androidx.work.WorkManager;
 
 import net.veldor.flibustaloader.App;
 import net.veldor.flibustaloader.notificatons.Notificator;
+import net.veldor.flibustaloader.ui.MainActivity;
 import net.veldor.flibustaloader.utils.LogHandler;
 import net.veldor.flibustaloader.workers.DownloadBooksWorker;
 
@@ -25,6 +28,7 @@ public class MiscActionsReceiver extends BroadcastReceiver {
     public static final String ACTION_SKIP_BOOK = "skip book";
     public static final String ACTION_RESTART_TOR = "restart tor";
     public static final String ACTION_SEND_LOGS = "send logs";
+    public static final String ACTION_ENABLE_VPN_MODE = "enable vpn";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -71,6 +75,15 @@ public class MiscActionsReceiver extends BroadcastReceiver {
                     Intent it = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     context.sendBroadcast(it);
                     LogHandler.getInstance().sendLogs();
+
+                case ACTION_ENABLE_VPN_MODE:
+                    App.getInstance().switchExternalVpnUse();
+                    Intent mStartActivity = new Intent(context, MainActivity.class);
+                    int mPendingIntentId = 123456;
+                    PendingIntent mPendingIntent = PendingIntent.getActivity(context, mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+                    AlarmManager mgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+                    mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+                    System.exit(0);
 
             }
         }

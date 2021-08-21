@@ -47,6 +47,10 @@ public class ReserveSettingsWorker extends Worker {
     static final String SEQUENCES_SUBSCRIBE_BACKUP_NAME = "data7";
     static final String BOOKMARKS_BACKUP_NAME = "data8";
     static final String DOWNLOAD_SCHEDULE_BACKUP_NAME = "data9";
+    static final String BLACKLIST_BOOKS_BACKUP_NAME = "data10";
+    static final String BLACKLIST_AUTHORS_BACKUP_NAME = "data11";
+    static final String BLACKLIST_GENRES_BACKUP_NAME = "data12";
+    static final String BLACKLIST_SEQUENCES_BACKUP_NAME = "data13";
     public static DocumentFile sSaveDir;
     public static DocumentFile sBackupFile;
     public static File sCompatSaveDir;
@@ -90,11 +94,26 @@ public class ReserveSettingsWorker extends Worker {
                     sharedPrefsFile = new File(Environment.getDataDirectory() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml");
                 }
                 writeToZip(out, dataBuffer, sharedPrefsFile, PREF_BACKUP_NAME);
-
                 // сохраню автозаполнение поиска
                 File autocompleteFile = new File(App.getInstance().getFilesDir(), MyFileReader.SEARCH_AUTOCOMPLETE_FILE);
                 if (autocompleteFile.isFile()) {
                     writeToZip(out, dataBuffer, autocompleteFile, AUTOFILL_BACKUP_NAME);
+                }// сохраню чёрные списки
+                File blacklistFile = new File(App.getInstance().getFilesDir(), MyFileReader.BOOKS_BLACKLIST_FILE);
+                if (autocompleteFile.isFile()) {
+                    writeToZip(out, dataBuffer, blacklistFile, BLACKLIST_BOOKS_BACKUP_NAME);
+                }
+                blacklistFile = new File(App.getInstance().getFilesDir(), MyFileReader.AUTHORS_BLACKLIST_FILE);
+                if (autocompleteFile.isFile()) {
+                    writeToZip(out, dataBuffer, blacklistFile, BLACKLIST_AUTHORS_BACKUP_NAME);
+                }
+                blacklistFile = new File(App.getInstance().getFilesDir(), MyFileReader.GENRES_BLACKLIST_FILE);
+                if (autocompleteFile.isFile()) {
+                    writeToZip(out, dataBuffer, blacklistFile, BLACKLIST_GENRES_BACKUP_NAME);
+                }
+                blacklistFile = new File(App.getInstance().getFilesDir(), MyFileReader.SEQUENCES_BLACKLIST_FILE);
+                if (autocompleteFile.isFile()) {
+                    writeToZip(out, dataBuffer, blacklistFile, BLACKLIST_SEQUENCES_BACKUP_NAME);
                 }
                 // сохраню подписки
                 File subscriptionFile = new File(App.getInstance().getFilesDir(), MyFileReader.BOOKS_SUBSCRIBE_FILE);

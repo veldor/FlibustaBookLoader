@@ -205,6 +205,9 @@ public class MyPreferences {
     public String getAuthCookie() {
         return mSharedPreferences.getString(AUTH_COOKIE_VALUE, null);
     }
+    public String getPicMirror() {
+        return mSharedPreferences.getString(App.getInstance().getString(R.string.pref_custom_pic_mirror), App.PIC_MIRROR_URL);
+    }
 
     public void removeAuthCookie() {
         mSharedPreferences.edit().remove(AUTH_COOKIE_VALUE).apply();

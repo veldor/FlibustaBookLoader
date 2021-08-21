@@ -64,6 +64,19 @@ public class RestoreSettingsWorker extends Worker {
                                 targetFile = new File(App.getInstance().getFilesDir(), MyFileReader.SEARCH_AUTOCOMPLETE_FILE);
                                 extractFromZip(zin, targetFile);
                                 break;
+                            case ReserveSettingsWorker.BLACKLIST_BOOKS_BACKUP_NAME:
+                                targetFile = new File(App.getInstance().getFilesDir(), MyFileReader.BOOKS_BLACKLIST_FILE);
+                                extractFromZip(zin, targetFile);
+                            case ReserveSettingsWorker.BLACKLIST_AUTHORS_BACKUP_NAME:
+                                targetFile = new File(App.getInstance().getFilesDir(), MyFileReader.AUTHORS_BLACKLIST_FILE);
+                                extractFromZip(zin, targetFile);
+                            case ReserveSettingsWorker.BLACKLIST_GENRES_BACKUP_NAME:
+                                targetFile = new File(App.getInstance().getFilesDir(), MyFileReader.GENRES_BLACKLIST_FILE);
+                                extractFromZip(zin, targetFile);
+                            case ReserveSettingsWorker.BLACKLIST_SEQUENCES_BACKUP_NAME:
+                                targetFile = new File(App.getInstance().getFilesDir(), MyFileReader.SEQUENCES_BLACKLIST_FILE);
+                                extractFromZip(zin, targetFile);
+                                break;
                             case ReserveSettingsWorker.BOOKS_SUBSCRIBE_BACKUP_NAME:
                                 targetFile = new File(App.getInstance().getFilesDir(), BOOKS_SUBSCRIBE_FILE);
                                 extractFromZip(zin, targetFile);

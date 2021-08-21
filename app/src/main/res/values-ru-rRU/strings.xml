@@ -222,4 +222,7 @@
     <string name="share_app_message">Поделиться приложением</string>
     <string name="share_app_link_title">Ссылка на приложение</string>
     <string name="latest_release_here_template">Последний релиз Flibusta downloader можно скачать по ссылке: %s</string>
+    <string name="too_large_version_message">TOR не запустится</string>
+    <string name="too_large_version_text">К сожалению, на Android 10+ встроенный TOR-клиент пока работать не будет. Используйте внешний VPN.</string>
+    <string name="enable_vpn_message">Использовать VPN</string>
 </resources>

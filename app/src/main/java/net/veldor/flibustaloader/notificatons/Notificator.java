@@ -62,6 +62,7 @@ public class Notificator {
     public static final int CHECK_AVAILABILITY_NOTIFICATION = 15;
     public static final int IS_TEST_VERSION_NOTIFICATION = 16;
     private static final int MIRROR_USING_NOTIFICATION = 14;
+    private static final int VERSION_TOO_LAGRE_NOTIFICATION = 17;
     private static final int SEND_LOG_CODE = 5;
     private static Notificator instance;
     private final Context mContext;
@@ -571,5 +572,19 @@ public class Notificator {
                 .addAction(R.drawable.ic_baseline_bookmark_24, App.getInstance().getString(R.string.send_log_message), sendLogsPendingIntent);
 
         mNotificationManager.notify(IS_TEST_VERSION_NOTIFICATION, notificationBuilder.build());
+    }
+
+    public void showNotTorLoadNotification() {
+        Intent enableVPNModeIntent = new Intent(mContext, MiscActionsReceiver.class);
+        enableVPNModeIntent.putExtra(EXTRA_ACTION_TYPE, MiscActionsReceiver.ACTION_ENABLE_VPN_MODE);
+        PendingIntent enableVPNIntent = PendingIntent.getBroadcast(mContext, SEND_LOG_CODE, enableVPNModeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext, MISC_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
+                .setContentTitle(App.getInstance().getString(R.string.too_large_version_message))
+                .addAction(R.drawable.ic_baseline_bookmark_24, App.getInstance().getString(R.string.enable_vpn_message), enableVPNIntent)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(App.getInstance().getString(R.string.too_large_version_text)));
+
+        mNotificationManager.notify(VERSION_TOO_LAGRE_NOTIFICATION, notificationBuilder.build());
     }
 }

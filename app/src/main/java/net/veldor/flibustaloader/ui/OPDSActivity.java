@@ -626,7 +626,10 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         mMassLoadSwitcher = findViewById(R.id.showAllSwitcher);
         if (mMassLoadSwitcher != null) {
             mMassLoadSwitcher.setChecked(App.getInstance().isDownloadAll());
-            mMassLoadSwitcher.setOnCheckedChangeListener((compoundButton, b) -> App.getInstance().switchDownloadAll());
+            mMassLoadSwitcher.setOnCheckedChangeListener((compoundButton, b) -> {
+                App.getInstance().switchDownloadAll();
+                invalidateMenu();
+            });
         }
         mFab = findViewById(R.id.floatingMenu);
         mFab.setVisibility(View.GONE);
@@ -1132,7 +1135,7 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
 
             Glide
                     .with(imageContainer)
-                    .load("https://cn815.mooo.com/ad/common" + foundedBook.previewUrl)
+                    .load(MyPreferences.getInstance().getPicMirror() + foundedBook.previewUrl)
                     .into(imageContainer);
 
             dialogBuilder
@@ -1351,6 +1354,11 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         myItem = menu.findItem(R.id.discardFavoriteType);
         myItem.setEnabled(App.getInstance().getFavoriteMime() != null);
 
+        // обработаю переключатель загрузки всех результатов поиска книг
+        myItem = menu.findItem(R.id.menuLoadAllBooks);
+        Log.d("surprise", "onCreateOptionsMenu: is checked? " + App.getInstance().isDownloadAll());
+        myItem.setChecked(App.getInstance().isDownloadAll());
+
         // переключатель превью обложек
         myItem = menu.findItem(R.id.showPreviews);
         myItem.setChecked(App.getInstance().isPreviews());
@@ -1464,6 +1472,11 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
         }
         if (id == R.id.action_sort_by) {
             selectSorting();
+            return true;
+        }
+        if (id == R.id.menuLoadAllBooks) {
+            mMassLoadSwitcher.toggle();
+            invalidateMenu();
             return true;
         }
         if (id == R.id.clearSearchHistory) {

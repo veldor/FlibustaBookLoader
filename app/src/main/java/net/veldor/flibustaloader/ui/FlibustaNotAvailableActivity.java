@@ -1,7 +1,11 @@
 package net.veldor.flibustaloader.ui;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -17,6 +21,20 @@ public class FlibustaNotAvailableActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flibusta_not_available);
+        Button switchToVpnBtn = findViewById(R.id.switchToVpnBtn);
+        if (App.getInstance().isExternalVpn()) {
+            switchToVpnBtn.setVisibility(View.GONE);
+        } else {
+            switchToVpnBtn.setOnClickListener(view -> {
+                App.getInstance().switchExternalVpnUse();
+                Intent mStartActivity = new Intent(FlibustaNotAvailableActivity.this, MainActivity.class);
+                int mPendingIntentId = 123456;
+                PendingIntent mPendingIntent = PendingIntent.getActivity(FlibustaNotAvailableActivity.this, mPendingIntentId, mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+                AlarmManager mgr = (AlarmManager) FlibustaNotAvailableActivity.this.getSystemService(Context.ALARM_SERVICE);
+                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+                System.exit(0);
+            });
+        }
         Button closeAppBtn = findViewById(R.id.closeAppButton);
         closeAppBtn.setOnClickListener(v -> System.exit(0));
         Button tryAgainBtn = findViewById(R.id.retryButton);

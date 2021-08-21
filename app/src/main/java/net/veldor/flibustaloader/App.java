@@ -2,6 +2,7 @@ package net.veldor.flibustaloader;
 
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
@@ -73,13 +74,14 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class App extends MultiDexApplication {
     //todo switch to false on release
-    public static final boolean isTestVersion = false;
+    public static final boolean isTestVersion = true;
     public static final MutableLiveData<Boolean> sResetLoginCookie = new MutableLiveData<>();
 
     // хранилище статуса HTTP запроса
     public final MutableLiveData<String> RequestStatus = new MutableLiveData<>();
 
     public static final String SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask=";
+    public static final String PIC_MIRROR_URL = "http://flibusta.is";
     private static final String PARSE_WEB_REQUEST_TAG = "parse web request";
     private static final String EXTERNAL_VPN = "external vpn";
     private static final String PREFERENCE_LINEAR_LAYOUT = "linear layout";
@@ -176,14 +178,21 @@ public class App extends MultiDexApplication {
     public void onCreate() {
         super.onCreate();
         instance = this;
+        // читаю настройки sharedPreferences
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         sNotificator = Notificator.getInstance();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if(!App.getInstance().isExternalVpn()){
+                sNotificator.showNotTorLoadNotification();
+            }
+        }
+        else{
+            startTor();
+        }
         if (isTestVersion) {
             LogHandler.getInstance().initLog();
             sNotificator.showTestVersionNotification();
         }
-        // читаю настройки sharedPreferences
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        Log.d("surprise", "App onCreate 162: app version is " + Grammar.getAppVersion());
 
         startTor();
 

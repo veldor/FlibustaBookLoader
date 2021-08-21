@@ -29,6 +29,11 @@
         android:title="@string/use_dark_mode"
         yourapp:showAsAction="never" />
     <item
+        android:id="@+id/menuLoadAllBooks"
+        android:checkable="true"
+        android:title="@string/show_all_results_switcher_text"
+        yourapp:showAsAction="never" />
+    <item
         android:id="@+id/menuCreateAuthorDir"
         android:checkable="true"
         android:title="@string/message_create_author_folder"

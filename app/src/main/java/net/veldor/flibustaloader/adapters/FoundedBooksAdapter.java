@@ -338,14 +338,13 @@ public class FoundedBooksAdapter extends RecyclerView.Adapter<FoundedBooksAdapte
 
             ImageView imageContainer = mRoot.findViewById(R.id.previewImage);
             if (imageContainer != null) {
-                Log.d("surprise", "ViewHolder bind 341: " + "https://nina-dot-flibusta.appspot.com/" + foundedBook.previewUrl);
                 // если включено отображение превью книг и превью существует
                 if (App.getInstance().isPreviews() && foundedBook.previewUrl != null) {
                     imageContainer.setVisibility(View.VISIBLE);
                     // загружу изображение с помощью GLIDE
                     Glide
                             .with(imageContainer)
-                            .load("https://cn815.mooo.com/ad/common" + foundedBook.previewUrl)
+                            .load(MyPreferences.getInstance().getPicMirror() + foundedBook.previewUrl)
                             .into(imageContainer);
                 } else {
                     imageContainer.setVisibility(View.GONE);

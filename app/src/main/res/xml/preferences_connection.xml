@@ -23,4 +23,8 @@
         android:title="Назначить зеркало Флибусты"
         android:summary="Зеркало в виде https://mirror.net Тут можно назначить зеркало, с которого будет загружаться информация. При проблемах с соединением поставьте пустое значение"
         app:key="@string/pref_custom_flibusta_mirror"/>
+    <EditTextPreference
+        android:title="Зеркало загрузки обложек"
+        android:summary="Зеркало в виде https://mirror.net Тут можно назначить зеркало, с которого будут загружаться обложки книг. При проблемах с соединением поставьте пустое значение"
+        app:key="@string/pref_custom_pic_mirror"/>
 </PreferenceScreen>
