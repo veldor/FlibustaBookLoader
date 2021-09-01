@@ -73,11 +73,7 @@ public class BookOpener {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setDataAndType(Uri.fromFile(file), MimeTypes.getFullMime(type));
                 intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
-                if (intentCanBeHandled(intent)) {
-                    App.getInstance().startActivity(intent);
-                } else {
-                    Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
-                }
+                App.getInstance().startActivity(Intent.createChooser(intent, App.getInstance().getString(R.string.open_with_menu_item)).addFlags(FLAG_ACTIVITY_NEW_TASK));
             } else {
                 Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
             }

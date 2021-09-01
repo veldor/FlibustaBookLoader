@@ -155,7 +155,6 @@ public class GlobalWebClient {
                 if (status == 200) {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
-                        Log.d("surprise", "GlobalWebClient handleBookLoadRequestNoContentLength 114: start parse content " + System.currentTimeMillis());
                         InputStream content = entity.getContent();
                         if (content != null) {
                             OutputStream out = App.getInstance().getContentResolver().openOutputStream(newFile.getUri());
@@ -166,10 +165,8 @@ public class GlobalWebClient {
                                     out.write(buffer, 0, read);
                                 }
 
-                                Log.d("surprise", "GlobalWebClient handleBookLoadRequestNoContentLength 114: finish parse content " + System.currentTimeMillis());
                                 out.close();
                                 content.close();
-                                Log.d("surprise", "TorWebClient downloadBook 188: created file length is " + newFile.length());
                                 if (newFile.length() > 0) {
                                     Log.d("surprise", "TorWebClient downloadBook 190: file founded and saved to " + newFile.getUri());
                                     return true;
@@ -197,7 +194,6 @@ public class GlobalWebClient {
                 if (status == 200) {
                     HttpEntity entity = response.getEntity();
                     if (entity != null) {
-                        Log.d("surprise", "TorWebClient downloadBook 177: content length is " + entity.getContentLength());
                         InputStream content = entity.getContent();
                         if (content != null) {
                             OutputStream out = new FileOutputStream(newFile);
@@ -234,7 +230,6 @@ public class GlobalWebClient {
             }
         } else {
             // сначала попробую запросить инфу с зеркала
-            Log.d("surprise", "GlobalWebClient request 33: TRY REQUEST MIRROR");
             TorWebClient webClient;
             try {
                 webClient = new TorWebClient();

@@ -122,7 +122,7 @@ public class App extends MultiDexApplication {
     public static final String MIRROR_URL = "http://flisland.net/";
     public static final String BASE_BOOK_URL = "http://flibustahezeous3.onion/b/";
 
-        public static final String TOR_FILES_LOCATION = "torfiles";
+    public static final String TOR_FILES_LOCATION = "torfiles";
     private static final String PREFERENCE_NIGHT_MODE_ENABLED = "night mode";
     private static final String PREFERENCE_LAST_LOADED_URL = "last_loaded_url";
     public static final String PREFERENCE_DOWNLOAD_LOCATION = "download_location";
@@ -181,14 +181,7 @@ public class App extends MultiDexApplication {
         // читаю настройки sharedPreferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         sNotificator = Notificator.getInstance();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if(!App.getInstance().isExternalVpn()){
-                sNotificator.showNotTorLoadNotification();
-            }
-        }
-        else{
-            startTor();
-        }
+        startTor();
         if (isTestVersion) {
             LogHandler.getInstance().initLog();
             sNotificator.showTestVersionNotification();
@@ -265,7 +258,6 @@ public class App extends MultiDexApplication {
     }
 
     public void startTor() {
-        Log.d("surprise", "App startTor 246: Tor start initiated");
         // если используется внешний VPN- TOR не нужен
         if (!isExternalVpn()) {
             // если рабочий ещё не запущен- запущу. Если уже работает- проигнорирую
@@ -278,7 +270,6 @@ public class App extends MultiDexApplication {
                 WorkManager.getInstance(this).enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork);
             }
         } else {
-            Log.d("surprise", "App startTor 257: tor initiation skipped, use external VPN");
             GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED);
         }
     }
@@ -456,14 +447,16 @@ public class App extends MultiDexApplication {
     }
 
     public void initializeDownload() {
-        // отменю предыдущую работу
-        // запущу рабочего, который загрузит все книги
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
-        WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.KEEP, downloadAllWorker);
-        App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
+        if (!DownloadBooksWorker.downloadInProgress) {
+            // отменю предыдущую работу
+            // запущу рабочего, который загрузит все книги
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            OneTimeWorkRequest downloadAllWorker = new OneTimeWorkRequest.Builder(DownloadBooksWorker.class).addTag(MULTIPLY_DOWNLOAD).setConstraints(constraints).build();
+            WorkManager.getInstance(App.getInstance()).enqueueUniqueWork(MULTIPLY_DOWNLOAD, ExistingWorkPolicy.KEEP, downloadAllWorker);
+            App.getInstance().mDownloadAllWork = WorkManager.getInstance(App.getInstance()).getWorkInfoByIdLiveData(downloadAllWorker.getId());
+        }
     }
 
     public void handleWebPage(InputStream my) {

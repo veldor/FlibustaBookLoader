@@ -16,6 +16,8 @@ import androidx.documentfile.provider.DocumentFile;
 
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager;
 
+import net.veldor.flibustaloader.database.AppDatabase;
+import net.veldor.flibustaloader.database.dao.BooksDownloadScheduleDao;
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule;
 import net.veldor.flibustaloader.ecxeptions.ConnectionLostException;
 import net.veldor.flibustaloader.http.ExternalVpnVewClient;
@@ -23,6 +25,7 @@ import net.veldor.flibustaloader.http.GlobalWebClient;
 import net.veldor.flibustaloader.http.TorStarter;
 import net.veldor.flibustaloader.http.TorWebClient;
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver;
+import net.veldor.flibustaloader.ui.BaseActivity;
 import net.veldor.flibustaloader.utils.FilesHandler;
 import net.veldor.flibustaloader.utils.MimeTypes;
 import net.veldor.flibustaloader.utils.MyPreferences;
@@ -204,7 +207,6 @@ public class MyWebViewClient extends WebViewClient {
             }
             return output;
         } catch (IOException e) {
-            Log.d("surprise", "MyWebViewClient injectMyCss: error when injecting my Js or CSS");
             e.printStackTrace();
         }
         return null;
@@ -233,7 +235,6 @@ public class MyWebViewClient extends WebViewClient {
 
     @SuppressWarnings("CharsetObjectCanBeUsed")
     private WebResourceResponse handleRequest(WebView view, String url) {
-        Log.d("surprise", "MyWebViewClient handleRequest 235: request " + url);
         if (App.getInstance().useMirror) {
             url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
         }
@@ -290,11 +291,9 @@ public class MyWebViewClient extends WebViewClient {
             InputStream input = httpResponse.getEntity().getContent();
             String encoding = ENCODING_UTF_8;
             String mime = httpResponse.getEntity().getContentType().getValue();
-            Log.d("surprise", "MyWebViewClient handleRequest 262: mime is " + mime + " request is " + url);
 
             // todo разобраться с application/octet-stream
             if (mime.equals("application/octet-stream")) {
-                Log.d("surprise", "MyWebViewClient handleRequest 298: HAVE OCTET-STREAM");
                 // придётся ориентироваться по имени файла и определять, что это книга
                 // костыль, конечно, но что делать
 
@@ -304,7 +303,6 @@ public class MyWebViewClient extends WebViewClient {
                         headers) {
                     if (h.getName().equals("Content-Disposition")) {
                         // похоже на книгу
-                        Log.d("surprise", "MyWebViewClient handleRequest 310: LOOKS LIKE ITS BOOK");
                         // Тут пока что грязный хак, скажу, что это epub
                         mime = "application/epub";
                     }
@@ -312,48 +310,36 @@ public class MyWebViewClient extends WebViewClient {
             }
             // Если формат книжный, загружу книгу
             if (MimeTypes.isBookFormat(mime)) {
-                Log.d("surprise", "MyWebViewClient handleRequest 277: ADD BOOK TO QUEUE");
-                Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
-                startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
-                App.getInstance().sendBroadcast(startLoadingIntent);
+//                Intent startLoadingIntent = new Intent(BOOK_LOAD_ACTION);
+//                startLoadingIntent.putExtra(BOOK_LOAD_EVENT, START_BOOK_LOADING);
+//                App.getInstance().sendBroadcast(startLoadingIntent);
                 // пока что- сэмулирую загрузку по типу OPDS
                 BooksDownloadSchedule newBook = new BooksDownloadSchedule();
                 // покажу хедеры
                 Header[] headers = httpResponse.getAllHeaders();
                 for (Header h :
                         headers) {
-                    Log.d("surprise", "MyWebViewClient handleRequest 271: Header " + h.getName());
-                    Log.d("surprise", "MyWebViewClient handleRequest 271: Header VALUE" + h.getValue());
                     if (h.getValue().startsWith("attachment; filename=\"")) {
                         newBook.name = h.getValue().substring(22);
                         Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);
+                        break;
                     } else if (h.getValue().startsWith("attachment;")) {
                         newBook.name = h.getValue().substring(21);
                         Log.d("surprise", "MyWebViewClient handleRequest 276: name is " + newBook.name);
+                        break;
                     }
                 }
-                TorWebClient client;
                 // создам файл
+                AppDatabase database = App.getInstance().mDatabase;
                 newBook.link = url.substring(url.indexOf("/b"));
-                try {
-                    client = new TorWebClient();
-                } catch (ConnectionLostException e) {
-                    return getConnectionError();
+                BooksDownloadScheduleDao dao = database.booksDownloadScheduleDao();
+                dao.insert(newBook);
+                BaseActivity.sLiveDownloadScheduleCount.postValue(true);
+                if (MyPreferences.getInstance().isDownloadAutostart()){
+                    App.getInstance().initializeDownload();
                 }
-                client.downloadBook(newBook);
-                // проверю, что книга загружена. Если да- оповещу об этом, если нет-
-                // о том, что не удалось загрузить
                 String message;
-                if(FilesHandler.isBookDownloaded(newBook)){
-                    Intent intent = new Intent(App.getInstance(), BookLoadedReceiver.class);
-                    intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, newBook.name);
-                    intent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, newBook.format);
-                    App.getInstance().sendBroadcast(intent);
-                    message = "<H1 style='text-align:center;'>Книга загружена</H1><H2 style='text-align:center;'>Возвращаюсь на предыдущую страницу</H2><script>setTimeout(function(){history.back()}, 1000)</script>";
-                }
-                else{
-                    message = "<H1 style='text-align:center;'>Книгу загрузить не удалось, попробуйте позднее</H1><H2 style='text-align:center;'>Возвращаюсь на предыдущую страницу</H2><script>setTimeout(function(){history.back()}, 1000)</script>";
-                }
+                message = "<H1 style='text-align:center;'>Книга добавлена в очередь загрузок</H1><H2 style='text-align:center;'>Возвращаюсь на предыдущую страницу</H2><script>setTimeout(function(){history.back()}, 1000)</script>";
                 ByteArrayInputStream inputStream = null;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                     inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
@@ -364,10 +350,10 @@ public class MyWebViewClient extends WebViewClient {
                         ex.printStackTrace();
                     }
                 }
-                Intent finishLoadingIntent = new Intent(BOOK_LOAD_ACTION);
-                finishLoadingIntent.putExtra(BOOK_LOAD_EVENT, FINISH_BOOK_LOADING);
-                App.getInstance().sendBroadcast(finishLoadingIntent);
-                return new WebResourceResponse("application/zip", ENCODING_UTF_8, inputStream);
+//                Intent finishLoadingIntent = new Intent(BOOK_LOAD_ACTION);
+//                finishLoadingIntent.putExtra(BOOK_LOAD_EVENT, FINISH_BOOK_LOADING);
+//                App.getInstance().sendBroadcast(finishLoadingIntent);
+                return new WebResourceResponse("text/html", ENCODING_UTF_8, inputStream);
             }
 
             // если загружена страница- добавлю её как последнюю загруженную
@@ -499,7 +485,7 @@ public class MyWebViewClient extends WebViewClient {
                         ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(encoding));
                         return new WebResourceResponse(mime, ENCODING_UTF_8, inputStream);
                     } catch (IOException e) {
-                        Log.d("surprise", "some output error");
+                        e.printStackTrace();
                     } finally {
                         // отправлю оповещение об окончании загрузки страницы
                         Intent finishLoadingIntent = new Intent(BOOK_LOAD_ACTION);

@@ -75,11 +75,7 @@ public class BookSharer {
                         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
                         shareIntent.setType(MimeTypes.getFullMime(type));
                         shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
-                        if (intentCanBeHandled(shareIntent)) {
-                            App.getInstance().startActivity(shareIntent);
-                        } else {
-                            Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
-                        }
+                            App.getInstance().startActivity(Intent.createChooser(shareIntent, App.getInstance().getString(R.string.send_book_title)).addFlags(FLAG_ACTIVITY_NEW_TASK));
                     } else {
                         Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
                     }
@@ -110,11 +106,7 @@ public class BookSharer {
                 shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(bookFile));
                 shareIntent.setType(MimeTypes.getFullMime(type));
                 shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
-                if (intentCanBeHandled(shareIntent)) {
-                    App.getInstance().startActivity(shareIntent);
-                } else {
-                    Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
-                }
+                App.getInstance().startActivity(Intent.createChooser(shareIntent, App.getInstance().getString(R.string.send_book_title)).addFlags(FLAG_ACTIVITY_NEW_TASK));
             } else {
                 Toast.makeText(context, context.getString(R.string.file_not_found_message), Toast.LENGTH_LONG).show();
             }

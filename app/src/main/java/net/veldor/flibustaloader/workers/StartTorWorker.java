@@ -21,7 +21,6 @@ public class StartTorWorker extends Worker {
     @Override
     public Result doWork() {
         if (App.getInstance().torInitInProgress) {
-            Log.d("surprise", "StartTorWorker doWork 33: started yet");
             return Result.success();
         }
         App.getInstance().torInitInProgress = true;
@@ -29,11 +28,9 @@ public class StartTorWorker extends Worker {
         while (App.sTorStartTry < 4 && !isStopped()) {
             // есть три попытки, если все три неудачны- верну ошибку
             TorStarter starter = new TorStarter();
-            Log.d("surprise", "StartTorWorker doWork: start tor, try # " + App.sTorStartTry);
             if (starter.startTor()) {
                 GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED);
                 // success try
-                Log.d("surprise", "StartTorWorker doWork 51:tor initiated");
                 App.getInstance().torInitInProgress = false;
                 // обнулю счётчик попыток
                 App.sTorStartTry = 0;

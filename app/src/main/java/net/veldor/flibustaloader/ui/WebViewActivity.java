@@ -77,8 +77,6 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
         super.onCreate(savedInstanceState);
 
         // проверю куку
-        Log.d("surprise", "WebViewActivity.java 77 onCreate: cookie is " + MyPreferences.getInstance().getAuthCookie());
-
         if (MyPreferences.getInstance().isEInk()) {
             setContentView(R.layout.new_eink_webview_activity);
         } else {
@@ -109,8 +107,6 @@ public class WebViewActivity extends BaseActivity implements SearchView.OnQueryT
 
         // добавлю viewModel
         mMyViewModel = new ViewModelProvider(this).get(MainViewModel.class);
-        Log.d("surprise", "WebViewActivity onCreate " + mMyViewModel);
-
         // зарегистрирую получатель команды возвращения на предыдущую страницу
         IntentFilter filter = new IntentFilter();
         filter.addAction(MyWebViewClient.BOOK_LOAD_ACTION);

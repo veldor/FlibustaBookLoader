@@ -117,7 +117,6 @@ public class TorWebClient {
     public String request(String text) {
         if (App.getInstance().useMirror) {
             // TODO заменить зеркало
-            Log.d("surprise", "TorWebClient request 128: change mirror");
             text = text.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
         }
         try {
@@ -130,7 +129,6 @@ public class TorWebClient {
             is = httpResponse.getEntity().getContent();
             return inputStreamToString(is);
         } catch (IOException e) {
-            Log.d("surprise", "TorWebClient request 137: page load error");
             App.getInstance().mLoadAllStatus.postValue("Ошибка загрузки страницы");
             //broadcastTorError(e);
             e.printStackTrace();
@@ -159,10 +157,8 @@ public class TorWebClient {
     private HttpResponse simpleGetRequest(String url) throws IOException {
         if (App.getInstance().useMirror) {
             // TODO заменить зеркало
-            Log.d("surprise", "TorWebClient request 128: change mirror");
             url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com");
         }
-        Log.d("surprise", "TorWebClient simpleGetRequest 128: request " + url);
         HttpGet httpGet = new HttpGet(url);
         httpGet.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
         httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
@@ -208,6 +204,10 @@ public class TorWebClient {
                         if (newFile != null) {
                             result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, newFile);
                             if(newFile.isFile() && newFile.length() > 0){
+                                if(book.format.isEmpty()){
+                                    Header receivedContentType = response.getLastHeader("Content-Type");
+                                    book.format = receivedContentType.getValue();
+                                }
                                 book.loaded = true;
                             }
                         }
@@ -223,6 +223,10 @@ public class TorWebClient {
                             File file = FilesHandler.getBaseDownloadFile(book);
                             result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
                             if(file.isFile() && file.length() > 0){
+                                if(book.format.isEmpty()){
+                                Header receivedContentType = response.getLastHeader("Content-Type");
+                                book.format = receivedContentType.getValue();
+                            }
                                 book.loaded = true;
                             }
                         }
@@ -231,6 +235,10 @@ public class TorWebClient {
                     File file = FilesHandler.getCompatDownloadFile(book);
                     result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
                     if(file.isFile() && file.length() > 0){
+                        if(book.format.isEmpty()){
+                            Header receivedContentType = response.getLastHeader("Content-Type");
+                            book.format = receivedContentType.getValue();
+                        }
                         book.loaded = true;
                     }
                 }
@@ -239,7 +247,6 @@ public class TorWebClient {
                 }
             }
             if (response == null || response.getStatusLine().getStatusCode() != 200 || response.getEntity().getContentLength() < 1) {
-                Log.d("surprise", "TorWebClient downloadBook 225: can't load from main mirror");
                 // попробую загрузку с резервного адреса
                 response = simpleGetRequest(URLHelper.getFlibustaIsUrl() + book.link);
                 if (response != null && response.getStatusLine().getStatusCode() == 200 && response.getEntity().getContentLength() < 1) {
@@ -251,6 +258,10 @@ public class TorWebClient {
                             if (newFile != null) {
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, newFile);
                                 if(newFile.isFile() && newFile.length() > 0){
+                                    if(book.format.isEmpty()){
+                                        Header receivedContentType = response.getLastHeader("Content-Type");
+                                        book.format = receivedContentType.getValue();
+                                    }
                                     book.loaded = true;
                                 }
                             }
@@ -260,6 +271,10 @@ public class TorWebClient {
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
 
                                 if(file.isFile() && file.length() > 0){
+                                    if(book.format.isEmpty()){
+                                        Header receivedContentType = response.getLastHeader("Content-Type");
+                                        book.format = receivedContentType.getValue();
+                                    }
                                     book.loaded = true;
                                 }
                             } catch (Exception e1) {
@@ -267,6 +282,10 @@ public class TorWebClient {
                                 File file = FilesHandler.getBaseDownloadFile(book);
                                 result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
                                 if(file.isFile() && file.length() > 0){
+                                    if(book.format.isEmpty()){
+                                        Header receivedContentType = response.getLastHeader("Content-Type");
+                                        book.format = receivedContentType.getValue();
+                                    }
                                     book.loaded = true;
                                 }
                             }
@@ -275,6 +294,10 @@ public class TorWebClient {
                         File file = FilesHandler.getCompatDownloadFile(book);
                         result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file);
                         if(file.isFile() && file.length() > 0){
+                            if(book.format.isEmpty()){
+                                Header receivedContentType = response.getLastHeader("Content-Type");
+                                book.format = receivedContentType.getValue();
+                            }
                             book.loaded = true;
                         }
                     }
@@ -288,9 +311,12 @@ public class TorWebClient {
                     try {
                         DocumentFile newFile = FilesHandler.getDownloadFile(book, response);
                         if (newFile != null) {
-                            Log.d("surprise", "TorWebClient downloadBook 276: HERE " + newFile.getName());
                             GlobalWebClient.handleBookLoadRequest(response, newFile);
                             if(newFile.isFile() && newFile.length() > 0){
+                                if(book.format.isEmpty()){
+                                    Header receivedContentType = response.getLastHeader("Content-Type");
+                                    book.format = receivedContentType.getValue();
+                                }
                                 book.loaded = true;
                             }
                         }
@@ -299,6 +325,10 @@ public class TorWebClient {
                             File file = FilesHandler.getCompatDownloadFile(book);
                             GlobalWebClient.handleBookLoadRequest(response, file);
                             if(file.isFile() && file.length() > 0){
+                                if(book.format.isEmpty()){
+                                    Header receivedContentType = response.getLastHeader("Content-Type");
+                                    book.format = receivedContentType.getValue();
+                                }
                                 book.loaded = true;
                             }
                         } catch (Exception e1) {
@@ -306,6 +336,10 @@ public class TorWebClient {
                             File file = FilesHandler.getBaseDownloadFile(book);
                             GlobalWebClient.handleBookLoadRequest(response, file);
                             if(file.isFile() && file.length() > 0){
+                                if(book.format.isEmpty()){
+                                    Header receivedContentType = response.getLastHeader("Content-Type");
+                                    book.format = receivedContentType.getValue();
+                                }
                                 book.loaded = true;
                             }
                         }
@@ -315,6 +349,10 @@ public class TorWebClient {
                 File file = FilesHandler.getCompatDownloadFile(book);
                 GlobalWebClient.handleBookLoadRequest(response, file);
                 if(file.isFile() && file.length() > 0){
+                    if(book.format.isEmpty()){
+                        Header receivedContentType = response.getLastHeader("Content-Type");
+                        book.format = receivedContentType.getValue();
+                    }
                     book.loaded = true;
                 }
             }
@@ -323,14 +361,12 @@ public class TorWebClient {
             throw new BookNotFoundException();
         } catch (IOException e) {
             e.printStackTrace();
-            Log.d("surprise", "TorWebClient downloadBook: ошибка при сохранении");
             //throw new TorNotLoadedException();
         }
     }
 
 
     public boolean login(Uri uri, String login, String password) throws Exception {
-        Log.d("surprise", "TorWebClient login start logging in");
         HttpResponse response;
         UrlEncodedFormEntity params;
         params = get2post(uri, login, password);
@@ -339,7 +375,6 @@ public class TorWebClient {
             App.getInstance().RequestStatus.postValue(App.getInstance().getString(R.string.response_received_message));
             if (response != null) {
                 int status = response.getStatusLine().getStatusCode();
-                Log.d("surprise", "TorWebClient login status is " + status);
                 // получен ответ, попробую извлечь куку
                 Header[] cookies = response.getHeaders("set-cookie");
                 if (cookies.length > 1) {
@@ -358,14 +393,10 @@ public class TorWebClient {
                     MyPreferences.getInstance().saveLoginCookie(cookieValue.toString());
                     App.getInstance().RequestStatus.postValue(App.getInstance().getString(R.string.success_login_message));
                     return true;
-                } else {
-                    Log.d("surprise", "TorWebClient login no cookie :(");
-                    Log.d("surprise", "TorWebClient.java 230 login: " + response.getEntity().getContent());
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
-            Log.d("surprise", "TorWebClient login error logging in");
         }
         return false;
     }

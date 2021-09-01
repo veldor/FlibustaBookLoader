@@ -370,7 +370,6 @@ public class Notificator {
         long left = System.currentTimeMillis() - beginingTime;
         long forBook = left / currentDownload;
         long leftTime = (mBooksCount - currentDownload) * forBook / 1000;
-        Log.d("surprise", "Notificator updateDownloadProgress 372: left for download: " + leftTime);
         // при нажатии на уведомление- открою экран ожидания очереди
         Intent openWindowIntent = new Intent(mContext, ActivityBookDownloadSchedule.class);
         openWindowIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_SINGLE_TOP);
@@ -411,9 +410,6 @@ public class Notificator {
                         .setGroupSummary(true);
 
         mNotificationManager.notify(-100, mBuilder.build());
-
-        Log.d("surprise", "Notificator sendLoadedBookNotification 118: type is " + queuedElement.format);
-
         // создам интент для функции отправки файла
         Intent shareIntent = new Intent(mContext, BookActionReceiver.class);
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_ACTION_TYPE, BookLoadedReceiver.ACTION_TYPE_SHARE);

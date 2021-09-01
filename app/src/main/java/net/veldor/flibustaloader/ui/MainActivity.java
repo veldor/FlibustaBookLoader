@@ -80,28 +80,28 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !App.getInstance().isExternalVpn()) {
-            // show dialog window about tor not working here
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
-            dialogBuilder
-                    .setTitle(getString(R.string.tor_not_availiable_title))
-                    .setMessage(getString(R.string.tor_not_availiable_message))
-                    .setPositiveButton(getString(android.R.string.ok), (dialogInterface, i) -> {
-                        App.getInstance().switchExternalVpnUse();
-                        if (!permissionGranted()) {
-                            // показываю диалог с требованием предоставить разрешения
-                            showPermissionDialog();
-                        } else {
-                            if (MyPreferences.getInstance().isDownloadDir()) {
-                                showSelectDownloadFolderDialog();
-                            } else {
-                                handleStart();
-                            }
-                        }
-                    })
-                    .setNegativeButton(getString(android.R.string.cancel), (dialogInterface, i) -> dialogInterface.dismiss())
-                    .show();
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !App.getInstance().isExternalVpn()) {
+//            // show dialog window about tor not working here
+//            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, R.style.MyDialogStyle);
+//            dialogBuilder
+//                    .setTitle(getString(R.string.tor_not_availiable_title))
+//                    .setMessage(getString(R.string.tor_not_availiable_message))
+//                    .setPositiveButton(getString(android.R.string.ok), (dialogInterface, i) -> {
+//                        App.getInstance().switchExternalVpnUse();
+//                        if (!permissionGranted()) {
+//                            // показываю диалог с требованием предоставить разрешения
+//                            showPermissionDialog();
+//                        } else {
+//                            if (MyPreferences.getInstance().isDownloadDir()) {
+//                                showSelectDownloadFolderDialog();
+//                            } else {
+//                                handleStart();
+//                            }
+//                        }
+//                    })
+//                    .setNegativeButton(getString(android.R.string.cancel), (dialogInterface, i) -> dialogInterface.dismiss())
+//                    .show();
+//        }
         if(MyPreferences.getInstance().isSkipMainScreen()){
             Toast.makeText(this, getString(R.string.lockscreen_scipped_message),Toast.LENGTH_LONG).show();
             startView();
@@ -371,9 +371,9 @@ public class MainActivity extends BaseActivity {
             if (getIntent().getData() != null) {//check if intent is not null
                 mLink = getIntent().getData();//set a variable for the WebViewActivity
             }
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                startView();
-            }
+//            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+//                startView();
+//            }
         } else {
             selectView();
         }
@@ -396,9 +396,9 @@ public class MainActivity extends BaseActivity {
                                 startView();
                             }
                         }
-                        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                            startView();
-                        }
+//                        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+//                            startView();
+//                        }
                     })
                     .setNegativeButton("Режим OPDS", (dialog, which) -> {
                         App.getInstance().setView(App.VIEW_ODPS);

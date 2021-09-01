@@ -39,7 +39,7 @@ import static net.veldor.flibustaloader.view_models.MainViewModel.MULTIPLY_DOWNL
 
 public class DownloadBooksWorker extends Worker {
     private final Notificator mNotificator;
-
+    public static boolean downloadInProgress = false;
     public DownloadBooksWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         mNotificator = App.getInstance().getNotificator();
@@ -104,12 +104,11 @@ public class DownloadBooksWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        downloadInProgress = true;
         long downloadStartTime = System.currentTimeMillis();
-        Log.d("surprise", "DownloadBooksWorker doWork 108: start download in " + downloadStartTime);
         if (App.getInstance().useMirror) {
             // оповещу о невозможности скачивания книг с альтернативного зеркала
             mNotificator.notifyDownloadFromMirror();
-            Log.d("surprise", "DownloadBooksWorker doWork 112: download using alter mirror");
         }
         ArrayList<BooksDownloadSchedule> downloadErrors = new ArrayList<>();
         // проверю, есть ли в очереди скачивания книги
@@ -122,7 +121,6 @@ public class DownloadBooksWorker extends Worker {
             int mBooksCount = dao.getQueueSize();
             int bookDownloadsWithErrors = 0;
             if (mBooksCount > 0) {
-                Log.d("surprise", "DownloadBooksWorker doWork 125: books in schedule on start: " + mBooksCount);
                 // помечу рабочего важным
                 ForegroundInfo info = createForegroundInfo();
                 setForegroundAsync(info);
@@ -133,32 +131,28 @@ public class DownloadBooksWorker extends Worker {
                 // начну скачивание
                 // периодически удостовериваюсь, что работа не отменена
                 if (isStopped()) {
-                    Log.d("surprise", "DownloadBooksWorker doWork 136: worker is stopped");
                     // немедленно прекращаю работу
                     mNotificator.cancelBookLoadNotification();
+                    downloadInProgress = false;
                     return Result.success();
                 }
                 int downloadCounter = 1;
                 // пока есть книги в очереди скачивания и работа не остановлена
                 while ((queuedElement = dao.getFirstQueuedBook()) != null && !isStopped()) {
                     queuedElement.name = queuedElement.name.replaceAll("\\p{C}", "");
-                    Log.d("surprise", "DownloadBooksWorker doWork 144: NAME IS " + queuedElement.name);
                     mNotificator.updateDownloadProgress(dao.getQueueSize() + downloadCounter - 1, downloadCounter, downloadStartTime);
                     // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
                     if (!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null) {
                         dao.delete(queuedElement);
                         // уведомлю, что размер списка закачек изменился
                         BaseActivity.sLiveDownloadScheduleCount.postValue(true);
-                        Log.d("surprise", "DownloadBooksWorker doWork book " + queuedElement.name + " skipped as downloaded");
                         continue;
                     }
                     // загружу книгу
                     try {
-                        Log.d("surprise", "DownloadBooksWorker doWork 155: downloading " + queuedElement.name + " in " + queuedElement.format);
                         downloadBook(queuedElement);
                         if (!isStopped()) {
                             if (queuedElement.loaded) {
-                                Log.d("surprise", "DownloadBooksWorker doWork 159: book successful load");
                                 // отмечу книгу как скачанную
                                 DownloadedBooks downloadedBook = new DownloadedBooks();
                                 downloadedBook.bookId = queuedElement.bookId;
@@ -206,6 +200,7 @@ public class DownloadBooksWorker extends Worker {
                         }
                         mNotificator.cancelBookLoadNotification();
                         mNotificator.showTorNotLoadedNotification();
+                        downloadInProgress = false;
                         return Result.success();
                     }
                     ++downloadCounter;
@@ -235,11 +230,11 @@ public class DownloadBooksWorker extends Worker {
             }
         }
         mNotificator.cancelBookLoadNotification();
+        downloadInProgress = false;
         return Result.success();
     }
 
     private void downloadBook(BooksDownloadSchedule book) throws BookNotFoundException, TorNotLoadedException {
-        Log.d("surprise", "DownloadBooksWorker downloadBook 223: " + book.name);
         if (App.getInstance().isExternalVpn()) {
             Log.d("surprise", "DownloadBooksWorker downloadBook try download trough external vpn");
             ExternalVpnVewClient.downloadBook(book);

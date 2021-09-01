@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Objects;
 
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpResponse;
@@ -40,11 +41,8 @@ public class FilesHandler {
         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(zip));
         shareIntent.setType(getMimeType(zip.getName()));
         shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
-        if (intentCanBeHandled(shareIntent)) {
-            App.getInstance().startActivity(shareIntent);
-        } else {
-            Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
-        }
+        App.getInstance().startActivity(Intent.createChooser(shareIntent, App.getInstance().getString(R.string.send_book_title)).addFlags(FLAG_ACTIVITY_NEW_TASK));
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -56,11 +54,7 @@ public class FilesHandler {
                 shareIntent.putExtra(Intent.EXTRA_STREAM, incomingDocumentFile.getUri());
                 shareIntent.setType(getMimeType(incomingDocumentFile.getName()));
                 shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
-                if (intentCanBeHandled(shareIntent)) {
-                    App.getInstance().startActivity(shareIntent);
-                } else {
-                    Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
-                }
+                App.getInstance().startActivity(Intent.createChooser(shareIntent, App.getInstance().getString(R.string.send_book_title)).addFlags(FLAG_ACTIVITY_NEW_TASK));
             } else {
                 String docId = DocumentsContract.getDocumentId(incomingDocumentFile.getUri());
                 final String[] split = docId.split(":");
@@ -81,11 +75,7 @@ public class FilesHandler {
                         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
                         shareIntent.setType(mime);
                         shareIntent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
-                        if (intentCanBeHandled(shareIntent)) {
-                            App.getInstance().startActivity(shareIntent);
-                        } else {
-                            Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
-                        }
+                        App.getInstance().startActivity(Intent.createChooser(shareIntent, App.getInstance().getString(R.string.send_book_title)).addFlags(FLAG_ACTIVITY_NEW_TASK));
                     }
                 }
             }
@@ -96,7 +86,6 @@ public class FilesHandler {
         final String docId;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             docId = DocumentsContract.getDocumentId(df.getUri());
-            Log.d("surprise", "BookSharer shareBook " + docId);
             final String[] split = docId.split(":");
             final String storage = split[0];
             String path = "///storage/" + storage + "/" + split[1];
@@ -130,16 +119,40 @@ public class FilesHandler {
     }
 
     public static DocumentFile getDownloadFile(BooksDownloadSchedule book, HttpResponse response) {
-        // придётся проверять, соответствует ли разрешение запрашиваемого файла разрешению полученного
-        Header receivedContentType = response.getLastHeader("Content-Type");
-        String trueFormat = receivedContentType.getValue();
-        String trueFormatExtension = MimeTypes.getTrueFormatExtension(trueFormat);
-        if (trueFormatExtension != null) {
-            // сравню полученный формат с настоящим. Если полученный отличается от настоящего- поменяю исходный
-            String extension = Grammar.getExtension(book.name);
-            if (!extension.equals(trueFormatExtension)) {
+        boolean extensionSetted = false;
+
+//        Header[] headers = response.getAllHeaders();
+//        for (Header h :
+//                headers) {
+//            Log.d("surprise", "FilesHandler: 127 " + h.getName());
+//            Log.d("surprise", "FilesHandler: 127 " + h.getValue());
+//        }
+
+        // try to get file name with extension
+        Header filenameHeader = response.getLastHeader("Content-Disposition");
+        if(filenameHeader != null){
+            String value = filenameHeader.getValue();
+            if(value != null){
+                String extension = Grammar.getExtension(value.replace("\"", ""));
+                // setup extension
+                book.format = MimeTypes.getFullMime(extension);
+                book.name = Grammar.changeExtension(book.name, extension);
+//                Log.d("surprise", "*******FilesHandler: v1 EXTENSION " + extension);
+//                Log.d("surprise", "*******FilesHandler: v1 MIME " + book.format);
+//                Log.d("surprise", "*******FilesHandler: v1 CONVERTED NAME " + book.name);
+                extensionSetted = true;
+            }
+        }
+        if(!extensionSetted){
+            Header receivedContentType = response.getLastHeader("Content-Type");
+            String trueFormat = receivedContentType.getValue();
+            String trueFormatExtension = MimeTypes.getTrueFormatExtension(trueFormat);
+            if(trueFormatExtension != null) {
                 book.format = trueFormat;
                 book.name = Grammar.changeExtension(book.name, trueFormatExtension);
+//                Log.d("surprise", "*******FilesHandler: v2 EXTENSION " + trueFormatExtension);
+//                Log.d("surprise", "*******FilesHandler: v2 MIME " + book.format);
+//                Log.d("surprise", "*******FilesHandler: v2 CONVERTED NAME " + book.name);
             }
         }
         // получу имя файла
@@ -155,13 +168,10 @@ public class FilesHandler {
             }
             if (downloadsDir != null && downloadsDir.findFile(book.reservedSequenceName) == null) {
                 downloadsDir = downloadsDir.createDirectory(book.reservedSequenceName);
-                Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.reservedSequenceName);
             } else if (downloadsDir != null) {
                 downloadsDir = downloadsDir.findFile(book.reservedSequenceName);
-                Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.reservedSequenceName);
             }
             if (downloadsDir == null) {
-                Log.d("surprise", "FilesHandler getDownloadFile can't create dir " + book.reservedSequenceName);
                 downloadsDir = App.getInstance().getDownloadDir();
             }
         } else {
@@ -178,42 +188,34 @@ public class FilesHandler {
                 // создам папку
                 if (downloadsDir != null && downloadsDir.findFile(book.authorDirName) == null) {
                     downloadsDir = downloadsDir.createDirectory(book.authorDirName);
-                    Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.authorDirName);
                 } else if (downloadsDir != null) {
                     downloadsDir = downloadsDir.findFile(book.authorDirName);
-                    Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.authorDirName);
                 }
                 if (downloadsDir == null) {
-                    Log.d("surprise", "FilesHandler getDownloadFile can't use dir " + book.authorDirName);
                     downloadsDir = App.getInstance().getDownloadDir();
                 }
             }
             if (MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null && !book.sequenceDirName.isEmpty()) {
                 if (downloadsDir.findFile(book.sequenceDirName) == null) {
                     downloadsDir = downloadsDir.createDirectory(book.sequenceDirName);
-                    Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.sequenceDirName);
                 } else {
                     downloadsDir = downloadsDir.findFile(book.sequenceDirName);
-                    Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.sequenceDirName);
                 }
                 if (downloadsDir == null) {
                     downloadsDir = App.getInstance().getDownloadDir();
-                    Log.d("surprise", "FilesHandler getDownloadFile can't use dir " + book.sequenceDirName);
                 }
             }
         }
-        Log.d("surprise", "FilesHandler getDownloadFile load to dir " + downloadsDir.getUri());
         // проверю, нет ли ещё файла с таким именем, если есть- удалю
         DocumentFile[] files = downloadsDir.listFiles();
         int fileCounter = 0;
         DocumentFile oneFile;
-        if(files != null && files.length > 0){
-            while (fileCounter < files.length - 1){
+        if (files.length > 0) {
+            while (fileCounter < files.length - 1) {
                 fileCounter++;
                 oneFile = files[fileCounter];
-                Log.d("surprise", "n " + book.name);
-                if(oneFile.isFile()){
-                    if(oneFile.getName().startsWith(book.name)){
+                if (oneFile.isFile()) {
+                    if (Objects.requireNonNull(oneFile.getName()).startsWith(book.name)) {
                         oneFile.delete();
                     }
                 }
@@ -221,10 +223,11 @@ public class FilesHandler {
         }
         DocumentFile existentFile = downloadsDir.findFile(book.name);
         if (existentFile != null) {
-            Log.d("surprise", "FilesHandler getDownloadFile 209: have dublicate file");
             existentFile.delete();
         }
-        return downloadsDir.createFile(book.format, book.name);
+        DocumentFile file = downloadsDir.createFile(book.format, book.name);
+        Log.d("surprise", "FilesHandler: 217 created file " + file.getName());
+        return file;
     }
 
     public static File getCompatDownloadFile(BooksDownloadSchedule book) {
@@ -232,18 +235,14 @@ public class FilesHandler {
         // проверю, нужно ли создавать папку под автора
         if (MyPreferences.getInstance().isCreateSequencesDir() && book.reservedSequenceName != null) {
             file = new File(file, book.reservedSequenceName);
-            Log.d("surprise", "FilesHandler getDownloadFile create dir " + book.reservedSequenceName);
         } else {
             if (MyPreferences.getInstance().isCreateAuthorsDir()) {
                 file = new File(file, book.authorDirName);
-                Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.authorDirName);
             }
             if (MyPreferences.getInstance().isCreateSequencesDir() && book.sequenceDirName != null) {
-                Log.d("surprise", "FilesHandler getDownloadFile use dir " + book.sequenceDirName);
                 file = new File(file, book.sequenceDirName);
             }
         }
-        Log.d("surprise", "FilesHandler getDownloadFile load to dir " + file.getAbsolutePath());
         return new File(file, book.name);
     }
 
@@ -258,11 +257,7 @@ public class FilesHandler {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(file.getUri(), mime);
             intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_NEW_TASK);
-            if (intentCanBeHandled(intent)) {
-                App.getInstance().startActivity(intent);
-            } else {
-                Toast.makeText(App.getInstance(), "Не найдено приложение, открывающее данный файл", Toast.LENGTH_SHORT).show();
-            }
+            App.getInstance().startActivity(Intent.createChooser(intent, App.getInstance().getString(R.string.open_with_menu_item)).addFlags(FLAG_ACTIVITY_NEW_TASK));
         }
     }
 
@@ -285,14 +280,13 @@ public class FilesHandler {
                     }
                     downloadsDir = downloadsDir.findFile(newBook.authorDirName);
                 }
-                if (MyPreferences.getInstance().isCreateSequencesDir() && downloadsDir != null && newBook.sequenceDirName != null && newBook.reservedSequenceName != null &&  !newBook.reservedSequenceName.isEmpty()) {
+                if (MyPreferences.getInstance().isCreateSequencesDir() && downloadsDir != null && newBook.sequenceDirName != null && newBook.reservedSequenceName != null && !newBook.reservedSequenceName.isEmpty()) {
                     downloadsDir = downloadsDir.findFile(newBook.sequenceDirName);
                 }
             }
             if (downloadsDir != null) {
                 DocumentFile file = downloadsDir.findFile(newBook.name);
                 if (file != null && file.isFile() && file.canRead() && file.length() > 0) {
-                    Log.d("surprise", "FilesHandler isBookDownloaded 292: WOW, BOOK LOADED, I CHECK IT");
                     return true;
                 }
             }
@@ -306,11 +300,9 @@ public class FilesHandler {
             }
             File file = new File(dd, newBook.name);
             if (file.isFile() && file.canRead() && file.length() > 0) {
-                Log.d("surprise", "FilesHandler isBookDownloaded 292: WOW, BOOK LOADED, I CHECK IT");
                 return true;
             }
         }
-        Log.d("surprise", "FilesHandler isBookDownloaded 293: book not loaded, too sad");
         return false;
     }
 }

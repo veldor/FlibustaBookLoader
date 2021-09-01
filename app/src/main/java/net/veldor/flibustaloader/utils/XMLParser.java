@@ -403,10 +403,6 @@ public class XMLParser {
 
                    }
                 }
-                Log.d("surprise", "XMLParser searchDownloadLinks 398: found download links on page: " + linksList.size());
-            }
-            else{
-                Log.d("surprise", "XMLParser searchDownloadLinks: not found links");
             }
         } catch (IOException e) {
             e.printStackTrace();

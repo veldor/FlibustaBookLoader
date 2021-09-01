@@ -2053,14 +2053,18 @@ public class OPDSActivity extends BaseActivity implements SearchView.OnQueryText
             invalidateMenu();
             // получу сокращённый MIME
             String shortMime = linksArray[i];
+            Log.d("surprise", "OPDSActivity: 2056 short mime is " + shortMime);
             String longMime = MimeTypes.getFullMime(shortMime);
+            Log.d("surprise", "OPDSActivity: 2058 long mime is " + longMime);
             int counter1 = 0;
             int linksLength1 = downloadLinks.size();
             DownloadLink item;
             while (counter1 < linksLength1) {
                 item = downloadLinks.get(counter1);
+                Log.d("surprise", "OPDSActivity: 2064 item mime is " + item.mime);
                 if (item.mime.equals(longMime)) {
                     mViewModel.addToDownloadQueue(item);
+                    Log.d("surprise", "OPDSActivity: 2064 add " + item.mime);
                     break;
                 }
                 counter1++;

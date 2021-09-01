@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.utils;
 
+import android.util.Log;
+
 import java.util.HashMap;
 
 public class MimeTypes {
@@ -15,6 +17,7 @@ public class MimeTypes {
         put("application/pdf", "pdf");
         put("application/djvu", "djvu");
         put("application/html+zip", "html");
+        put("application/octet-stream", "html");
         put("application/txt+zip", "txt");
         put("application/txt", "txt");
         put("application/rtf+zip", "rtf");
@@ -27,9 +30,11 @@ public class MimeTypes {
         put("application/epub", "epub");
         put("application/pdf", "pdf");
         put("application/djvu", "djvu");
+        put("application/msword", "doc");
+        put("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx");
         put("application/html+zip", "html.zip");
         put("application/txt+zip", "txt.zip");
-        put("application/rtf+zip", "rtf.zip");
+        put("application/rtf+zip", "rtf");
         put("application/zip", "zip");
     }};
 
@@ -40,6 +45,8 @@ public class MimeTypes {
         put("pdf", "application/pdf");
         put("djvu", "application/djvu");
         put("html", "application/html+zip");
+        put("doc", "application/msword");
+        put("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
         put("txt", "application/txt+zip");
         put("rtf", "application/rtf+zip");
         put("zip", "application/zip");
@@ -72,7 +79,7 @@ public class MimeTypes {
         if (mime.equals("application/pdf+zip")) {
             return "pdf.zip";
         }
-        if (mime.equals("application/rtf")) {
+        if (mime.equals("application/rtf+zip")) {
             return "rtf";
         }
         if (mime.equals("application/txt")) {
@@ -85,9 +92,7 @@ public class MimeTypes {
     }
 
     public static String getFullMime(String shortMime) {
-        if (shortMime.endsWith(".zip")) {
-            return "application/zip";
-        }
+        Log.d("surprise", "MimeTypes: 89 GET MIME FOR " + shortMime);
         if (FULL_MIMES.containsKey(shortMime)) {
             return FULL_MIMES.get(shortMime);
         }
@@ -100,6 +105,9 @@ public class MimeTypes {
         }
         if(trueFormat.equals("application/zip")){
             return "zip";
+        }
+        if (MIMES.containsKey(trueFormat)) {
+            return MIMES.get(trueFormat);
         }
         return null;
     }
