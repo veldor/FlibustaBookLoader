@@ -632,7 +632,7 @@ class NotificationHandler private constructor(private var context: Context) {
         mNotificationManager.notify(FLIBUSTA_IS_BACK_NOTIFICATION, incomingCallNotification)
     }
 
-    fun notifyDownloadFromMirror() {
+    fun notifyUseAlternativeMirror() {
         val notificationBuilder = NotificationCompat.Builder(App.instance, MISC_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
             .setContentTitle("Используется альтернативное зеркало!")

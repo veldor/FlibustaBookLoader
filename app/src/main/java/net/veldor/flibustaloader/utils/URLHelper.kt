@@ -12,7 +12,7 @@ object URLHelper {
     @kotlin.jvm.JvmStatic
     fun getBaseOPDSUrl(): String {
         if (PreferencesHandler.instance.isCustomMirror) {
-            return PreferencesHandler.instance.getCustomMirror
+            return PreferencesHandler.instance.customMirror
         }
         if (PreferencesHandler.instance.isExternalVpn) {
             Log.d("surprise", "URLHelper getBaseOPDSUrl 18: use external vpn")
@@ -32,7 +32,7 @@ object URLHelper {
         val urlConstructor = StringBuilder()
         when {
             PreferencesHandler.instance.isCustomMirror -> {
-                urlConstructor.append(PreferencesHandler.instance.getCustomMirror)
+                urlConstructor.append(PreferencesHandler.instance.customMirror)
                     .append("/opds/")
             }
             PreferencesHandler.instance.isExternalVpn -> {
@@ -52,5 +52,17 @@ object URLHelper {
             )
         }
         return urlConstructor.toString()
+    }
+
+    @kotlin.jvm.JvmStatic
+    fun getFlibustaUrl(): String{
+        if(PreferencesHandler.instance.isCustomMirror){
+            return PreferencesHandler.instance.customMirror
+        }
+        return PreferencesHandler.BASE_URL
+    }
+    @kotlin.jvm.JvmStatic
+    fun getFlibustaMirrorUrl(): String{
+        return PreferencesHandler.MIRROR_URL
     }
 }

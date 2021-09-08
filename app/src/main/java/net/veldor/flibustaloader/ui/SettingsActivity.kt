@@ -69,13 +69,13 @@ class SettingsActivity : BaseActivity(),
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
-        override fun onCreatePreferences(savedInstanceState: Bundle, rootKey: String) {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_root, rootKey)
         }
     }
 
     class ReservePreferencesFragment : PreferenceFragmentCompat() {
-        override fun onCreatePreferences(savedInstanceState: Bundle, rootKey: String) {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_reserve, rootKey)
         }
 
@@ -87,7 +87,7 @@ class SettingsActivity : BaseActivity(),
                 findPreference<Preference>(getString(R.string.restore_settings))
             if (settingsBackupPref != null) {
                 settingsBackupPref.onPreferenceClickListener =
-                    Preference.OnPreferenceClickListener { preference: Preference? ->
+                    Preference.OnPreferenceClickListener {
                         Toast.makeText(
                             context,
                             "Выберите папку для сохранения резервной копии",
@@ -108,15 +108,14 @@ class SettingsActivity : BaseActivity(),
             }
             if (settingsRestorePref != null) {
                 settingsRestorePref.onPreferenceClickListener =
-                    Preference.OnPreferenceClickListener { preference: Preference? ->
+                    Preference.OnPreferenceClickListener {
                         Toast.makeText(
                             context,
                             "Выберите сохранённый ранее файл с настройками.",
                             Toast.LENGTH_LONG
                         ).show()
                         // открою окно выбота файла для восстановления
-                        val intent: Intent
-                        intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        val intent: Intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                             Intent(Intent.ACTION_OPEN_DOCUMENT)
                         } else {
                             Intent(Intent.ACTION_GET_CONTENT)
@@ -241,7 +240,7 @@ class SettingsActivity : BaseActivity(),
             } else if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK) {
                 // сохраню файл
                 if (data != null && data.extras != null) {
-                    val folderLocation = data.extras.getString("data")
+                    val folderLocation = data.extras!!.getString("data")
                     if (folderLocation != null) {
                         val destination = File(folderLocation)
                         if (destination.exists()) {
@@ -293,13 +292,13 @@ class SettingsActivity : BaseActivity(),
     }
 
     class ConnectionPreferencesFragment : PreferenceFragmentCompat() {
-        override fun onCreatePreferences(savedInstanceState: Bundle, rootKey: String) {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_connection, rootKey)
         }
     }
 
     class ViewPreferencesFragment : PreferenceFragmentCompat() {
-        override fun onCreatePreferences(savedInstanceState: Bundle, rootKey: String) {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_view, rootKey)
         }
 
@@ -310,7 +309,7 @@ class SettingsActivity : BaseActivity(),
             val switchNightModePref = findPreference<Preference>("night mode")
             if (switchViewPref != null) {
                 switchViewPref.onPreferenceChangeListener =
-                    Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
+                    Preference.OnPreferenceChangeListener { _: Preference?, _: Any? ->
                         Toast.makeText(
                             requireContext(),
                             requireContext().getString(R.string.app_restart_message),
@@ -322,7 +321,7 @@ class SettingsActivity : BaseActivity(),
             }
             if (switchNightModePref != null) {
                 switchNightModePref.onPreferenceChangeListener =
-                    Preference.OnPreferenceChangeListener { preference, newValue ->
+                    Preference.OnPreferenceChangeListener { _, _ ->
                         Toast.makeText(
                             requireContext(),
                             requireContext().getString(R.string.app_restart_message),
@@ -336,7 +335,7 @@ class SettingsActivity : BaseActivity(),
     }
 
     class UpdatePreferencesFragment : PreferenceFragmentCompat() {
-        override fun onCreatePreferences(savedInstanceState: Bundle, rootKey: String) {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_update, rootKey)
         }
 
@@ -346,7 +345,7 @@ class SettingsActivity : BaseActivity(),
                 findPreference<Preference>(getString(R.string.pref_check_update_now))
             if (checkUpdatePref != null) {
                 checkUpdatePref.onPreferenceClickListener =
-                    Preference.OnPreferenceClickListener { preference: Preference? ->
+                    Preference.OnPreferenceClickListener {
                         Toast.makeText(context, "Проверяю обновления", Toast.LENGTH_SHORT).show()
                         val updateCheckStatus = checkUpdate()
                         updateCheckStatus.observe(
@@ -371,7 +370,7 @@ class SettingsActivity : BaseActivity(),
                     getString(R.string.snackbar_found_update_message),
                     Snackbar.LENGTH_INDEFINITE
                 )
-                updateSnackbar.setAction(getString(R.string.snackbar_update_action_message)) { v: View? ->
+                updateSnackbar.setAction(getString(R.string.snackbar_update_action_message)) {
                     Toast.makeText(context, "Загружаю обновление", Toast.LENGTH_SHORT).show()
                     update()
                 }
@@ -383,7 +382,7 @@ class SettingsActivity : BaseActivity(),
 
     class DownloadPreferencesFragment : PreferenceFragmentCompat() {
         private var mChangeDownloadFolderPreference: Preference? = null
-        override fun onCreatePreferences(savedInstanceState: Bundle, rootKey: String) {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_download, rootKey)
         }
 
@@ -414,7 +413,7 @@ class SettingsActivity : BaseActivity(),
                 findPreference<Preference>(getString(R.string.pref_download_location_alt))
             if (changeDownloadFolderAltPreference != null) {
                 changeDownloadFolderAltPreference.onPreferenceClickListener =
-                    Preference.OnPreferenceClickListener { preference: Preference? ->
+                    Preference.OnPreferenceClickListener {
                         showAlterDirSelectDialog()
                         false
                     }
@@ -429,7 +428,7 @@ class SettingsActivity : BaseActivity(),
                     .setTitle("Альтернативный выбор папки")
                     .setMessage("На случай, если папка для скачивания не выбирается основным методом. Только для совместимости, никаких преимуществ этот способ не даёт, также выбранная папка может сбрасываться при перезагрузке смартфона и её придётся выбирать заново")
                     .setCancelable(true)
-                    .setPositiveButton(android.R.string.ok) { dialog: DialogInterface?, which: Int ->
+                    .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
                         val intent = Intent(context, FolderPicker::class.java)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                             intent.addFlags(
@@ -463,7 +462,7 @@ class SettingsActivity : BaseActivity(),
                                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                                     )
                                 }
-                                App.instance.setDownloadDir(treeUri)
+                                PreferencesHandler.instance.downloadDir = dl
                                 Toast.makeText(
                                     context,
                                     getText(R.string.download_folder_changed_message_new),
@@ -479,11 +478,11 @@ class SettingsActivity : BaseActivity(),
             } else if (requestCode == READ_REQUEST_CODE) {
                 if (resultCode == RESULT_OK) {
                     if (data != null && data.extras != null) {
-                        val folderLocation = data.extras.getString("data")
+                        val folderLocation = data.extras!!.getString("data")
                         if (folderLocation != null) {
                             val destination = File(folderLocation)
                             if (destination.exists()) {
-                                App.instance.setDownloadDir(Uri.parse(folderLocation))
+                                PreferencesHandler.instance.compatDownloadDir = destination
                                 Toast.makeText(
                                     context,
                                     getText(R.string.download_folder_changed_message).toString() + folderLocation,

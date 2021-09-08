@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.ui
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.App
@@ -10,8 +11,10 @@ import android.app.AlarmManager
 import android.view.*
 import android.widget.*
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import kotlin.system.exitProcess
 
 class FlibustaNotAvailableActivity : AppCompatActivity() {
+    @SuppressLint("UnspecifiedImmutableFlag")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_flibusta_not_available)
@@ -19,7 +22,7 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
         if (PreferencesHandler.instance.isExternalVpn) {
             switchToVpnBtn.visibility = View.GONE
         } else {
-            switchToVpnBtn.setOnClickListener { view: View? ->
+            switchToVpnBtn.setOnClickListener {
                 PreferencesHandler.instance.isExternalVpn = !PreferencesHandler.instance.isExternalVpn
                 val mStartActivity =
                     Intent(this@FlibustaNotAvailableActivity, MainActivity::class.java)
@@ -33,18 +36,18 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
                 val mgr =
                     this@FlibustaNotAvailableActivity.getSystemService(ALARM_SERVICE) as AlarmManager
                 mgr[AlarmManager.RTC, System.currentTimeMillis() + 100] = mPendingIntent
-                System.exit(0)
+                exitProcess(0)
             }
         }
         val closeAppBtn = findViewById<Button>(R.id.closeAppButton)
-        closeAppBtn.setOnClickListener { v: View? -> System.exit(0) }
+        closeAppBtn.setOnClickListener { exitProcess(0) }
         val tryAgainBtn = findViewById<Button>(R.id.retryButton)
-        tryAgainBtn.setOnClickListener { v: View? ->
+        tryAgainBtn.setOnClickListener {
             startActivity(Intent(this@FlibustaNotAvailableActivity, MainActivity::class.java))
             finish()
         }
         val startCheckWorker = findViewById<Button>(R.id.startCheckerBtn)
-        startCheckWorker.setOnClickListener { v: View? ->
+        startCheckWorker.setOnClickListener {
             App.instance.startCheckWorker()
             Toast.makeText(
                 this@FlibustaNotAvailableActivity,
@@ -57,7 +60,7 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
             startActivity(startMain)
         }
         val disableInspectionButton = findViewById<Button>(R.id.disableInspectionButton)
-        disableInspectionButton.setOnClickListener { v: View? ->
+        disableInspectionButton.setOnClickListener {
             PreferencesHandler.instance.setInspectionEnabled(false)
             Toast.makeText(
                 this@FlibustaNotAvailableActivity,
@@ -68,7 +71,7 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
             finish()
         }
         val showMainWindowButton = findViewById<Button>(R.id.showMainWindowButton)
-        showMainWindowButton.setOnClickListener { v: View? ->
+        showMainWindowButton.setOnClickListener {
             // запущу главное окно
             startView()
             finish()
@@ -78,9 +81,8 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
     private fun startView() {
         // проверю очередь скачивания. Если она не пуста- предложу продолжить закачку
         // проверю, не запущено ли приложение с помощью интента. Если да- запущу программу в webView режиме
-        val targetActivityIntent: Intent
         // проверю, если используем ODPS- перенаправлю в другую активность
-        targetActivityIntent = if (App.instance.view == App.VIEW_ODPS) {
+        val targetActivityIntent: Intent = if (PreferencesHandler.instance.view == App.VIEW_ODPS) {
             Intent(this, OPDSActivity::class.java)
         } else {
             Intent(this, WebViewActivity::class.java)

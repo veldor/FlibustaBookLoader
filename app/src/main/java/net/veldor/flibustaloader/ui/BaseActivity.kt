@@ -36,7 +36,7 @@ open class BaseActivity : AppCompatActivity() {
 
     protected open fun setupInterface() {
         // включу аппаратное ускорение, если оно активно
-        if (PreferencesHandler.instance.isHardwareAcceleration()) {
+        if (PreferencesHandler.instance.hardwareAcceleration) {
             window.setFlags(
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED

@@ -6,6 +6,7 @@ import net.veldor.flibustaloader.http.TorStarter
 import android.content.Context
 import android.util.Log
 import androidx.work.*
+import net.veldor.flibustaloader.http.TorWebClient
 
 class StartTorWorker(context: Context, workerParams: WorkerParameters) :
     Worker(context, workerParams) {

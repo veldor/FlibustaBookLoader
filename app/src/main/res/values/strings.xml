@@ -247,8 +247,24 @@
     <string name="too_large_version_text">Tor can\'t load on this version of Android yet. Please, use external VPN</string>
     <string name="enable_vpn_message">Enable VPN mode</string>
     <string name="tor_not_availiable_title">Tor not available</string>
-    <string name="tor_not_availiable_message">In this version you require external VPN to show content. Install it or rollback on previous version of app. Sorry for that</string>
-    <string name="pref_custom_pic_mirror">custom_pic_mirror</string>
+    <string name="tor_not_availiable_message" translatable="false">In this version you require external VPN to show content. Install it or rollback on previous version of app. Sorry for that</string>
+    <string name="pref_custom_pic_mirror" translatable="false">custom_pic_mirror</string>
     <string name="send_book_title">Send book</string>
-    <string name="download_title">Загрузить</string>
+    <string name="permissions_required_message">Permissions required for books download</string>
+    <string name="permissions_required_title">Required permissions</string>
+    <string name="accept_permissions_button">Accept</string>
+    <string name="dismiss_permissions_button">Descline and close app</string>
+    <string name="download_title">Download</string>
+    <string name="e_ink_enabled_title">Enabled e-ink theme</string>
+    <string name="e_ink_enabled_message">It not support night mode and can be switched off here or on settings screen</string>
+    <string name="select_download_folder_title">Select dir for downloads</string>
+    <string name="select_download_folder_message">Select dir for book download</string>
+    <string name="download_folder_select_accept">Select</string>
+    <string name="alternate_dir_select_button">Can\'t select dir</string>
+    <string name="alter_dir_selection_title">Alter dir selection</string>
+    <string name="alter_dir_selection_body">If can\'t choose folder by default method</string>
+    <string name="select_view_title">Select view</string>
+    <string name="web_view_mode_button">Browser view</string>
+    <string name="opds_view_button">Catalog view</string>
+    <string name="select_view_body">Select app view</string>
 </resources>

@@ -18,7 +18,7 @@ class CheckFlibustaAvailabilityWorker(context: Context, workerParams: WorkerPara
         var url: String
         // теперь проверю подключение к основному серверу
         if (PreferencesHandler.instance.isCustomMirror) {
-            url = PreferencesHandler.instance.getCustomMirror
+            url = PreferencesHandler.instance.customMirror
             if (inspect(url)) {
                 outputDataBuilder.putBoolean(AVAILABILITY_STATE, true)
             }

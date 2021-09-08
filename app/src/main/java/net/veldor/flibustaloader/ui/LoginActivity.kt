@@ -43,7 +43,7 @@ class LoginActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable) {
-                mLoginReady = if (s != null && s.length > 0) {
+                mLoginReady = if (s.length > 0) {
                     if (mPasswordReady) {
                         mLoginButton.setEnabled(true)
                     }
@@ -57,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable) {
-                mPasswordReady = if (s != null && s.length > 0) {
+                mPasswordReady = if (s.length > 0) {
                     if (mLoginReady) {
                         mLoginButton.setEnabled(true)
                     }
@@ -71,7 +71,7 @@ class LoginActivity : AppCompatActivity() {
             mProgressBar.setVisibility(View.VISIBLE)
             lockElements()
             val worker =
-                mMyViewModel!!.logMeIn(mLogin.getText().toString(), mPassword.getText().toString())
+                mMyViewModel.logMeIn(mLogin.getText().toString(), mPassword.getText().toString())
             observeRequest(worker)
         })
     }
@@ -97,7 +97,7 @@ class LoginActivity : AppCompatActivity() {
             }
         })
         requestStatus.observe(this, { s: String? ->
-            if (s != null && !s.isEmpty()) {
+            if (s != null && s.isNotEmpty()) {
                 setStatusText(s)
             }
         })

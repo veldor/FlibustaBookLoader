@@ -56,7 +56,6 @@ object FilesHandler {
             } else {
                 val docId = DocumentsContract.getDocumentId(incomingDocumentFile.uri)
                 val split = docId.split(":").toTypedArray()
-                val storage = split[0]
                 // получу файл из documentFile и отправлю его
                 var file = getFileFromDocumentFile(incomingDocumentFile)
                 if (file != null) {
@@ -163,7 +162,7 @@ object FilesHandler {
             }
         }
         // получу имя файла
-        var downloadsDir = App.instance.downloadDir
+        var downloadsDir = PreferencesHandler.instance.downloadDir
         if (PreferencesHandler.instance
                 .isCreateSequencesDir() && book.reservedSequenceName.isNotEmpty()
         ) {
@@ -181,7 +180,7 @@ object FilesHandler {
                 downloadsDir = downloadsDir.findFile(book.reservedSequenceName)
             }
             if (downloadsDir == null) {
-                downloadsDir = App.instance.downloadDir
+                downloadsDir = PreferencesHandler.instance.downloadDir
             }
         } else {
             // проверю, нужно ли создавать папку под автора
@@ -201,7 +200,7 @@ object FilesHandler {
                     downloadsDir = downloadsDir.findFile(book.authorDirName)
                 }
                 if (downloadsDir == null) {
-                    downloadsDir = App.instance.downloadDir
+                    downloadsDir = PreferencesHandler.instance.downloadDir
                 }
             }
             if (PreferencesHandler.instance
@@ -213,7 +212,7 @@ object FilesHandler {
                     downloadsDir.findFile(book.sequenceDirName)
                 }
                 if (downloadsDir == null) {
-                    downloadsDir = App.instance.downloadDir
+                    downloadsDir = PreferencesHandler.instance.downloadDir
                 }
             }
         }
@@ -241,7 +240,7 @@ object FilesHandler {
 
     @kotlin.jvm.JvmStatic
     fun getCompatDownloadFile(book: BooksDownloadSchedule): File {
-        var file: File? = PreferencesHandler.instance.compatDownloadDir()
+        var file: File? = PreferencesHandler.instance.compatDownloadDir
         // проверю, нужно ли создавать папку под автора
         if (PreferencesHandler.instance
                 .isCreateSequencesDir() && book.reservedSequenceName.isNotEmpty()
@@ -284,7 +283,7 @@ object FilesHandler {
 
     fun isBookDownloaded(newBook: BooksDownloadSchedule): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            var downloadsDir = App.instance.downloadDir
+            var downloadsDir = PreferencesHandler.instance.downloadDir
             if (PreferencesHandler.instance
                     .isCreateSequencesDir() && newBook.reservedSequenceName.isNotEmpty()
             ) {
@@ -306,7 +305,7 @@ object FilesHandler {
                     downloadsDir = downloadsDir.findFile(newBook.authorDirName)
                 }
                 if (PreferencesHandler.instance
-                        .isCreateSequencesDir() && downloadsDir != null && newBook.sequenceDirName.isNotEmpty() && newBook.reservedSequenceName.isNotEmpty() && !newBook.reservedSequenceName.isEmpty()
+                        .isCreateSequencesDir() && downloadsDir != null && newBook.sequenceDirName.isNotEmpty() && newBook.reservedSequenceName.isNotEmpty() && newBook.reservedSequenceName.isNotEmpty()
                 ) {
                     downloadsDir = downloadsDir.findFile(newBook.sequenceDirName)
                 }
@@ -318,7 +317,7 @@ object FilesHandler {
                 }
             }
         } else {
-            var dd: File? = PreferencesHandler.instance.compatDownloadDir()
+            var dd: File? = PreferencesHandler.instance.compatDownloadDir
             if (PreferencesHandler.instance
                     .isCreateAuthorsDir() && newBook.authorDirName.isNotEmpty() && newBook.authorDirName.isNotEmpty()
             ) {

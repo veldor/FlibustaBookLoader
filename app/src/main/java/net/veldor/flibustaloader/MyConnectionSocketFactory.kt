@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader
 
+import android.util.Log
 import cz.msebera.android.httpclient.HttpHost
 import cz.msebera.android.httpclient.conn.socket.ConnectionSocketFactory
 import cz.msebera.android.httpclient.protocol.HttpContext
@@ -12,8 +13,6 @@ import java.net.Socket
 
 class MyConnectionSocketFactory : ConnectionSocketFactory {
     override fun createSocket(context: HttpContext): Socket {
-        //InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
-        //Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
         return Socket() //(proxy);
     }
 
@@ -22,10 +21,11 @@ class MyConnectionSocketFactory : ConnectionSocketFactory {
         incomingConnectionTimeout: Int,
         incomingSocket: Socket,
         host: HttpHost,
-        remoteAddress: InetSocketAddress,
-        localAddress: InetSocketAddress,
+        remoteAddress: InetSocketAddress?,
+        localAddress: InetSocketAddress?,
         context: HttpContext
     ): Socket {
+        Log.d("surprise", "connectSocket: create connection")
         val socksaddr = context.getAttribute("socks.address") as InetSocketAddress
         val socket = Socket()
         val connectTimeout = 100000

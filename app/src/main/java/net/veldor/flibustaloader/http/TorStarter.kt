@@ -36,7 +36,6 @@ class TorStarter {
     init {
         if (App.instance.mLoadedTor.value == null) {
             tor = AndroidOnionProxyManager(App.instance, App.TOR_FILES_LOCATION)
-            Log.d("surprise", "StartTorWorker doWork 39: tor manager added")
             App.instance.mLoadedTor.postValue(tor)
         } else {
             tor = App.instance.mLoadedTor.value

@@ -57,7 +57,7 @@ class CheckSubscriptionsWorker(context: Context, workerParams: WorkerParameters)
                 if (!isStopped) {
                     // пока буду загружать все страницы, которые есть
                     if (PreferencesHandler.instance.isExternalVpn) {
-                        val response = ExternalVpnVewClient.rawRequest(App.BASE_URL + mNextPageLink)
+                        val response = ExternalVpnVewClient.rawRequest(PreferencesHandler.BASE_URL + mNextPageLink)
                         if (response != null) {
                             try {
                                 answer = EntityUtils.toString(response.entity)

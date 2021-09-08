@@ -1,26 +1,25 @@
 package net.veldor.flibustaloader.ui
 
-import net.veldor.flibustaloader.utils.FilesHandler.shareFile
-import net.veldor.flibustaloader.utils.Grammar.getLiteralSize
-import net.veldor.flibustaloader.utils.Grammar.getExtension
-import net.veldor.flibustaloader.utils.FilesHandler.openFile
-import androidx.recyclerview.widget.RecyclerView
-import android.os.Bundle
-import net.veldor.flibustaloader.R
-import androidx.recyclerview.widget.LinearLayoutManager
-import net.veldor.flibustaloader.App
-import android.widget.Toast
 import android.content.DialogInterface
 import android.os.Build
-import androidx.documentfile.provider.DocumentFile
+import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.documentfile.provider.DocumentFile
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.DirContentAdapter
 import net.veldor.flibustaloader.selections.*
+import net.veldor.flibustaloader.utils.FilesHandler.openFile
+import net.veldor.flibustaloader.utils.FilesHandler.shareFile
+import net.veldor.flibustaloader.utils.Grammar.getExtension
+import net.veldor.flibustaloader.utils.Grammar.getLiteralSize
+import net.veldor.flibustaloader.utils.PreferencesHandler
 import java.io.File
-import java.lang.Exception
-import java.util.ArrayList
+import java.util.*
 
 class ShowDownloadFolderContentActivity : BaseActivity() {
     private lateinit var recycler: RecyclerView
@@ -34,7 +33,7 @@ class ShowDownloadFolderContentActivity : BaseActivity() {
         recycler.layoutManager = LinearLayoutManager(this)
         // получу список файлов из папки
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val downloadsDir = App.instance.downloadDir
+            val downloadsDir = PreferencesHandler.instance.downloadDir
             if (downloadsDir != null && downloadsDir.isDirectory) {
                 val files = downloadsDir.listFiles()
                 val books = recursiveScan(files, "")
@@ -48,7 +47,7 @@ class ShowDownloadFolderContentActivity : BaseActivity() {
                 }
             }
         } else {
-            val downloadDir = App.instance.downloadDir
+            val downloadDir = PreferencesHandler.instance.downloadDir
             if (downloadDir != null && downloadDir.isDirectory) {
                 val files = downloadDir.listFiles()
                 val books = recursiveScan(files, "")
@@ -68,7 +67,7 @@ class ShowDownloadFolderContentActivity : BaseActivity() {
         super.setupInterface()
 
         // скрою переход на данное активити
-        val menuNav = mNavigationView!!.menu
+        val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToFileList)
         item.isEnabled = false
         item.isChecked = true

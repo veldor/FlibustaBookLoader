@@ -26,7 +26,7 @@ object BookSharer {
         // ========================================================================================
         val context: Context = App.instance
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            var downloadsDir = App.instance.downloadDir
+            var downloadsDir = PreferencesHandler.instance.downloadDir
             if (PreferencesHandler.instance
                     .isCreateSequencesDir() && reservedSequenceFolder != null
             ) {
@@ -100,7 +100,7 @@ object BookSharer {
                 }
             }
         } else {
-            var dd: File? = PreferencesHandler.instance.compatDownloadDir()
+            var dd: File? = PreferencesHandler.instance.compatDownloadDir
             if (PreferencesHandler.instance
                     .isCreateSequencesDir() && reservedSequenceFolder != null
             ) {

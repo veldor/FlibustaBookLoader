@@ -22,7 +22,7 @@ object BookOpener {
         Log.d("surprise", "BookOpener openBook 24: sequence dir is $sequenceDir")
         val context: Context = App.instance
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            var downloadsDir = App.instance.downloadDir
+            var downloadsDir = PreferencesHandler.instance.downloadDir
             if (PreferencesHandler.instance
                     .isCreateSequencesDir() && reservedSequenceFolder != null
             ) {
@@ -73,7 +73,7 @@ object BookOpener {
                 }
             }
         } else {
-            var dd: File? = PreferencesHandler.instance.compatDownloadDir()
+            var dd: File? = PreferencesHandler.instance.compatDownloadDir
             if (PreferencesHandler.instance
                     .isCreateAuthorsDir() && authorDir != null && authorDir.isNotEmpty()
             ) {

@@ -11,13 +11,21 @@ import java.io.File
 
 class PreferencesHandler private constructor() {
     private var preferences: SharedPreferences =
-        androidx.preference.PreferenceManager.getDefaultSharedPreferences(App.instance)
+            androidx.preference.PreferenceManager.getDefaultSharedPreferences(App.instance)
 
 
     var isLinearLayout: Boolean
         get() = preferences.getBoolean(PREF_LINEAR_LAYOUT, true)
         set(state) {
             preferences.edit().putBoolean(PREF_LINEAR_LAYOUT, state).apply()
+        }
+
+
+    var hardwareAcceleration: Boolean
+        get() = preferences.getBoolean(HW_ACCELERATION_PREF, true)
+        set(state) {
+            preferences.edit().putBoolean(HW_ACCELERATION_PREF, state)
+                    .apply()
         }
 
 
@@ -38,20 +46,20 @@ class PreferencesHandler private constructor() {
 
     var lastLoadedUrl: String
         get() = preferences.getString(
-            PREF_LAST_LOADED_URL,
-            URLHelper.getBaseUrl()
+                PREF_LAST_LOADED_URL,
+                URLHelper.getBaseUrl()
         )!!
         set(url) {
             if (url != "http://flibustahezeous3.onion/favicon.ico" && url != "http://flibustahezeous3.onion/sites/default/files/bluebreeze_favicon.ico") preferences.edit()
-                .putString(
-                    PREF_LAST_LOADED_URL, url
-                ).apply()
+                    .putString(
+                            PREF_LAST_LOADED_URL, url
+                    ).apply()
         }
 
 
     val picMirror: String
         get() = preferences.getString(
-            App.instance.getString(R.string.pref_custom_pic_mirror), App.PIC_MIRROR_URL
+                App.instance.getString(R.string.pref_custom_pic_mirror), App.PIC_MIRROR_URL
         )!!
 
     var viewMode: Int
@@ -84,8 +92,8 @@ class PreferencesHandler private constructor() {
 
     val isEInk: Boolean
         get() = preferences.getBoolean(
-            App.instance.getString(R.string.pref_is_eink),
-            false
+                App.instance.getString(R.string.pref_is_eink),
+                false
         )
 
     fun isShowChanges(): Boolean {
@@ -97,14 +105,14 @@ class PreferencesHandler private constructor() {
 
     val isCustomMirror: Boolean
         get() = preferences.getBoolean(
-            App.instance.getString(R.string.pref_use_custom_mirror),
-            false
+                App.instance.getString(R.string.pref_use_custom_mirror),
+                false
         )
 
-    val getCustomMirror: String
+    val customMirror: String
         get() = preferences.getString(
-            App.instance.getString(R.string.pref_custom_flibusta_mirror),
-            URLHelper.getBaseUrl()
+                App.instance.getString(R.string.pref_custom_flibusta_mirror),
+                URLHelper.getBaseUrl()
         )!!
 
     var isSubscriptionsAutoCheck: Boolean
@@ -213,7 +221,7 @@ class PreferencesHandler private constructor() {
         val file = File(folderLocation)
         if (file.isDirectory) {
             preferences.edit().putString(PREF_DOWNLOAD_LOCATION, folderLocation)
-                .apply()
+                    .apply()
             return true
         }
         return false
@@ -224,7 +232,7 @@ class PreferencesHandler private constructor() {
         get() {
             // возвращу папку для закачек
             val downloadLocation =
-                preferences.getString(PREF_DOWNLOAD_LOCATION, null)
+                    preferences.getString(PREF_DOWNLOAD_LOCATION, null)
             if (downloadLocation != null) {
                 try {
                     val dl = DocumentFile.fromTreeUri(App.instance, Uri.parse(downloadLocation))
@@ -258,157 +266,152 @@ class PreferencesHandler private constructor() {
             preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file?.toUri().toString()).apply()
         }
 
-    fun isDownloadDir(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            downloadDir == null
-        } else {
-            compatDownloadDir == null
-        }
-    }
-
-    fun isHardwareAcceleration(): Boolean {
-        return preferences.getBoolean(HW_ACCELERATION_PREF, true)
-    }
-
-    fun switchHardwareAcceleration() {
-        preferences.edit().putBoolean(HW_ACCELERATION_PREF, !isHardwareAcceleration())
-            .apply()
-    }
-
-
-    fun getDownloadDirLocation(): String? {
-        val dir = downloadDir
-        if (dir != null && dir.isDirectory) {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                UriConverter.getPath(App.instance, dir.uri)
-            } else {
-                dir.uri.path
+    val downloadDirAssigned: Boolean
+        get()
+        {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                return downloadDir != null
             }
+            return compatDownloadDir != null
         }
-        val compatDir = compatDownloadDir
-        return if (compatDir != null && compatDir.isDirectory) {
-            compatDir.absolutePath
-        } else "Не распознал папку загрузок"
+
+
+fun getDownloadDirLocation(): String? {
+    val dir = downloadDir
+    if (dir != null && dir.isDirectory) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            UriConverter.getPath(App.instance, dir.uri)
+        } else {
+            dir.uri.path
+        }
     }
+    val compatDir = compatDownloadDir
+    return if (compatDir != null && compatDir.isDirectory) {
+        compatDir.absolutePath
+    } else "Не распознал папку загрузок"
+}
 
 
-    fun setChangesViewed() {
-        preferences.edit().putString(LAST_CHANGELOG_VERSION_PREF, Grammar.appVersion)
+fun setChangesViewed() {
+    preferences.edit().putString(LAST_CHANGELOG_VERSION_PREF, Grammar.appVersion)
             .apply()
-    }
+}
 
 
-    fun isCreateAuthorsDir(): Boolean {
-        return preferences.getBoolean(
+fun isCreateAuthorsDir(): Boolean {
+    return preferences.getBoolean(
             App.instance.getString(R.string.pref_create_author_folder), false
-        )
-    }
+    )
+}
 
-    fun isCreateSequencesDir(): Boolean {
-        return preferences.getBoolean(
+fun isCreateSequencesDir(): Boolean {
+    return preferences.getBoolean(
             App.instance.getString(R.string.pref_create_sequence_folder), false
-        )
-    }
+    )
+}
 
-    fun isCreateAdditionalDir(): Boolean {
-        return preferences.getBoolean(
+fun isCreateAdditionalDir(): Boolean {
+    return preferences.getBoolean(
             App.instance.getString(R.string.pref_create_additional_folders), false
-        )
-    }
+    )
+}
 
 
-    fun isAutofocusSearch(): Boolean {
-        return preferences.getBoolean(
+fun isAutofocusSearch(): Boolean {
+    return preferences.getBoolean(
             App.instance.getString(R.string.pref_autostart_search), true
-        )
-    }
+    )
+}
 
 
-    fun setCreateAuthorsDir(checked: Boolean) {
-        preferences.edit()
+fun setCreateAuthorsDir(checked: Boolean) {
+    preferences.edit()
             .putBoolean(App.instance.getString(R.string.pref_create_author_folder), checked)
             .apply()
-    }
+}
 
-    fun setCreateSequencesDir(checked: Boolean) {
-        preferences.edit()
+fun setCreateSequencesDir(checked: Boolean) {
+    preferences.edit()
             .putBoolean(App.instance.getString(R.string.pref_create_sequence_folder), checked)
             .apply()
-    }
+}
 
 
-    fun askedForDonation(): Boolean {
-        return preferences.getBoolean(PREF_BEG_DONATION, false)
-    }
+fun askedForDonation(): Boolean {
+    return preferences.getBoolean(PREF_BEG_DONATION, false)
+}
 
 
-    fun setDonationBegged() {
-        preferences.edit().putBoolean(PREF_BEG_DONATION, true).apply()
-    }
+fun setDonationBegged() {
+    preferences.edit().putBoolean(PREF_BEG_DONATION, true).apply()
+}
 
-    fun setEInk(isChecked: Boolean) {
-        preferences.edit()
+fun setEInk(isChecked: Boolean) {
+    preferences.edit()
             .putBoolean(App.instance.getString(R.string.pref_is_eink), isChecked).apply()
-    }
+}
 
-    fun isCheckAvailability(): Boolean {
-        return preferences.getBoolean(PREF_CHECK_AVAILABILITY, true)
-    }
+fun isCheckAvailability(): Boolean {
+    return preferences.getBoolean(PREF_CHECK_AVAILABILITY, true)
+}
 
-    fun setInspectionEnabled(isEnabled: Boolean) {
-        preferences.edit().putBoolean(PREF_CHECK_AVAILABILITY, isEnabled).apply()
-    }
+fun setInspectionEnabled(isEnabled: Boolean) {
+    preferences.edit().putBoolean(PREF_CHECK_AVAILABILITY, isEnabled).apply()
+}
 
-    fun isSkipMainScreen(): Boolean {
-        return preferences.getBoolean(PREF_SKIP_MAIN_SCREEN, false)
-    }
+fun isSkipMainScreen(): Boolean {
+    return preferences.getBoolean(PREF_SKIP_MAIN_SCREEN, false)
+}
 
-    fun isShowLoadMoreBtn(): Boolean {
-        return preferences.getBoolean(PREF_SHOW_LOAD_MORE_BTN, false)
-    }
+fun isShowLoadMoreBtn(): Boolean {
+    return preferences.getBoolean(PREF_SHOW_LOAD_MORE_BTN, false)
+}
 
-    fun isPicHide(): Boolean {
-        return preferences.getBoolean(PREF_HIDE_PICS, false)
-    }
-
-
-    companion object {
-        private const val PREF_LINEAR_LAYOUT = "linear layout"
-        const val PREF_DOWNLOAD_LOCATION = "download_location"
-        private const val PREF_VIEW = "view"
-        private const val PREF_CHECK_UPDATES = "check_updates"
-        private const val PREF_RE_DOWNLOAD = "re download"
-        private const val PREF_LAST_LOADED_URL = "last_loaded_url"
-        private const val PREF_VIEW_MODE = "view mode"
-        private const val PREF_NIGHT_MODE_ENABLED = "night mode"
-        private const val PREF_PREVIEWS = "cover_previews_show"
-        private const val PREF_HIDE_READ = "hide read"
-        private const val PREF_LOAD_ALL = "load all"
-        private const val PREF_SAVE_ONLY_SELECTED = "save only selected"
-        private const val PREF_FAVORITE_MIME = "favorite format"
-        private const val PREF_LAST_CHECKED_BOOK = "last_checked_book"
-        private const val PERF_EXTERNAL_VPN = "external vpn"
-        private const val SUBSCRIPTIONS_AUTO_CHECK_PREF = "subscriptions auto check"
-        private const val LAST_SEARCH_URL_PREF = "last load url"
-        const val SHOW_DOWNLOAD_PROGRESS_PREF = "show download progress"
-        private const val HW_ACCELERATION_PREF = "hardware acceleration"
-        private const val HIDE_DIGESTS_PREF = "hide digests"
-        private const val HIDE_DOWNLOADED_PREF = "hide downloaded"
-        private const val LAST_CHANGELOG_VERSION_PREF = "last changelog version"
-        private const val BOOKS_DOWNLOAD_AUTOSTART = "download auto start"
-        private const val PREF_USE_FILTER = "use filter"
-        private const val PREF_CHECK_AVAILABILITY = "check availability"
-        private const val PREF_ONLY_RUSSIAN = "only russian"
-        private const val AUTH_COOKIE_VALUE = "auth cookie value"
-        private const val PREF_BEG_DONATION = "beg donation"
-        private const val PREF_SKIP_MAIN_SCREEN = "skip load screen"
-        private const val PREF_SHOW_LOAD_MORE_BTN = "show more btn"
-        private const val PREF_HIDE_PICS = "clear view"
+fun isPicHide(): Boolean {
+    return preferences.getBoolean(PREF_HIDE_PICS, false)
+}
 
 
-        @JvmStatic
-        var instance: PreferencesHandler = PreferencesHandler()
-            private set
-    }
+companion object {
+    private const val PREF_LINEAR_LAYOUT = "linear layout"
+    const val PREF_DOWNLOAD_LOCATION = "download_location"
+    private const val PREF_VIEW = "view"
+    private const val PREF_CHECK_UPDATES = "check_updates"
+    private const val PREF_RE_DOWNLOAD = "re download"
+    private const val PREF_LAST_LOADED_URL = "last_loaded_url"
+    private const val PREF_VIEW_MODE = "view mode"
+    private const val PREF_NIGHT_MODE_ENABLED = "night mode"
+    private const val PREF_PREVIEWS = "cover_previews_show"
+    private const val PREF_HIDE_READ = "hide read"
+    private const val PREF_LOAD_ALL = "load all"
+    private const val PREF_SAVE_ONLY_SELECTED = "save only selected"
+    private const val PREF_FAVORITE_MIME = "favorite format"
+    private const val PREF_LAST_CHECKED_BOOK = "last_checked_book"
+    private const val PERF_EXTERNAL_VPN = "external vpn"
+    private const val SUBSCRIPTIONS_AUTO_CHECK_PREF = "subscriptions auto check"
+    private const val LAST_SEARCH_URL_PREF = "last load url"
+    const val SHOW_DOWNLOAD_PROGRESS_PREF = "show download progress"
+    private const val HW_ACCELERATION_PREF = "hardware acceleration"
+    private const val HIDE_DIGESTS_PREF = "hide digests"
+    private const val HIDE_DOWNLOADED_PREF = "hide downloaded"
+    private const val LAST_CHANGELOG_VERSION_PREF = "last changelog version"
+    private const val BOOKS_DOWNLOAD_AUTOSTART = "download auto start"
+    private const val PREF_USE_FILTER = "use filter"
+    private const val PREF_CHECK_AVAILABILITY = "check availability"
+    private const val PREF_ONLY_RUSSIAN = "only russian"
+    private const val AUTH_COOKIE_VALUE = "auth cookie value"
+    private const val PREF_BEG_DONATION = "beg donation"
+    private const val PREF_SKIP_MAIN_SCREEN = "skip load screen"
+    private const val PREF_SHOW_LOAD_MORE_BTN = "show more btn"
+    private const val PREF_HIDE_PICS = "clear view"
+
+    const val BASE_URL = "http://flibustahezeous3.onion"
+    const val MIRROR_URL = "http://flibusta.site"
+
+
+    @JvmStatic
+    var instance: PreferencesHandler = PreferencesHandler()
+        private set
+}
 
 }

@@ -73,7 +73,7 @@ class App : MultiDexApplication() {
     var mDownloadSelectedBooks: SparseBooleanArray? = null
     val mTypeSelected = MutableLiveData<Boolean>()
     lateinit var mDatabase: AppDatabase
-    lateinit var mSearchWork: LiveData<WorkInfo>
+    var mSearchWork: LiveData<WorkInfo> = MutableLiveData()
     private var mBooksSubscribe: SubscribeBooks? = null
     private var mBooksBlacklist: BlacklistBooks? = null
     private var mAuthorsSubscribe: SubscribeAuthors? = null
@@ -89,9 +89,7 @@ class App : MultiDexApplication() {
         super.onCreate()
         // got instance
         instance = this
-
         setupApp()
-
         // определю ночной режим
         if (PreferencesHandler.instance.nightMode) {
             AppCompatDelegate.setDefaultNightMode(

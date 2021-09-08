@@ -30,6 +30,8 @@ import android.util.Log
 import cz.msebera.android.httpclient.HttpResponse
 import cz.msebera.android.httpclient.client.HttpClient
 import cz.msebera.android.httpclient.ssl.SSLContexts
+import net.veldor.flibustaloader.http.JavaConnectionSocketFactory
+import net.veldor.flibustaloader.http.JavaSslConnectionSocketFactory
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver
 import java.io.*
 import java.lang.Exception
@@ -299,7 +301,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
             // если загружена страница- добавлю её как последнюю загруженную
             if (mime.startsWith(HTML_TYPE)) {
                 if (!url.startsWith(AJAX_REQUEST)) {
-                    App.instance.lastLoadedUrl = url
+                    PreferencesHandler.instance.lastLoadedUrl = url
                     // попробую найти внутри ссылки на книги
                     // скопирую inputStream для разбора ссылок
                     val baos = ByteArrayOutputStream()
@@ -385,7 +387,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                         // сохраняю книгу в памяти устройства
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             val downloadsDir: DocumentFile =
-                                App.instance.downloadDir!!
+                                PreferencesHandler.instance.downloadDir!!
                             // проверю, не сохдан ли уже файл, если создан- удалю
                             val existentFile = downloadsDir.findFile(name)
                             existentFile?.delete()
@@ -403,7 +405,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                                 out.close()
                             }
                         } else {
-                            val file = PreferencesHandler.instance.compatDownloadDir()
+                            val file = PreferencesHandler.instance.compatDownloadDir
                             if (file != null) {
                                 val newFile = File(file, name)
                                 val status = httpResponse.statusLine.statusCode

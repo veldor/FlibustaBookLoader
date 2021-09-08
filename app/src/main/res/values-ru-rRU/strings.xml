@@ -225,4 +225,23 @@
     <string name="too_large_version_message">TOR не запустится</string>
     <string name="too_large_version_text">К сожалению, на Android 10+ встроенный TOR-клиент пока работать не будет. Используйте внешний VPN.</string>
     <string name="enable_vpn_message">Использовать VPN</string>
+    <string name="permissions_required_title">Необходимо предоставить разрешения</string>
+    <string name="accept_permissions_button">Предоставить разрешение</string>
+    <string name="dismiss_permissions_button">Нет, закрыть приложение</string>
+    <string name="permissions_required_message">Для загрузки книг необходимо предоставить доступ к памяти устройства</string>
+    <string name="download_title">Загрузить</string>
+    <string name="send_book_title">Отправить книгу</string>
+    <string name="tor_not_availiable_title">Клиент TOR недоступен</string>
+    <string name="e_ink_enabled_title">Активирована тема для электронной книги</string>
+    <string name="e_ink_enabled_message">Тут не поддерживается ночной режим приложений. Переключить тему вы можете на экране загрузки или в настройках приложения</string>
+    <string name="select_download_folder_title">Выберите папку для сохранения</string>
+    <string name="select_download_folder_message">Выберите папку, в которой будут храниться скачанные книги</string>
+    <string name="download_folder_select_accept">Выбрать</string>
+    <string name="alternate_dir_select_button">Папка не выбирается</string>
+    <string name="alter_dir_selection_title">Альтернативный выбор папки</string>
+    <string name="alter_dir_selection_body">На случай, если папка для скачивания не выбирается основным методом. Только для совместимости, никаких преимуществ этот способ не даёт, также выбранная папка может сбрасываться при перезагрузке смартфона и её придётся выбирать заново</string>
+    <string name="select_view_title">Выберите внешний вид</string>
+    <string name="select_view_body"><![CDATA[Выберите вид приложения. В будущем вы можете переключить вид в меню приложения (Меню => внешний вид). В режиме браузера информация берётся непосредственно с сайта Флибусты и выглядит как страница сайта. В режиме каталога информация получается из электронного каталога Флибусты. Рекомендую попробовать оба режима, у каждого из них свои плюсы. Приятного поиска.]]></string>
+    <string name="web_view_mode_button">Режим браузера</string>
+    <string name="opds_view_button">Режим каталога</string>
 </resources>

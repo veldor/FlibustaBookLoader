@@ -68,7 +68,7 @@ class WebViewActivity : BaseActivity(), SearchView.OnQueryTextListener {
         if (intent.data != null) { //check if intent is not null
             val data = intent.data //set a variable for the Intent
             val fullPath = data.encodedPath
-            PreferencesHandler.instance.lastLoadedUrl = App.BASE_URL + fullPath
+            PreferencesHandler.instance.lastLoadedUrl = PreferencesHandler.BASE_URL + fullPath
         }
         // проверю, не вызвана ли активность
         mIsActivityCalled = intent.getBooleanExtra(CALLED, false)

@@ -1,45 +1,40 @@
 package net.veldor.flibustaloader.http
 
-import net.veldor.flibustaloader.utils.URLHelper.getBaseOPDSUrl
-import net.veldor.flibustaloader.utils.FilesHandler.getDownloadFile
-import net.veldor.flibustaloader.utils.FilesHandler.getCompatDownloadFile
-import net.veldor.flibustaloader.utils.FilesHandler.getBaseDownloadFile
-import net.veldor.flibustaloader.utils.URLHelper.getFlibustaIsUrl
-import net.veldor.flibustaloader.App
-import cz.msebera.android.httpclient.client.protocol.HttpClientContext
-import kotlin.Throws
-import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
-import cz.msebera.android.httpclient.client.methods.HttpGet
-import cz.msebera.android.httpclient.conn.socket.ConnectionSocketFactory
-import cz.msebera.android.httpclient.config.RegistryBuilder
-import net.veldor.flibustaloader.MyConnectionSocketFactory
-import net.veldor.flibustaloader.MySSLConnectionSocketFactory
-import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager
-import net.veldor.flibustaloader.MyWebViewClient.FakeDnsResolver
-import cz.msebera.android.httpclient.impl.client.HttpClients
-import net.veldor.flibustaloader.ecxeptions.BookNotFoundException
-import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
-import android.os.Build
-import cz.msebera.android.httpclient.client.entity.UrlEncodedFormEntity
-import net.veldor.flibustaloader.R
-import cz.msebera.android.httpclient.client.methods.HttpPost
-import android.widget.Toast
-import cz.msebera.android.httpclient.message.BasicNameValuePair
-import net.veldor.flibustaloader.MyWebViewClient
 import android.net.Uri
-import cz.msebera.android.httpclient.*
+import android.os.Build
+import android.widget.Toast
+import cz.msebera.android.httpclient.HttpHeaders
+import cz.msebera.android.httpclient.HttpResponse
+import cz.msebera.android.httpclient.NameValuePair
+import cz.msebera.android.httpclient.NoHttpResponseException
 import cz.msebera.android.httpclient.client.HttpClient
+import cz.msebera.android.httpclient.client.entity.UrlEncodedFormEntity
+import cz.msebera.android.httpclient.client.methods.HttpGet
+import cz.msebera.android.httpclient.client.methods.HttpPost
+import cz.msebera.android.httpclient.client.protocol.HttpClientContext
+import cz.msebera.android.httpclient.config.RegistryBuilder
+import cz.msebera.android.httpclient.conn.socket.ConnectionSocketFactory
+import cz.msebera.android.httpclient.impl.client.HttpClients
+import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager
+import cz.msebera.android.httpclient.message.BasicNameValuePair
 import cz.msebera.android.httpclient.ssl.SSLContexts
+import net.veldor.flibustaloader.*
+import net.veldor.flibustaloader.MyWebViewClient.FakeDnsResolver
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
+import net.veldor.flibustaloader.ecxeptions.BookNotFoundException
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
+import net.veldor.flibustaloader.utils.FilesHandler.getBaseDownloadFile
+import net.veldor.flibustaloader.utils.FilesHandler.getCompatDownloadFile
+import net.veldor.flibustaloader.utils.FilesHandler.getDownloadFile
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.URLHelper.getBaseOPDSUrl
+import net.veldor.flibustaloader.utils.URLHelper.getFlibustaIsUrl
 import java.io.*
-import java.lang.Exception
-import java.lang.RuntimeException
-import java.lang.StringBuilder
 import java.net.InetSocketAddress
-import java.util.ArrayList
+import java.util.*
 
 class TorWebClient {
-    private var mHttpClient: HttpClient? = null
+    private lateinit var mHttpClient: HttpClient
     private lateinit var mContext: HttpClientContext
 
     @get:Throws(ConnectionLostException::class)
@@ -53,7 +48,7 @@ class TorWebClient {
         var text = incomingText
         if (App.instance.useMirror) {
             // TODO заменить зеркало
-            text = text.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com")
+            text = text.replace("http://flibustahezeous3.onion", "http://flibusta.is")
         }
         try {
             val httpGet = HttpGet(text)
@@ -62,7 +57,7 @@ class TorWebClient {
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
             )
             httpGet.setHeader("X-Compress", "null")
-            val httpResponse = mHttpClient!!.execute(httpGet, mContext)
+            val httpResponse = mHttpClient.execute(httpGet, mContext)
             App.instance.mLoadAllStatus.postValue("Данные получены")
             val `is`: InputStream = httpResponse.entity.content
             return inputStreamToString(`is`)
@@ -82,7 +77,7 @@ class TorWebClient {
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
             )
             httpGet.setHeader("X-Compress", "null")
-            val httpResponse = mHttpClient!!.execute(httpGet, mContext)
+            val httpResponse = mHttpClient.execute(httpGet, mContext)
             App.instance.mLoadAllStatus.postValue("Данные получены")
             val `is`: InputStream = httpResponse.entity.content
             return inputStreamToString(`is`)
@@ -92,6 +87,20 @@ class TorWebClient {
             e.printStackTrace()
         }
         return null
+    }
+
+    @Throws(java.lang.Exception::class)
+    fun directRequest(text: String?): String? {
+            val httpGet = HttpGet(text)
+            httpGet.setHeader(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
+            )
+            httpGet.setHeader("X-Compress", "null")
+            val httpResponse = mHttpClient.execute(httpGet, mContext)
+            App.instance.mLoadAllStatus.postValue("Данные получены")
+            val `is`: InputStream = httpResponse.entity.content
+            return inputStreamToString(`is`)
     }
 
     @Throws(IOException::class)
@@ -111,7 +120,7 @@ class TorWebClient {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
         )
         httpGet.setHeader("X-Compress", "null")
-        return mHttpClient!!.execute(httpGet, mContext)
+        return mHttpClient.execute(httpGet, mContext)
     }
 
     private val newHttpClient: HttpClient
@@ -147,23 +156,21 @@ class TorWebClient {
             var response = simpleGetRequest(getBaseOPDSUrl() + book.link)
             // проверю, что запрос выполнен и файл не пуст. Если это не так- попорбую загрузить книгу с основного домена
             if (response.statusLine.statusCode == 200 && response.entity.contentLength < 1) {
-                var result = false
+                var result: Boolean
                 // тут может быть загрузка книги без указания длины контента, попробую загрузить
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     try {
                         val newFile = getDownloadFile(book, response)
-                        if (newFile != null) {
-                            result = GlobalWebClient.handleBookLoadRequestNoContentLength(
-                                response,
-                                newFile
-                            )
-                            if (newFile.isFile && newFile.length() > 0) {
-                                if (book.format.isEmpty()) {
-                                    val receivedContentType = response.getLastHeader("Content-Type")
-                                    book.format = receivedContentType.value
-                                }
-                                book.loaded = true
+                        result = GlobalWebClient.handleBookLoadRequestNoContentLength(
+                            response,
+                            newFile
+                        )
+                        if (newFile.isFile && newFile.length() > 0) {
+                            if (book.format.isEmpty()) {
+                                val receivedContentType = response.getLastHeader("Content-Type")
+                                book.format = receivedContentType.value
                             }
+                            book.loaded = true
                         }
                     } catch (e: Exception) {
                         try {
@@ -206,24 +213,22 @@ class TorWebClient {
                 // попробую загрузку с резервного адреса
                 response = simpleGetRequest(getFlibustaIsUrl() + book.link)
                 if (response.statusLine.statusCode == 200 && response.entity.contentLength < 1) {
-                    var result = false
+                    var result: Boolean
                     // тут может быть загрузка книги без указания длины контента, попробую загрузить
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         try {
                             val newFile = getDownloadFile(book, response)
-                            if (newFile != null) {
-                                result = GlobalWebClient.handleBookLoadRequestNoContentLength(
-                                    response,
-                                    newFile
-                                )
-                                if (newFile.isFile && newFile.length() > 0) {
-                                    if (book.format.isEmpty()) {
-                                        val receivedContentType =
-                                            response.getLastHeader("Content-Type")
-                                        book.format = receivedContentType.value
-                                    }
-                                    book.loaded = true
+                            result = GlobalWebClient.handleBookLoadRequestNoContentLength(
+                                response,
+                                newFile
+                            )
+                            if (newFile.isFile && newFile.length() > 0) {
+                                if (book.format.isEmpty()) {
+                                    val receivedContentType =
+                                        response.getLastHeader("Content-Type")
+                                    book.format = receivedContentType.value
                                 }
+                                book.loaded = true
                             }
                         } catch (e: Exception) {
                             try {
@@ -277,15 +282,13 @@ class TorWebClient {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 try {
                     val newFile = getDownloadFile(book, response)
-                    if (newFile != null) {
-                        GlobalWebClient.handleBookLoadRequest(response, newFile)
-                        if (newFile.isFile && newFile.length() > 0) {
-                            if (book.format.isEmpty()) {
-                                val receivedContentType = response.getLastHeader("Content-Type")
-                                book.format = receivedContentType.value
-                            }
-                            book.loaded = true
+                    GlobalWebClient.handleBookLoadRequest(response, newFile)
+                    if (newFile.isFile && newFile.length() > 0) {
+                        if (book.format.isEmpty()) {
+                            val receivedContentType = response.getLastHeader("Content-Type")
+                            book.format = receivedContentType.value
                         }
+                        book.loaded = true
                     }
                 } catch (e: Exception) {
                     try {

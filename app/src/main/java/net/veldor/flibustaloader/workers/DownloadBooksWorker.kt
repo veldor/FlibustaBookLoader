@@ -28,7 +28,7 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
         val downloadStartTime = System.currentTimeMillis()
         if (App.instance.useMirror) {
             // оповещу о невозможности скачивания книг с альтернативного зеркала
-            mNotificator.notifyDownloadFromMirror()
+            mNotificator.notifyUseAlternativeMirror()
         }
         val downloadErrors = ArrayList<BooksDownloadSchedule>()
         // проверю, есть ли в очереди скачивания книги

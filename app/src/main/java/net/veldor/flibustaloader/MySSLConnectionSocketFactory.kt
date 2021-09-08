@@ -21,7 +21,7 @@ class MySSLConnectionSocketFactory(sslContext: SSLContext?) :
     @Throws(IOException::class)
     override fun connectSocket(
         connectTimeout: Int, socket: Socket, host: HttpHost, remoteAddress: InetSocketAddress,
-        localAddress: InetSocketAddress, context: HttpContext
+        localAddress: InetSocketAddress?, context: HttpContext
     ): Socket {
         val unresolvedRemote = InetSocketAddress
             .createUnresolved(host.hostName, remoteAddress.port)

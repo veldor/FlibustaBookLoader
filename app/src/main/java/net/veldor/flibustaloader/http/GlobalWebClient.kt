@@ -256,6 +256,7 @@ object GlobalWebClient {
 
     @Throws(IOException::class)
     fun requestNoMirror(requestString: String?): String? {
+        Log.d("surprise", "requestNoMirror: requesting $requestString")
         // если используется внешний VPN- выполню поиск в нём, иначае- в TOR
         if (PreferencesHandler.instance.isExternalVpn) {
             val response = ExternalVpnVewClient.rawRequest(requestString)
