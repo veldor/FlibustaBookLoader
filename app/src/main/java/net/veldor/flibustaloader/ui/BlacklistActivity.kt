@@ -40,7 +40,7 @@ class BlacklistActivity : BaseActivity() {
         // добавлю идентификатор строки поиска
         mInput = findViewById(R.id.blacklist_name)
         mRecycler = findViewById(R.id.resultsList)
-        mRecycler.setLayoutManager(LinearLayoutManager(this))
+        mRecycler.layoutManager = LinearLayoutManager(this)
         mBooksBlacklistContainer = App.instance.booksBlacklist
         mAuthorsBlacklistContainer = App.instance.authorsBlacklist
         mSequencesBlacklistContainer = App.instance.sequencesBlacklist
@@ -48,7 +48,7 @@ class BlacklistActivity : BaseActivity() {
         showBooks()
         // отслежу переключение типа добавления
         mRadioContainer = findViewById(R.id.blacklist_type)
-        mRadioContainer.setOnCheckedChangeListener { group: RadioGroup?, checkedId: Int ->
+        mRadioContainer.setOnCheckedChangeListener { _: RadioGroup?, checkedId: Int ->
             if (checkedId == R.id.blacklistBook) {
                 showBooks()
             } else if (checkedId == R.id.blacklistAuthor) {
@@ -63,24 +63,28 @@ class BlacklistActivity : BaseActivity() {
         subscribeBtn?.setOnClickListener { view: View? -> addToBlacklist(view) }
         val switchOnlyRussian = findViewById<SwitchCompat>(R.id.switchOnlyRussian)
         switchOnlyRussian.isChecked = PreferencesHandler.instance.isOnlyRussian
-        switchOnlyRussian.setOnCheckedChangeListener { buttonView: CompoundButton?, isChecked: Boolean ->
+        switchOnlyRussian.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             PreferencesHandler.instance.isOnlyRussian = isChecked
         }
     }
 
-    fun addToBlacklist(view: View?) {
+    private fun addToBlacklist(view: View?) {
         val value = mInput!!.text.toString().trim { it <= ' ' }
-        if (!value.isEmpty()) {
+        if (value.isNotEmpty()) {
             // добавлю подписку в зависимости от типа
-            val checkedRadioButtonId = mRadioContainer.checkedRadioButtonId
-            if (checkedRadioButtonId == R.id.blacklistBook) {
-                mBooksBlacklistContainer!!.addValue(value)
-            } else if (checkedRadioButtonId == R.id.blacklistAuthor) {
-                mAuthorsBlacklistContainer!!.addValue(value)
-            } else if (checkedRadioButtonId == R.id.blacklistSequence) {
-                mSequencesBlacklistContainer!!.addValue(value)
-            } else if (checkedRadioButtonId == R.id.blacklistGenre) {
-                mGenresBlacklistContainer!!.addValue(value)
+            when (mRadioContainer.checkedRadioButtonId) {
+                R.id.blacklistBook -> {
+                    mBooksBlacklistContainer!!.addValue(value)
+                }
+                R.id.blacklistAuthor -> {
+                    mAuthorsBlacklistContainer!!.addValue(value)
+                }
+                R.id.blacklistSequence -> {
+                    mSequencesBlacklistContainer!!.addValue(value)
+                }
+                R.id.blacklistGenre -> {
+                    mGenresBlacklistContainer!!.addValue(value)
+                }
             }
             mInput!!.setText("")
             Toast.makeText(this, "Добавляю значение $value", Toast.LENGTH_LONG).show()

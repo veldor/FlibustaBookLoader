@@ -41,7 +41,7 @@ class BlacklistAdapter(private var mItems: ArrayList<BlacklistItem>) :
             mBinding.setVariable(BR.blacklists, item)
             mBinding.executePendingBindings()
             val container = mBinding.root
-            val name = container.findViewById<TextView>(R.id.book_name)
+            val name = container.findViewById<TextView>(R.id.name)
             when (item.type) {
                 "book" -> name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.book_name_color, null))
                 "author" -> name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.author_text_color, null))

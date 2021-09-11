@@ -15,12 +15,12 @@ import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.DownloadScheduleAdapter
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.notificatons.NotificationHandler
-import net.veldor.flibustaloader.view_models.MainViewModel
+import net.veldor.flibustaloader.view_models.OPDSViewModel
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.downloadProgress
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.noActiveDownloadProcess
 
 class ActivityBookDownloadSchedule : BaseActivity() {
-    private lateinit var myViewModel: MainViewModel
+    private lateinit var myViewModel: OPDSViewModel
     private lateinit var booksAdapter: DownloadScheduleAdapter
     private lateinit var stopDownloadBtn: View
     private lateinit var continueDownloadBtn: View
@@ -28,7 +28,7 @@ class ActivityBookDownloadSchedule : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.new_download_schedule_activity)
         setupInterface()
-        myViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        myViewModel = ViewModelProvider(this).get(OPDSViewModel::class.java)
         observeChanges()
     }
 

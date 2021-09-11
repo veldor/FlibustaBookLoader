@@ -27,7 +27,7 @@ class NavigatorSelectHandler(private val mContext: Activity) :
             mContext.startActivity(intent)
             mContext.finish()
         } else if (itemId == R.id.goToOPDS) {
-            PreferencesHandler.instance.view = App.VIEW_ODPS
+            PreferencesHandler.instance.view = App.VIEW_OPDS
             val intent = Intent(mContext, OPDSActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             mContext.startActivity(intent)

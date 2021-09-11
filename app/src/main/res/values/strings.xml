@@ -267,4 +267,5 @@
     <string name="web_view_mode_button">Browser view</string>
     <string name="opds_view_button">Catalog view</string>
     <string name="select_view_body">Select app view</string>
+    <string name="used_mirror_message">Main site unavailable, mirror used. Restart app for try connect to main window</string>
 </resources>

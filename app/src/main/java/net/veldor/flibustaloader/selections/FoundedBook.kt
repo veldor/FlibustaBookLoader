@@ -4,24 +4,20 @@ import java.io.Serializable
 import java.util.*
 
 class FoundedBook : FoundedItem, Serializable {
-    @JvmField
+    var id: String? = null
     var name: String? = null
     var author: String? = null
     var downloadsCount: String? = null
-    @JvmField
     var translate: String? = null
     val downloadLinks = ArrayList<DownloadLink>()
     var size: String? = null
-    @JvmField
     var format: String? = null
     var genreComplex: String? = null
     val genres = ArrayList<Genre>()
     var sequenceComplex: String? = null
     val sequences = ArrayList<FoundedSequence>()
     val authors = ArrayList<Author>()
-    @JvmField
     var bookInfo: String? = null
-    var id: String? = null
     var read = false
     var downloaded = false
     @JvmField

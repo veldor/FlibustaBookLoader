@@ -176,6 +176,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
 
     private fun handleRequest(view: WebView, incomingUrl: String): WebResourceResponse? {
         var url = incomingUrl
+        Log.d("surprise", "handleRequest: i here and handle $incomingUrl")
         if (App.instance.useMirror) {
             url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com")
         }

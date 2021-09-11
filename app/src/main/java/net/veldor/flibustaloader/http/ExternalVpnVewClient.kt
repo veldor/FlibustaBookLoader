@@ -17,8 +17,7 @@ import net.veldor.flibustaloader.utils.FilesHandler.getBaseDownloadFile
 import net.veldor.flibustaloader.utils.FilesHandler.getCompatDownloadFile
 import net.veldor.flibustaloader.utils.FilesHandler.getDownloadFile
 import net.veldor.flibustaloader.utils.PreferencesHandler
-import net.veldor.flibustaloader.utils.URLHelper.getBaseUrl
-import net.veldor.flibustaloader.utils.URLHelper.getFlibustaIsUrl
+import net.veldor.flibustaloader.utils.URLHelper
 import java.io.IOException
 import java.net.InetSocketAddress
 
@@ -94,30 +93,23 @@ object ExternalVpnVewClient {
     fun downloadBook(book: BooksDownloadSchedule) {
         Log.d(
             "surprise",
-            "ExternalVpnVewClient downloadBook 112: request " + getBaseUrl() + book.link
+            "ExternalVpnVewClient downloadBook 112: request " + URLHelper.getBaseUrl() + book.link
         )
-        var response = rawRequest(getBaseUrl() + book.link)
+        var response = rawRequest(URLHelper.getBaseUrl() + book.link)
         if (response == null || response.statusLine.statusCode != 200 || response.entity.contentLength < 1) {
-            // попробую загрузку с резервного адреса
-            Log.d(
-                "surprise",
-                "ExternalVpnVewClient downloadBook 116: request from reserve " + getFlibustaIsUrl() + book.link
-            )
-            response = rawRequest(getFlibustaIsUrl() + book.link)
+            response = rawRequest(URLHelper.getBaseUrl() + book.link)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
                 val newFile = getDownloadFile(book, response!!)
-                if (newFile != null) {
-                    // запрошу данные
-                    Log.d(
-                        "surprise",
-                        "TorWebClient downloadBook: request " + book.link + " of book " + book.name
-                    )
-                    GlobalWebClient.handleBookLoadRequest(response, newFile)
-                    if (newFile.isFile && newFile.length() > 0) {
-                        book.loaded = true
-                    }
+                // запрошу данные
+                Log.d(
+                    "surprise",
+                    "TorWebClient downloadBook: request " + book.link + " of book " + book.name
+                )
+                GlobalWebClient.handleBookLoadRequest(response, newFile)
+                if (newFile.isFile && newFile.length() > 0) {
+                    book.loaded = true
                 }
             } catch (e: Exception) {
                 try {

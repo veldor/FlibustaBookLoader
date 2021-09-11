@@ -298,7 +298,7 @@ class FoundedBooksAdapter(arrayList: ArrayList<FoundedBook>) :
 
             // добавлю отображение информации о книге при клике на название книги
 
-            mBinding.bookName.setOnClickListener {
+            mBinding.name.setOnClickListener {
                 App.instance.mSelectedBook.postValue(
                     mBook
                 )

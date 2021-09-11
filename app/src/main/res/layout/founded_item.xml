@@ -4,15 +4,14 @@
     <data>
         <import type="android.view.View" />
         <variable
-            name="author"
-            type="net.veldor.flibustaloader.selections.Author" />
+            name="item"
+            type="net.veldor.flibustaloader.selections.FoundedEntity" />
     </data>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/rootView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/author_layout"
             android:padding="10dp"
             android:layout_marginBottom="10dp">
 
@@ -20,24 +19,24 @@
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@{author.name}"
+                android:text="@{item.name}"
                 android:textAlignment="center"
-                android:textColor="@drawable/author_text_color"
-                android:textSize="18sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@+id/menuButton"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 android:gravity="center_horizontal" />
 
-            <TextView
-                android:id="@+id/sequence_length"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@{author.content}"
+            <ImageButton
+                android:id="@+id/menuButton"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:contentDescription="@string/book_menu"
+                android:src="@drawable/ic_more_vert_black_24dp"
+                style="@style/Widget.AppCompat.Button.Borderless.Colored"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/name" />
+                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

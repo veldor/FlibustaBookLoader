@@ -85,13 +85,6 @@ object XMLParser {
             val entries =
                 xPath.evaluate("/feed/entry", document, XPathConstants.NODESET) as NodeList
             if (entries.length > 0) {
-                App.instance.mSearchTitle.postValue(
-                    (xPath.evaluate(
-                        "/feed/title",
-                        document,
-                        XPathConstants.NODE
-                    ) as Node).textContent
-                )
                 // определю тип содержимого
                 identificationSearchType(entries.item(0), xPath)
                 when (App.sSearchType) {
@@ -154,7 +147,6 @@ object XMLParser {
         var handledEntryCounter = 0
         while (entries.item(counter).also { entry = it } != null) {
             ++handledEntryCounter
-            App.instance.mLoadAllStatus.postValue("Обрабатываю серию $handledEntryCounter из $entriesLength")
             sequence = FoundedSequence()
             sequence.title =
                 (xPath.evaluate("./title", entry, XPathConstants.NODE) as Node).textContent
@@ -178,7 +170,6 @@ object XMLParser {
         var handledEntryCounter = 0
         while (entries.item(counter).also { entry = it } != null) {
             ++handledEntryCounter
-            App.instance.mLoadAllStatus.postValue("Обрабатываю жанр $handledEntryCounter из $entriesLength")
             genre = Genre()
             try {
                 genre.label =
@@ -218,7 +209,6 @@ object XMLParser {
         var handledEntryCounter = 0
         while (entries.item(counter).also { entry = it } != null) {
             ++handledEntryCounter
-            App.instance.mLoadAllStatus.postValue("Обрабатываю книгу $handledEntryCounter из $entriesLength")
             book = FoundedBook()
             book.id = (xPath.evaluate("./id", entry, XPathConstants.NODE) as Node).textContent
             // узнаю, прочитана ли книга
@@ -349,7 +339,6 @@ object XMLParser {
         var handledEntryCounter = 0
         while (entries.item(counter).also { entry = it } != null) {
             ++handledEntryCounter
-            App.instance.mLoadAllStatus.postValue("Обрабатываю автора $handledEntryCounter из $entriesLength")
             author = Author()
             author.name =
                 (xPath.evaluate("./title", entry, XPathConstants.NODE) as Node).textContent

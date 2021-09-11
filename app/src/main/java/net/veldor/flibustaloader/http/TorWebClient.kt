@@ -27,8 +27,7 @@ import net.veldor.flibustaloader.utils.FilesHandler.getBaseDownloadFile
 import net.veldor.flibustaloader.utils.FilesHandler.getCompatDownloadFile
 import net.veldor.flibustaloader.utils.FilesHandler.getDownloadFile
 import net.veldor.flibustaloader.utils.PreferencesHandler
-import net.veldor.flibustaloader.utils.URLHelper.getBaseOPDSUrl
-import net.veldor.flibustaloader.utils.URLHelper.getFlibustaIsUrl
+import net.veldor.flibustaloader.utils.URLHelper
 import java.io.*
 import java.net.InetSocketAddress
 import java.util.*
@@ -58,11 +57,9 @@ class TorWebClient {
             )
             httpGet.setHeader("X-Compress", "null")
             val httpResponse = mHttpClient.execute(httpGet, mContext)
-            App.instance.mLoadAllStatus.postValue("Данные получены")
             val `is`: InputStream = httpResponse.entity.content
             return inputStreamToString(`is`)
         } catch (e: IOException) {
-            App.instance.mLoadAllStatus.postValue("Ошибка загрузки страницы")
             //broadcastTorError(e);
             e.printStackTrace()
         }
@@ -78,11 +75,9 @@ class TorWebClient {
             )
             httpGet.setHeader("X-Compress", "null")
             val httpResponse = mHttpClient.execute(httpGet, mContext)
-            App.instance.mLoadAllStatus.postValue("Данные получены")
             val `is`: InputStream = httpResponse.entity.content
             return inputStreamToString(`is`)
         } catch (e: IOException) {
-            App.instance.mLoadAllStatus.postValue("Ошибка загрузки страницы")
             //broadcastTorError(e);
             e.printStackTrace()
         }
@@ -98,7 +93,6 @@ class TorWebClient {
             )
             httpGet.setHeader("X-Compress", "null")
             val httpResponse = mHttpClient.execute(httpGet, mContext)
-            App.instance.mLoadAllStatus.postValue("Данные получены")
             val `is`: InputStream = httpResponse.entity.content
             return inputStreamToString(`is`)
     }
@@ -153,7 +147,7 @@ class TorWebClient {
     @Throws(BookNotFoundException::class)
     fun downloadBook(book: BooksDownloadSchedule) {
         try {
-            var response = simpleGetRequest(getBaseOPDSUrl() + book.link)
+            var response = simpleGetRequest(URLHelper.getBaseUrl() + book.link)
             // проверю, что запрос выполнен и файл не пуст. Если это не так- попорбую загрузить книгу с основного домена
             if (response.statusLine.statusCode == 200 && response.entity.contentLength < 1) {
                 var result: Boolean
@@ -211,7 +205,7 @@ class TorWebClient {
             }
             if (response.statusLine.statusCode != 200 || response.entity.contentLength < 1) {
                 // попробую загрузку с резервного адреса
-                response = simpleGetRequest(getFlibustaIsUrl() + book.link)
+                response = simpleGetRequest(URLHelper.getBaseUrl() + book.link)
                 if (response.statusLine.statusCode == 200 && response.entity.contentLength < 1) {
                     var result: Boolean
                     // тут может быть загрузка книги без указания длины контента, попробую загрузить

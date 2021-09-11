@@ -460,7 +460,7 @@ class MainActivity : BaseActivity() {
                     }
                 }
                 .setNegativeButton(getString(R.string.opds_view_button)) { _: DialogInterface?, _: Int ->
-                    PreferencesHandler.instance.view = App.VIEW_ODPS
+                    PreferencesHandler.instance.view = App.VIEW_OPDS
                     if (mReadyToStart) {
                         if (PreferencesHandler.instance.isCheckAvailability()) {
                             checkFlibustaAvailability()
@@ -690,7 +690,7 @@ class MainActivity : BaseActivity() {
             targetActivityIntent.data = mLink
         } else {
             // проверю, если используем OPDS- перенаправлю в другую активность
-            targetActivityIntent = if (PreferencesHandler.instance.view == App.VIEW_ODPS) {
+            targetActivityIntent = if (PreferencesHandler.instance.view == App.VIEW_OPDS) {
                 Intent(this, OPDSActivity::class.java)
             } else {
                 Intent(this, WebViewActivity::class.java)
@@ -709,16 +709,7 @@ class MainActivity : BaseActivity() {
 
     companion object {
         private const val REQUEST_WRITE_READ = 22
-        const val START_TOR = 3
         private const val TOR_LOAD_MAX_TIME = 180
     }
 
-    // observer
-    class DialogDismissLifecycleObserver(private var dialog: AlertDialog?) : LifecycleObserver {
-        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-        fun onPause() {
-            dialog?.dismiss()
-            dialog = null
-        }
-    }
 }

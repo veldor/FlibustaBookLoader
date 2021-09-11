@@ -12,6 +12,7 @@ import net.veldor.flibustaloader.http.TorStarter
 import net.veldor.flibustaloader.http.TorWebClient
 import net.veldor.flibustaloader.notificatons.NotificationHandler
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.URLHelper
 
 class PeriodicCheckFlibustaAvailabilityWorker(context: Context, workerParams: WorkerParameters) :
     Worker(context, workerParams) {
@@ -24,40 +25,34 @@ class PeriodicCheckFlibustaAvailabilityWorker(context: Context, workerParams: Wo
             // помечу рабочего важным
             // Mark the Worker as important
             setForegroundAsync(createForegroundInfo())
-            while (App.instance.torInitInProgress) {
-                try {
-                    Thread.sleep(100)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+            if (App.instance.mLoadedTor.value == null) {
+                while (App.instance.torInitInProgress) {
+                    try {
+                        Thread.sleep(100)
+                    } catch (e: InterruptedException) {
+                        e.printStackTrace()
+                    }
                 }
-            }
-            App.instance.torInitInProgress = true
-            // попробую стартовать TOR
-            val starter = TorStarter()
-            App.sTorStartTry = 0
-            while (App.sTorStartTry < 4) {
-                // есть три попытки, если все три неудачны- верну ошибку
-                if (starter.startTor()) {
-                    App.sTorStartTry = 0
-                    break
-                } else {
-                    App.sTorStartTry++
+                App.instance.torInitInProgress = true
+                // попробую стартовать TOR
+                val starter = TorStarter()
+                App.sTorStartTry = 0
+                while (App.sTorStartTry < 4) {
+                    // есть три попытки, если все три неудачны- верну ошибку
+                    if (starter.startTor()) {
+                        App.sTorStartTry = 0
+                        break
+                    } else {
+                        App.sTorStartTry++
+                    }
                 }
+                App.instance.torInitInProgress = false
             }
-            App.instance.torInitInProgress = false
-
             // готово, проверю доступность
-            var webClient: TorWebClient? = null
-            try {
-                webClient = TorWebClient()
-            } catch (e: ConnectionLostException) {
-                e.printStackTrace()
-            }
-            if (webClient == null) {
-                return Result.success()
-            }
-            val url = "http://flibustahezeous3.onion"
-            val answer = webClient.requestNoMirror(url)
+
+            val webClient = TorWebClient()
+            val url = URLHelper.getFlibustaUrl()
+            val answer = webClient.directRequest(url)
             if (answer != null && answer.isNotEmpty()) {
                 NotificationHandler.instance.notifyFlibustaIsBack()
                 WorkManager.getInstance(App.instance).cancelAllWorkByTag(ACTION)

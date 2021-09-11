@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader
 
 import android.net.Uri
-import android.util.Log
 import android.util.SparseBooleanArray
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.LiveData
@@ -21,7 +20,7 @@ import net.veldor.flibustaloader.selections.FoundedBook
 import net.veldor.flibustaloader.selections.FoundedSequence
 import net.veldor.flibustaloader.ui.OPDSActivity
 import net.veldor.flibustaloader.utils.*
-import net.veldor.flibustaloader.view_models.MainViewModel
+import net.veldor.flibustaloader.view_models.OPDSViewModel
 import net.veldor.flibustaloader.workers.*
 import java.io.File
 import java.io.InputStream
@@ -32,8 +31,6 @@ class App : MultiDexApplication() {
     // хранилище статуса HTTP запроса
     val requestStatus = MutableLiveData<String>()
 
-    // место для хранения текста ответа поиска
-    val mSearchTitle = MutableLiveData<String>()
     val mSelectedSequences = MutableLiveData<ArrayList<FoundedSequence>>()
 
     // место для хранения выбранной серии
@@ -62,12 +59,10 @@ class App : MultiDexApplication() {
     val mLiveDownloadedBookId = MutableLiveData<String>()
     var mDownloadAllWork: LiveData<WorkInfo>? = null
     var mDownloadsInProgress = false
-    var mProcess: OneTimeWorkRequest? = null
     val mBooksDownloadFailed = ArrayList<FoundedBook>()
     var mBookSortOption = -1
     var mAuthorSortOptions = -1
     var mOtherSortOptions = -1
-    val mLoadAllStatus = MutableLiveData<String>()
     val mSubscribeResults = MutableLiveData<ArrayList<FoundedBook>>()
     val mShowCover = MutableLiveData<FoundedBook>()
     var mDownloadSelectedBooks: SparseBooleanArray? = null
@@ -134,7 +129,7 @@ class App : MultiDexApplication() {
 
     private fun handleMassDownload() {
         val workStatus = WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(
-            MainViewModel.MULTIPLY_DOWNLOAD
+            OPDSViewModel.MULTIPLY_DOWNLOAD
         )
         workStatus.observeForever { workInfos: List<WorkInfo?>? ->
             if (workInfos != null) {
@@ -247,9 +242,9 @@ class App : MultiDexApplication() {
                 .build()
             val downloadAllWorker = OneTimeWorkRequest.Builder(
                 DownloadBooksWorker::class.java
-            ).addTag(MainViewModel.MULTIPLY_DOWNLOAD).setConstraints(constraints).build()
+            ).addTag(OPDSViewModel.MULTIPLY_DOWNLOAD).setConstraints(constraints).build()
             WorkManager.getInstance(instance).enqueueUniqueWork(
-                MainViewModel.MULTIPLY_DOWNLOAD,
+                OPDSViewModel.MULTIPLY_DOWNLOAD,
                 ExistingWorkPolicy.KEEP,
                 downloadAllWorker
             )
@@ -275,14 +270,13 @@ class App : MultiDexApplication() {
             .build()
         // запущу рабочего, который периодически будет обновлять данные
         val periodicTask = PeriodicWorkRequest.Builder(
-            PeriodicCheckFlibustaAvailabilityWorker::class.java, 15, TimeUnit.MINUTES
+            PeriodicCheckFlibustaAvailabilityWorker::class.java, 30, TimeUnit.MINUTES
         ).setConstraints(constraints).build()
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             PeriodicCheckFlibustaAvailabilityWorker.ACTION,
             ExistingPeriodicWorkPolicy.REPLACE,
             periodicTask
         )
-        Log.d("surprise", "App startCheckWorker 497: CHECKER PLANNED")
     }
 
     fun shareLatestRelease() {
@@ -307,7 +301,7 @@ class App : MultiDexApplication() {
         const val BACKUP_FILE_NAME = "settings_backup.zip"
         const val MAX_BOOK_NUMBER = 548398
         const val VIEW_WEB = 1
-        const val VIEW_ODPS = 2
+        const val VIEW_OPDS = 2
         const val START_TOR = "start_tor"
         var sSearchType = OPDSActivity.SEARCH_BOOKS
         const val NEW_BOOKS = "http://flibustahezeous3.onion/new"

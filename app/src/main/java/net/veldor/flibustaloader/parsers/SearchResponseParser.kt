@@ -116,13 +116,6 @@ class SearchResponseParser(answer: String) {
     init {
         val document = getDocument(answer)
         mXpath = XPathFactory.newInstance().newXPath()
-        App.instance.mSearchTitle.postValue(
-            (mXpath.evaluate(
-                "/feed/title",
-                document,
-                XPathConstants.NODE
-            ) as Node).textContent
-        )
         mEntries = mXpath.evaluate("/feed/entry", document, XPathConstants.NODESET) as NodeList
     }
 }

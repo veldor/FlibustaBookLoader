@@ -23,7 +23,6 @@ internal object AuthorsParser {
         var handledEntryCounter = 0
         while (entries.item(counter).also { entry = it } != null) {
             ++handledEntryCounter
-            App.instance.mLoadAllStatus.postValue("Обрабатываю автора $handledEntryCounter из $entriesLength")
             author = Author()
             author.name =
                 (xPath.evaluate("./title", entry, XPathConstants.NODE) as Node).textContent

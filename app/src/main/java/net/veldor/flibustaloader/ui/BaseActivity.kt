@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.ui
 
+import android.app.Dialog
 import android.os.Bundle
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.App
@@ -15,7 +16,11 @@ import androidx.lifecycle.MutableLiveData
 import android.util.Log
 import android.view.*
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import net.veldor.flibustaloader.utils.MyFileReader.SUBSCRIPTIONS_FILE
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import java.io.File
@@ -31,7 +36,6 @@ open class BaseActivity : AppCompatActivity() {
     private var mDrawer: DrawerLayout? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setupObservers()
     }
 
     protected open fun setupInterface() {
@@ -152,6 +156,15 @@ open class BaseActivity : AppCompatActivity() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             App.instance.startActivity(intent)
             Runtime.getRuntime().exit(0)
+        }
+    }
+
+    // observer
+    class DialogDismissLifecycleObserver(private var dialog: Dialog?) : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        fun onPause() {
+            dialog?.dismiss()
+            dialog = null
         }
     }
 

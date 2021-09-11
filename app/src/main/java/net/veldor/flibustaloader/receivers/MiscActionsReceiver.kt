@@ -9,7 +9,7 @@ import net.veldor.flibustaloader.notificatons.NotificationHandler
 import android.widget.Toast
 import net.veldor.flibustaloader.App
 import androidx.work.WorkManager
-import net.veldor.flibustaloader.view_models.MainViewModel
+import net.veldor.flibustaloader.view_models.OPDSViewModel
 import net.veldor.flibustaloader.ui.MainActivity
 import android.app.PendingIntent
 import android.app.AlarmManager
@@ -32,7 +32,7 @@ class MiscActionsReceiver : BroadcastReceiver() {
                     NotificationHandler.instance.hideMassDownloadInQueueMessage()
                     dropDownloadsQueue()
                     WorkManager.getInstance(App.instance)
-                        .cancelAllWorkByTag(MainViewModel.MULTIPLY_DOWNLOAD)
+                        .cancelAllWorkByTag(OPDSViewModel.MULTIPLY_DOWNLOAD)
                     // отменяю работу и очищу очередь скачивания
                     NotificationHandler.instance.cancelBookLoadNotification()
                     Toast.makeText(
@@ -45,7 +45,7 @@ class MiscActionsReceiver : BroadcastReceiver() {
                     NotificationHandler.instance.hideMassDownloadInQueueMessage()
                     Log.d("surprise", "MiscActionsReceiver onReceive: pause")
                     WorkManager.getInstance(App.instance)
-                        .cancelAllWorkByTag(MainViewModel.MULTIPLY_DOWNLOAD)
+                        .cancelAllWorkByTag(OPDSViewModel.MULTIPLY_DOWNLOAD)
                     Toast.makeText(
                         App.instance,
                         "Скачивание книг приостановлено!",

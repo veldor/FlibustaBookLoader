@@ -1,29 +1,50 @@
 package net.veldor.flibustaloader.view_models
 
 import android.app.Application
+import android.util.Log
+import android.util.SparseBooleanArray
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import androidx.work.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import net.veldor.flibustaloader.App
+import net.veldor.flibustaloader.MyWebView
+import net.veldor.flibustaloader.database.entity.ReadedBooks
+import net.veldor.flibustaloader.http.GlobalWebClient
+import net.veldor.flibustaloader.interfaces.MyViewModelInterface
+import net.veldor.flibustaloader.parsers.TestParser
+import net.veldor.flibustaloader.selections.DownloadLink
+import net.veldor.flibustaloader.selections.FoundedBook
+import net.veldor.flibustaloader.selections.SearchResult
 import net.veldor.flibustaloader.updater.Updater.checkUpdate
 import net.veldor.flibustaloader.updater.Updater.update
-import net.veldor.flibustaloader.utils.MyFileReader.getSearchAutocomplete
-import net.veldor.flibustaloader.utils.XMLHandler.getSearchAutocomplete
 import net.veldor.flibustaloader.utils.BookSharer.shareLink
 import net.veldor.flibustaloader.utils.MyFileReader.clearAutocomplete
-import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker.Companion.addLink
-import net.veldor.flibustaloader.interfaces.MyViewModelInterface
-import net.veldor.flibustaloader.App
-import androidx.lifecycle.LiveData
-import net.veldor.flibustaloader.MyWebView
-import net.veldor.flibustaloader.selections.FoundedBook
-import net.veldor.flibustaloader.database.entity.ReadedBooks
-import android.util.SparseBooleanArray
-import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker
-import net.veldor.flibustaloader.selections.DownloadLink
-import net.veldor.flibustaloader.workers.SearchWorker
-import android.util.Log
-import androidx.work.*
+import net.veldor.flibustaloader.utils.MyFileReader.getSearchAutocomplete
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.URLHelper
+import net.veldor.flibustaloader.utils.XMLHandler.getSearchAutocomplete
+import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker
+import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker.Companion.addLink
 import java.util.*
 
-class MainViewModel(application: Application) : GlobalViewModel(application), MyViewModelInterface {
+class OPDSViewModel(application: Application) : GlobalViewModel(application), MyViewModelInterface {
+
+    // ошибка загрузки
+    private val _isLoadError = MutableLiveData<Boolean>()
+    val isLoadError: LiveData<Boolean> = _isLoadError
+
+    // статус запроса
+    private val _requestStatus = MutableLiveData<String>()
+    val requestStatus: LiveData<String> = _requestStatus
+
+    // результаты поиска
+    private val _searchResults = MutableLiveData<SearchResult>()
+    val searchResults: LiveData<SearchResult> = _searchResults
+
+    var searchCancelled: Boolean = false
     private val mClickedItemsStack = Stack<Int>()
     val viewMode: Int
         get() = PreferencesHandler.instance.viewMode
@@ -120,18 +141,38 @@ class MainViewModel(application: Application) : GlobalViewModel(application), My
         }
     }
 
-    fun request(s: String): UUID {
-        Log.d("surprise", "MainViewModel request 131: load $s")
-        val inputData = Data.Builder()
-            .putString(SearchWorker.REQUEST, s)
-            .build()
-        // запущу рабочего, который выполнит запрос
-        val searchWorkRequest =
-            OneTimeWorkRequest.Builder(SearchWorker::class.java).addTag(SearchWorker.WORK_TAG)
-                .setInputData(inputData).build()
-        WorkManager.getInstance(App.instance)
-            .enqueueUniqueWork(SearchWorker.WORK_TAG, ExistingWorkPolicy.REPLACE, searchWorkRequest)
-        return searchWorkRequest.id
+    fun request(s: String) {
+        // запрошу данные
+        viewModelScope.launch(Dispatchers.IO) {
+            _requestStatus.postValue("Запрашиваю страницу")
+            val answer = GlobalWebClient.request(URLHelper.getBaseUrl() + s)
+            if (answer == null || answer.isEmpty()) {
+                _isLoadError.postValue(true)
+                return@launch
+            }
+            _requestStatus.postValue("Данные загружены, обработка")
+            // попробую с помощью нового парсера разобрать ответ
+            val parser = TestParser(answer)
+            val results = parser.parse()
+            _requestStatus.postValue("Данные обработаны")
+            val searchResult = SearchResult()
+            searchResult.appended = false
+            searchResult.size = results.size
+            searchResult.results = results
+            searchResult.nextPageLink = parser.nextPageLink
+            _searchResults.postValue(searchResult)
+
+        }
+//        val inputData = Data.Builder()
+//            .putString(SearchWorker.REQUEST, s)
+//            .build()
+//        // запущу рабочего, который выполнит запрос
+//        val searchWorkRequest =
+//            OneTimeWorkRequest.Builder(SearchWorker::class.java).addTag(SearchWorker.WORK_TAG)
+//                .setInputData(inputData).build()
+//        WorkManager.getInstance(App.instance)
+//            .enqueueUniqueWork(SearchWorker.WORK_TAG, ExistingWorkPolicy.REPLACE, searchWorkRequest)
+//        return searchWorkRequest.id
     }
 
     fun saveClickedIndex(sClickedItemIndex: Int) {

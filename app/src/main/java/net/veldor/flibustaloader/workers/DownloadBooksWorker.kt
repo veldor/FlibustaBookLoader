@@ -12,7 +12,7 @@ import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException
 import kotlin.Throws
 import net.veldor.flibustaloader.http.ExternalVpnVewClient
 import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
-import net.veldor.flibustaloader.view_models.MainViewModel
+import net.veldor.flibustaloader.view_models.OPDSViewModel
 import androidx.lifecycle.LiveData
 import android.util.Log
 import androidx.work.*
@@ -224,7 +224,7 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
         fun noActiveDownloadProcess(): Boolean {
             // проверю наличие активных процессов скачивания
             val info = WorkManager.getInstance(App.instance)
-                .getWorkInfosForUniqueWork(MainViewModel.MULTIPLY_DOWNLOAD)
+                .getWorkInfosForUniqueWork(OPDSViewModel.MULTIPLY_DOWNLOAD)
             try {
                 val results = info.get()
                 if (results == null || results.size == 0) {
@@ -247,7 +247,7 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
         @JvmStatic
         val downloadProgress: LiveData<List<WorkInfo>>
             get() = WorkManager.getInstance(App.instance)
-                .getWorkInfosForUniqueWorkLiveData(MainViewModel.MULTIPLY_DOWNLOAD)
+                .getWorkInfosForUniqueWorkLiveData(OPDSViewModel.MULTIPLY_DOWNLOAD)
 
         @JvmStatic
         fun skipFirstBook() {

@@ -109,7 +109,7 @@ object FilesHandler {
     @kotlin.jvm.JvmStatic
     fun getChangeText(): String {
         try {
-            val textFileStream = App.instance.assets.open("   changes.txt")
+            val textFileStream = App.instance.assets.open("changes.txt")
             val r = BufferedReader(InputStreamReader(textFileStream))
             val total = StringBuilder()
             var line: String?

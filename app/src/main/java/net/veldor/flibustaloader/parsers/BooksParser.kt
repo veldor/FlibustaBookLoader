@@ -67,7 +67,6 @@ internal object BooksParser {
         while (entries.item(counter).also { entry = it } != null) {
             var skip = false
             ++handledEntryCounter
-            App.instance.mLoadAllStatus.postValue("Обрабатываю книгу $handledEntryCounter из $entriesLength")
             book = FoundedBook()
             book.id = (xPath.evaluate("./id", entry, XPathConstants.NODE) as Node).textContent
             // узнаю, прочитана ли книга

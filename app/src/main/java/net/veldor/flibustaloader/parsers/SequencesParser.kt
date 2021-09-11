@@ -21,7 +21,6 @@ internal object SequencesParser {
         var handledEntryCounter = 0
         while (entries.item(counter).also { entry = it } != null) {
             ++handledEntryCounter
-            App.instance.mLoadAllStatus.postValue("Обрабатываю серию $handledEntryCounter из $entriesLength")
             sequence = FoundedSequence()
             sequence.title =
                 (xPath.evaluate("./title", entry, XPathConstants.NODE) as Node).textContent

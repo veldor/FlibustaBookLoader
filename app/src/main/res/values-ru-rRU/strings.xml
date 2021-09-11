@@ -25,7 +25,7 @@
     <string name="share_url_message">Ссылка на страницу</string>
     <string name="share_url_title">Отправить в</string>
     <string name="download_folder_changed_message">"Папка загрузок изменена на "</string>
-    <string name="title_activity_opds">OPDS</string>
+    <string name="title_activity_opds">Каталог</string>
     <string name="whoSearchMessage">Что ищем?</string>
     <string name="search_book_message">Книгу</string>
     <string name="search_author_message">Автора</string>
@@ -125,8 +125,8 @@
     <string name="books_download_channel_description">Уведомление процесса загрузки книг</string>
     <string name="use_hardware_acceleration_title">Использовать аппаратное ускорение</string>
     <string name="hide_digest_title">Скрывать сборники</string>
-    <string name="navigation_go_webview">Режим WebView</string>
-    <string name="navigation_go_opds">Режим OPDS</string>
+    <string name="navigation_go_webview">Режим браузера</string>
+    <string name="navigation_go_opds">Режим каталога</string>
     <string name="actions">Действия</string>
     <string name="navigation_go_settings">Настройки</string>
     <string name="download_preferences">Настройки загрузок</string>
@@ -194,7 +194,7 @@
     <string name="disable_inspection_message">Отключить проверку</string>
     <string name="inspection_disabled_message">Проверка отключена. Вы можете повторно включить её в настройках соединения</string>
     <string name="error_load_page_title">Ошибка получения данных</string>
-    <string name="error_load_page_message">Что-то пошло не так. Мне очень жаль. Вы можете повторить попытку или попробовать ещё раз позднее.</string>
+    <string name="error_load_page_message">Не удалось получить данные. Возможно слишком медленное соединение или сервер недоступен</string>
     <string name="disable_connectivity_check_message">Отключить проверку</string>
     <string name="check_too_long_message">Проверка доступности сервера занимает больше времени, чем обычно. Вы можете подождать ещё(возможно, у вас медленное соединение), пропустить проверку или отключить проверку</string>
     <string name="foreground_channel_description">Фоновые уведомления</string>
@@ -244,4 +244,5 @@
     <string name="select_view_body"><![CDATA[Выберите вид приложения. В будущем вы можете переключить вид в меню приложения (Меню => внешний вид). В режиме браузера информация берётся непосредственно с сайта Флибусты и выглядит как страница сайта. В режиме каталога информация получается из электронного каталога Флибусты. Рекомендую попробовать оба режима, у каждого из них свои плюсы. Приятного поиска.]]></string>
     <string name="web_view_mode_button">Режим браузера</string>
     <string name="opds_view_button">Режим каталога</string>
+    <string name="used_mirror_message">Используется альтернативное зеркало, так как основной сайт недоступен. Чтобы попытаться подключиться к основному сайту- перезапустите приложение</string>
 </resources>

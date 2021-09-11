@@ -17,7 +17,7 @@ import net.veldor.flibustaloader.selections.Genre
 import net.veldor.flibustaloader.ui.OPDSActivity
 import net.veldor.flibustaloader.utils.Grammar.clearDirName
 import net.veldor.flibustaloader.utils.PreferencesHandler
-import net.veldor.flibustaloader.utils.URLHelper.getBaseOPDSUrl
+import net.veldor.flibustaloader.utils.URLHelper
 import java.util.*
 
 class SearchWorker(context: Context, workerParams: WorkerParameters) :
@@ -45,7 +45,7 @@ class SearchWorker(context: Context, workerParams: WorkerParameters) :
                 // сделаю первый запрос по-любому
                 var answer = GlobalWebClient.request(request)
                 if (answer == null || answer.isEmpty()) {
-                    OPDSActivity.isLoadError.postValue(true)
+                    //OPDSActivity.isLoadError.postValue(true)
                 }
                 if (!isStopped) {
                     var result: ArrayList<*>
@@ -66,7 +66,6 @@ class SearchWorker(context: Context, workerParams: WorkerParameters) :
                                     ++pageCounter
                                     // запрошу следующую страницу, если она есть
                                     request = if (answer != null) {
-                                        App.instance.mLoadAllStatus.postValue("Загружаю страницу $pageCounter")
                                         getNextPageLink(answer)
                                     } else {
                                         null
@@ -90,7 +89,6 @@ class SearchWorker(context: Context, workerParams: WorkerParameters) :
                                     ++pageCounter
                                     // запрошу следующую страницу, если она есть
                                     request = if (answer != null) {
-                                        App.instance.mLoadAllStatus.postValue("Загружаю страницу $pageCounter")
                                         getNextPageLink(answer)
                                     } else {
                                         null
@@ -118,7 +116,6 @@ class SearchWorker(context: Context, workerParams: WorkerParameters) :
                                     Log.d("surprise", "SearchWorker doWork 110: load authors")
                                     // запрошу следующую страницу, если она есть
                                     request = if (answer != null) {
-                                        App.instance.mLoadAllStatus.postValue("Загружаю страницу $pageCounter")
                                         getNextPageLink(answer)
                                     } else {
                                         null
@@ -147,7 +144,6 @@ class SearchWorker(context: Context, workerParams: WorkerParameters) :
                                         // запрошу следующую страницу, если она есть
                                         if (answer != null) {
                                             request = getNextPageLink(answer)
-                                            App.instance.mLoadAllStatus.postValue("Загружаю страницу $pageCounter")
                                         } else {
                                             request = null
                                         }
@@ -189,7 +185,7 @@ class SearchWorker(context: Context, workerParams: WorkerParameters) :
         if (answer!!.contains(s)) {
             val finishValue = answer.indexOf(s) - 2
             s = answer.substring(0, finishValue)
-            return getBaseOPDSUrl() + s.substring(s.lastIndexOf("\"") + 1).replace("&amp;", "&")
+            return URLHelper.getBaseUrl() + s.substring(s.lastIndexOf("\"") + 1).replace("&amp;", "&")
         }
         return null
     }

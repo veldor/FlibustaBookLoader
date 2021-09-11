@@ -33,13 +33,10 @@ import com.google.android.material.snackbar.Snackbar
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.MyWebViewClient
 import net.veldor.flibustaloader.R
-import net.veldor.flibustaloader.adapters.FoundedAuthorsAdapter
-import net.veldor.flibustaloader.adapters.FoundedBooksAdapter
-import net.veldor.flibustaloader.adapters.FoundedGenresAdapter
-import net.veldor.flibustaloader.adapters.FoundedSequencesAdapter
+import net.veldor.flibustaloader.adapters.*
 import net.veldor.flibustaloader.database.entity.Bookmark
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
-import net.veldor.flibustaloader.databinding.NewOpdsActivityBinding
+import net.veldor.flibustaloader.databinding.ActivityOdpsBinding
 import net.veldor.flibustaloader.dialogs.ChangelogDialog
 import net.veldor.flibustaloader.dialogs.GifDialog
 import net.veldor.flibustaloader.dialogs.GifDialogListener
@@ -53,11 +50,9 @@ import net.veldor.flibustaloader.utils.MimeTypes
 import net.veldor.flibustaloader.utils.MimeTypes.getFullMime
 import net.veldor.flibustaloader.utils.MimeTypes.getMime
 import net.veldor.flibustaloader.utils.PreferencesHandler
-import net.veldor.flibustaloader.utils.URLHelper.getBaseOPDSUrl
-import net.veldor.flibustaloader.utils.URLHelper.getBaseUrl
-import net.veldor.flibustaloader.utils.URLHelper.getSearchRequest
+import net.veldor.flibustaloader.utils.URLHelper
 import net.veldor.flibustaloader.utils.XMLHandler.putSearchValue
-import net.veldor.flibustaloader.view_models.MainViewModel
+import net.veldor.flibustaloader.view_models.OPDSViewModel
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.noActiveDownloadProcess
 import net.veldor.flibustaloader.workers.SearchWorker
 import java.io.UnsupportedEncodingException
@@ -65,15 +60,13 @@ import java.net.URLEncoder
 import java.util.*
 
 class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
-    private lateinit var mBinding: NewOpdsActivityBinding
+    private lateinit var viewModel: OPDSViewModel
+    private lateinit var binding: ActivityOdpsBinding
     private var mTorRestartDialog: AlertDialog? = null
-    private var mViewModel: MainViewModel? = null
     private var mSearchView: SearchView? = null
     private lateinit var autocompleteStrings: ArrayList<String>
     private var mSearchAdapter: ArrayAdapter<String>? = null
-    private var mSearchRadioContainer: RadioGroup? = null
     private var mShowLoadDialog: Dialog? = null
-    private var mLoadMoreBtn: Button? = null
     private var mTorConnectErrorReceiver: TorConnectErrorReceiver? = null
     private val mAuthorViewTypes = arrayOf(
         "Книги по сериям",
@@ -83,18 +76,13 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     )
     private var mSelectAuthorViewDialog: AlertDialog? = null
     private var mSelectAuthorsDialog: AlertDialog.Builder? = null
-    private var mResultsRecycler: RecyclerView? = null
-    private var mSearchTitle: TextView? = null
     private var mSelectSequencesDialog: AlertDialog.Builder? = null
     private var mLastLoadedPageUrl: String? = null
     private var mSelectedAuthor: Author? = null
     private var mConfirmExit: Long = 0
-    private var mRootView: View? = null
     private var mMultiplyDownloadDialog: Dialog? = null
     private var mSelectBookTypeDialog: AlertDialog? = null
     private lateinit var mSearchAutoComplete: SearchAutoComplete
-    private var mForwardBtn: ImageButton? = null
-    private var mBackwardBtn: ImageButton? = null
     private var mBookTypeDialog: AlertDialog? = null
     private var mCoverPreviewDialog: Dialog? = null
     private var bookInfoDialog: AlertDialog? = null
@@ -102,31 +90,24 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     private var mDownloadSelectedDialog: AlertDialog? = null
     private var mSuccessSelect: LiveData<Boolean>? = null
     private var mAddToLoaded = false
-    private var mScrollView: ScrollView? = null
-    private var mSearchBooksButton: RadioButton? = null
-    private var mSearchAuthorsButton: RadioButton? = null
-    private var mMassLoadSwitcher: SwitchCompat? = null
     private var mActivityVisible = true
     private var mShowAuthorsListActivator: Button? = null
-    private var mConnectionTypeView: TextView? = null
     private var mPageNotLoadedDialog: AlertDialog? = null
     private var mDisconnectedSnackbar: Snackbar? = null
     private var mCurrentPage = 0
+
+
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // добавлю viewModel
+        viewModel = ViewModelProvider(this).get(OPDSViewModel::class.java)
+        // todo вспомнить, что делает этот параметр
         sLoadNextPage.value = false
-        if (PreferencesHandler.instance.isEInk) {
-            setContentView(R.layout.new_eink_opds_activity)
-        } else {
-            mBinding = NewOpdsActivityBinding.inflate(layoutInflater, null, false)
-            setContentView(mBinding.root)
+        binding = ActivityOdpsBinding.inflate(layoutInflater, null, false)
+        setContentView(binding.drawerLayout)
 
-        }
         setupInterface()
         setupObservers()
-
-        // добавлю viewModel
-        mViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         checkSearchType()
 
         // проверю очередь загрузки
@@ -135,40 +116,24 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         if (mShowAuthorsListActivator != null) {
             mShowAuthorsListActivator!!.setOnClickListener {
                 doSearch(
-                    getBaseOPDSUrl() + "/opds/authorsindex",
+                    URLHelper.getBaseUrl() + "/opds/authorsindex",
                     false
                 )
             }
         }
-
-        // определю кнопки прыжков по результатам
-        mLoadMoreBtn = findViewById(R.id.load_more_button)
-
-        // кнопка перехода вперёд
-        mForwardBtn = findViewById(R.id.forward_btn)
-        mBackwardBtn = findViewById(R.id.backward_btn)
-        if (mBackwardBtn != null) {
-            mBackwardBtn!!.setOnClickListener {
-                if (!instance!!.isEmpty) {
-                    val lastPage = instance!!.lastPage
-                    if (lastPage != null) {
-                        doSearch(lastPage, false)
-                        return@setOnClickListener
-                    }
+        binding.backwardBtn.setOnClickListener {
+            if (!instance!!.isEmpty) {
+                val lastPage = instance!!.lastPage
+                if (lastPage != null) {
+                    doSearch(lastPage, false)
+                    return@setOnClickListener
                 }
-                if (mConfirmExit != 0L) {
-                    if (mConfirmExit > System.currentTimeMillis() - 3000) {
-                        // выйду из приложения
-                        Log.d("surprise", "OPDSActivity onKeyDown exit")
-                        finishAffinity()
-                    } else {
-                        Toast.makeText(
-                            this@OPDSActivity,
-                            "Нечего загружать. Нажмите ещё раз для выхода",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        mConfirmExit = System.currentTimeMillis()
-                    }
+            }
+            if (mConfirmExit != 0L) {
+                if (mConfirmExit > System.currentTimeMillis() - 3000) {
+                    // выйду из приложения
+                    Log.d("surprise", "OPDSActivity onKeyDown exit")
+                    finishAffinity()
                 } else {
                     Toast.makeText(
                         this@OPDSActivity,
@@ -177,17 +142,22 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                     ).show()
                     mConfirmExit = System.currentTimeMillis()
                 }
+            } else {
+                Toast.makeText(
+                    this@OPDSActivity,
+                    "Нечего загружать. Нажмите ещё раз для выхода",
+                    Toast.LENGTH_SHORT
+                ).show()
+                mConfirmExit = System.currentTimeMillis()
             }
         }
-        if (mForwardBtn != null) {
-            mForwardBtn!!.setOnClickListener {
-                scrollToTop()
-                if (sNextPage != null && sNextPage!!.isNotEmpty()) {
-                    doSearch(sNextPage, false)
-                } else {
-                    Toast.makeText(this@OPDSActivity, "Результаты закончились", Toast.LENGTH_SHORT)
-                        .show()
-                }
+        binding.forwardBtn.setOnClickListener {
+            scrollToTop()
+            if (sNextPage != null && sNextPage!!.isNotEmpty()) {
+                doSearch(sNextPage, false)
+            } else {
+                Toast.makeText(this@OPDSActivity, "Результаты закончились", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 
@@ -199,36 +169,27 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         handleLoading()
 
         // создам тестовый массив строк для автозаполнения
-        autocompleteStrings = mViewModel!!.searchAutocomplete
-        if (mLoadMoreBtn != null) {
-            // при нажатии кнопки назад- убираем последний элемент истории и переходим на предпоследний
-            mLoadMoreBtn!!.setOnClickListener {
-                // загружаю следующую страницу
-                mAddToLoaded = true
-                doSearch(sNextPage, false)
-            }
+        autocompleteStrings = viewModel.searchAutocomplete
+        // при нажатии кнопки назад- убираем последний элемент истории и переходим на предпоследний
+        binding.loadMoreButton.setOnClickListener {
+            // загружаю следующую страницу
+            mAddToLoaded = true
+            doSearch(sNextPage, false)
         }
-        // добавлю отслеживание изменения ваианта поиска
-        mSearchBooksButton = findViewById(R.id.searchBook)
-        if (mSearchBooksButton != null) {
-            mSearchBooksButton!!.setOnClickListener {
-                mShowAuthorsListActivator!!.visibility = View.GONE
-                mMassLoadSwitcher!!.visibility = View.VISIBLE
-                Toast.makeText(this@OPDSActivity, "Ищем книги", Toast.LENGTH_SHORT).show()
-                sSearchType = SEARCH_TYPE_BOOKS
-                if (mSearchView != null) {
-                    Log.d("surprise", "OPDSActivity onCreate 242: show search icon")
-                    mSearchView!!.visibility = View.VISIBLE
-                    if (PreferencesHandler.instance.isAutofocusSearch()) {
-                        mSearchView!!.isIconified = false
-                        mSearchView!!.requestFocusFromTouch()
-                    }
+        binding.searchBook.setOnClickListener {
+            mShowAuthorsListActivator!!.visibility = View.GONE
+            Toast.makeText(this@OPDSActivity, "Ищем книги", Toast.LENGTH_SHORT).show()
+            sSearchType = SEARCH_TYPE_BOOKS
+            if (mSearchView != null) {
+                Log.d("surprise", "OPDSActivity onCreate 242: show search icon")
+                mSearchView!!.visibility = View.VISIBLE
+                if (PreferencesHandler.instance.isAutofocusSearch()) {
+                    mSearchView!!.isIconified = false
+                    mSearchView!!.requestFocusFromTouch()
                 }
             }
         }
-        mSearchAuthorsButton = findViewById(R.id.searchAuthor)
-        mSearchAuthorsButton!!.setOnClickListener {
-            mMassLoadSwitcher!!.visibility = View.GONE
+        binding.searchAuthor.setOnClickListener {
             mShowAuthorsListActivator!!.visibility = View.VISIBLE
             Toast.makeText(this@OPDSActivity, "Ищем авторов", Toast.LENGTH_SHORT).show()
             sSearchType = SEARCH_TYPE_AUTHORS
@@ -241,10 +202,8 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 }
             }
         }
-        val searchGenresButton = findViewById<RadioButton>(R.id.searchGenre)
-        searchGenresButton.setOnClickListener {
+        binding.searchGenre.setOnClickListener {
             mShowAuthorsListActivator!!.visibility = View.GONE
-            mMassLoadSwitcher!!.visibility = View.GONE
             Toast.makeText(this@OPDSActivity, "Ищу жанры", Toast.LENGTH_SHORT).show()
             sSearchType = SEARCH_TYPE_GENRE
             sBookmarkName = "Все жанры"
@@ -252,13 +211,11 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 mSearchView!!.visibility = View.INVISIBLE
             }
             showLoadWaitingDialog()
-            doSearch(getSearchRequest(SEARCH_TYPE_GENRE, "genres"), false)
+            doSearch(URLHelper.getSearchRequest(SEARCH_TYPE_GENRE, "genres"), false)
             scrollToTop()
             mFab!!.visibility = View.GONE
         }
-        val searchSequencesButton = findViewById<RadioButton>(R.id.searchSequence)
-        searchSequencesButton.setOnClickListener {
-            mMassLoadSwitcher!!.visibility = View.GONE
+        binding.searchSequence.setOnClickListener {
             Toast.makeText(this@OPDSActivity, "Ищу серии", Toast.LENGTH_SHORT).show()
             sSearchType = SEARCH_TYPE_SEQUENCES
             sBookmarkName = "Все серии"
@@ -266,24 +223,10 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 mSearchView!!.visibility = View.INVISIBLE
             }
             showLoadWaitingDialog()
-            doSearch(getSearchRequest(SEARCH_TYPE_SEQUENCES, "sequencesindex"), false)
+            doSearch(URLHelper.getSearchRequest(SEARCH_TYPE_SEQUENCES, "sequencesindex"), false)
             scrollToTop()
             mFab!!.visibility = View.GONE
         }
-
-        // заголовок поиска
-        val searchTitle: LiveData<String> = App.instance.mSearchTitle
-        searchTitle.observe(this, { s: String? ->
-            if (s != null) {
-                if (mSearchTitle != null) {
-                    mSearchTitle!!.visibility = View.VISIBLE
-                    mSearchTitle!!.text = s
-                    changeTitle(s)
-                }
-            } else if (mSearchTitle != null) {
-                mSearchTitle!!.visibility = View.GONE
-            }
-        })
 
         // добавлю отслеживание получения списка ссылок на скачивание
         val downloadLinks: LiveData<ArrayList<DownloadLink>> = App.instance.mDownloadLinksList
@@ -291,7 +234,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             if (downloadLinks1 != null && downloadLinks1.size > 0 && mActivityVisible) {
                 if (downloadLinks1.size == 1) {
                     // добавлю книгу в очередь скачивания
-                    mViewModel!!.addToDownloadQueue(downloadLinks1[0])
+                    viewModel.addToDownloadQueue(downloadLinks1[0])
                     Toast.makeText(
                         this@OPDSActivity,
                         R.string.book_added_to_schedule_message,
@@ -316,7 +259,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             if (author != null) {
                 // если выбран конкретный автор- отображу выбор показа его книг, если выбрана группа авторов- загружу следующую страницу выбора
                 if (author.id != null && author.id!!.startsWith("tag:authors")) {
-                    doSearch(getBaseOPDSUrl() + author.uri, false)
+                    doSearch(author.uri, false)
                 } else {
                     mSelectedAuthor = author
                     showAuthorViewSelect()
@@ -336,7 +279,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             if (foundedSequence != null) {
                 scrollToTop()
                 SearchWorker.sSequenceName = foundedSequence.title
-                doSearch(getBaseOPDSUrl() + foundedSequence.link, false)
+                doSearch(URLHelper.getBaseUrl() + foundedSequence.link, false)
             }
         })
 
@@ -346,17 +289,26 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         checkUpdates()
 
         // если передана ссылка- перейду по ней
-        Log.d("surprise", "check link")
         val intent = intent
         val link = intent.getStringExtra(TARGET_LINK)
         if (link != null) {
-            Log.d("surprise", "have link")
             doSearch(link, false)
         }
     }
 
     override fun setupObservers() {
         super.setupObservers()
+
+        viewModel.searchResults.observe(this, {
+            mShowLoadDialog?.dismiss()
+            if(it.appended){
+                (binding.resultsList.adapter as FoundedItemAdapter).append(it.results)
+            }
+            else{
+                (binding.resultsList.adapter as FoundedItemAdapter).setContent(it.results)
+            }
+        })
+
         // Отслежу команду на загрузку страницы из адаптера
         sLoadNextPage.observe(this, { doLoad ->
             if (doLoad && sNextPage != null) {
@@ -364,11 +316,11 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 doSearch(sNextPage, false)
             } else {
                 Toast.makeText(this@OPDSActivity, "Все книги загружены", Toast.LENGTH_SHORT).show()
-                val adapter = mResultsRecycler!!.adapter
+                val adapter = binding.resultsList.adapter
                 adapter?.notifyDataSetChanged()
             }
         })
-        isLoadError.observe(this, { hasError: Boolean ->
+        viewModel.isLoadError.observe(this, { hasError: Boolean ->
             if (hasError) {
                 // покажу окошко и сообщу, что загрузка не удалась
                 showPageNotLoadedDialog()
@@ -396,19 +348,31 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     private fun showDisconnectedStateSnackbar() {
         if (mDisconnectedSnackbar == null) {
             mDisconnectedSnackbar =
-                Snackbar.make(mRootView!!, "Connection lost", Snackbar.LENGTH_INDEFINITE)
+                Snackbar.make(binding.rootView, "Connection lost", Snackbar.LENGTH_INDEFINITE)
         }
         mDisconnectedSnackbar!!.show()
     }
 
     private fun showPageNotLoadedDialog() {
-        if (mPageNotLoadedDialog == null) {
-            mPageNotLoadedDialog = AlertDialog.Builder(this, R.style.MyDialogStyle)
-                .setTitle(getString(R.string.error_load_page_title))
-                .setMessage(getString(R.string.error_load_page_message))
-                .setPositiveButton(android.R.string.ok, null)
-                .create()
+        mShowLoadDialog?.dismiss()
+        val builder = AlertDialog.Builder(this, R.style.MyDialogStyle)
+            .setTitle(getString(R.string.error_load_page_title))
+            .setMessage(getString(R.string.error_load_page_message))
+            .setPositiveButton("Повторить запрос") { _: DialogInterface?, _: Int ->
+                doSearch(mLastLoadedPageUrl, true)
+            }
+            .setNeutralButton("Перезапустить приложение") { _: DialogInterface?, _: Int ->
+                Handler().postDelayed(ResetApp(), 100)
+            }
+        if (!App.instance.useMirror) {
+            builder.setNegativeButton("Использовать резервное зеркало") { _: DialogInterface?, _: Int ->
+                App.instance.useMirror = true
+                binding.mirrorUsed.visibility = View.VISIBLE
+                doSearch(mLastLoadedPageUrl, true)
+            }
         }
+        mPageNotLoadedDialog = builder.create()
+        lifecycle.addObserver(DialogDismissLifecycleObserver(mPageNotLoadedDialog))
         mPageNotLoadedDialog!!.show()
     }
 
@@ -423,7 +387,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     private fun checkSearchType() {
         // получу выбранный тип поиска
-        when (mSearchRadioContainer!!.checkedRadioButtonId) {
+        when (binding.subscribeType.checkedRadioButtonId) {
             R.id.searchBook -> {
                 sSearchType = SEARCH_TYPE_BOOKS
             }
@@ -440,7 +404,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     }
 
     private fun checkDownloadQueue() {
-        val queue = mViewModel!!.checkDownloadQueue()
+        val queue = viewModel.checkDownloadQueue()
         if (queue) {
             // продолжу загрузку книг
             val schedule = App.instance.mDatabase.booksDownloadScheduleDao().allBooksLive
@@ -474,7 +438,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 .setMessage(R.string.re_download_dialog_body_message)
                 .setCancelable(true)
                 .setPositiveButton(R.string.ok) { _: DialogInterface?, _: Int ->
-                    mViewModel!!.initiateMassDownload()
+                    viewModel.initiateMassDownload()
                     Toast.makeText(
                         this@OPDSActivity,
                         R.string.download_continued_message,
@@ -488,28 +452,30 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     override fun setupInterface() {
         super.setupInterface()
-
-        // определю тип соединения
-        mConnectionTypeView = findViewById(R.id.connectionType)
-
+        binding.mirrorUsed.visibility = if (App.instance.useMirror) View.VISIBLE else View.GONE
+        binding.mirrorUsed.setOnClickListener {
+            Toast.makeText(this, getString(R.string.used_mirror_message), Toast.LENGTH_LONG).show()
+        }
+        binding.resultsList.adapter = FoundedItemAdapter(arrayListOf())
+        if (PreferencesHandler.instance.isLinearLayout) {
+            binding.resultsList.layoutManager = LinearLayoutManager(this@OPDSActivity)
+        } else {
+            binding.resultsList.layoutManager = GridLayoutManager(this@OPDSActivity, 2)
+        }
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToOPDS)
         item.isEnabled = false
         item.isChecked = true
 
-        // Обёртка просмотра
-        mScrollView = findViewById(R.id.subscriptions_layout)
-        // рециклеры
-        mResultsRecycler = findViewById(R.id.resultsList)
-        mResultsRecycler!!.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        binding.resultsList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 // проверю последний видимый элемент
                 if (PreferencesHandler.instance.isLinearLayout) {
-                    val manager = mResultsRecycler!!.layoutManager as LinearLayoutManager?
+                    val manager = binding.resultsList.layoutManager as LinearLayoutManager?
                     if (manager != null) {
-                        val adapter = mResultsRecycler!!.adapter
+                        val adapter = binding.resultsList.adapter
                         if (adapter != null) {
                             val position = manager.findLastCompletelyVisibleItemPosition()
                             if (position == adapter.itemCount - 1 && PreferencesHandler.instance.isShowLoadMoreBtn() &&
@@ -528,40 +494,27 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 }
             }
         })
-        if (PreferencesHandler.instance.isLinearLayout) {
-            mResultsRecycler!!.layoutManager = LinearLayoutManager(this@OPDSActivity)
-        } else {
-            mResultsRecycler!!.layoutManager = GridLayoutManager(this@OPDSActivity, 2)
-        }
 
         // варианты поиска
-        mSearchRadioContainer = findViewById(R.id.subscribe_type)
-        mSearchTitle = findViewById(R.id.search_title)
-        mRootView = findViewById(R.id.rootView)
-        if (mRootView != null) {
-            if (PreferencesHandler.instance.isEInk) {
-                //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
-                Log.d("surprise", "OPDSActivity setupInterface 529: use reader")
-            } else {
-                if (PreferencesHandler.instance.isPicHide()) {
-                    // назначу фон
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        mRootView!!.background = ContextCompat.getDrawable(this, R.drawable.back_2)
-                    } else {
-                        mRootView!!.background =
-                            ResourcesCompat.getDrawable(resources, R.drawable.back_2, null)
-                    }
+        if (PreferencesHandler.instance.isEInk) {
+            //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
+            Log.d("surprise", "OPDSActivity setupInterface 529: use reader")
+        } else {
+            if (PreferencesHandler.instance.isPicHide()) {
+                // назначу фон
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    binding.rootView.background = ContextCompat.getDrawable(this, R.drawable.back_2)
+                } else {
+                    binding.rootView.background =
+                        ResourcesCompat.getDrawable(resources, R.drawable.back_2, null)
                 }
             }
         }
-        mMassLoadSwitcher = findViewById(R.id.showAllSwitcher)
-        if (mMassLoadSwitcher != null) {
-            mMassLoadSwitcher!!.isChecked = PreferencesHandler.instance.isDownloadAll
-            mMassLoadSwitcher!!.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean ->
-                PreferencesHandler.instance.isDownloadAll =
-                    !PreferencesHandler.instance.isDownloadAll
-                invalidateMenu()
-            }
+        binding.showAllSwitcher.isChecked = PreferencesHandler.instance.isDownloadAll
+        binding.showAllSwitcher.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean ->
+            PreferencesHandler.instance.isDownloadAll =
+                !PreferencesHandler.instance.isDownloadAll
+            invalidateMenu()
         }
         mFab = findViewById(R.id.floatingMenu)
         mFab!!.visibility = View.GONE
@@ -628,7 +581,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     private fun scrollUp() {
         if (PreferencesHandler.instance.isLinearLayout) {
-            val manager = mResultsRecycler!!.layoutManager as LinearLayoutManager?
+            val manager = binding.resultsList.layoutManager as LinearLayoutManager?
             if (manager != null) {
                 val position = manager.findFirstCompletelyVisibleItemPosition()
                 if (position > 0) {
@@ -640,10 +593,10 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     private fun scrollDown() {
         if (PreferencesHandler.instance.isLinearLayout) {
-            val manager = mResultsRecycler!!.layoutManager as LinearLayoutManager?
+            val manager = binding.resultsList.layoutManager as LinearLayoutManager?
             if (manager != null) {
                 var position = manager.findFirstCompletelyVisibleItemPosition()
-                val adapter = mResultsRecycler!!.adapter
+                val adapter = binding.resultsList.adapter
                 if (adapter != null) {
                     if (position < adapter.itemCount - 1) {
                         manager.scrollToPositionWithOffset(position + 1, 10)
@@ -669,16 +622,16 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     }
 
     private fun downloadUnloaded() {
-        val status = mViewModel!!.downloadAll(true)
+        val status = viewModel.downloadAll(true)
         observeBookScheduleAdd(status)
     }
 
     private fun showDownloadSelectedDialog() {
         // добавлю книги в список для загрузки
-        if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
+        if (binding.resultsList.adapter is FoundedBooksAdapter) {
             // получу названия книг
             val books: ArrayList<FoundedBook> =
-                (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.items
+                (binding.resultsList.adapter as FoundedBooksAdapter?)!!.items
             if (books.size > 0) {
                 val variants = arrayOfNulls<String>(books.size)
                 for ((counter, fb) in books.withIndex()) {
@@ -700,7 +653,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                         mDownloadSelectedDialog!!.listView.checkedItemCount
                         val ids = mDownloadSelectedDialog!!.listView.checkedItemPositions
                         if (ids.size() > 0) {
-                            val status = mViewModel!!.downloadSelected(ids)
+                            val status = viewModel.downloadSelected(ids)
                             observeBookScheduleAdd(status)
                         } else {
                             Toast.makeText(
@@ -730,7 +683,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 ).show()
                 // запущу скачивание
                 if (PreferencesHandler.instance.isDownloadAutostart) {
-                    mViewModel!!.initiateMassDownload()
+                    viewModel.initiateMassDownload()
                 }
                 startActivity(Intent(baseContext, ActivityBookDownloadSchedule::class.java))
                 status.removeObservers(this@OPDSActivity)
@@ -741,7 +694,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     private fun checkUpdates() {
         if (PreferencesHandler.instance.isCheckUpdate) {
             // проверю обновления
-            val version = mViewModel!!.startCheckUpdate()
+            val version = viewModel.startCheckUpdate()
             version.observe(this, { aBoolean: Boolean? ->
                 if (aBoolean != null && aBoolean) {
                     // показываю Snackbar с уведомлением
@@ -754,12 +707,18 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     private fun makeUpdateSnackbar() {
         val updateSnackbar = Snackbar.make(
-            mRootView!!,
+            binding.rootView,
             getString(R.string.snackbar_found_update_message),
-            Snackbar.LENGTH_INDEFINITE
+            Snackbar.LENGTH_LONG
         )
-        updateSnackbar.setAction(getString(R.string.snackbar_update_action_message)) { mViewModel!!.initializeUpdate() }
-        updateSnackbar.setActionTextColor(ResourcesCompat.getColor(resources, android.R.color.white, null))
+        updateSnackbar.setAction(getString(R.string.snackbar_update_action_message)) { viewModel.initializeUpdate() }
+        updateSnackbar.setActionTextColor(
+            ResourcesCompat.getColor(
+                resources,
+                android.R.color.white,
+                null
+            )
+        )
         updateSnackbar.show()
     }
 
@@ -767,16 +726,16 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         // отслеживание нового поиска
         sNewSearch.observe(this, { aBoolean: Boolean ->
             // если есть адаптер и это не адаптер с книгами- сброшу его значение
-            if (aBoolean && mResultsRecycler!!.adapter is MyAdapterInterface) {
-                (mResultsRecycler!!.adapter as MyAdapterInterface?)!!.clearList()
+            if (aBoolean && binding.resultsList.adapter is MyAdapterInterface) {
+                (binding.resultsList.adapter as MyAdapterInterface?)!!.clearList()
             }
             if (!aBoolean) {
                 Handler().postDelayed({
-                    if (sElementForSelectionIndex >= 0 && mResultsRecycler != null && mResultsRecycler!!.adapter != null && mResultsRecycler!!.adapter!!
-                            .itemCount > sElementForSelectionIndex && mResultsRecycler!!.layoutManager != null
+                    if (sElementForSelectionIndex >= 0 && binding.resultsList.adapter != null && binding.resultsList.adapter!!
+                            .itemCount > sElementForSelectionIndex && binding.resultsList.layoutManager != null
                     ) {
                         if (PreferencesHandler.instance.isLinearLayout) {
-                            val manager = mResultsRecycler!!.layoutManager as LinearLayoutManager?
+                            val manager = binding.resultsList.layoutManager as LinearLayoutManager?
                             manager!!.scrollToPositionWithOffset(sElementForSelectionIndex - 1, 10)
                         }
                     }
@@ -788,18 +747,18 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         sNothingFound.observe(this, { result: Boolean ->
             if (result) {
                 Toast.makeText(this@OPDSActivity, "Ничего не найдено", Toast.LENGTH_SHORT).show()
-                if (mResultsRecycler!!.adapter != null) {
-                    if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
+                if (binding.resultsList.adapter != null) {
+                    if (binding.resultsList.adapter is FoundedBooksAdapter) {
                         if (mAddToLoaded) {
                             mFab!!.visibility = View.VISIBLE
                         } else {
-                            (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.setContent(
+                            (binding.resultsList.adapter as FoundedBooksAdapter?)!!.setContent(
                                 null,
                                 false
                             )
                         }
-                    } else if (mResultsRecycler!!.adapter is FoundedAuthorsAdapter) {
-                        (mResultsRecycler!!.adapter as FoundedAuthorsAdapter?)!!.setContent(
+                    } else if (binding.resultsList.adapter is FoundedAuthorsAdapter) {
+                        (binding.resultsList.adapter as FoundedAuthorsAdapter?)!!.setContent(
                             arrayListOf()
                         )
                     }
@@ -810,8 +769,8 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         // отслеживание загруженной книги
         val downloadedBook: LiveData<String> = App.instance.mLiveDownloadedBookId
         downloadedBook.observe(this, { downloadedBookId: String? ->
-            if (downloadedBookId != null && mResultsRecycler!!.adapter is FoundedBooksAdapter) {
-                (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.bookDownloaded(
+            if (downloadedBookId != null && binding.resultsList.adapter is FoundedBooksAdapter) {
+                (binding.resultsList.adapter as FoundedBooksAdapter?)!!.bookDownloaded(
                     downloadedBookId
                 )
             }
@@ -829,7 +788,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         // получена прямая ссылка для поиска
         sLiveSearchLink.observe(this, { s: String? ->
             if (s != null && s.isNotEmpty()) {
-                doSearch(getBaseOPDSUrl() + s, false)
+                doSearch(URLHelper.getBaseUrl() + s, false)
             }
         })
 
@@ -837,80 +796,74 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         sLiveGenresFound.observe(this, { genres: ArrayList<Genre> ->
             hideLoadingButtons()
             sSearchType = SEARCH_TYPE_GENRE
-            if (mResultsRecycler!!.adapter != null) {
-                if (mResultsRecycler!!.adapter is FoundedGenresAdapter) {
-                    (mResultsRecycler!!.adapter as FoundedGenresAdapter?)!!.setContent(genres)
+            if (binding.resultsList.adapter != null) {
+                if (binding.resultsList.adapter is FoundedGenresAdapter) {
+                    (binding.resultsList.adapter as FoundedGenresAdapter?)!!.setContent(genres)
                 } else {
-                    mResultsRecycler!!.adapter = FoundedGenresAdapter(genres)
+                    binding.resultsList.adapter = FoundedGenresAdapter(genres)
                 }
             } else {
-                mResultsRecycler!!.adapter = FoundedGenresAdapter(genres)
+                binding.resultsList.adapter = FoundedGenresAdapter(genres)
             }
         })
         // отслежу получение списка серий
         sLiveSequencesFound.observe(this, { sequences: ArrayList<FoundedSequence> ->
             hideLoadingButtons()
             sSearchType = SEARCH_TYPE_SEQUENCES
-            if (mResultsRecycler!!.adapter != null) {
-                if (mResultsRecycler!!.adapter is FoundedSequencesAdapter) {
-                    (mResultsRecycler!!.adapter as FoundedSequencesAdapter?)!!.setContent(
+            if (binding.resultsList.adapter != null) {
+                if (binding.resultsList.adapter is FoundedSequencesAdapter) {
+                    (binding.resultsList.adapter as FoundedSequencesAdapter?)!!.setContent(
                         sequences
                     )
                 } else {
-                    mResultsRecycler!!.adapter = FoundedSequencesAdapter(sequences)
+                    binding.resultsList.adapter = FoundedSequencesAdapter(sequences)
                 }
             } else {
-                mResultsRecycler!!.adapter = FoundedSequencesAdapter(sequences)
+                binding.resultsList.adapter = FoundedSequencesAdapter(sequences)
             }
         })
         sLiveAuthorsFound.observe(this, { authors: ArrayList<Author> ->
-            if (!mSearchAuthorsButton!!.isChecked) {
-                mSearchAuthorsButton!!.isChecked = true
+            if (!binding.searchAuthor.isChecked) {
+                binding.searchAuthor.isChecked = true
             }
             App.sSearchType = SEARCH_AUTHORS
             hideLoadingButtons()
             // найденные авторы сброшены
-            if (mResultsRecycler!!.adapter != null) {
-                if (mResultsRecycler!!.adapter is FoundedAuthorsAdapter) {
-                    (mResultsRecycler!!.adapter as FoundedAuthorsAdapter?)!!.setContent(authors)
+            if (binding.resultsList.adapter != null) {
+                if (binding.resultsList.adapter is FoundedAuthorsAdapter) {
+                    (binding.resultsList.adapter as FoundedAuthorsAdapter?)!!.setContent(authors)
                 } else {
-                    mResultsRecycler!!.adapter = FoundedAuthorsAdapter(authors)
+                    binding.resultsList.adapter = FoundedAuthorsAdapter(authors)
                 }
             } else {
-                mResultsRecycler!!.adapter = FoundedAuthorsAdapter(authors)
+                binding.resultsList.adapter = FoundedAuthorsAdapter(authors)
             }
         })
         sLiveBooksFound.observe(this, { books: ArrayList<FoundedBook> ->
-            if (!mSearchBooksButton!!.isChecked) {
-                mSearchBooksButton!!.isChecked = true
+            if (!binding.searchBook.isChecked) {
+                binding.searchBook.isChecked = true
             }
             App.sSearchType = SEARCH_BOOKS
             // найденные книги сброшены
-            if (mResultsRecycler!!.adapter != null) {
-                if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
-                    (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.setContent(
+            if (binding.resultsList.adapter != null) {
+                if (binding.resultsList.adapter is FoundedBooksAdapter) {
+                    (binding.resultsList.adapter as FoundedBooksAdapter?)!!.setContent(
                         books,
                         mAddToLoaded
                     )
                     mAddToLoaded = false
                 } else {
-                    mResultsRecycler!!.adapter = FoundedBooksAdapter(books)
+                    binding.resultsList.adapter = FoundedBooksAdapter(books)
                 }
             } else {
-                mResultsRecycler!!.adapter = FoundedBooksAdapter(books)
+                binding.resultsList.adapter = FoundedBooksAdapter(books)
             }
             if (books.size > 0) {
                 mFab!!.visibility = View.VISIBLE
                 if (!PreferencesHandler.instance.isDownloadAll && sNextPage != null) {
-                    if (mLoadMoreBtn != null) {
-                        mLoadMoreBtn!!.visibility = View.VISIBLE
-                    }
-                    if (mForwardBtn != null) {
-                        mForwardBtn!!.visibility = View.VISIBLE
-                    }
-                    if (mBackwardBtn != null) {
-                        mBackwardBtn!!.visibility = View.VISIBLE
-                    }
+                    binding.loadMoreButton.visibility = View.VISIBLE
+                    binding.forwardBtn.visibility = View.VISIBLE
+                    binding.backwardBtn.visibility = View.VISIBLE
                 } else {
                     hideLoadingButtons()
                 }
@@ -948,15 +901,15 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                     when (which) {
                         0 -> {
                             // отмечу книгу как прочитанную
-                            mViewModel!!.setBookRead(foundedBook)
+                            viewModel.setBookRead(foundedBook)
                             Toast.makeText(
                                 this@OPDSActivity,
                                 "Книга отмечена как прочитанная",
                                 Toast.LENGTH_LONG
                             ).show()
                             // оповещу адаптер об этом
-                            if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
-                                (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.setBookReaded(
+                            if (binding.resultsList.adapter is FoundedBooksAdapter) {
+                                (binding.resultsList.adapter as FoundedBooksAdapter?)!!.setBookReaded(
                                     foundedBook
                                 )
                             }
@@ -975,7 +928,8 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             this,
             { author: Author? ->
                 if (author != null) doSearch(
-                    getBaseOPDSUrl() + "/opds/new/0/newauthors/" + author.id!!.substring(22), false
+                    URLHelper.getBaseUrl() + "/opds/new/0/newauthors/" + author.id!!.substring(22),
+                    false
                 )
             })
 
@@ -1016,7 +970,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             }
             observeBooksDownload()
         }
-        val loadStatus: LiveData<String> = App.instance.mLoadAllStatus
+        val loadStatus: LiveData<String> = viewModel.requestStatus
         loadStatus.observe(this, { s: String? ->
             if (s != null && s.isNotEmpty() && mShowLoadDialog != null) {
                 // изменю сообщение
@@ -1042,15 +996,10 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     }
 
     private fun hideLoadingButtons() {
-        if (mLoadMoreBtn != null) {
-            mLoadMoreBtn!!.visibility = View.GONE
-        }
-        if (mForwardBtn != null) {
-            mForwardBtn!!.visibility = View.GONE
-        }
-        if (mBackwardBtn != null) {
-            mBackwardBtn!!.visibility = View.GONE
-        }
+
+        binding.loadMoreButton.visibility = View.GONE
+        binding.forwardBtn.visibility = View.GONE
+        binding.backwardBtn.visibility = View.GONE
     }
 
     private fun showPreview(foundedBook: FoundedBook) {
@@ -1076,7 +1025,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     private fun showPage(book: FoundedBook?) {
         val intent = Intent(this, WebViewActivity::class.java)
-        intent.data = Uri.parse(getBaseUrl() + book!!.bookLink)
+        intent.data = Uri.parse(URLHelper.getBaseUrl() + book!!.bookLink)
         intent.putExtra(WebViewActivity.CALLED, true)
         startActivity(intent)
     }
@@ -1101,12 +1050,18 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 // если есть недогруженные книги- выведу Snackbar, где уведомплю об этом
                 if (App.instance.mBooksDownloadFailed.size > 0) {
                     val updateSnackbar = Snackbar.make(
-                        mRootView!!,
+                        binding.rootView,
                         "Есть недокачанные книги",
-                        Snackbar.LENGTH_INDEFINITE
+                        Snackbar.LENGTH_LONG
                     )
                     updateSnackbar.setAction("Попробовать ещё раз") { }
-                    updateSnackbar.setActionTextColor(ResourcesCompat.getColor(resources, android.R.color.white, null))
+                    updateSnackbar.setActionTextColor(
+                        ResourcesCompat.getColor(
+                            resources,
+                            android.R.color.white,
+                            null
+                        )
+                    )
                     updateSnackbar.show()
                 }
             }
@@ -1176,20 +1131,16 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     override fun onResume() {
         super.onResume()
-        if (mConnectionTypeView != null) {
-            if (PreferencesHandler.instance.isExternalVpn) {
-                mConnectionTypeView!!.text = getString(R.string.vpn_title)
-                mConnectionTypeView!!.setBackgroundColor(Color.parseColor("#03A9F4"))
-            } else {
-                mConnectionTypeView!!.text = getString(R.string.tor_title)
-                mConnectionTypeView!!.setBackgroundColor(Color.parseColor("#4CAF50"))
-            }
+        if (PreferencesHandler.instance.isExternalVpn) {
+            binding.connectionType.text = getString(R.string.vpn_title)
+            binding.connectionType.setBackgroundColor(Color.parseColor("#03A9F4"))
+        } else {
+            binding.connectionType.text = getString(R.string.tor_title)
+            binding.connectionType.setBackgroundColor(Color.parseColor("#4CAF50"))
         }
-        if (mResultsRecycler != null) {
-            mResultsRecycler!!.performClick()
-            if (mResultsRecycler!!.adapter is MyAdapterInterface) {
-                mResultsRecycler!!.adapter!!.notifyDataSetChanged()
-            }
+        binding.resultsList.performClick()
+        if (binding.resultsList.adapter is MyAdapterInterface) {
+            binding.resultsList.adapter!!.notifyDataSetChanged()
         }
         mActivityVisible = true
     }
@@ -1210,7 +1161,6 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     private fun hideWaitingDialog() {
         if (mShowLoadDialog != null) {
             mShowLoadDialog!!.dismiss()
-            App.instance.mLoadAllStatus.value = "Ожидание"
         }
     }
 
@@ -1261,7 +1211,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             mSearchAutoComplete.setAdapter(mSearchAdapter)
         }
         var myItem = menu.findItem(R.id.menuUseDarkMode)
-        myItem.isChecked = mViewModel!!.nightModeEnabled
+        myItem.isChecked = viewModel.nightModeEnabled
 
 
         // обработаю переключатель быстрой загрузки
@@ -1319,27 +1269,27 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             SEARCH_BOOKS -> {
                 App.instance.mBookSortOption = which
                 // если подключен книжный адаптер- проведу сортировку
-                if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
-                    (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.sort()
+                if (binding.resultsList.adapter is FoundedBooksAdapter) {
+                    (binding.resultsList.adapter as FoundedBooksAdapter?)!!.sort()
                 }
             }
             SEARCH_AUTHORS -> {
                 App.instance.mAuthorSortOptions = which
                 Log.d("surprise", "OPDSActivity sortList 1075: sort authors")
-                if (mResultsRecycler!!.adapter is FoundedAuthorsAdapter) {
-                    (mResultsRecycler!!.adapter as FoundedAuthorsAdapter?)!!.sort()
+                if (binding.resultsList.adapter is FoundedAuthorsAdapter) {
+                    (binding.resultsList.adapter as FoundedAuthorsAdapter?)!!.sort()
                 }
             }
             SEARCH_SEQUENCE -> {
                 App.instance.mOtherSortOptions = which
-                if (mResultsRecycler!!.adapter is FoundedSequencesAdapter) {
-                    (mResultsRecycler!!.adapter as FoundedSequencesAdapter?)!!.sort()
+                if (binding.resultsList.adapter is FoundedSequencesAdapter) {
+                    (binding.resultsList.adapter as FoundedSequencesAdapter?)!!.sort()
                 }
             }
             SEARCH_GENRE -> {
                 App.instance.mOtherSortOptions = which
-                if (mResultsRecycler!!.adapter is FoundedGenresAdapter) {
-                    (mResultsRecycler!!.adapter as FoundedGenresAdapter?)!!.sort()
+                if (binding.resultsList.adapter is FoundedGenresAdapter) {
+                    (binding.resultsList.adapter as FoundedGenresAdapter?)!!.sort()
                 }
             }
         }
@@ -1356,7 +1306,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             return true
         }
         if (id == R.id.menuUseDarkMode) {
-            mViewModel!!.switchNightMode()
+            viewModel.switchNightMode()
             Handler().postDelayed(ResetApp(), 100)
             return true
         }
@@ -1380,7 +1330,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             return true
         }
         if (id == R.id.menuLoadAllBooks) {
-            mMassLoadSwitcher!!.toggle()
+            binding.showAllSwitcher.toggle()
             invalidateMenu()
             return true
         }
@@ -1522,31 +1472,31 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     }
 
     private fun showReadedBooks() {
-        if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
-            (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.showReaded(sBooksForDownload!!)
+        if (binding.resultsList.adapter is FoundedBooksAdapter) {
+            (binding.resultsList.adapter as FoundedBooksAdapter?)!!.showReaded(sBooksForDownload!!)
         }
     }
 
     private fun showDownloadedBooks() {
-        if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
-            (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.showDownloaded(sBooksForDownload!!)
+        if (binding.resultsList.adapter is FoundedBooksAdapter) {
+            (binding.resultsList.adapter as FoundedBooksAdapter?)!!.showDownloaded(sBooksForDownload!!)
         }
     }
 
     private fun hideReadedBooks() {
-        if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
-            (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.hideReaded()
+        if (binding.resultsList.adapter is FoundedBooksAdapter) {
+            (binding.resultsList.adapter as FoundedBooksAdapter?)!!.hideReaded()
         }
     }
 
     private fun hideDownloadedBooks() {
-        if (mResultsRecycler!!.adapter is FoundedBooksAdapter) {
-            (mResultsRecycler!!.adapter as FoundedBooksAdapter?)!!.hideDownloaded()
+        if (binding.resultsList.adapter is FoundedBooksAdapter) {
+            (binding.resultsList.adapter as FoundedBooksAdapter?)!!.hideDownloaded()
         }
     }
 
     private fun clearHistory() {
-        mViewModel!!.clearHistory()
+        viewModel.clearHistory()
         autocompleteStrings = ArrayList()
         mSearchAdapter =
             ArrayAdapter(this, android.R.layout.simple_list_item_1, autocompleteStrings)
@@ -1557,7 +1507,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     private fun downloadAllBooks() {
         // добавлю книги в список для загрузки
         // если выбран тип загрузки книг и они существуют- предлагаю выбрать тип загрузки
-        val status = mViewModel!!.downloadAll(false)
+        val status = viewModel.downloadAll(false)
         observeBookScheduleAdd(status)
     }
 
@@ -1609,10 +1559,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                     .setTitle(getString(R.string.download_books_title))
                     .setMessage(getString(R.string.download_books_msg))
                     .setPositiveButton("Отменить") { _: DialogInterface?, _: Int ->
-                        if (App.instance.mProcess != null) {
-                            WorkManager.getInstance(this@OPDSActivity)
-                                .cancelWorkById(App.instance.mProcess!!.id)
-                        }
+                        viewModel.searchCancelled = true
                         mMultiplyDownloadDialog?.dismiss()
                         // отменю операцию
                         Toast.makeText(
@@ -1631,14 +1578,8 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                     .setPositiveBtnText("Отменить")
                     .onPositiveClicked(object : GifDialogListener {
                         override fun onClick() {
-                            if (App.instance.mProcess != null) {
-                                Log.d("surprise", "OPDSActivity OnClick kill process")
-                                WorkManager.getInstance(this@OPDSActivity)
-                                    .cancelWorkById(App.instance.mProcess!!.id)
-                            }
-                            if (mMultiplyDownloadDialog != null) {
-                                mMultiplyDownloadDialog!!.dismiss()
-                            }
+                            viewModel.searchCancelled = true
+                            mMultiplyDownloadDialog?.dismiss()
                             // отменю операцию
                             Toast.makeText(
                                 this@OPDSActivity,
@@ -1650,8 +1591,8 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                     .build()
             }
         }
-        //mMultiplyDownloadDialog.setMessage("Считаю количество книг для скачивания");
         if (!this@OPDSActivity.isFinishing) {
+            lifecycle.addObserver(DialogDismissLifecycleObserver(mMultiplyDownloadDialog))
             mMultiplyDownloadDialog!!.show()
         }
     }
@@ -1672,11 +1613,11 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                     when (which) {
                         0 -> {
                             App.sSearchType = SEARCH_BOOKS
-                            doSearch(getBaseOPDSUrl() + "/opds/new/0/new", false)
+                            doSearch("/opds/new/0/new", false)
                         }
-                        1 -> doSearch(getBaseOPDSUrl() + "/opds/newgenres", false)
-                        2 -> doSearch(getBaseOPDSUrl() + "/opds/newauthors", false)
-                        3 -> doSearch(getBaseOPDSUrl() + "/opds/newsequences", false)
+                        1 -> doSearch("/opds/newgenres", false)
+                        2 -> doSearch("/opds/newauthors", false)
+                        3 -> doSearch("/opds/newsequences", false)
                     }
                 }
                 .show()
@@ -1713,14 +1654,14 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             }
         }
         val searchString = URLEncoder.encode(s, "utf-8").replace("+", "%20")
-        doSearch(getSearchRequest(sSearchType, searchString), false)
+        doSearch(URLHelper.getSearchRequest(sSearchType, searchString), false)
     }
 
     private fun addValueToAutocompleteList(s: String) {
         // занесу значение в список автозаполнения
         if (putSearchValue(s)) {
             // обновлю список поиска
-            autocompleteStrings = mViewModel!!.searchAutocomplete
+            autocompleteStrings = viewModel.searchAutocomplete
             mSearchAdapter!!.clear()
             mSearchAdapter!!.addAll(autocompleteStrings)
             mSearchAdapter!!.notifyDataSetChanged()
@@ -1728,6 +1669,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
     }
 
     private fun doSearch(s: String?, searchOnBackPressed: Boolean) {
+
         mFab!!.visibility = View.GONE
         mCurrentPage = 0
         if (s != null && s.isNotEmpty()) {
@@ -1738,42 +1680,21 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
             PreferencesHandler.instance.lastLoadedUrl = s
             if (!searchOnBackPressed) {
                 if (mLastLoadedPageUrl != null) {
-                    Log.d(
-                        "surprise",
-                        "OPDSActivity doSearch 1733: add to history: $mLastLoadedPageUrl"
-                    )
                     instance!!.addToHistory(
                         mLastLoadedPageUrl!!
                     )
                 }
-                Log.d("surprise", "OPDSActivity doSearch 1736: save last loaded page $s")
                 mLastLoadedPageUrl = s
             }
-            // очищу историю поиска и положу туда начальное значение
-//            if (addToHistory || History.getInstance().isOneElementInQueue()) {
-//                Log.d("surprise", "OPDSActivity doSearch 1730: add to HISTORY");
-//                History.getInstance().addToHistory(s);
-//            }
             showLoadWaitingDialog()
             if (!searchOnBackPressed) {
                 // сохраню порядковый номер элемента по которому был клик, если он был
-                mViewModel!!.saveClickedIndex(sClickedItemIndex)
+                viewModel.saveClickedIndex(sClickedItemIndex)
             }
             sClickedItemIndex = -1
-            observeSearchStatus(mViewModel!!.request(s))
+            viewModel.request(s)
             // добавлю значение в историю
         }
-    }
-
-    private fun observeSearchStatus(requestId: UUID) {
-        val workInfo = WorkManager.getInstance(this).getWorkInfoByIdLiveData(requestId)
-        workInfo.observe(this, { workInfo1: WorkInfo? ->
-            if (workInfo1 != null) {
-                if (workInfo1.state.isFinished) {
-                    hideWaitingDialog()
-                }
-            }
-        })
     }
 
     private fun showLoadWaitingDialog() {
@@ -1887,7 +1808,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         }
         if (url != null) {
             scrollToTop()
-            doSearch(getBaseOPDSUrl() + url, false)
+            doSearch(URLHelper.getBaseUrl() + url, false)
         }
     }
 
@@ -1954,7 +1875,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 val lastPage = instance!!.lastPage
                 if (lastPage != null) {
                     // получу значение элемента, по которому кликнули в предыдущем поиске
-                    sElementForSelectionIndex = mViewModel!!.lastClickedElement
+                    sElementForSelectionIndex = viewModel.lastClickedElement
                     doSearch(lastPage, true)
                     mLastLoadedPageUrl = lastPage
                     return true
@@ -2042,7 +1963,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 item = downloadLinks[counter1]
                 Log.d("surprise", "OPDSActivity: 2064 item mime is " + item.mime)
                 if (item.mime == longMime) {
-                    mViewModel!!.addToDownloadQueue(item)
+                    viewModel.addToDownloadQueue(item)
                     Log.d("surprise", "OPDSActivity: 2064 add " + item.mime)
                     break
                 }
@@ -2061,26 +1982,8 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == MainActivity.START_TOR) {
-            // перезагружу страницу
-            val lastUrl = instance!!.showLastPage()
-            if (lastUrl.isNotEmpty()) {
-                showLoadWaitingDialog()
-                mViewModel!!.request(lastUrl)
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
-        }
-    }
-
     private fun scrollToTop() {
-        if (mResultsRecycler != null) {
-            mResultsRecycler!!.scrollToPosition(0)
-        }
-        if (mScrollView != null) {
-            mScrollView!!.smoothScrollTo(0, 0)
-        }
+        binding.resultsList.scrollToPosition(0)
     }
 
     private fun invalidateMenu() {
@@ -2090,7 +1993,6 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
                 Log.d("surprise", "OPDSActivity onMenuOpened 1036: showing search")
                 mSearchView!!.visibility = View.VISIBLE
             } else {
-                Log.d("surprise", "OPDSActivity onMenuOpened 1040: hide search")
                 mSearchView!!.visibility = View.INVISIBLE
             }
         }, 100)
@@ -2135,7 +2037,6 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         val sNothingFound = MutableLiveData<Boolean>()
         val sNewSearch = MutableLiveData<Boolean>()
         var sClickedItemIndex = -1
-        val isLoadError = MutableLiveData<Boolean>()
         var sLoadNextPage = MutableLiveData<Boolean>()
 
         // ВИДЫ ПОИСКА

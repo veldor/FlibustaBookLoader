@@ -20,7 +20,6 @@ internal object GenresParser {
         var handledEntryCounter = 0
         while (entries.item(counter).also { entry = it } != null) {
             ++handledEntryCounter
-            App.instance.mLoadAllStatus.postValue("Обрабатываю жанр $handledEntryCounter из $entriesLength")
             genre = Genre()
             try {
                 genre.label =

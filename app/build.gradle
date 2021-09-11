@@ -57,6 +57,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
 
 
+    //noinspection GradleDependency
     implementation 'androidx.work:work-runtime:2.5.0'
 
     implementation 'lib.kashif:folderpicker:2.4'
@@ -97,6 +98,7 @@ dependencies {
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.5'
     implementation "androidx.core:core-ktx:$core_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
+    //noinspection GradleDependency
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
 }

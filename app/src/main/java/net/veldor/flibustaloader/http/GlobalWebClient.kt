@@ -23,6 +23,7 @@ object GlobalWebClient {
     const val DISCONNECTED = 2
     @Throws(IOException::class)
     fun request(requestString: String): String? {
+        Log.d("surprise", "request: requesting $requestString")
         // если используется внешний VPN- выполню поиск в нём, иначае- в TOR
         if (PreferencesHandler.instance.isExternalVpn) {
             val response = ExternalVpnVewClient.rawRequest(requestString)
@@ -30,17 +31,14 @@ object GlobalWebClient {
                 return EntityUtils.toString(response.entity)
             }
         } else {
-            val response = MirrorRequestClient().request(requestString)
-            if (response == null) {
-                // сначала попробую запросить инфу с зеркала
-                val webClient: TorWebClient = try {
-                    TorWebClient()
-                } catch (e: ConnectionLostException) {
-                    return null
+            try {
+                val result = TorWebClient().directRequest(requestString)
+                if (!result.isNullOrEmpty()) {
+                    return result
                 }
-                return webClient.request(requestString)
+            } catch (_: Exception) {
+                Log.d("surprise", "checkFlibustaAvailability: error then request mirror")
             }
-            return response
         }
         return null
     }
