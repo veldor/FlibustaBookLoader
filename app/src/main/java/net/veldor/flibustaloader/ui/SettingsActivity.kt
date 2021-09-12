@@ -46,11 +46,6 @@ class SettingsActivity : BaseActivity(),
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d("surprise", "SettingsActivity onDestroy 72: DESTROYED")
-    }
-
     override fun setupInterface() {
         super.setupInterface()
         setTheme(R.style.preferencesStyle)
@@ -115,11 +110,12 @@ class SettingsActivity : BaseActivity(),
                             Toast.LENGTH_LONG
                         ).show()
                         // открою окно выбота файла для восстановления
-                        val intent: Intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                            Intent(Intent.ACTION_OPEN_DOCUMENT)
-                        } else {
-                            Intent(Intent.ACTION_GET_CONTENT)
-                        }
+                        val intent: Intent =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                Intent(Intent.ACTION_OPEN_DOCUMENT)
+                            } else {
+                                Intent(Intent.ACTION_GET_CONTENT)
+                            }
                         intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                         intent.type = "application/zip"
                         if (TransportUtils.intentCanBeHandled(intent)) {
@@ -295,6 +291,41 @@ class SettingsActivity : BaseActivity(),
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_connection, rootKey)
         }
+
+        override fun onResume() {
+            super.onResume()
+            val useMirrorPref =
+                findPreference<Preference>(getString(R.string.pref_use_custom_mirror))
+            useMirrorPref?.summary =
+                if (PreferencesHandler.instance.isCustomMirror) getString(R.string.used_title) else getString(
+                    R.string.disabled_title
+                )
+            useMirrorPref?.setOnPreferenceChangeListener { _: Preference?, _: Any? ->
+                useMirrorPref.summary =
+                    if (PreferencesHandler.instance.isCustomMirror) getString(R.string.disabled_title) else getString(
+                        R.string.used_title
+                    )
+                true
+            }
+            val mirrorAddress =
+                findPreference<Preference>(getString(R.string.pref_custom_flibusta_mirror))
+            mirrorAddress?.summary =
+                if (PreferencesHandler.instance.customMirror == PreferencesHandler.BASE_URL) getString(
+                    R.string.custom_mirror_hint
+                ) else PreferencesHandler.instance.customMirror
+            mirrorAddress?.setOnPreferenceChangeListener { _: Preference?, value: Any? ->
+                val newValue = value as String
+                if(newValue.isEmpty()){
+                    PreferencesHandler.instance.customMirror = null
+                    mirrorAddress.summary = getString(R.string.custom_mirror_hint)
+                    return@setOnPreferenceChangeListener false
+                }
+                else{
+                    mirrorAddress.summary = newValue
+                }
+                true
+            }
+        }
     }
 
     class ViewPreferencesFragment : PreferenceFragmentCompat() {
@@ -393,7 +424,8 @@ class SettingsActivity : BaseActivity(),
                 findPreference(getString(R.string.pref_download_location))
             if (mChangeDownloadFolderPreference != null) {
                 // отображу текущую выбранную папку
-                mChangeDownloadFolderPreference!!.summary = "Текущая папка: " + PreferencesHandler.instance.getDownloadDirLocation()
+                mChangeDownloadFolderPreference!!.summary =
+                    "Текущая папка: " + PreferencesHandler.instance.getDownloadDirLocation()
                 mChangeDownloadFolderPreference!!.onPreferenceClickListener =
                     Preference.OnPreferenceClickListener {
                         // открою диалог выбора папки

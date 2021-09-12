@@ -245,4 +245,7 @@
     <string name="web_view_mode_button">Режим браузера</string>
     <string name="opds_view_button">Режим каталога</string>
     <string name="used_mirror_message">Используется альтернативное зеркало, так как основной сайт недоступен. Чтобы попытаться подключиться к основному сайту- перезапустите приложение</string>
+    <string name="custom_mirror_hint">Зеркало в виде https://mirror.net Тут можно назначить зеркало, с которого будет загружаться информация. При проблемах с соединением поставьте пустое значение</string>
+    <string name="used_title">Активно</string>
+    <string name="disabled_title">Отключено</string>
 </resources>

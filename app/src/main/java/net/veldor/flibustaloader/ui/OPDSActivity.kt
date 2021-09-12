@@ -302,7 +302,7 @@ class OPDSActivity : BaseActivity(), SearchView.OnQueryTextListener {
         viewModel.searchResults.observe(this, {
             mShowLoadDialog?.dismiss()
             if(it.appended){
-                (binding.resultsList.adapter as FoundedItemAdapter).append(it.results)
+                (binding.resultsList.adapter as FoundedItemAdapter).appendContent(it.results)
             }
             else{
                 (binding.resultsList.adapter as FoundedItemAdapter).setContent(it.results)

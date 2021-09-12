@@ -75,7 +75,7 @@ class OPDSViewModel(application: Application) : GlobalViewModel(application), My
     val randomBookUrl: String
         get() {
             val random = Random()
-            return App.BASE_BOOK_URL + random.nextInt(App.MAX_BOOK_NUMBER)
+            return URLHelper.getFlibustaUrl() +  App.BASE_BOOK_URL + random.nextInt(App.MAX_BOOK_NUMBER)
         }
 
     fun shareLink(mWebView: MyWebView) {

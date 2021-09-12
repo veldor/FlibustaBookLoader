@@ -33,6 +33,7 @@ import cz.msebera.android.httpclient.ssl.SSLContexts
 import net.veldor.flibustaloader.http.JavaConnectionSocketFactory
 import net.veldor.flibustaloader.http.JavaSslConnectionSocketFactory
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver
+import net.veldor.flibustaloader.utils.URLHelper
 import java.io.*
 import java.lang.Exception
 import java.lang.StringBuilder
@@ -177,9 +178,6 @@ class MyWebViewClient internal constructor() : WebViewClient() {
     private fun handleRequest(view: WebView, incomingUrl: String): WebResourceResponse? {
         var url = incomingUrl
         Log.d("surprise", "handleRequest: i here and handle $incomingUrl")
-        if (App.instance.useMirror) {
-            url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com")
-        }
         return try {
             mViewMode = PreferencesHandler.instance.viewMode
             mNightMode = PreferencesHandler.instance.nightMode
@@ -301,7 +299,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
 
             // если загружена страница- добавлю её как последнюю загруженную
             if (mime.startsWith(HTML_TYPE)) {
-                if (!url.startsWith(AJAX_REQUEST)) {
+                if (!url.startsWith(URLHelper.getFlibustaUrl() + "/makebooklist?")) {
                     PreferencesHandler.instance.lastLoadedUrl = url
                     // попробую найти внутри ссылки на книги
                     // скопирую inputStream для разбора ссылок
@@ -509,7 +507,6 @@ class MyWebViewClient internal constructor() : WebViewClient() {
         private const val MY_COMPAT_FAT_CSS_STYLE = "myCompatFatStyle.css"
         private const val MY_JS = "myJs.js"
         private const val HTML_TYPE = "text/html"
-        private const val AJAX_REQUEST = "http://flibustahezeous3.onion/makebooklist?"
     }
 
     init {

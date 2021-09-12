@@ -20,6 +20,7 @@ import android.util.Log
 import androidx.work.*
 import net.veldor.flibustaloader.utils.MyFileReader.SUBSCRIPTIONS_FILE
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.URLHelper
 import java.io.*
 import java.lang.Exception
 import java.util.*
@@ -78,7 +79,7 @@ class CheckSubscriptionsWorker(context: Context, workerParams: WorkerParameters)
                             return Result.success()
                         }
                         if (!isStopped) {
-                            answer = webClient.request(App.BASE_URL + mNextPageLink)
+                            answer = webClient.request(URLHelper.getFlibustaUrl() + mNextPageLink)
                         }
                     }
                     mNextPageLink = null

@@ -15,7 +15,7 @@ class TestParser(private val text: String) {
     var nextPageLink: String? = null
 
     fun parse(): ArrayList<FoundedEntity> {
-
+        var contentType: String? = null
         var downlodLink: DownloadLink
         var entity: FoundedEntity
         val authorStringBuilder = StringBuilder()
@@ -126,7 +126,7 @@ class TestParser(private val text: String) {
                             else{
                                 // if it is a sequence selector- save link
                                 if(foundedEntity!!.type == TYPE_SEQUENCE){
-                                    attributeIndex = attributes.getIndex("rel")
+                                    attributeIndex = attributes.getIndex("href")
                                     foundedEntity!!.link = attributes.getValue(attributeIndex)
                                 }
                             }
@@ -157,23 +157,27 @@ class TestParser(private val text: String) {
             override fun characters(ch: CharArray?, start: Int, length: Int) {
                 // Если перед этим мы отметили, что имя тэга NAME - значит нам надо текст использовать.
                 if (idFound) {
+                    idFound = false
                     textValue = String(ch!!, start, length)
-                    when {
-                        textValue!!.contains(TYPE_BOOK) -> {
-                            foundedEntity!!.type = TYPE_BOOK
-                        }
-                        textValue!!.contains(TYPE_AUTHOR) -> {
-                            foundedEntity!!.type = TYPE_AUTHOR
-                        }
-                        textValue!!.contains(TYPE_GENRE) -> {
-                            foundedEntity!!.type = TYPE_GENRE
-                        }
-                        textValue!!.contains(TYPE_SEQUENCE) -> {
-                            foundedEntity!!.type = TYPE_SEQUENCE
+                    // считаю, что все найденные элементы одного типа
+                    if(contentType == null) {
+                        when {
+                            textValue!!.contains(TYPE_BOOK) -> {
+                                contentType = TYPE_BOOK
+                            }
+                            textValue!!.contains(TYPE_AUTHOR) -> {
+                                contentType = TYPE_AUTHOR
+                            }
+                            textValue!!.contains(TYPE_GENRE) -> {
+                                contentType = TYPE_GENRE
+                            }
+                            textValue!!.contains(TYPE_SEQUENCE) -> {
+                                contentType = TYPE_SEQUENCE
+                            }
                         }
                     }
-                    foundedEntity?.id = textValue!!
-                    idFound = false
+                    foundedEntity!!.type = contentType!!
+                    foundedEntity!!.id = textValue!!
                 }
                 if(nameFound){
                     foundedEntity!!.name = String(ch!!, start, length)

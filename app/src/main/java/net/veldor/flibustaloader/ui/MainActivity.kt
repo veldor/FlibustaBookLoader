@@ -10,6 +10,7 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -127,6 +128,7 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("surprise", "onCreate: launch main activity")
         viewModel = ViewModelProvider(this).get(StartViewModel::class.java)
         // буду отслеживать проверку доступности флибусты
         viewModel.connectionTestSuccess.observe(this, {
@@ -503,6 +505,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun checkFlibustaAvailability() {
+        Log.d("surprise", "checkFlibustaAvailability: init check")
         binding.statusWrapper.setText(getString(R.string.check_flibusta_availability_message))
         previousText = getString(R.string.check_flibusta_availability_message)
         viewModel.checkFlibustaAvailability()
@@ -681,6 +684,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun launchView() {
+        viewModel.cancelCheck()
         // проверю очередь скачивания. Если она не пуста- предложу продолжить закачку
         // проверю, не запущено ли приложение с помощью интента. Если да- запущу программу в webView режиме
         val targetActivityIntent: Intent

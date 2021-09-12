@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.http
 
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import cz.msebera.android.httpclient.HttpHeaders
 import cz.msebera.android.httpclient.HttpResponse
@@ -45,10 +46,6 @@ class TorWebClient {
 
     fun request(incomingText: String): String? {
         var text = incomingText
-        if (App.instance.useMirror) {
-            // TODO заменить зеркало
-            text = text.replace("http://flibustahezeous3.onion", "http://flibusta.is")
-        }
         try {
             val httpGet = HttpGet(text)
             httpGet.setHeader(
@@ -86,6 +83,7 @@ class TorWebClient {
 
     @Throws(java.lang.Exception::class)
     fun directRequest(text: String?): String? {
+        Log.d("surprise", "directRequest: make direct request $text")
             val httpGet = HttpGet(text)
             httpGet.setHeader(
                 "User-Agent",
@@ -100,10 +98,6 @@ class TorWebClient {
     @Throws(IOException::class)
     private fun simpleGetRequest(incomingUrl: String): HttpResponse {
         var url = incomingUrl
-        if (App.instance.useMirror) {
-            // TODO заменить зеркало
-            url = url.replace("http://flibustahezeous3.onion", "https://flibusta.appspot.com")
-        }
         val httpGet = HttpGet(url)
         httpGet.setHeader(
             "Accept",
@@ -334,7 +328,7 @@ class TorWebClient {
         val params: UrlEncodedFormEntity? = get2post(uri, login, password)
         try {
             response =
-                executeRequest("http://flibustahezeous3.onion/node?destination=node", null, params)
+                executeRequest(URLHelper.getFlibustaUrl() + "/node?destination=node", null, params)
             App.instance.requestStatus.postValue(
                 App.instance.getString(R.string.response_received_message)
             )
@@ -401,8 +395,8 @@ class TorWebClient {
                 request.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
                 request.setHeader(HttpHeaders.CACHE_CONTROL, "no-cache")
                 request.setHeader("DNT", "1")
-                request.setHeader(HttpHeaders.HOST, "flibustahezeous3.onion")
-                request.setHeader("Origin", "http://flibustahezeous3.onion")
+                request.setHeader(HttpHeaders.HOST, URLHelper.getFlibustaUrl())
+                request.setHeader("Origin", URLHelper.getFlibustaUrl())
                 request.setHeader(HttpHeaders.PRAGMA, "no-cache")
                 request.setHeader("Proxy-Connection", "keep-ali e")
                 request.setHeader("Upgrade-Insecure-Requests", "1")
@@ -441,7 +435,7 @@ class TorWebClient {
             paramsArray.add(
                 BasicNameValuePair(
                     "return_to",
-                    "http://flibustahezeous3.onion/openid/authenticate?destination=node"
+                    URLHelper.getFlibustaUrl() + "/openid/authenticate?destination=node"
                 )
             )
             try {

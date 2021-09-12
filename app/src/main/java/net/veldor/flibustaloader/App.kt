@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader
 
 import android.net.Uri
+import android.util.Log
 import android.util.SparseBooleanArray
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.LiveData
@@ -84,6 +85,7 @@ class App : MultiDexApplication() {
         super.onCreate()
         // got instance
         instance = this
+
         setupApp()
         // определю ночной режим
         if (PreferencesHandler.instance.nightMode) {
@@ -293,7 +295,7 @@ class App : MultiDexApplication() {
         //todo switch to false on release
         const val isTestVersion = true
         val sResetLoginCookie = MutableLiveData<Boolean>()
-        const val SEARCH_URL = "http://flibustahezeous3.onion/booksearch?ask="
+        const val SEARCH_URL = "/booksearch?ask="
         const val PIC_MIRROR_URL = "http://flibusta.is"
         private const val PARSE_WEB_REQUEST_TAG = "parse web request"
         var sTorStartTry = 0
@@ -304,14 +306,13 @@ class App : MultiDexApplication() {
         const val VIEW_OPDS = 2
         const val START_TOR = "start_tor"
         var sSearchType = OPDSActivity.SEARCH_BOOKS
-        const val NEW_BOOKS = "http://flibustahezeous3.onion/new"
+        const val NEW_BOOKS = "/new"
         const val VIEW_MODE_NORMAL = 1
         const val VIEW_MODE_LIGHT = 2
         const val VIEW_MODE_FAT = 3
         const val VIEW_MODE_FAST = 4
         const val VIEW_MODE_FAST_FAT = 5
-        const val BASE_URL = "http://flibustahezeous3.onion"
-        const val BASE_BOOK_URL = "http://flibustahezeous3.onion/b/"
+        const val BASE_BOOK_URL = "/b/"
         const val TOR_FILES_LOCATION = "torfiles"
         lateinit var instance: App
             private set

@@ -33,7 +33,7 @@ object URLHelper {
     @kotlin.jvm.JvmStatic
     fun getFlibustaUrl(): String{
         if(PreferencesHandler.instance.isCustomMirror){
-            return PreferencesHandler.instance.customMirror
+            return PreferencesHandler.instance.customMirror.toString()
         }
         return PreferencesHandler.BASE_URL
     }

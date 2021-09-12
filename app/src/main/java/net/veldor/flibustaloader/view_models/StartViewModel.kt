@@ -10,6 +10,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.http.TorWebClient
@@ -18,6 +20,7 @@ import net.veldor.flibustaloader.utils.URLHelper
 
 class StartViewModel : ViewModel() {
 
+    private var currentWork: Job? = null
     private val _connectionTestSuccess = MutableLiveData<Boolean>().apply {}
     val connectionTestSuccess: LiveData<Boolean> = _connectionTestSuccess
     private val _connectionTestFailed = MutableLiveData<Boolean>().apply {}
@@ -25,21 +28,24 @@ class StartViewModel : ViewModel() {
     private var testInProgress = false
 
     fun checkFlibustaAvailability() {
-        viewModelScope.launch(Dispatchers.IO) {
+        currentWork?.cancel()
+        currentWork = viewModelScope.launch(Dispatchers.IO) {
             if (!testInProgress) {
                 testInProgress = true
                 try {
-                    Log.d("surprise", "checkFlibustaAvailability: check ${URLHelper.getFlibustaUrl()}")
-                    val result = TorWebClient().directRequest(URLHelper.getFlibustaUrl())
+                    val url = URLHelper.getFlibustaUrl();
+                    Log.d("surprise", "checkFlibustaAvailability: check $url")
+                    val result = TorWebClient().directRequest(url)
                     if (result.isNullOrEmpty()) {
                         Log.d("surprise", "checkFlibustaAvailability: can't request base mirror")
                     } else {
-                        Log.d("surprise", "checkFlibustaAvailability: base url avaliable")
+                        Log.d("surprise", "checkFlibustaAvailability: base url available")
                         _connectionTestSuccess.postValue(true)
                         testInProgress = false
                         return@launch
                     }
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    e.printStackTrace()
                     Log.d("surprise", "checkFlibustaAvailability: error then request mirror")
                 }
                 Log.d("surprise", "checkFlibustaAvailability: check ${URLHelper.getFlibustaMirrorUrl()}")
@@ -49,7 +55,7 @@ class StartViewModel : ViewModel() {
                     _connectionTestFailed.postValue(true)
                     false
                 } else{
-                    Log.d("surprise", "checkFlibustaAvailability: mirror url avaliable")
+                    Log.d("surprise", "checkFlibustaAvailability: mirror url available")
                     // set use alternative mirror
                     App.instance.useMirror = true
                     NotificationHandler.instance.notifyUseAlternativeMirror()
@@ -57,7 +63,14 @@ class StartViewModel : ViewModel() {
                     false
                 }
             }
+            else{
+                Log.d("surprise", "checkFlibustaAvailability: test already start")
+            }
         }
+    }
+
+    fun cancelCheck(){
+        currentWork?.cancel()
     }
 
 

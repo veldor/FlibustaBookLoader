@@ -21,7 +21,7 @@
         android:defaultValue="false"/>
     <EditTextPreference
         android:title="Назначить зеркало Флибусты"
-        android:summary="Зеркало в виде https://mirror.net Тут можно назначить зеркало, с которого будет загружаться информация. При проблемах с соединением поставьте пустое значение"
+        android:summary="@string/custom_mirror_hint"
         app:key="@string/pref_custom_flibusta_mirror"/>
     <EditTextPreference
         android:title="Зеркало загрузки обложек"

@@ -11,6 +11,7 @@ import net.veldor.flibustaloader.selections.FoundedItem
 import android.util.Log
 import androidx.work.*
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.URLHelper
 import java.util.*
 
 class LoadSubscriptionsWorker(context: Context, workerParams: WorkerParameters) :
@@ -62,7 +63,7 @@ class LoadSubscriptionsWorker(context: Context, workerParams: WorkerParameters) 
                 return Result.success()
             }
             val result = ArrayList<FoundedItem>()
-            var answer = webClient!!.request(App.BASE_URL + "/opds/new/0/new")
+            var answer = webClient!!.request(URLHelper.getFlibustaUrl() + "/opds/new/0/new")
             // сразу же обработаю результат
             if (answer != null && answer.isNotEmpty()) {
                 handleSearchResults(result, answer)
@@ -80,7 +81,7 @@ class LoadSubscriptionsWorker(context: Context, workerParams: WorkerParameters) 
                         e.printStackTrace()
                         return Result.success()
                     }
-                    answer = webClient!!.request(App.BASE_URL + sNextPage)
+                    answer = webClient!!.request(URLHelper.getFlibustaUrl() + sNextPage)
                     handleSearchResults(result, answer!!)
                 }
             }

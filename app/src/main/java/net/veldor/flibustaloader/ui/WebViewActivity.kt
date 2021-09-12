@@ -286,7 +286,7 @@ class WebViewActivity : BaseActivity(), SearchView.OnQueryTextListener {
             binding.myWebView.loadUrl(URLHelper.getBaseUrl())
             return true
         } else if (itemId == R.id.showNew) {
-            binding.myWebView.loadUrl(App.NEW_BOOKS)
+            binding.myWebView.loadUrl(URLHelper.getFlibustaUrl() + App.NEW_BOOKS)
             return true
         } else if (itemId == R.id.randomBook) {
             binding.myWebView.loadUrl(viewModel.randomBookUrl)
@@ -344,7 +344,7 @@ class WebViewActivity : BaseActivity(), SearchView.OnQueryTextListener {
 
     private fun makeSearch(s: String) {
         changeTitle("Поиск: $s")
-        val searchString = App.SEARCH_URL + s.trim { it <= ' ' }
+        val searchString = URLHelper.getFlibustaUrl() + App.SEARCH_URL + s.trim { it <= ' ' }
         binding.myWebView.loadUrl(searchString)
         // занесу значение в список автозаполнения
         if (putSearchValue(s)) {

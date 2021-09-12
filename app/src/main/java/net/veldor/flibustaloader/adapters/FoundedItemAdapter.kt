@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
-import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.BR
@@ -25,7 +24,8 @@ class FoundedItemAdapter(arrayList: ArrayList<FoundedEntity>) :
     RecyclerView.Adapter<FoundedItemAdapter.ViewHolder>(), MyAdapterInterface {
     private var values: ArrayList<FoundedEntity> = arrayListOf()
 
-    private var mLayoutInflater: LayoutInflater = LayoutInflater.from(App.instance.applicationContext)
+    private var mLayoutInflater: LayoutInflater =
+        LayoutInflater.from(App.instance.applicationContext)
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ViewHolder {
         val binding = FoundedItemBinding.inflate(
@@ -43,15 +43,9 @@ class FoundedItemAdapter(arrayList: ArrayList<FoundedEntity>) :
     }
 
     fun setContent(newData: ArrayList<FoundedEntity>) {
-        Log.d("surprise", "setContent: set new content")
-        if (newData.size == 0 && values.size == 0) {
-            Toast.makeText(App.instance, "Жанры не найдены", Toast.LENGTH_SHORT).show()
-            notifyItemRangeChanged(0,0)
-        } else {
-            val previousArrayLen = values.size
-            values.addAll(newData)
-            notifyItemRangeChanged(0, newData.size)
-        }
+        notifyItemRangeRemoved(0, values.size)
+        values = newData
+        notifyItemRangeInserted(0, newData.size)
     }
 
     fun sort() {
@@ -59,14 +53,16 @@ class FoundedItemAdapter(arrayList: ArrayList<FoundedEntity>) :
     }
 
     override fun clearList() {
+        notifyItemRangeRemoved(0, values.size)
         values = ArrayList()
-        notifyItemRangeChanged(0,0)
+        notifyItemRangeInserted(0,0)
     }
 
-    fun append(results: ArrayList<FoundedEntity>) {
+    fun appendContent(results: ArrayList<FoundedEntity>) {
+        val oldLength = values.size
         Log.d("surprise", "append: append to existent results")
         values.addAll(results)
-        notifyItemRangeChanged(0, values.size)
+        notifyItemRangeInserted(oldLength, results.size)
     }
 
     inner class ViewHolder(private val binding: FoundedItemBinding) : RecyclerView.ViewHolder(
@@ -82,7 +78,13 @@ class FoundedItemAdapter(arrayList: ArrayList<FoundedEntity>) :
                 ) == OPDSActivity.sElementForSelectionIndex
             ) {
                 Log.d("surprise", "ViewHolder bind 118: mark selected")
-                binding.root.setBackgroundColor(ResourcesCompat.getColor(App.instance.resources, R.color.selected_item_background, null))
+                binding.root.setBackgroundColor(
+                    ResourcesCompat.getColor(
+                        App.instance.resources,
+                        R.color.selected_item_background,
+                        null
+                    )
+                )
 
                 // очищу переменную с элементом
                 OPDSActivity.sElementForSelectionIndex = -1
@@ -93,32 +95,45 @@ class FoundedItemAdapter(arrayList: ArrayList<FoundedEntity>) :
                         R.drawable.genre_layout,
                         null
                     )
+                when (item.type) {
+                    TYPE_BOOK -> {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.book_name_color,
+                                null
+                            )
+                        )
+                    }
+                    TYPE_AUTHOR -> {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.author_text_color,
+                                null
+                            )
+                        )
+                    }
+                    TYPE_SEQUENCE -> {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.sequences_text,
+                                null
+                            )
+                        )
+                    }
+                    TYPE_GENRE -> {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.genre_text_color,
+                                null
+                            )
+                        )
+                    }
+                }
             }
-        }
-
-        init {
-            if(item.type == TYPE_BOOK){
-                binding.name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.book_name_color, null))
-            }
-            else if(item.type == TYPE_AUTHOR){
-                binding.name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.author_text_color, null))
-            }
-            else if(item.type == TYPE_SEQUENCE){
-                binding.name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.sequences_text, null))
-            }
-            else if(item.type == TYPE_GENRE){
-                binding.name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.genre_text_color, null))
-            }
-//            container.setOnClickListener {
-//                OPDSActivity.sLiveSearchLink.postValue(item.term)
-//                // сообщу, по какому именно элементу был клик
-//                OPDSActivity.sClickedItemIndex = mGenres.indexOf(mGenre)
-//                if (mGenre!!.term!!.contains("newgenres")) {
-//                    OPDSActivity.sBookmarkName = "Новинки в жанре: " + mGenre!!.label
-//                } else {
-//                    OPDSActivity.sBookmarkName = "Жанр: " + mGenre!!.label
-//                }
-//            }
         }
     }
 

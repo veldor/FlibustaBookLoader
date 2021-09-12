@@ -7,6 +7,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.work.*
+import net.veldor.flibustaloader.utils.URLHelper
 import java.io.UnsupportedEncodingException
 import java.lang.Exception
 
@@ -21,7 +22,7 @@ class LoginWorker(context: Context, workerParams: WorkerParameters) :
         Log.d("surprise", "LoginWorker doWork prepare work")
         try {
             // создам запрос на аутентификацию
-            val url = "http://flibustahezeous3.onion/node?destination=node"
+            val url = URLHelper.getBaseUrl() + "/node?destination=node"
             App.instance.requestStatus.postValue(
                 App.instance.getString(R.string.message_prepare_request)
             )

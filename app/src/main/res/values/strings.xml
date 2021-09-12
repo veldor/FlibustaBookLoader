@@ -268,4 +268,7 @@
     <string name="opds_view_button">Catalog view</string>
     <string name="select_view_body">Select app view</string>
     <string name="used_mirror_message">Main site unavailable, mirror used. Restart app for try connect to main window</string>
+    <string name="used_title">used</string>
+    <string name="disabled_title">disabled</string>
+    <string name="custom_mirror_hint">Mirror for use</string>
 </resources>
