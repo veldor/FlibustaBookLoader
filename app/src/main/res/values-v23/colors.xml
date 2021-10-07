@@ -3,6 +3,7 @@
     <color name="colorPrimary">#3e5f75</color>
     <color name="colorPrimaryDark">#081b86</color>
     <color name="textColor">#000000</color>
+    <color name="tintColor">#CCCCCC</color>
     <color name="background_color">#ffffff</color>
     <color name="sequences_background">#A4FFFFFF</color>
     <color name="sequences_text">#5403ad</color>

@@ -25,29 +25,6 @@ class PeriodicCheckFlibustaAvailabilityWorker(context: Context, workerParams: Wo
             // помечу рабочего важным
             // Mark the Worker as important
             setForegroundAsync(createForegroundInfo())
-            if (App.instance.mLoadedTor.value == null) {
-                while (App.instance.torInitInProgress) {
-                    try {
-                        Thread.sleep(100)
-                    } catch (e: InterruptedException) {
-                        e.printStackTrace()
-                    }
-                }
-                App.instance.torInitInProgress = true
-                // попробую стартовать TOR
-                val starter = TorStarter()
-                App.sTorStartTry = 0
-                while (App.sTorStartTry < 4) {
-                    // есть три попытки, если все три неудачны- верну ошибку
-                    if (starter.startTor()) {
-                        App.sTorStartTry = 0
-                        break
-                    } else {
-                        App.sTorStartTry++
-                    }
-                }
-                App.instance.torInitInProgress = false
-            }
             // готово, проверю доступность
 
             val webClient = TorWebClient()

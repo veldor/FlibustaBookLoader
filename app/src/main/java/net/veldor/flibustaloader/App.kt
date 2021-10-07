@@ -2,9 +2,7 @@ package net.veldor.flibustaloader
 
 import android.net.Uri
 import android.util.Log
-import android.util.SparseBooleanArray
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.multidex.MultiDexApplication
 import androidx.room.Room
@@ -13,104 +11,44 @@ import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.veldor.flibustaloader.database.AppDatabase
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.http.GlobalWebClient
+import net.veldor.flibustaloader.http.TorStarter
 import net.veldor.flibustaloader.notificatons.NotificationHandler
-import net.veldor.flibustaloader.selections.Author
-import net.veldor.flibustaloader.selections.DownloadLink
-import net.veldor.flibustaloader.selections.FoundedBook
-import net.veldor.flibustaloader.selections.FoundedSequence
-import net.veldor.flibustaloader.ui.OPDSActivity
-import net.veldor.flibustaloader.utils.*
+import net.veldor.flibustaloader.utils.LogHandler
+import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import net.veldor.flibustaloader.view_models.OPDSViewModel
-import net.veldor.flibustaloader.workers.*
+import net.veldor.flibustaloader.workers.DownloadBooksWorker
+import net.veldor.flibustaloader.workers.PeriodicCheckFlibustaAvailabilityWorker
+import net.veldor.flibustaloader.workers.ShareLastReleaseWorker
+import net.veldor.flibustaloader.workers.StartTorWorker
 import java.io.File
-import java.io.InputStream
-import java.util.*
 import java.util.concurrent.TimeUnit
 
+
 class App : MultiDexApplication() {
+    val liveBookDownloadInProgress: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
+    val liveBookJustLoaded: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
+    val liveBookJustRemovedFromQueue: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
+    val liveBookJustError: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
+
     // хранилище статуса HTTP запроса
     val requestStatus = MutableLiveData<String>()
 
-    val mSelectedSequences = MutableLiveData<ArrayList<FoundedSequence>>()
-
-    // место для хранения выбранной серии
-    val mSelectedSequence = MutableLiveData<FoundedSequence>()
-
-    // добавление результатов к уже имеющимся
-    var mResultsEscalate = false
-
-    // место для хранения выбранного писателя
-    val mSelectedAuthor = MutableLiveData<Author>()
-
-    // место для хранения выбора писателей
-    val mSelectedAuthors = MutableLiveData<ArrayList<Author>>()
-    var mDownloadUnloaded = false
-    var mSelectedFormat: String? = null
     var useMirror = false
-    private var sNotificator: NotificationHandler? = null
     var downloadedApkFile: File? = null
     var updateDownloadUri: Uri? = null
-    val mDownloadLinksList = MutableLiveData<ArrayList<DownloadLink>>()
-    val mSelectedBook = MutableLiveData<FoundedBook>()
-    val mContextBook = MutableLiveData<FoundedBook>()
     val mLoadedTor = MutableLiveData<AndroidOnionProxyManager>()
-    val mAuthorNewBooks = MutableLiveData<Author>()
-    val mMultiplyDownloadStatus = MutableLiveData<String>()
     val mLiveDownloadedBookId = MutableLiveData<String>()
-    var mDownloadAllWork: LiveData<WorkInfo>? = null
-    var mDownloadsInProgress = false
-    val mBooksDownloadFailed = ArrayList<FoundedBook>()
-    var mBookSortOption = -1
-    var mAuthorSortOptions = -1
-    var mOtherSortOptions = -1
-    val mSubscribeResults = MutableLiveData<ArrayList<FoundedBook>>()
-    val mShowCover = MutableLiveData<FoundedBook>()
-    var mDownloadSelectedBooks: SparseBooleanArray? = null
-    val mTypeSelected = MutableLiveData<Boolean>()
+    val liveDownloadState = MutableLiveData(DownloadBooksWorker.DOWNLOAD_FINISHED)
     lateinit var mDatabase: AppDatabase
-    var mSearchWork: LiveData<WorkInfo> = MutableLiveData()
-    private var mBooksSubscribe: SubscribeBooks? = null
-    private var mBooksBlacklist: BlacklistBooks? = null
-    private var mAuthorsSubscribe: SubscribeAuthors? = null
-    private var mSequencesSubscribe: SubscribeSequences? = null
-    var mRequestData: InputStream? = null
-    private var mAuthorsBlacklist: BlacklistAuthors? = null
-    private var mSequencesBlacklist: BlacklistSequences? = null
-    private var mGenresBlacklist: BlacklistGenres? = null
-    var torInitInProgress = false
 
 
     override fun onCreate() {
         super.onCreate()
         // got instance
         instance = this
-
-        setupApp()
-        // определю ночной режим
-        if (PreferencesHandler.instance.nightMode) {
-            AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_YES
-            )
-        } else {
-            AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            )
-        }
-        // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
-        handleMassDownload()
-    }
-
-    private fun setupApp() {
-            runBlocking {
-                launch {
-                    startTor()
-                    if (isTestVersion) {
-                        LogHandler.getInstance()!!.initLog()
-                        NotificationHandler.instance.showTestVersionNotification()
-                    }
-                }
-            }
 
         // получаю базу данных
         mDatabase = Room.databaseBuilder(
@@ -127,6 +65,31 @@ class App : MultiDexApplication() {
             )
             .allowMainThreadQueries()
             .build()
+
+        // определю ночной режим
+        if (PreferencesHandler.instance.nightMode) {
+            AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_YES
+            )
+        } else {
+            AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            )
+        }
+        // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
+        handleMassDownload()
+    }
+
+    fun startTorInit() {
+        runBlocking {
+            launch {
+                startTor()
+                if (isTestVersion) {
+                    LogHandler.getInstance()!!.initLog()
+                    NotificationHandler.instance.showTestVersionNotification()
+                }
+            }
+        }
     }
 
     private fun handleMassDownload() {
@@ -141,9 +104,9 @@ class App : MultiDexApplication() {
                     if (info != null) {
                         when (info.state) {
                             WorkInfo.State.ENQUEUED ->                                 // ожидаем запуска скачивания, покажу уведомление
-                                sNotificator!!.showMassDownloadInQueueMessage()
-                            WorkInfo.State.RUNNING -> sNotificator!!.hideMassDownloadInQueueMessage()
-                            WorkInfo.State.SUCCEEDED -> sNotificator!!.cancelBookLoadNotification()
+                                NotificationHandler.instance.showMassDownloadInQueueMessage()
+                            WorkInfo.State.RUNNING -> NotificationHandler.instance.hideMassDownloadInQueueMessage()
+                            WorkInfo.State.SUCCEEDED -> NotificationHandler.instance.cancelBookLoadNotification()
                             else -> {
                             }
                         }
@@ -153,18 +116,12 @@ class App : MultiDexApplication() {
         }
     }
 
-    fun checkDownloadQueue(): Boolean {
-        // получу все книги в очереди скачивания
-        val dao = mDatabase.booksDownloadScheduleDao()
-        val queuedBook = dao.firstQueuedBook
-        return queuedBook != null
-    }
-
     fun startTor() {
         // если используется внешний VPN- TOR не нужен
         if (!PreferencesHandler.instance.isExternalVpn) {
             // если рабочий ещё не запущен- запущу. Если уже работает- проигнорирую
-            if (!torInitInProgress) {
+            if (TorStarter.liveTorLaunchState.value != TorStarter.TOR_LAUNCH_IN_PROGRESS) {
+                TorStarter.liveTorLaunchState.postValue(TorStarter.TOR_LAUNCH_IN_PROGRESS)
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build()
@@ -175,93 +132,25 @@ class App : MultiDexApplication() {
                 WorkManager.getInstance(this)
                     .enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork)
             }
-        }
-        else {
+        } else {
             // по умолчанию считаю, что соединение успешно
             GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED)
         }
     }
 
-    // добавлю хранилище подписок
-    val booksSubscribe: SubscribeBooks
-        get() {
-            if (mBooksSubscribe == null) {
-                mBooksSubscribe = SubscribeBooks()
-            }
-            return mBooksSubscribe!!
-        }
-
-    // добавлю хранилище чёрного списка
-    val booksBlacklist: BlacklistBooks
-        get() {
-            if (mBooksBlacklist == null) {
-                mBooksBlacklist = BlacklistBooks()
-            }
-            return mBooksBlacklist!!
-        }
-    val authorsSubscribe: SubscribeAuthors
-        get() {
-            if (mAuthorsSubscribe == null) {
-                mAuthorsSubscribe = SubscribeAuthors()
-            }
-            return mAuthorsSubscribe!!
-        }
-    val authorsBlacklist: BlacklistAuthors
-        get() {
-            if (mAuthorsBlacklist == null) {
-                mAuthorsBlacklist = BlacklistAuthors()
-            }
-            return mAuthorsBlacklist!!
-        }
-    val sequencesBlacklist: BlacklistSequences
-        get() {
-            if (mSequencesBlacklist == null) {
-                mSequencesBlacklist = BlacklistSequences()
-            }
-            return mSequencesBlacklist!!
-        }
-    val genresBlacklist: BlacklistGenres
-        get() {
-            if (mGenresBlacklist == null) {
-                mGenresBlacklist = BlacklistGenres()
-            }
-            return mGenresBlacklist!!
-        }
-    val sequencesSubscribe: SubscribeSequences
-        get() {
-            if (mSequencesSubscribe == null) {
-                mSequencesSubscribe = SubscribeSequences()
-            }
-            return mSequencesSubscribe!!
-        }
-
-    fun initializeDownload() {
-        if (!DownloadBooksWorker.downloadInProgress) {
-            // отменю предыдущую работу
-            // запущу рабочего, который загрузит все книги
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
-            val downloadAllWorker = OneTimeWorkRequest.Builder(
-                DownloadBooksWorker::class.java
-            ).addTag(OPDSViewModel.MULTIPLY_DOWNLOAD).setConstraints(constraints).build()
-            WorkManager.getInstance(instance).enqueueUniqueWork(
-                OPDSViewModel.MULTIPLY_DOWNLOAD,
-                ExistingWorkPolicy.KEEP,
-                downloadAllWorker
-            )
-            instance.mDownloadAllWork =
-                WorkManager.getInstance(instance).getWorkInfoByIdLiveData(downloadAllWorker.id)
-        }
-    }
-
-    fun handleWebPage(my: InputStream?) {
-        mRequestData = my
-        val parseDataWorker = OneTimeWorkRequest.Builder(
-            ParseWebRequestWorker::class.java
-        ).addTag(PARSE_WEB_REQUEST_TAG).build()
-        WorkManager.getInstance(instance)
-            .enqueueUniqueWork(PARSE_WEB_REQUEST_TAG, ExistingWorkPolicy.REPLACE, parseDataWorker)
+    private fun startDownloadBooksWorker() {
+        // запущу рабочего, который загрузит все книги
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val downloadAllWorker = OneTimeWorkRequest.Builder(
+            DownloadBooksWorker::class.java
+        ).addTag(OPDSViewModel.MULTIPLY_DOWNLOAD).setConstraints(constraints).build()
+        WorkManager.getInstance(instance).enqueueUniqueWork(
+            OPDSViewModel.MULTIPLY_DOWNLOAD,
+            ExistingWorkPolicy.KEEP,
+            downloadAllWorker
+        )
     }
 
 
@@ -291,29 +180,60 @@ class App : MultiDexApplication() {
         WorkManager.getInstance(this).enqueue(task)
     }
 
+    fun requestDownloadBooksStart() {
+        if (PreferencesHandler.instance.isDownloadAutostart) {
+            var workInProgress = false
+            val workManager = WorkManager.getInstance(this)
+            val statuses =
+                workManager.getWorkInfosForUniqueWork(OPDSViewModel.MULTIPLY_DOWNLOAD)
+            val workInfoList: List<WorkInfo> = statuses.get()
+            workInfoList.forEach {
+                if (it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED) {
+                    workInProgress = true
+                }
+            }
+            if (!workInProgress) {
+                startDownloadBooksWorker()
+                DownloadScheduleViewModel.downloadState.postValue(true)
+            }
+        }
+    }
+
+    fun switchDownloadState() {
+        var workStopped = false
+        val workManager = WorkManager.getInstance(this)
+        val statuses =
+            workManager.getWorkInfosForUniqueWork(OPDSViewModel.MULTIPLY_DOWNLOAD)
+        val workInfoList: List<WorkInfo> = statuses.get()
+        workInfoList.forEach {
+            // если найдены рабочие экземпляры- остановлю их
+            if (it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED) {
+                val work = workManager.getWorkInfoById(it.id)
+                work.cancel(true)
+                if (!workStopped) {
+                    workStopped = true
+                }
+            }
+        }
+        if (workStopped) {
+            // если работы приостановлены- удалю сообщение о загрузке
+            // оповещу о смене статуса
+            DownloadScheduleViewModel.downloadState.postValue(false)
+        } else {
+            // запущу загрузку
+            startDownloadBooksWorker()
+            DownloadScheduleViewModel.downloadState.postValue(true)
+
+        }
+    }
+
     companion object {
         //todo switch to false on release
         const val isTestVersion = true
         val sResetLoginCookie = MutableLiveData<Boolean>()
-        const val SEARCH_URL = "/booksearch?ask="
-        const val PIC_MIRROR_URL = "http://flibusta.is"
-        private const val PARSE_WEB_REQUEST_TAG = "parse web request"
-        var sTorStartTry = 0
         const val BACKUP_DIR_NAME = "FlibustaDownloaderBackup"
         const val BACKUP_FILE_NAME = "settings_backup.zip"
-        const val MAX_BOOK_NUMBER = 548398
-        const val VIEW_WEB = 1
-        const val VIEW_OPDS = 2
         const val START_TOR = "start_tor"
-        var sSearchType = OPDSActivity.SEARCH_BOOKS
-        const val NEW_BOOKS = "/new"
-        const val VIEW_MODE_NORMAL = 1
-        const val VIEW_MODE_LIGHT = 2
-        const val VIEW_MODE_FAT = 3
-        const val VIEW_MODE_FAST = 4
-        const val VIEW_MODE_FAST_FAT = 5
-        const val BASE_BOOK_URL = "/b/"
-        const val TOR_FILES_LOCATION = "torfiles"
         lateinit var instance: App
             private set
     }

@@ -7,7 +7,4 @@
         app:title="@string/check_updates"
         android:defaultValue="true"
         android:summary="@string/summary_check_updates"/>
-    <Preference
-        app:key="@string/pref_check_update_now"
-        android:title="@string/title_check_update_now"/>
 </PreferenceScreen>

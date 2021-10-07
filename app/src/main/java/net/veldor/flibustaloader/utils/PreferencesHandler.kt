@@ -7,9 +7,12 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
+import net.veldor.flibustaloader.ui.fragments.WebViewFragment
 import java.io.File
 
 class PreferencesHandler private constructor() {
+
+
     private var preferences: SharedPreferences =
         androidx.preference.PreferenceManager.getDefaultSharedPreferences(App.instance)
 
@@ -47,37 +50,31 @@ class PreferencesHandler private constructor() {
     var lastLoadedUrl: String
         get() = preferences.getString(
             PREF_LAST_LOADED_URL,
-            URLHelper.getBaseUrl()
+            ""
         )!!
         set(url) {
             if (!url.contains("/favicon.ico") && !url.contains("/sites/default/files/bluebreeze_favicon.ico")) preferences.edit()
                 .putString(
-                    PREF_LAST_LOADED_URL, url
+                    PREF_LAST_LOADED_URL, url.replace(URLHelper.getBaseUrl(), "")
                 ).apply()
         }
 
-
-    val picMirror: String
-        get() = preferences.getString(
-            App.instance.getString(R.string.pref_custom_pic_mirror), App.PIC_MIRROR_URL
-        )!!
-
     var viewMode: Int
-        get() = preferences.getInt(PREF_VIEW_MODE, App.VIEW_MODE_LIGHT)
+        get() = preferences.getInt(PREF_VIEW_MODE, WebViewFragment.VIEW_MODE_LIGHT)
         set(state) {
             var mode = 1
             when (state) {
                 R.id.menuUseLightStyle -> {
-                    mode = App.VIEW_MODE_LIGHT
+                    mode = WebViewFragment.VIEW_MODE_LIGHT
                 }
                 R.id.menuUseLightFastStyle -> {
-                    mode = App.VIEW_MODE_FAST
+                    mode = WebViewFragment.VIEW_MODE_FAST
                 }
                 R.id.menuUseLightFatStyle -> {
-                    mode = App.VIEW_MODE_FAT
+                    mode = WebViewFragment.VIEW_MODE_FAT
                 }
                 R.id.menuUseFatFastStyle -> {
-                    mode = App.VIEW_MODE_FAST_FAT
+                    mode = WebViewFragment.VIEW_MODE_FAST_FAT
                 }
             }
             preferences.edit().putInt(PREF_VIEW_MODE, mode).apply()
@@ -103,11 +100,16 @@ class PreferencesHandler private constructor() {
         return currentVersion != savedVersion
     }
 
-    val isCustomMirror: Boolean
+    var isCustomMirror: Boolean
         get() = preferences.getBoolean(
             App.instance.getString(R.string.pref_use_custom_mirror),
             false
         )
+        set(state) {
+            preferences.edit()
+                .putBoolean(App.instance.getString(R.string.pref_use_custom_mirror), state)
+                .apply()
+        }
 
     var customMirror: String?
         get() = preferences.getString(
@@ -115,7 +117,19 @@ class PreferencesHandler private constructor() {
             BASE_URL
         )
         set(state) {
-            preferences.edit().putString(App.instance.getString(R.string.pref_custom_flibusta_mirror), state).apply()
+            preferences.edit()
+                .putString(App.instance.getString(R.string.pref_custom_flibusta_mirror), state)
+                .apply()
+        }
+    var picMirror: String?
+        get() = preferences.getString(
+            App.instance.getString(R.string.pref_custom_pic_mirror),
+            BASE_PIC_URL
+        )
+        set(state) {
+            preferences.edit()
+                .putString(App.instance.getString(R.string.pref_custom_pic_mirror), state)
+                .apply()
         }
 
     var isSubscriptionsAutoCheck: Boolean
@@ -124,7 +138,7 @@ class PreferencesHandler private constructor() {
             preferences.edit().putBoolean(SUBSCRIPTIONS_AUTO_CHECK_PREF, state).apply()
         }
     val isDownloadAutostart: Boolean
-        get() = preferences.getBoolean(BOOKS_DOWNLOAD_AUTOSTART, false)
+        get() = preferences.getBoolean(BOOKS_DOWNLOAD_AUTOSTART, true)
 
     val showDownloadProgress: Boolean
         get() = preferences.getBoolean(SHOW_DOWNLOAD_PROGRESS_PREF, false)
@@ -165,8 +179,8 @@ class PreferencesHandler private constructor() {
         }
 
 
-    var isDownloadAll: Boolean
-        get() = preferences.getBoolean(PREF_LOAD_ALL, false)
+    var opdsPagedResultsLoad: Boolean
+        get() = preferences.getBoolean(PREF_LOAD_ALL, true)
         set(state) {
             preferences.edit().putBoolean(PREF_LOAD_ALL, state).apply()
         }
@@ -207,17 +221,6 @@ class PreferencesHandler private constructor() {
                 preferences.edit().putString(AUTH_COOKIE_VALUE, value).apply()
             }
         }
-
-
-    var saveOnlySelected: Boolean
-        get() = preferences.getBoolean(PREF_SAVE_ONLY_SELECTED, false)
-        set(checked) {
-            preferences.edit().putBoolean(PREF_SAVE_ONLY_SELECTED, checked).apply()
-        }
-
-    fun saveLastLoadedPage(s: String?) {
-        preferences.edit().putString(LAST_SEARCH_URL_PREF, s).apply()
-    }
 
     fun saveDownloadFolder(folderLocation: String?): Boolean {
         // ещё раз попробую создать файл
@@ -386,12 +389,10 @@ class PreferencesHandler private constructor() {
         private const val PREF_PREVIEWS = "cover_previews_show"
         private const val PREF_HIDE_READ = "hide read"
         private const val PREF_LOAD_ALL = "load all"
-        private const val PREF_SAVE_ONLY_SELECTED = "save only selected"
         private const val PREF_FAVORITE_MIME = "favorite format"
         private const val PREF_LAST_CHECKED_BOOK = "last_checked_book"
         private const val PERF_EXTERNAL_VPN = "external vpn"
         private const val SUBSCRIPTIONS_AUTO_CHECK_PREF = "subscriptions auto check"
-        private const val LAST_SEARCH_URL_PREF = "last load url"
         const val SHOW_DOWNLOAD_PROGRESS_PREF = "show download progress"
         private const val HW_ACCELERATION_PREF = "hardware acceleration"
         private const val HIDE_DIGESTS_PREF = "hide digests"
@@ -408,6 +409,7 @@ class PreferencesHandler private constructor() {
         private const val PREF_HIDE_PICS = "clear view"
 
         const val BASE_URL = "http://flibustahezeous3.onion"
+        const val BASE_PIC_URL = "http://flibusta.is"
         const val MIRROR_URL = "http://flibusta.site"
 
 

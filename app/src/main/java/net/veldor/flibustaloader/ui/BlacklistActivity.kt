@@ -1,185 +1,196 @@
 package net.veldor.flibustaloader.ui
 
-import androidx.recyclerview.widget.RecyclerView
 import android.os.Bundle
-import net.veldor.flibustaloader.R
-import androidx.lifecycle.LiveData
+import android.os.Handler
+import android.os.Looper
+import android.view.inputmethod.EditorInfo
+import android.widget.CompoundButton
+import android.widget.RadioGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
-import net.veldor.flibustaloader.App
-import androidx.appcompat.widget.SwitchCompat
+import co.mobiwise.materialintro.shape.Focus
+import co.mobiwise.materialintro.shape.FocusGravity
+import co.mobiwise.materialintro.shape.ShapeType
+import co.mobiwise.materialintro.view.MaterialIntroView
+import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.BlacklistAdapter
-import android.util.Log
-import android.view.*
-import android.widget.*
+import net.veldor.flibustaloader.databinding.ActivityBlacklistBinding
 import net.veldor.flibustaloader.utils.*
 
+
 class BlacklistActivity : BaseActivity() {
-    private lateinit var mRadioContainer: RadioGroup
-    private lateinit var mBlacklistAdapter: BlacklistAdapter
-    private lateinit var mRecycler: RecyclerView
-    private var mBooksBlacklistContainer: BlacklistBooks? = null
-    private var mInput: EditText? = null
-    private var mAuthorsBlacklistContainer: BlacklistAuthors? = null
-    private var mSequencesBlacklistContainer: BlacklistSequences? = null
-    private var mGenresBlacklistContainer: BlacklistGenres? = null
+    lateinit var binding: ActivityBlacklistBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.new_blacklist_activity)
+        binding = ActivityBlacklistBinding.inflate(layoutInflater)
+        setContentView(binding.drawerLayout)
         setupUi()
         setupObservers()
     }
 
     private fun setupUi() {
         setupInterface()
-
+        showHints()
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToBlacklist)
         item.isEnabled = false
         item.isChecked = true
         // добавлю идентификатор строки поиска
-        mInput = findViewById(R.id.blacklist_name)
-        mRecycler = findViewById(R.id.resultsList)
-        mRecycler.layoutManager = LinearLayoutManager(this)
-        mBooksBlacklistContainer = App.instance.booksBlacklist
-        mAuthorsBlacklistContainer = App.instance.authorsBlacklist
-        mSequencesBlacklistContainer = App.instance.sequencesBlacklist
-        mGenresBlacklistContainer = App.instance.genresBlacklist
-        showBooks()
-        // отслежу переключение типа добавления
-        mRadioContainer = findViewById(R.id.blacklist_type)
-        mRadioContainer.setOnCheckedChangeListener { _: RadioGroup?, checkedId: Int ->
-            if (checkedId == R.id.blacklistBook) {
-                showBooks()
-            } else if (checkedId == R.id.blacklistAuthor) {
-                showAuthors()
-            } else if (checkedId == R.id.blacklistSequence) {
-                showSequences()
-            } else if (checkedId == R.id.blacklistGenre) {
-                showGenres()
+        binding.resultsList.layoutManager = LinearLayoutManager(this)
+        binding.resultsList.adapter = BlacklistAdapter(BlacklistBooks.instance.getBlacklist())
+        binding.blacklistType.setOnCheckedChangeListener { _: RadioGroup?, checkedId: Int ->
+            when (checkedId) {
+                R.id.blacklistBook -> {
+                    (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistBooks.instance.getBlacklist())
+                }
+                R.id.blacklistAuthor -> {
+                    (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistAuthors.instance.getBlacklist())
+                }
+                R.id.blacklistSequence -> {
+                    (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistSequences.instance.getBlacklist())
+                }
+                R.id.blacklistGenre -> {
+                    (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistGenres.instance.getBlacklist())
+                }
             }
         }
-        val subscribeBtn = findViewById<Button>(R.id.add_to_blacklist_btn)
-        subscribeBtn?.setOnClickListener { view: View? -> addToBlacklist(view) }
-        val switchOnlyRussian = findViewById<SwitchCompat>(R.id.switchOnlyRussian)
-        switchOnlyRussian.isChecked = PreferencesHandler.instance.isOnlyRussian
-        switchOnlyRussian.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
+        binding.addToBlacklistBtn.setOnClickListener { addToBlacklist() }
+        binding.switchOnlyRussian.isChecked = PreferencesHandler.instance.isOnlyRussian
+        binding.switchOnlyRussian.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             PreferencesHandler.instance.isOnlyRussian = isChecked
+        }
+
+        binding.blacklistItemInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                // Do whatever you want here
+                addToBlacklist()
+                true
+            } else false
         }
     }
 
-    private fun addToBlacklist(view: View?) {
-        val value = mInput!!.text.toString().trim { it <= ' ' }
+    private fun showHints() {
+        showFirstHelp()
+    }
+
+    private fun addToBlacklist() {
+        val value = binding.blacklistItemInput.text.toString().trim { it <= ' ' }
         if (value.isNotEmpty()) {
             // добавлю подписку в зависимости от типа
-            when (mRadioContainer.checkedRadioButtonId) {
+            when (binding.blacklistType.checkedRadioButtonId) {
                 R.id.blacklistBook -> {
-                    mBooksBlacklistContainer!!.addValue(value)
+                    BlacklistBooks.instance.addValue(value)
                 }
                 R.id.blacklistAuthor -> {
-                    mAuthorsBlacklistContainer!!.addValue(value)
+                    BlacklistAuthors.instance.addValue(value)
                 }
                 R.id.blacklistSequence -> {
-                    mSequencesBlacklistContainer!!.addValue(value)
+                    BlacklistSequences.instance.addValue(value)
                 }
                 R.id.blacklistGenre -> {
-                    mGenresBlacklistContainer!!.addValue(value)
+                    BlacklistGenres.instance.addValue(value)
                 }
             }
-            mInput!!.setText("")
+            binding.blacklistItemInput.setText("")
             Toast.makeText(this, "Добавляю значение $value", Toast.LENGTH_LONG).show()
         } else {
             Toast.makeText(this, "Введите значение", Toast.LENGTH_LONG).show()
-            mInput!!.requestFocus()
+            binding.blacklistItemInput.requestFocus()
         }
-    }
-
-    private fun showBooks() {
-        // получу подписки на книги
-        val autocompleteValues = mBooksBlacklistContainer!!.getBlacklist()
-        mBlacklistAdapter = BlacklistAdapter(autocompleteValues!!)
-        mRecycler.adapter = mBlacklistAdapter
-    }
-
-    private fun showAuthors() {
-        // получу подписки на авторов
-        val autocompleteValues = mAuthorsBlacklistContainer!!.getBlacklist()
-        mBlacklistAdapter = BlacklistAdapter(autocompleteValues!!)
-        mRecycler.adapter = mBlacklistAdapter
-    }
-
-    private fun showSequences() {
-        // получу чёрный список серий
-        val autocompleteValues = mSequencesBlacklistContainer!!.getBlacklist()
-        mBlacklistAdapter = BlacklistAdapter(autocompleteValues!!)
-        mRecycler.adapter = mBlacklistAdapter
-    }
-
-    private fun showGenres() {
-        // получу чёрный список жанров
-        val autocompleteValues = mGenresBlacklistContainer!!.getBlacklist()
-        mBlacklistAdapter = BlacklistAdapter(autocompleteValues!!)
-        mRecycler.adapter = mBlacklistAdapter
     }
 
     override fun setupObservers() {
         super.setupObservers()
-        Log.d("surprise", "BlacklistActivity.java 95 setupObservers: setting up observers")
         // буду отслеживать изменения списка книг
-        val refresh: LiveData<Boolean> = BlacklistBooks.mListRefreshed
-        refresh.observe(this, { aBoolean: Boolean? ->
-            if (aBoolean != null && aBoolean && mRadioContainer.checkedRadioButtonId == R.id.blacklistBook) {
-                refreshBooksBlacklist()
+        BlacklistBooks.instance.liveBlacklistAdd.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistBook) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemAdded(it)
             }
         })
-
-
-        // буду отслеживать изменения списка авторов
-        val authorRefresh: LiveData<Boolean> = BlacklistAuthors.mListRefreshed
-        authorRefresh.observe(this, { aBoolean: Boolean? ->
-            if (aBoolean != null && aBoolean && mRadioContainer.checkedRadioButtonId == R.id.blacklistAuthor) {
-                refreshAuthorBlacklist()
+        BlacklistBooks.instance.liveBlacklistRemove.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistBook) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemRemoved(it)
             }
         })
-
-        // буду отслеживать изменения списка серий
-        val sequencesRefresh: LiveData<Boolean> = BlacklistSequences.mListRefreshed
-        sequencesRefresh.observe(this, { aBoolean: Boolean? ->
-            if (aBoolean != null && aBoolean && mRadioContainer.checkedRadioButtonId == R.id.blacklistSequence) {
-                refreshSequencesBlacklist()
+        // буду отслеживать изменения списка книг
+        BlacklistAuthors.instance.liveBlacklistAdd.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistAuthor) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemAdded(it)
             }
         })
-
-        // буду отслеживать изменения списка жанров
-        val genresRefresh: LiveData<Boolean> = BlacklistGenres.mListRefreshed
-        genresRefresh.observe(this, { aBoolean: Boolean? ->
-            if (aBoolean != null && aBoolean && mRadioContainer.checkedRadioButtonId == R.id.blacklistGenre) {
-                refreshGenresBlacklist()
+        BlacklistAuthors.instance.liveBlacklistRemove.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistAuthor) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemRemoved(it)
+            }
+        })
+        // буду отслеживать изменения списка книг
+        BlacklistGenres.instance.liveBlacklistAdd.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistGenre) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemAdded(it)
+            }
+        })
+        BlacklistGenres.instance.liveBlacklistRemove.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistGenre) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemRemoved(it)
+            }
+        })
+        // буду отслеживать изменения списка книг
+        BlacklistSequences.instance.liveBlacklistAdd.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistSequence) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemAdded(it)
+            }
+        })
+        BlacklistSequences.instance.liveBlacklistRemove.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistSequence) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemRemoved(it)
             }
         })
     }
+}
 
-    private fun refreshBooksBlacklist() {
-        val autocompleteValues = mBooksBlacklistContainer!!.getBlacklist()
-        mBlacklistAdapter.changeList(autocompleteValues!!)
-        mBlacklistAdapter.notifyDataSetChanged()
-    }
+private fun BlacklistActivity.showFirstHelp() {
+    Handler(Looper.getMainLooper()).postDelayed({
+        kotlin.run {
+            MaterialIntroView.Builder(this)
+                .enableDotAnimation(true)
+                .enableIcon(false)
+                .setFocusGravity(FocusGravity.CENTER)
+                .setFocusType(Focus.MINIMUM)
+                .setDelayMillis(300)
+                .setUsageId("blacklist type select")
+                .enableFadeAnimation(true)
+                .performClick(true)
+                .setListener {
+                    showSecondHelp()
+                }
+                .setInfoText(getString(R.string.blacklist_first_help_text))
+                .setTarget(binding.blacklistBook)
+                .setShape(ShapeType.CIRCLE)
+                .show()
+        }
+    }, 100)
+}
 
-    private fun refreshAuthorBlacklist() {
-        val blacklist = mAuthorsBlacklistContainer!!.getBlacklist()
-        mBlacklistAdapter.changeList(blacklist!!)
-        mBlacklistAdapter.notifyDataSetChanged()
-    }
+private fun BlacklistActivity.showSecondHelp() {
+    Handler(Looper.getMainLooper()).postDelayed({
+        kotlin.run {
+            MaterialIntroView.Builder(this)
+                .enableDotAnimation(true)
+                .enableIcon(false)
+                .setFocusGravity(FocusGravity.CENTER)
+                .setFocusType(Focus.MINIMUM)
+                .setDelayMillis(700)
+                .setUsageId("blacklist value enter")
+                .enableFadeAnimation(true)
+                .performClick(true)
+                .setListener {
 
-    private fun refreshSequencesBlacklist() {
-        val blacklist = mSequencesBlacklistContainer!!.getBlacklist()
-        mBlacklistAdapter.changeList(blacklist!!)
-        mBlacklistAdapter.notifyDataSetChanged()
-    }
-
-    private fun refreshGenresBlacklist() {
-        val blacklist = mGenresBlacklistContainer!!.getBlacklist()
-        mBlacklistAdapter.changeList(blacklist!!)
-        mBlacklistAdapter.notifyDataSetChanged()
-    }
+                }
+                .setInfoText(getString(R.string.blacklist_second_hint_text))
+                .setTarget(binding.blacklistItemInput)
+                .setShape(ShapeType.CIRCLE)
+                .show()
+        }
+    }, 100)
 }

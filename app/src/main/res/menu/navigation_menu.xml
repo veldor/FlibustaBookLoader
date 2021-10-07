@@ -6,13 +6,9 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/goToWebView"
-            android:icon="@drawable/ic_desktop_black_24"
-            android:title="@string/navigation_go_webview"/>
-        <item
-            android:id="@+id/goToOPDS"
-            android:icon="@drawable/ic_list_black_24"
-            android:title="@string/navigation_go_opds" />
+            android:id="@+id/goBrowse"
+            android:icon="@drawable/ic_baseline_public_24"
+            android:title="@string/search_title" />
         <item
             android:id="@+id/goToDownloadsList"
             app:actionViewClass="android.widget.TextView"
@@ -37,7 +33,7 @@
             android:id="@+id/goToFileList"
             android:icon="@drawable/ic_book_black_24dp"
             app:actionViewClass="android.widget.TextView"
-            android:title="@string/navigation_go_filelist" />
+            android:title="@string/navigation_go_file_list" />
         <item
             android:id="@+id/goToSettings"
             android:icon="@drawable/ic_baseline_settings_black_24"

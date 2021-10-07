@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey
 
 @Entity
 class BooksDownloadSchedule {
+
+
     @PrimaryKey(autoGenerate = true)
     var id = 0
     var bookId = ""
@@ -27,4 +29,12 @@ class BooksDownloadSchedule {
     @JvmField
     @Ignore
     var loaded = false
+
+    @JvmField
+    @Ignore
+    var failed: Boolean = false
+
+    @JvmField
+    @Ignore
+    var inProgress: Boolean = false
 }

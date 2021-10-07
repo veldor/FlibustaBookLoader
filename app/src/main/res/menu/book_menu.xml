@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:yourapp="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/actionShowDetails"
+        android:title="@string/details_in_browser_menu"
+        yourapp:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/markRead"
+        android:title="@string/mark_read"
+        yourapp:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/markDownloaded"
+        android:title="@string/mark_downloaded"
+        yourapp:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/shareBook"
+        android:title="@string/share_book"
+        yourapp:showAsAction="ifRoom" />
+</menu>

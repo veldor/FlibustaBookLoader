@@ -131,7 +131,7 @@
             fab:fab_size="mini" />
 
         <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fabDOwnloadSelected"
+            android:id="@+id/fabDownloadSelected"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_cloud_download_white_24dp"
@@ -139,7 +139,7 @@
             fab:fab_size="mini" />
 
         <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fabDOwnloadUnloaded"
+            android:id="@+id/fabDownloadUnloaded"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_cloud_download_white_24dp"

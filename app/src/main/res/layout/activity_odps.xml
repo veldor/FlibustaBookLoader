@@ -25,7 +25,7 @@
                 android:layout_height="wrap_content"
                 android:background="@color/colorPrimary"
                 android:theme="@style/MyActionBar"
-                app:titleTextColor="#D6D6D6"></androidx.appcompat.widget.Toolbar>
+                app:titleTextColor="#D6D6D6" />
         </com.google.android.material.appbar.AppBarLayout>
 
 
@@ -48,7 +48,7 @@
                 android:textAlignment="center"
                 android:textColor="#ffffff"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_type" />
+                app:layout_constraintTop_toBottomOf="@+id/search_type" />
 
             <TextView
                 android:id="@+id/mirrorUsed"
@@ -64,10 +64,10 @@
                 app:drawableLeftCompat="@drawable/ic_baseline_alt_route_24"
                 app:drawableStartCompat="@drawable/ic_baseline_alt_route_24"
                 app:layout_constraintEnd_toStartOf="@id/connectionType"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_type" />
+                app:layout_constraintTop_toBottomOf="@+id/search_type" />
 
             <RadioGroup
-                android:id="@+id/subscribe_type"
+                android:id="@+id/search_type"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -117,89 +117,42 @@
                     android:textColor="@color/sequences_text" />
             </RadioGroup>
 
+            <Button
+                android:id="@+id/showAuthorsListButton"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/show_authors_list_button"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/search_type" />
 
-            <androidx.core.widget.NestedScrollView
-                android:id="@+id/subscriptions_layout"
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/showAllSwitcher"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/show_all_results_switcher_text"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/search_type" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/firstBarrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="showAuthorsListButton,showAllSwitcher" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/resultsList"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/subscribe_type">
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:id="@+id/showAuthorsListButton"
-                        style="@style/Widget.AppCompat.Button.Borderless"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="@string/show_authors_list_button"
-                        android:visibility="gone"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/showAllSwitcher"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:text="@string/show_all_results_switcher_text"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/showAuthorsListButton" />
-
-                    <TextView
-                        android:id="@+id/search_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_horizontal"
-                        app:layout_constraintBottom_toTopOf="@+id/resultsList"
-                        app:layout_constraintTop_toBottomOf="@id/showAllSwitcher" />
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/resultsList"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        app:layout_constraintBottom_toTopOf="@+id/load_more_button" />
-
-                    <ImageButton
-                        android:id="@+id/backward_btn"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:background="@drawable/backward_arrow_24dp"
-                        android:contentDescription="@string/backward"
-                        android:visibility="invisible"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/resultsList" />
-
-                    <ImageButton
-                        android:id="@+id/forward_btn"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:background="@drawable/forward_arrow_24dp"
-                        android:contentDescription="@string/forward_button"
-                        android:visibility="invisible"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/resultsList" />
-
-                    <Button
-                        android:id="@+id/load_more_button"
-                        style="@style/Widget.AppCompat.Button.Borderless"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_marginBottom="70dp"
-                        android:text="@string/load_more_button"
-                        android:textColor="@color/genre_text_color"
-                        android:visibility="invisible"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/forward_btn"
-                        app:layout_constraintStart_toEndOf="@+id/backward_btn" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </androidx.core.widget.NestedScrollView>
+                app:layout_constraintTop_toBottomOf="@+id/firstBarrier" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
             <com.github.clans.fab.FloatingActionMenu
                 android:id="@+id/floatingMenu"
@@ -228,7 +181,7 @@
                     fab:fab_size="mini" />
 
                 <com.github.clans.fab.FloatingActionButton
-                    android:id="@+id/fabDOwnloadSelected"
+                    android:id="@+id/fabDownloadSelected"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_cloud_download_white_24dp"
@@ -236,16 +189,13 @@
                     fab:fab_size="mini" />
 
                 <com.github.clans.fab.FloatingActionButton
-                    android:id="@+id/fabDOwnloadUnloaded"
+                    android:id="@+id/fabDownloadUnloaded"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_cloud_download_white_24dp"
                     fab:fab_label="@string/download_unloaded_button"
                     fab:fab_size="mini" />
             </com.github.clans.fab.FloatingActionMenu>
-
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
     </RelativeLayout>
 
 

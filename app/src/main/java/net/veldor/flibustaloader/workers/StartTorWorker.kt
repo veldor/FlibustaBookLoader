@@ -1,40 +1,37 @@
 package net.veldor.flibustaloader.workers
 
-import net.veldor.flibustaloader.App
-import net.veldor.flibustaloader.http.GlobalWebClient
-import net.veldor.flibustaloader.http.TorStarter
 import android.content.Context
 import android.util.Log
-import androidx.work.*
-import net.veldor.flibustaloader.http.TorWebClient
+import androidx.work.Worker
+import androidx.work.WorkerParameters
+import net.veldor.flibustaloader.http.GlobalWebClient
+import net.veldor.flibustaloader.http.TorStarter
 
 class StartTorWorker(context: Context, workerParams: WorkerParameters) :
     Worker(context, workerParams) {
     override fun doWork(): Result {
-        if (App.instance.torInitInProgress) {
-            return Result.success()
-        }
-        App.instance.torInitInProgress = true
+        val starter = TorStarter()
         // попробую стартовать TOR 3 раза
-        while (App.sTorStartTry < 4 && !isStopped) {
+        while (TorStarter.torStartTry < 4 && !isStopped) {
             // есть три попытки, если все три неудачны- верну ошибку
-            val starter = TorStarter()
             if (starter.startTor()) {
                 GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED)
-                // success try
-                App.instance.torInitInProgress = false
+                TorStarter.liveTorLaunchState.postValue(TorStarter.TOR_LAUNCH_SUCCESS)
                 // обнулю счётчик попыток
-                App.sTorStartTry = 0
+                TorStarter.torStartTry = 0
                 return Result.success()
             }
+            Log.d("surprise", "doWork: failed tor start try")
             // попытка неудачна, плюсую счётчик попыток
-            App.sTorStartTry++
+            TorStarter.torStartTry++
         }
         // сюда попаду, если что-то помешало запуску
         if (isStopped) {
             Log.d("surprise", "StartTorWorker doWork: somebody stop this worker")
         }
-        App.instance.torInitInProgress = false
+        //
+        TorStarter.torStartTry = 0
+        TorStarter.liveTorLaunchState.postValue(TorStarter.TOR_LAUNCH_FAILED)
         return Result.success()
     }
 }

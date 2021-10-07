@@ -1,10 +1,11 @@
 package net.veldor.flibustaloader.adapters
 
+import android.os.Handler
+import android.os.Looper.getMainLooper
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.databinding.ViewDataBinding
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.BR
@@ -13,39 +14,161 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.databinding.DownloadScheduleBookItemBinding
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.removeFromQueue
 
-class DownloadScheduleAdapter(private var mBooks: List<BooksDownloadSchedule>) :
+class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule?>) :
     RecyclerView.Adapter<DownloadScheduleAdapter.ViewHolder>() {
-    private var mLayoutInflater: LayoutInflater = LayoutInflater.from(App.instance.applicationContext)
+    private var mLayoutInflater: LayoutInflater =
+        LayoutInflater.from(App.instance.applicationContext)
+
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ViewHolder {
-        val binding = DownloadScheduleBookItemBinding.inflate(mLayoutInflater)
+        val binding = DownloadScheduleBookItemBinding.inflate(mLayoutInflater, viewGroup, false)
         return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, i: Int) {
-        viewHolder.bind(mBooks[i])
+        viewHolder.bind(links[i])
     }
 
     override fun getItemCount(): Int {
-        return mBooks.size
+        return links.size
     }
 
-    fun setData(booksDownloadSchedules: List<BooksDownloadSchedule>) {
-        mBooks = booksDownloadSchedules
+    fun setData(booksDownloadSchedules: ArrayList<BooksDownloadSchedule?>) {
+        notifyItemRangeRemoved(0, links.size)
+        links = booksDownloadSchedules
+        notifyItemRangeInserted(0, links.size)
     }
 
-    class ViewHolder(private val mBinding: ViewDataBinding) : RecyclerView.ViewHolder(
-        mBinding.root
-    ) {
+    fun notifyBookDownloaded(book: BooksDownloadSchedule?) {
+        if (book != null) {
+            var index: Int = -1
+            links.forEach {
+                if (it!!.link == book.link) {
+                    index = links.indexOf(it)
+                }
+            }
+            if (index >= 0) {
+                links[index] = book
+                notifyItemChanged(index)
+
+                Handler(getMainLooper()).postDelayed({
+                    links.removeAt(index)
+                    notifyItemRemoved(index)
+                }, 1000)
+            }
+        }
+    }
+
+    fun notifyBookRemovedFromQueue(book: BooksDownloadSchedule?) {
+        if (book != null) {
+            var index: Int = -1
+            links.forEach {
+                if (it!!.link == book.link) {
+                    index = links.indexOf(it)
+                }
+            }
+            if (index >= 0) {
+                links.removeAt(index)
+                notifyItemRemoved(index)
+            }
+        }
+    }
+
+    fun notifyBookDownloadError(book: BooksDownloadSchedule?) {
+        if (book != null) {
+            var index: Int = -1
+            links.forEach {
+                if (it!!.link == book.link) {
+                    index = links.indexOf(it)
+                }
+            }
+            if (index >= 0) {
+                book.failed = true
+                links[index] = book
+                notifyItemChanged(index)
+            }
+        }
+    }
+
+    fun notifyBookDownloadInProgress(book: BooksDownloadSchedule?) {
+        if (book != null) {
+            var index: Int = -1
+            links.forEach {
+                if (it!!.link == book.link) {
+                    index = links.indexOf(it)
+                }
+            }
+            if (index >= 0) {
+                book.inProgress = true
+                links[index] = book
+                notifyItemChanged(index)
+            }
+        }
+    }
+
+    class ViewHolder(private val mBinding: DownloadScheduleBookItemBinding) :
+        RecyclerView.ViewHolder(
+            mBinding.root
+        ) {
+
+        var item: BooksDownloadSchedule? = null
+
         fun bind(scheduleItem: BooksDownloadSchedule?) {
+            item = scheduleItem
             mBinding.setVariable(BR.book, scheduleItem)
             mBinding.executePendingBindings()
+            if (scheduleItem!!.name.isEmpty()) {
+                mBinding.name.text = "Имя не найдено"
+            }
+            when {
+                scheduleItem.loaded -> {
+                    mBinding.bookStateText.text = App.instance.getString(R.string.book_loaded_text)
+                    mBinding.bookStateText.setTextColor(
+                        ResourcesCompat.getColor(
+                            App.instance.resources,
+                            R.color.genre_text_color,
+                            null
+                        )
+                    )
+                }
+                scheduleItem.failed -> {
+                    mBinding.bookStateText.text =
+                        App.instance.getString(R.string.book_load_failed_text)
+                    mBinding.bookStateText.setTextColor(
+                        ResourcesCompat.getColor(
+                            App.instance.resources,
+                            R.color.book_name_color,
+                            null
+                        )
+                    )
+                }
+                scheduleItem.inProgress -> {
+                    mBinding.bookStateText.text =
+                        App.instance.getString(R.string.book_load_in_progress_text)
+                    mBinding.bookStateText.setTextColor(
+                        ResourcesCompat.getColor(
+                            App.instance.resources,
+                            R.color.author_text_color,
+                            null
+                        )
+                    )
+                }
+                else -> {
+                    mBinding.bookStateText.text =
+                        App.instance.getString(R.string.wait_for_download)
+                    mBinding.bookStateText.setTextColor(
+                        ResourcesCompat.getColor(
+                            App.instance.resources,
+                            R.color.dark_gray,
+                            null
+                        )
+                    )
+                }
+            }
             // добавлю действие при клике на кнопку скачивания
-            val container = mBinding.root
-            val deleteItem = container.findViewById<View>(R.id.deleteItemBtn)
-            deleteItem?.setOnClickListener {
+            mBinding.deleteItemBtn.setOnClickListener {
                 // найду в очереди данную книгу и удалю её из очереди
                 removeFromQueue(scheduleItem)
-                //DownloadScheduleAdapter.this.notifyDataSetChanged();
+                App.instance.liveBookJustRemovedFromQueue.postValue(item)
                 Toast.makeText(
                     App.instance,
                     "Книга удалена из очереди скачивания",

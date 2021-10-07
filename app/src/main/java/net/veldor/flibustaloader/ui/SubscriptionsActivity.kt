@@ -8,15 +8,21 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.Navigation
+import net.veldor.flibustaloader.databinding.ActivitySubscriptionsBinding
 
 class SubscriptionsActivity : BaseActivity() {
+
+
+    private lateinit var binding: ActivitySubscriptionsBinding
     private var mBottomNavView: BottomNavigationView? = null
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.new_subscriptions_activity)
+        binding = ActivitySubscriptionsBinding.inflate(layoutInflater)
+        setContentView(binding.drawerLayout)
+
         setupInterface()
-
-
         // проверю, если в интенте указано открыть целевой фрагмент- открою его
         val intent = intent
         val startFragment = intent.getIntExtra(START_FRAGMENT, -1)
@@ -34,10 +40,11 @@ class SubscriptionsActivity : BaseActivity() {
     override fun setupInterface() {
         super.setupInterface()
         // скрою переход на данное активити
-        val menuNav = mNavigationView!!.menu
+        val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToSubscriptions)
         item.isEnabled = false
         item.isChecked = true
+
         // активирую нижнее меню
         mBottomNavView = findViewById(R.id.bottom_nav_view)
         // Passing each menu ID as a set of Ids because each

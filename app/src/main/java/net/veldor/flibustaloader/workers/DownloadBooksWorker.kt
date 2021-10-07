@@ -1,82 +1,92 @@
 package net.veldor.flibustaloader.workers
 
-import net.veldor.flibustaloader.App
-import net.veldor.flibustaloader.http.TorWebClient
 import android.content.Context
-import net.veldor.flibustaloader.notificatons.NotificationHandler
+import android.util.Log
+import androidx.work.ForegroundInfo
+import androidx.work.Worker
+import androidx.work.WorkerParameters
+import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
-import net.veldor.flibustaloader.ui.BaseActivity
 import net.veldor.flibustaloader.database.entity.DownloadedBooks
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException
-import kotlin.Throws
+import net.veldor.flibustaloader.handlers.LoadedBookHandler
 import net.veldor.flibustaloader.http.ExternalVpnVewClient
-import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
-import net.veldor.flibustaloader.view_models.OPDSViewModel
-import androidx.lifecycle.LiveData
-import android.util.Log
-import androidx.work.*
+import net.veldor.flibustaloader.http.TorWebClient
+import net.veldor.flibustaloader.notificatons.NotificationHandler
+import net.veldor.flibustaloader.ui.BaseActivity
+import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.PreferencesHandler
-import java.util.ArrayList
-import java.util.concurrent.ExecutionException
+import net.veldor.flibustaloader.utils.RandomString
+import net.veldor.flibustaloader.utils.URLHelper
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
+import java.util.*
 
-class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
+class DownloadBooksWorker(
+    context: Context,
+    workerParams: WorkerParameters
+) :
     Worker(context, workerParams) {
-    private val mNotificator: NotificationHandler = NotificationHandler.instance
+
+    private val downloadErrors: ArrayList<BooksDownloadSchedule> = arrayListOf()
+
     override fun doWork(): Result {
-        downloadInProgress = true
+        App.instance.liveDownloadState.postValue(DOWNLOAD_IN_PROGRESS)
         val downloadStartTime = System.currentTimeMillis()
-        if (App.instance.useMirror) {
-            // оповещу о невозможности скачивания книг с альтернативного зеркала
-            mNotificator.notifyUseAlternativeMirror()
-        }
-        val downloadErrors = ArrayList<BooksDownloadSchedule>()
         // проверю, есть ли в очереди скачивания книги
         val db = App.instance.mDatabase
         val dao = db.booksDownloadScheduleDao()
         val downloadBooksDao = db.downloadedBooksDao()
         val reDownload = PreferencesHandler.instance.isReDownload
+
         try {
             // получу количество книг на начало скачивания
-            var mBooksCount = dao.queueSize
+            var booksCount = dao.queueSize
             var bookDownloadsWithErrors = 0
-            if (mBooksCount > 0) {
+            var booksDownloadedYet = 0
+            var totalBooksCount: Int
+            if (booksCount > 0) {
                 // помечу рабочего важным
                 val info = createForegroundInfo()
                 setForegroundAsync(info)
-                // создам уведомление о скачивании
-                mNotificator.mDownloadScheduleBuilder!!.setProgress(mBooksCount, 0, true)
-                mNotificator.mNotificationManager.notify(
-                    NotificationHandler.DOWNLOAD_PROGRESS_NOTIFICATION,
-                    mNotificator.mDownloadScheduleBuilder!!.build()
-                )
-                var queuedElement: BooksDownloadSchedule
+                var queuedElement: BooksDownloadSchedule?
                 // начну скачивание
                 // периодически удостовериваюсь, что работа не отменена
                 if (isStopped) {
                     // немедленно прекращаю работу
-                    mNotificator.cancelBookLoadNotification()
-                    downloadInProgress = false
+                    NotificationHandler.instance.cancelBookLoadNotification()
+                    App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
                     return Result.success()
                 }
                 var downloadCounter = 1
-                // пока есть книги в очереди скачивания и работа не остановлена
-                while (dao.firstQueuedBook.also { queuedElement = it!! } != null && !isStopped) {
+                while (true) {
+                    // получу первый элемент из очереди
+                    queuedElement = dao.firstQueuedBook
+                    if(queuedElement == null || isStopped){
+                        break
+                    }
+                    // получу оставшееся количество книг для загрузки
+                    totalBooksCount = booksDownloadedYet + dao.queueSize
+
                     queuedElement.name = queuedElement.name.replace("\\p{C}".toRegex(), "")
-                    mNotificator.updateDownloadProgress(
-                        dao.queueSize + downloadCounter - 1,
+                    NotificationHandler.instance.updateDownloadProgress(
+                        totalBooksCount,
                         downloadCounter,
                         downloadStartTime
                     )
+
                     // проверю, не загружалась ли уже книга, если загружалась и запрещена повторная загрузка- пропущу её
                     if (!reDownload && downloadBooksDao.getBookById(queuedElement.bookId) != null) {
                         dao.delete(queuedElement)
                         // уведомлю, что размер списка закачек изменился
-                        BaseActivity.sLiveDownloadScheduleCount.postValue(true)
+                        BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
                         continue
                     }
                     // загружу книгу
                     try {
+                        App.instance.liveBookDownloadInProgress.postValue(queuedElement)
                         downloadBook(queuedElement)
                         if (!isStopped) {
                             if (queuedElement.loaded) {
@@ -85,43 +95,41 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
                                 downloadedBook.bookId = queuedElement.bookId
                                 downloadBooksDao.insert(downloadedBook)
                                 // удалю книгу из очереди скачивания
-                                // покажу уведомление о успешной загрузке
-                                mNotificator.sendLoadedBookNotification(queuedElement)
                                 dao.delete(queuedElement)
                                 // уведомлю, что размер списка закачек изменился
-                                BaseActivity.sLiveDownloadScheduleCount.postValue(true)
+                                BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
                                 // оповещу о скачанной книге
+                                App.instance.liveBookJustLoaded.postValue(queuedElement)
                                 App.instance.mLiveDownloadedBookId.postValue(queuedElement.bookId)
                                 // если не клянчил донаты- поклянчу :)
                                 if (!PreferencesHandler.instance.askedForDonation()) {
-                                    mNotificator.begDonation()
+                                    NotificationHandler.instance.begDonation()
                                     PreferencesHandler.instance.setDonationBegged()
                                 }
                             } else {
-                                Log.d(
-                                    "surprise",
-                                    "DownloadBooksWorker doWork 178: book not loaded or loaded with zero size"
-                                )
-                                mNotificator.sendBookNotFoundInCurrentFormatNotification(
+                                NotificationHandler.instance.sendBookNotFoundInCurrentFormatNotification(
                                     queuedElement
                                 )
+                                App.instance.liveBookJustError.postValue(queuedElement)
                                 bookDownloadsWithErrors++
                                 downloadErrors.add(queuedElement)
                                 dao.delete(queuedElement)
                             }
                         }
-                    } catch (e: BookNotFoundException) {
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                         Log.d(
                             "surprise",
                             "DownloadBooksWorker doWork 173: catch book not found error"
                         )
                         // ошибка загрузки книг, выведу сообщение об ошибке
-                        mNotificator.sendBookNotFoundInCurrentFormatNotification(queuedElement)
+                        App.instance.liveBookJustError.postValue(queuedElement)
+                        NotificationHandler.instance.sendBookNotFoundInCurrentFormatNotification(queuedElement)
                         bookDownloadsWithErrors++
                         downloadErrors.add(queuedElement)
                         dao.delete(queuedElement)
                         // уведомлю, что размер списка закачек изменился
-                        BaseActivity.sLiveDownloadScheduleCount.postValue(true)
+                        BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
                     } catch (e: TorNotLoadedException) {
                         Log.d(
                             "surprise",
@@ -135,25 +143,26 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
                                 downloadErrors.remove(b)
                             }
                         }
-                        mNotificator.cancelBookLoadNotification()
-                        mNotificator.showTorNotLoadedNotification()
-                        downloadInProgress = false
+                        NotificationHandler.instance.cancelBookLoadNotification()
+                        NotificationHandler.instance.showTorNotLoadedNotification()
+                        App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
                         return Result.success()
                     }
                     ++downloadCounter
+                    ++booksDownloadedYet
                 }
                 // цикл закончился, проверю, все ли книги загружены
-                mBooksCount = dao.queueSize
-                if (mBooksCount == 0 && !isStopped) {
+                booksCount = dao.queueSize
+                if (booksCount == 0 && !isStopped) {
                     // ура, всё загружено, выведу сообщение об успешной загрузке
-                    mNotificator.showBooksLoadedNotification(bookDownloadsWithErrors)
+                    NotificationHandler.instance.showBooksLoadedNotification(bookDownloadsWithErrors)
                     // Добавлю все книги с ошибками обратно в список загрузки
                     for (b in downloadErrors) {
                         dao.insert(b)
                         downloadErrors.remove(b)
                     }
                     // уведомлю, что размер списка закачек изменился
-                    BaseActivity.sLiveDownloadScheduleCount.postValue(true)
+                    BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
                 }
             }
         } finally {
@@ -164,38 +173,80 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
                 }
             }
         }
-        mNotificator.cancelBookLoadNotification()
-        downloadInProgress = false
+        NotificationHandler.instance.cancelBookLoadNotification()
+        App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
         return Result.success()
     }
 
+
     @Throws(BookNotFoundException::class, TorNotLoadedException::class)
-    private fun downloadBook(book: BooksDownloadSchedule) {
-        if (PreferencesHandler.instance.isExternalVpn) {
-            Log.d("surprise", "DownloadBooksWorker downloadBook try download trough external vpn")
-            ExternalVpnVewClient.downloadBook(book)
-        } else {
-            // настрою клиент
-            try {
-                val client = TorWebClient()
-                client.downloadBook(book)
-            } catch (e: ConnectionLostException) {
-                mNotificator.showTorNotLoadedNotification()
-                e.printStackTrace()
-                throw TorNotLoadedException()
+    private fun downloadBook(book: BooksDownloadSchedule): Boolean {
+        val startTime = System.currentTimeMillis()
+        val bookUrl = URLHelper.getBaseUrl() + book.link
+        // получу response доступным способом
+        val response =
+            if (PreferencesHandler.instance.isExternalVpn) ExternalVpnVewClient.rawRequest(bookUrl) else TorWebClient().rawRequest(
+                bookUrl
+            )
+        if (response != null) {
+            // проверю, что запрос успешен
+            if (response.statusLine.statusCode in 200..310) {
+                if (book.name.isEmpty()) {
+                    // try to get file name with extension
+                    val filenameHeader = response.getLastHeader("Content-Disposition")
+                    if (filenameHeader != null) {
+                        book.name = Grammar.removeExtension(
+                            filenameHeader.value.replace(
+                                "attachment; filename=",
+                                ""
+                            )
+                        )
+                    }
+                }
+                // ответ сервера получен
+                // загружу временный файл
+                val content = response.entity.content
+                val contentLength = response.entity.contentLength
+                if (content != null && response.entity.contentLength > 0) {
+                    val tempFile = File.createTempFile(RandomString().nextString(), null)
+                    val out: OutputStream = FileOutputStream(tempFile)
+                    var read: Int
+                    val buffer = ByteArray(1024)
+                    while (content.read(buffer).also { read = it } > 0) {
+                        out.write(buffer, 0, read)
+                        NotificationHandler.instance.createBookLoadingProgressNotification(
+                            contentLength.toInt(),
+                            tempFile.length().toInt(),
+                            book.name,
+                            startTime
+                        )
+                    }
+                    out.close()
+                    content.close()
+                    NotificationHandler.instance.cancelBookLoadingProgressNotification()
+                    if (tempFile.length() > 1000) {
+                        Log.d(
+                            "surprise",
+                            "downloadBook: loaded something with content length ${tempFile.length()} and status ${response.statusLine.statusCode}"
+                        )
+                        // книга загружена, помещу её в нужную папку и правильно назову
+                        LoadedBookHandler().saveBook(book, response, tempFile)
+                        book.loaded = true
+                        return true
+                    }
+                }
             }
         }
+        return false
     }
 
     private fun createForegroundInfo(): ForegroundInfo {
         // Build a notification
-        val notification = mNotificator.createMassBookLoadNotification()
+        val notification = NotificationHandler.instance.createMassBookLoadNotification()
         return ForegroundInfo(NotificationHandler.DOWNLOAD_PROGRESS_NOTIFICATION, notification)
     }
 
     companion object {
-        @JvmField
-        var downloadInProgress = false
         @JvmStatic
         fun dropDownloadsQueue() {
             // удалю из базы данных всю очередь скачивания
@@ -208,7 +259,7 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
                 }
             }
             // уведомлю, что размер списка закачек изменился
-            BaseActivity.sLiveDownloadScheduleCount.postValue(true)
+            BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
         }
 
         @JvmStatic
@@ -217,37 +268,8 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
             val dao = db.booksDownloadScheduleDao()
             dao.delete(scheduleItem)
             // уведомлю, что размер списка закачек изменился
-            BaseActivity.sLiveDownloadScheduleCount.postValue(true)
+            BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
         }
-
-        @JvmStatic
-        fun noActiveDownloadProcess(): Boolean {
-            // проверю наличие активных процессов скачивания
-            val info = WorkManager.getInstance(App.instance)
-                .getWorkInfosForUniqueWork(OPDSViewModel.MULTIPLY_DOWNLOAD)
-            try {
-                val results = info.get()
-                if (results == null || results.size == 0) {
-                    return true
-                }
-                for (v in results) {
-                    val status = v.state
-                    if (status == WorkInfo.State.ENQUEUED || status == WorkInfo.State.RUNNING) {
-                        return false
-                    }
-                }
-            } catch (e: ExecutionException) {
-                e.printStackTrace()
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-            }
-            return true
-        }
-
-        @JvmStatic
-        val downloadProgress: LiveData<List<WorkInfo>>
-            get() = WorkManager.getInstance(App.instance)
-                .getWorkInfosForUniqueWorkLiveData(OPDSViewModel.MULTIPLY_DOWNLOAD)
 
         @JvmStatic
         fun skipFirstBook() {
@@ -255,7 +277,20 @@ class DownloadBooksWorker(context: Context, workerParams: WorkerParameters) :
             val dao = db.booksDownloadScheduleDao()
             dao.delete(dao.firstQueuedBook)
             // уведомлю, что размер списка закачек изменился
-            BaseActivity.sLiveDownloadScheduleCount.postValue(true)
+            BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
+        }
+
+        const val DOWNLOAD_IN_PROGRESS = "download in progress"
+        const val DOWNLOAD_FINISHED = "download finished"
+    }
+
+    override fun onStopped() {
+        super.onStopped()
+        val dao = App.instance.mDatabase.booksDownloadScheduleDao()
+        // сохраню список книг с ошибками
+        for (b in downloadErrors) {
+            dao.insert(b)
+            downloadErrors.remove(b)
         }
     }
 

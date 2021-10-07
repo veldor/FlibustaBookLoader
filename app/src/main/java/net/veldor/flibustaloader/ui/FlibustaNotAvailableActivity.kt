@@ -81,12 +81,8 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
     private fun startView() {
         // проверю очередь скачивания. Если она не пуста- предложу продолжить закачку
         // проверю, не запущено ли приложение с помощью интента. Если да- запущу программу в webView режиме
-        // проверю, если используем ODPS- перенаправлю в другую активность
-        val targetActivityIntent: Intent = if (PreferencesHandler.instance.view == App.VIEW_OPDS) {
-            Intent(this, OPDSActivity::class.java)
-        } else {
-            Intent(this, WebViewActivity::class.java)
-        }
+        // проверю, если используем OPDS- перенаправлю в другую активность
+        val targetActivityIntent = Intent(this, BrowserActivity::class.java)
         targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(targetActivityIntent)
         finish()

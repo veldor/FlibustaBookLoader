@@ -20,29 +20,25 @@
     <Preference
         app:title="@string/view_preferences"
         app:icon="@drawable/ic_baseline_eye_24"
-        app:summary="Настройки внешнего вида"
         app:fragment="net.veldor.flibustaloader.ui.SettingsActivity$ViewPreferencesFragment"/>
     <Preference
         app:title="@string/download_preferences"
         app:icon="@drawable/ic_cloud_download_black_24dp"
-        app:summary="Настройки загрузок"
         app:fragment="net.veldor.flibustaloader.ui.SettingsActivity$DownloadPreferencesFragment"/>
 
     <Preference
         app:title="@string/reserve_preferences"
         app:icon="@drawable/ic_backup_black_24dp"
-        app:summary="Резервирование настроек приложения"
+        app:summary="Резервирование и восстановление настроек"
         app:fragment="net.veldor.flibustaloader.ui.SettingsActivity$ReservePreferencesFragment"/>
 
     <Preference
         app:title="@string/update_preferences"
         app:icon="@drawable/ic_baseline_sync_black_24"
-        app:summary="Управление обновлением приложения"
         app:fragment="net.veldor.flibustaloader.ui.SettingsActivity$UpdatePreferencesFragment"/>
 
     <Preference
         app:title="@string/connection_preferences"
         app:icon="@drawable/ic_baseline_vpn_key_black_24"
-        app:summary="Управление соединением"
         app:fragment="net.veldor.flibustaloader.ui.SettingsActivity$ConnectionPreferencesFragment"/>
 </PreferenceScreen>

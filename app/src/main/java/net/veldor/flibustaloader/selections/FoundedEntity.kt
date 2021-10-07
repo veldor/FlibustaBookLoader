@@ -1,14 +1,21 @@
 package net.veldor.flibustaloader.selections
 
+import android.graphics.Bitmap
 import java.util.ArrayList
 
 class FoundedEntity {
-    lateinit var type: String
-    lateinit var id: String
-    lateinit var link: String
-    lateinit var name: String
+    var content: String = ""
+    var selected: Boolean = false
+    var buttonPressed: Boolean = false
+    var description: String = ""
+    var language: String = ""
+    var coverUrl: String? = null
+    var type: String? = null
+    var id: String? = null
+    var link: String? = null
+    var name: String? = null
     var author: String? = null
-    lateinit var downloadsCount: String
+    var downloadsCount: String? = null
     var translate: String? = null
     var size: String? = null
     var format: String? = null
@@ -16,8 +23,9 @@ class FoundedEntity {
     val genres = ArrayList<FoundedEntity>()
     var genreComplex: String? = null
     val sequences = ArrayList<FoundedEntity>()
-    var sequencesComplex: String? = null
-
+    val authors = ArrayList<FoundedEntity>()
+    var sequencesComplex: String = ""
+    var cover: Bitmap? = null
 
     var read = false
     var downloaded = false

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_opds"
+        android:icon="@drawable/ic_baseline_view_list_24"
+        android:title="@string/navigation_go_opds" />
+    <item
+        android:id="@+id/navigation_web_view"
+        android:icon="@drawable/ic_baseline_public_24"
+        android:title="@string/navigation_go_webview" />
+</menu>

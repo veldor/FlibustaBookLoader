@@ -1,40 +1,46 @@
 package net.veldor.flibustaloader.ui
 
-import net.veldor.flibustaloader.utils.FilesHandler.shareFile
-import net.veldor.flibustaloader.updater.Updater.checkUpdate
-import net.veldor.flibustaloader.updater.Updater.update
-import android.os.Bundle
-import net.veldor.flibustaloader.R
-import net.veldor.flibustaloader.App
-import android.widget.Toast
+import android.app.Activity
 import android.content.DialogInterface
-import androidx.drawerlayout.widget.DrawerLayout
-import android.os.Build
-import androidx.core.view.GravityCompat
 import android.content.Intent
-import lib.folderpicker.FolderPicker
-import androidx.documentfile.provider.DocumentFile
-import com.google.android.material.snackbar.Snackbar
-import androidx.preference.PreferenceFragmentCompat
-import net.veldor.flibustaloader.utils.TransportUtils
-import net.veldor.flibustaloader.workers.RestoreSettingsWorker
-import androidx.work.Operation.State.FAILURE
-import net.veldor.flibustaloader.workers.ReserveSettingsWorker
 import android.net.Uri
+import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.view.*
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.GravityCompat
+import androidx.documentfile.provider.DocumentFile
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.ViewModelProvider
 import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import androidx.work.*
+import lib.folderpicker.FolderPicker
+import net.veldor.flibustaloader.App
+import net.veldor.flibustaloader.R
+import net.veldor.flibustaloader.databinding.ActivityPreferencesBinding
+import net.veldor.flibustaloader.utils.FilesHandler
+import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.TransportUtils
+import net.veldor.flibustaloader.view_models.SettingsViewModel
 import java.io.File
 
 class SettingsActivity : BaseActivity(),
     PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
+    private lateinit var binding: ActivityPreferencesBinding
+    private lateinit var viewModel: SettingsViewModel
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.new_preferences_activity)
+        viewModel = ViewModelProvider(this).get(SettingsViewModel::class.java)
+        binding = ActivityPreferencesBinding.inflate(layoutInflater)
+        setContentView(binding.drawerLayout)
         setupInterface()
 
         // добавлю главный фрагмент
@@ -69,6 +75,7 @@ class SettingsActivity : BaseActivity(),
         }
     }
 
+    @Suppress("unused")
     class ReservePreferencesFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_reserve, rootKey)
@@ -88,15 +95,36 @@ class SettingsActivity : BaseActivity(),
                             "Выберите папку для сохранения резервной копии",
                             Toast.LENGTH_SHORT
                         ).show()
-                        // открою диалог выбора папки
+
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            startActivityForResult(
-                                Intent(Intent.ACTION_OPEN_DOCUMENT_TREE),
-                                REQUEST_CODE
+                            var intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                            intent.addFlags(
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                        or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                        or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
                             )
+                            if (TransportUtils.intentCanBeHandled(intent)) {
+                                backupDirSelectResultLauncher.launch(intent)
+                            } else {
+                                intent = Intent(context, FolderPicker::class.java)
+                                intent.addFlags(
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                            or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                            or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                )
+                                //compatBackupDirSelectResultLauncher.launch(intent)
+                            }
                         } else {
                             val intent = Intent(context, FolderPicker::class.java)
-                            startActivityForResult(intent, READ_REQUEST_CODE)
+                            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+                                intent.addFlags(
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                            or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                            or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                )
+                            }
+                            //compatBackupDirSelectResultLauncher.launch(intent)
                         }
                         false
                     }
@@ -121,7 +149,7 @@ class SettingsActivity : BaseActivity(),
                         if (TransportUtils.intentCanBeHandled(intent)) {
                             Toast.makeText(context, "Восстанавливаю настройки.", Toast.LENGTH_LONG)
                                 .show()
-                            startActivityForResult(intent, BACKUP_FILE_REQUEST_CODE)
+                            restoreFileSelectResultLauncher.launch(intent)
                         } else {
                             Toast.makeText(
                                 context,
@@ -134,151 +162,70 @@ class SettingsActivity : BaseActivity(),
             }
         }
 
-        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-            if (requestCode == BACKUP_FILE_REQUEST_CODE) {
-                // выбран файл, вероятно с бекапом
-                if (resultCode == RESULT_OK) {
-                    val uri: Uri?
-                    if (data != null) {
-                        uri = data.data
-                        if (uri != null) {
-                            // закодирую данные для передачи рабочему
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                App.instance.contentResolver.takePersistableUriPermission(
-                                    uri,
-                                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                                )
-                            }
-                            val inputData = Data.Builder()
-                                .putString(RestoreSettingsWorker.URI, uri.toString())
-                                .build()
-                            val restoreWorker = OneTimeWorkRequest.Builder(
-                                RestoreSettingsWorker::class.java
-                            ).setInputData(inputData).build()
-                            val workState = WorkManager.getInstance(App.instance)
-                                .enqueue(restoreWorker).state
-                            workState.observe(
-                                this@ReservePreferencesFragment,
-                                { state: Operation.State ->
-                                    if (state.toString() == "SUCCESS") {
-                                        // настройки приложения восстановлены
-                                        Toast.makeText(
-                                            context,
-                                            "Настройки приложения восстановлены",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        workState.removeObservers(this@ReservePreferencesFragment)
-                                        Handler().postDelayed(ResetApp(), 1000)
-                                    } else if (state is FAILURE) {
-                                        Toast.makeText(
-                                            context,
-                                            "Не удалось восстановить настройки приложения",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        workState.removeObservers(this@ReservePreferencesFragment)
-                                    }
-                                })
-                        }
-                    }
-                }
-            } else if (requestCode == REQUEST_CODE) {
-                if (resultCode == RESULT_OK) {
-                    if (data != null) {
-                        val treeUri = data.data
+
+        private var backupDirSelectResultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    if (result != null) {
+                        val treeUri = result.data!!.data
                         if (treeUri != null) {
                             // проверю наличие файла
                             val dl = DocumentFile.fromTreeUri(App.instance, treeUri)
                             if (dl != null && dl.isDirectory) {
-                                // зарезирвирую настройки в данную директорию
-                                ReserveSettingsWorker.sSaveDir = dl
-                                val reserveWorker = OneTimeWorkRequest.Builder(
-                                    ReserveSettingsWorker::class.java
-                                ).build()
-                                WorkManager.getInstance(App.instance).enqueue(reserveWorker)
-                                val workStatus = WorkManager.getInstance(App.instance)
-                                    .getWorkInfoByIdLiveData(reserveWorker.id)
-                                // Отслежу резервирование настроек, когда оно будет закончено- предложу отправить файл с настройками
-                                workStatus.observe(
-                                    this@ReservePreferencesFragment,
-                                    { state: WorkInfo ->
-                                        Log.d(
-                                            "surprise",
-                                            "ReservePreferencesFragment onActivityResult 174: state is $state"
-                                        )
-                                        if (state.state == WorkInfo.State.SUCCEEDED) {
-                                            Log.d(
-                                                "surprise",
-                                                "ReservePreferencesFragment onActivityResult 173: here"
-                                            )
+                                (requireActivity() as SettingsActivity).viewModel.backup(dl)
+                                (requireActivity() as SettingsActivity).viewModel.liveBackupData.observe(
+                                    viewLifecycleOwner,
+                                    {
+                                        if (it != null) {
+                                            // send file
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                                // отправка файла
-                                                val zip = ReserveSettingsWorker.sBackupFile
-                                                Log.d(
-                                                    "surprise",
-                                                    "ReservePreferencesFragment onActivityResult 177: zip is $zip"
-                                                )
-                                                if (zip != null && zip.isFile) {
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Настройки сохранены. Вот файл с ними",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                    shareFile(zip)
-                                                }
+                                                FilesHandler.shareFile(it, "Share settings")
                                             }
-                                            workStatus.removeObservers(this@ReservePreferencesFragment)
+                                            (requireActivity() as SettingsActivity).viewModel.liveBackupData.removeObservers(
+                                                viewLifecycleOwner
+                                            )
+                                        } else {
+                                            Toast.makeText(
+                                                requireContext(),
+                                                "Can't create backup file, try again!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
                                     })
                             }
                         }
                     }
                 }
-            } else if (requestCode == READ_REQUEST_CODE && resultCode == RESULT_OK) {
-                // сохраню файл
-                if (data != null && data.extras != null) {
-                    val folderLocation = data.extras!!.getString("data")
-                    if (folderLocation != null) {
-                        val destination = File(folderLocation)
-                        if (destination.exists()) {
-                            ReserveSettingsWorker.sCompatSaveDir = destination
-                            val reserveWorker = OneTimeWorkRequest.Builder(
-                                ReserveSettingsWorker::class.java
-                            ).build()
-                            val workState = WorkManager.getInstance(App.instance)
-                                .enqueue(reserveWorker).state
-                            // Отслежу резервирование настроек, когда оно будет закончено- предложу отправить файл с настройками
-                            workState.observe(
-                                this@ReservePreferencesFragment,
-                                { state: Operation.State ->
-                                    if (state.toString() == "SUCCESS") {
-                                        Log.d(
-                                            "surprise",
-                                            "ReservePreferencesFragment onActivityResult 173: here"
-                                        )
-                                        // отправка файла
-                                        val zip = ReserveSettingsWorker.sCompatBackupFile
-                                        Log.d(
-                                            "surprise",
-                                            "ReservePreferencesFragment onActivityResult 177: zip is $zip"
-                                        )
-                                        if (zip != null && zip.isFile) {
-                                            Toast.makeText(
-                                                context,
-                                                "Настройки сохранены. Вот файл с ними",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            shareFile(zip)
-                                        }
-                                        workState.removeObservers(this@ReservePreferencesFragment)
-                                    }
-                                })
+            }
+
+        private var restoreFileSelectResultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val uri: Uri?
+                    if (result != null) {
+                        uri = result.data?.data
+                        if (uri != null) {
+                            val dl = DocumentFile.fromSingleUri(App.instance, uri)
+                            if(dl != null) {
+                                Log.d("surprise", "${dl.name}: ")
+                                (requireActivity() as SettingsActivity).viewModel.restore(dl)
+                                (requireActivity() as SettingsActivity).viewModel.livePrefsRestored.observe(
+                                    viewLifecycleOwner,
+                                    {
+                                       if(it){
+                                           Toast.makeText(
+                                               requireContext(),
+                                               "Preferences restored, reboot app",
+                                               Toast.LENGTH_LONG
+                                           ).show()
+                                           Handler().postDelayed(ResetApp(), 3000)
+                                       }
+                                    })
+                            }
                         }
                     }
                 }
-            } else {
-                super.onActivityResult(requestCode, resultCode, data)
             }
-        }
 
         companion object {
             private const val BACKUP_FILE_REQUEST_CODE = 10
@@ -287,6 +234,7 @@ class SettingsActivity : BaseActivity(),
         }
     }
 
+    @Suppress("unused")
     class ConnectionPreferencesFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_connection, rootKey)
@@ -296,17 +244,22 @@ class SettingsActivity : BaseActivity(),
             super.onResume()
             val useMirrorPref =
                 findPreference<Preference>(getString(R.string.pref_use_custom_mirror))
-            useMirrorPref?.summary =
-                if (PreferencesHandler.instance.isCustomMirror) getString(R.string.used_title) else getString(
-                    R.string.disabled_title
-                )
             useMirrorPref?.setOnPreferenceChangeListener { _: Preference?, _: Any? ->
-                useMirrorPref.summary =
-                    if (PreferencesHandler.instance.isCustomMirror) getString(R.string.disabled_title) else getString(
-                        R.string.used_title
-                    )
+                Log.d(
+                    "surprise",
+                    "onResume: pref change! ${PreferencesHandler.instance.customMirror}"
+                )
+                if (PreferencesHandler.instance.customMirror == PreferencesHandler.BASE_URL) {
+                    Toast.makeText(
+                        context,
+                        "Сначала нужно ввести адрес зеркала ниже",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@setOnPreferenceChangeListener false
+                }
                 true
             }
+
             val mirrorAddress =
                 findPreference<Preference>(getString(R.string.pref_custom_flibusta_mirror))
             mirrorAddress?.summary =
@@ -315,19 +268,58 @@ class SettingsActivity : BaseActivity(),
                 ) else PreferencesHandler.instance.customMirror
             mirrorAddress?.setOnPreferenceChangeListener { _: Preference?, value: Any? ->
                 val newValue = value as String
-                if(newValue.isEmpty()){
-                    PreferencesHandler.instance.customMirror = null
+                if (newValue.isEmpty()) {
+                    PreferencesHandler.instance.customMirror = PreferencesHandler.BASE_URL
+                    PreferencesHandler.instance.isCustomMirror = false
                     mirrorAddress.summary = getString(R.string.custom_mirror_hint)
                     return@setOnPreferenceChangeListener false
+                } else {
+                    if (Grammar.isValidUrl(newValue)) {
+                        mirrorAddress.summary = newValue
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "$newValue - неверный формат Url. Введите ещё раз в формате http://flibusta.is",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        mirrorAddress.summary = getString(R.string.custom_mirror_hint)
+                        return@setOnPreferenceChangeListener false
+                    }
                 }
-                else{
-                    mirrorAddress.summary = newValue
+                true
+            }
+            val picMirrorAddress =
+                findPreference<Preference>(getString(R.string.pref_custom_pic_mirror))
+            picMirrorAddress?.summary =
+                if (PreferencesHandler.instance.picMirror == PreferencesHandler.BASE_PIC_URL) getString(
+                    R.string.custom_mirror_hint
+                ) else PreferencesHandler.instance.picMirror
+
+            picMirrorAddress?.setOnPreferenceChangeListener { _: Preference?, value: Any? ->
+                val newValue = value as String
+                if (newValue.isEmpty()) {
+                    PreferencesHandler.instance.customMirror = PreferencesHandler.BASE_PIC_URL
+                    picMirrorAddress.summary = getString(R.string.custom_mirror_hint)
+                    return@setOnPreferenceChangeListener false
+                } else {
+                    if (Grammar.isValidUrl(newValue)) {
+                        picMirrorAddress.summary = newValue
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "$newValue - неверный формат Url. Введите ещё раз в формате http://flibusta.is",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        picMirrorAddress.summary = getString(R.string.custom_mirror_hint)
+                        return@setOnPreferenceChangeListener false
+                    }
                 }
                 true
             }
         }
     }
 
+    @Suppress("unused")
     class ViewPreferencesFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_view, rootKey)
@@ -365,53 +357,85 @@ class SettingsActivity : BaseActivity(),
         }
     }
 
+    @Suppress("unused")
     class UpdatePreferencesFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_update, rootKey)
         }
-
-        override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
-            val checkUpdatePref =
-                findPreference<Preference>(getString(R.string.pref_check_update_now))
-            if (checkUpdatePref != null) {
-                checkUpdatePref.onPreferenceClickListener =
-                    Preference.OnPreferenceClickListener {
-                        Toast.makeText(context, "Проверяю обновления", Toast.LENGTH_SHORT).show()
-                        val updateCheckStatus = checkUpdate()
-                        updateCheckStatus.observe(
-                            this@UpdatePreferencesFragment,
-                            { aBoolean: Boolean? ->
-                                if (aBoolean != null && aBoolean) {
-                                    // показываю Snackbar с уведомлением
-                                    makeUpdateSnackbar()
-                                    updateCheckStatus.removeObservers(this@UpdatePreferencesFragment)
-                                }
-                            })
-                        false
-                    }
-            }
-        }
-
-        private fun makeUpdateSnackbar() {
-            val view = view
-            if (view != null) {
-                val updateSnackbar = Snackbar.make(
-                    requireView(),
-                    getString(R.string.snackbar_found_update_message),
-                    Snackbar.LENGTH_INDEFINITE
-                )
-                updateSnackbar.setAction(getString(R.string.snackbar_update_action_message)) {
-                    Toast.makeText(context, "Загружаю обновление", Toast.LENGTH_SHORT).show()
-                    update()
-                }
-                updateSnackbar.setActionTextColor(resources.getColor(android.R.color.white))
-                updateSnackbar.show()
-            }
-        }
     }
 
+    @Suppress("unused")
     class DownloadPreferencesFragment : PreferenceFragmentCompat() {
+
+        private var compatDirSelectResultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val data: Intent? = result.data
+                    if (data != null && data.extras != null && data.extras!!.containsKey("data")) {
+                        val folderLocation = data.extras!!.getString("data")
+                        val file = File(folderLocation)
+                        if (file.isDirectory && PreferencesHandler.instance.saveDownloadFolder(
+                                folderLocation
+                            )
+                        ) {
+                            Toast.makeText(requireContext(), "Папка сохранена!", Toast.LENGTH_SHORT)
+                                .show()
+                        } else {
+                            Toast.makeText(
+                                requireContext(),
+                                "Не удалось сохранить папку, попробуйте ещё раз!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+
+        private var dirSelectResultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    // There are no request codes
+                    val data: Intent? = result.data
+                    if (data != null) {
+                        val treeUri = data.data
+                        if (treeUri != null) {
+                            // проверю наличие файла
+                            val dl = DocumentFile.fromTreeUri(App.instance, treeUri)
+                            if (dl != null && dl.isDirectory) {
+                                try {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                        App.instance.contentResolver.takePersistableUriPermission(
+                                            treeUri,
+                                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        )
+                                        App.instance.contentResolver.takePersistableUriPermission(
+                                            treeUri,
+                                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                        )
+                                    }
+                                    PreferencesHandler.instance.downloadDir = dl
+                                } catch (e: Exception) {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        "Не удалось выдать разрешения на доступ, попробуем другой метод",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    val intent = Intent(requireContext(), FolderPicker::class.java)
+                                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+                                        intent.addFlags(
+                                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                    or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                                    or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                        )
+                                    }
+                                    compatDirSelectResultLauncher.launch(intent)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
         private var mChangeDownloadFolderPreference: Preference? = null
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences_download, rootKey)
@@ -428,15 +452,35 @@ class SettingsActivity : BaseActivity(),
                     "Текущая папка: " + PreferencesHandler.instance.getDownloadDirLocation()
                 mChangeDownloadFolderPreference!!.onPreferenceClickListener =
                     Preference.OnPreferenceClickListener {
-                        // открою диалог выбора папки
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            startActivityForResult(
-                                Intent(Intent.ACTION_OPEN_DOCUMENT_TREE),
-                                REQUEST_CODE
+                            var intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                            intent.addFlags(
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                        or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                        or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
                             )
+                            if (TransportUtils.intentCanBeHandled(intent)) {
+                                dirSelectResultLauncher.launch(intent)
+                            } else {
+                                intent = Intent(requireContext(), FolderPicker::class.java)
+                                intent.addFlags(
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                            or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                            or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                )
+                                compatDirSelectResultLauncher.launch(intent)
+                            }
                         } else {
-                            val intent = Intent(context, FolderPicker::class.java)
-                            startActivityForResult(intent, READ_REQUEST_CODE)
+                            val intent = Intent(requireContext(), FolderPicker::class.java)
+                            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+                                intent.addFlags(
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                            or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                            or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                )
+                            }
+                            compatDirSelectResultLauncher.launch(intent)
                         }
                         false
                     }
@@ -461,73 +505,22 @@ class SettingsActivity : BaseActivity(),
                     .setMessage("На случай, если папка для скачивания не выбирается основным методом. Только для совместимости, никаких преимуществ этот способ не даёт, также выбранная папка может сбрасываться при перезагрузке смартфона и её придётся выбирать заново")
                     .setCancelable(true)
                     .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
-                        val intent = Intent(context, FolderPicker::class.java)
+                        val intent = Intent(requireContext(), FolderPicker::class.java)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                             intent.addFlags(
                                 Intent.FLAG_GRANT_READ_URI_PERMISSION
                                         or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                                         or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
                             )
+                        } else {
+                            intent.addFlags(
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            )
                         }
-                        startActivityForResult(intent, READ_REQUEST_CODE)
+                        compatDirSelectResultLauncher.launch(intent)
                     }
                     .create().show()
-            }
-        }
-
-        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-            if (requestCode == REQUEST_CODE) {
-                if (resultCode == RESULT_OK) {
-                    if (data != null) {
-                        val treeUri = data.data
-                        if (treeUri != null) {
-                            // проверю наличие файла
-                            val dl = DocumentFile.fromTreeUri(App.instance, treeUri)
-                            if (dl != null && dl.isDirectory) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                    App.instance.contentResolver.takePersistableUriPermission(
-                                        treeUri,
-                                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                    )
-                                    App.instance.contentResolver.takePersistableUriPermission(
-                                        treeUri,
-                                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                                    )
-                                }
-                                PreferencesHandler.instance.downloadDir = dl
-                                Toast.makeText(
-                                    context,
-                                    getText(R.string.download_folder_changed_message_new),
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                mChangeDownloadFolderPreference!!.summary =
-                                    "Текущая папка: " + PreferencesHandler.instance
-                                        .getDownloadDirLocation()
-                            }
-                        }
-                    }
-                }
-            } else if (requestCode == READ_REQUEST_CODE) {
-                if (resultCode == RESULT_OK) {
-                    if (data != null && data.extras != null) {
-                        val folderLocation = data.extras!!.getString("data")
-                        if (folderLocation != null) {
-                            val destination = File(folderLocation)
-                            if (destination.exists()) {
-                                PreferencesHandler.instance.compatDownloadDir = destination
-                                Toast.makeText(
-                                    context,
-                                    getText(R.string.download_folder_changed_message).toString() + folderLocation,
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                mChangeDownloadFolderPreference!!.summary =
-                                    "Текущая папка: " + PreferencesHandler.instance.getDownloadDirLocation()
-                            }
-                        }
-                    }
-                }
-            } else {
-                super.onActivityResult(requestCode, resultCode, data)
             }
         }
 

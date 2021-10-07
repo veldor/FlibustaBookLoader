@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.BR
@@ -13,15 +12,15 @@ import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.database.dao.BookmarksDao
 import net.veldor.flibustaloader.database.entity.Bookmark
 import net.veldor.flibustaloader.databinding.BookmarkItemBinding
-import net.veldor.flibustaloader.ui.OPDSActivity
-import java.util.*
+import net.veldor.flibustaloader.ui.BrowserActivity
+import net.veldor.flibustaloader.ui.fragments.OpdsFragment.Companion.TARGET_LINK
 
 class BookmarksAdapter(private var mBookmarks: MutableList<Bookmark>) :
     RecyclerView.Adapter<BookmarksAdapter.ViewHolder>() {
     private var mLayoutInflater: LayoutInflater = LayoutInflater.from(App.instance.applicationContext)
     private val mDao: BookmarksDao = App.instance.mDatabase.bookmarksDao()
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ViewHolder {
-        val binding = BookmarkItemBinding.inflate(mLayoutInflater)
+        val binding = BookmarkItemBinding.inflate(mLayoutInflater, viewGroup, false)
         return ViewHolder(binding)
     }
 
@@ -33,12 +32,7 @@ class BookmarksAdapter(private var mBookmarks: MutableList<Bookmark>) :
         return mBookmarks.size
     }
 
-    fun setContent(arrayList: ArrayList<Bookmark>) {
-        mBookmarks = arrayList
-        notifyItemRangeChanged(0, mBookmarks.size)
-    }
-
-    inner class ViewHolder(private val mBinding: ViewDataBinding) : RecyclerView.ViewHolder(
+    inner class ViewHolder(private val mBinding: BookmarkItemBinding) : RecyclerView.ViewHolder(
         mBinding.root
     ) {
         fun bind(bookmark: Bookmark) {
@@ -48,8 +42,8 @@ class BookmarksAdapter(private var mBookmarks: MutableList<Bookmark>) :
             val container = mBinding.root
             val itemName = container.findViewById<View>(R.id.bookmark_name)
             itemName.setOnClickListener {
-                val intent = Intent(App.instance, OPDSActivity::class.java)
-                intent.putExtra(OPDSActivity.TARGET_LINK, bookmark.link)
+                val intent = Intent(App.instance, BrowserActivity::class.java)
+                intent.putExtra(TARGET_LINK, bookmark.link)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 App.instance.startActivity(intent)
             }

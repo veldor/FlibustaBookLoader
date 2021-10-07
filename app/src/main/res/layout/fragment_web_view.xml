@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="50dp">
+
+    <net.veldor.flibustaloader.MyWebView
+        android:id="@+id/myWebView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toBottomOf="@+id/pageLoadedProgressBar" />
+
+    <ProgressBar
+        android:id="@+id/pageLoadedProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/floatingMenu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="50dp"
+        android:padding="8dp"
+        android:visibility="gone"
+        fab:menu_animationDelayPerItem="0"
+        fab:menu_backgroundColor="#ccffffff"
+        fab:menu_colorNormal="#00C29F"
+        fab:menu_colorPressed="#00C29F"
+        fab:menu_colorRipple="#00C29F"
+        fab:menu_fab_label="@string/fab_cancel_label"
+        fab:menu_icon="@drawable/ic_cloud_download_white_24dp"
+        fab:menu_labels_ellipsize="end"
+        fab:menu_labels_singleLine="true">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fabDownloadAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_cloud_download_white_24dp"
+            fab:fab_label="@string/download_all_button"
+            fab:fab_size="mini" />
+    </com.github.clans.fab.FloatingActionMenu>
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+

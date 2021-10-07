@@ -19,7 +19,9 @@ object MyFileReader {
     const val AUTHORS_BLACKLIST_FILE = "authorsBlacklist.xml"
     const val SEQUENCES_SUBSCRIBE_FILE = "sequencesSubscribe.xml"
     const val SEQUENCES_BLACKLIST_FILE = "sequencesBlacklist.xml"
+    const val GENRES_SUBSCRIBE_FILE = "genresSubscribe.xml"
     const val GENRES_BLACKLIST_FILE = "genresBlacklist.xml"
+
     @kotlin.jvm.JvmStatic
     fun getSearchAutocomplete(): String {
         val autocompleteFile = File(App.instance.filesDir, SEARCH_AUTOCOMPLETE_FILE)
@@ -39,7 +41,7 @@ object MyFileReader {
         return text.toString()
     }
 
-    fun getBooksSubscribe(): String {
+    private fun getBooksSubscribe(): String {
         val booksSubscribeFile = File(App.instance.filesDir, BOOKS_SUBSCRIBE_FILE)
         if (!booksSubscribeFile.exists()) {
             makeFile(booksSubscribeFile, SUBSCRIBE_NEW)
@@ -57,7 +59,7 @@ object MyFileReader {
         return text.toString()
     }
 
-    fun getBooksBlacklist(): String {
+    private fun getBooksBlacklist(): String {
         val booksBlacklistFile = File(App.instance.filesDir, BOOKS_BLACKLIST_FILE)
         if (!booksBlacklistFile.exists()) {
             makeFile(booksBlacklistFile, BLACKLIST_NEW)
@@ -75,7 +77,7 @@ object MyFileReader {
         return text.toString()
     }
 
-    fun getAuthorsSubscribe(): String {
+    private fun getAuthorsSubscribe(): String {
         val authorsSubscribeFile = File(App.instance.filesDir, AUTHORS_SUBSCRIBE_FILE)
         if (!authorsSubscribeFile.exists()) {
             makeFile(authorsSubscribeFile, SUBSCRIBE_NEW)
@@ -93,7 +95,7 @@ object MyFileReader {
         return text.toString()
     }
 
-    fun getAuthorsBlacklist(): String {
+    private fun getAuthorsBlacklist(): String {
         val authorsBlacklistFile = File(App.instance.filesDir, AUTHORS_BLACKLIST_FILE)
         if (!authorsBlacklistFile.exists()) {
             makeFile(authorsBlacklistFile, BLACKLIST_NEW)
@@ -111,7 +113,7 @@ object MyFileReader {
         return text.toString()
     }
 
-    fun getSequencesBlacklist(): String {
+    private fun getSequencesBlacklist(): String {
         val blacklistFile = File(App.instance.filesDir, SEQUENCES_BLACKLIST_FILE)
         if (!blacklistFile.exists()) {
             makeFile(blacklistFile, BLACKLIST_NEW)
@@ -129,7 +131,7 @@ object MyFileReader {
         return text.toString()
     }
 
-    fun getGenresBlacklist(): String {
+    private fun getGenresBlacklist(): String {
         val blacklistFile = File(App.instance.filesDir, GENRES_BLACKLIST_FILE)
         if (!blacklistFile.exists()) {
             makeFile(blacklistFile, BLACKLIST_NEW)
@@ -147,7 +149,24 @@ object MyFileReader {
         return text.toString()
     }
 
-    fun getSequencesSubscribe(): String {
+    private fun getGenresSubscribe(): String {
+        val sequencesSubscribeFile = File(App.instance.filesDir, GENRES_SUBSCRIBE_FILE)
+        if (!sequencesSubscribeFile.exists()) {
+            makeFile(sequencesSubscribeFile, SUBSCRIBE_NEW)
+        }
+        val text = StringBuilder()
+        try {
+            val br = BufferedReader(FileReader(sequencesSubscribeFile))
+            var line: String?
+            while (br.readLine().also { line = it } != null) {
+                text.append(line)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return text.toString()
+    }
+    private fun getSequencesSubscribe(): String {
         val sequencesSubscribeFile = File(App.instance.filesDir, SEQUENCES_SUBSCRIBE_FILE)
         if (!sequencesSubscribeFile.exists()) {
             makeFile(sequencesSubscribeFile, SUBSCRIBE_NEW)
@@ -188,38 +207,77 @@ object MyFileReader {
         }
     }
 
-    fun saveBooksSubscription(value: String) {
+    private fun saveBooksSubscription(value: String) {
         val subscriptionFile = File(App.instance.filesDir, BOOKS_SUBSCRIBE_FILE)
         makeFile(subscriptionFile, value)
     }
 
-    fun saveBooksBlacklist(value: String) {
+    private fun saveBooksBlacklist(value: String) {
         val blacklistFile = File(App.instance.filesDir, BOOKS_BLACKLIST_FILE)
         makeFile(blacklistFile, value)
     }
 
-    fun saveAuthorsSubscription(value: String) {
+    private fun saveAuthorsSubscription(value: String) {
         val subscriptionFile = File(App.instance.filesDir, AUTHORS_SUBSCRIBE_FILE)
         makeFile(subscriptionFile, value)
     }
 
-    fun saveAuthorsBlacklist(value: String) {
+    private fun saveAuthorsBlacklist(value: String) {
         val blacklistFile = File(App.instance.filesDir, AUTHORS_BLACKLIST_FILE)
         makeFile(blacklistFile, value)
     }
 
-    fun saveSequencesSubscription(value: String) {
+    private fun saveSequencesSubscription(value: String) {
         val subscriptionFile = File(App.instance.filesDir, SEQUENCES_SUBSCRIBE_FILE)
         makeFile(subscriptionFile, value)
     }
 
-    fun saveSequencesBlacklist(value: String) {
+    private fun saveSequencesBlacklist(value: String) {
         val blacklistFile = File(App.instance.filesDir, SEQUENCES_BLACKLIST_FILE)
         makeFile(blacklistFile, value)
     }
 
-    fun saveGenresBlacklist(value: String) {
+    private fun saveGenresBlacklist(value: String) {
         val blacklistFile = File(App.instance.filesDir, GENRES_BLACKLIST_FILE)
         makeFile(blacklistFile, value)
+    }
+    private fun saveGenresSubscription(value: String) {
+        val blacklistFile = File(App.instance.filesDir, GENRES_SUBSCRIBE_FILE)
+        makeFile(blacklistFile, value)
+    }
+
+    fun getBlacklist(blacklistFileName: String): String {
+        return when (blacklistFileName) {
+            BOOKS_BLACKLIST_FILE -> getBooksBlacklist()
+            AUTHORS_BLACKLIST_FILE -> getAuthorsBlacklist()
+            SEQUENCES_BLACKLIST_FILE -> getSequencesBlacklist()
+            else -> getGenresBlacklist()
+        }
+    }
+
+    fun getSubscribe(fileName: String): String {
+        return when (fileName) {
+            BOOKS_SUBSCRIBE_FILE -> getBooksSubscribe()
+            AUTHORS_SUBSCRIBE_FILE -> getAuthorsSubscribe()
+            SEQUENCES_SUBSCRIBE_FILE -> getSequencesSubscribe()
+            else -> getGenresSubscribe()
+        }
+    }
+
+    fun saveBlacklist(blacklistFileName: String, content: String) {
+        when(blacklistFileName){
+            BOOKS_BLACKLIST_FILE -> saveBooksBlacklist(content)
+            AUTHORS_BLACKLIST_FILE -> saveAuthorsBlacklist(content)
+            SEQUENCES_BLACKLIST_FILE -> saveSequencesBlacklist(content)
+            GENRES_BLACKLIST_FILE -> saveGenresBlacklist(content)
+        }
+    }
+    fun saveSubscription(fileName: String, content: String) {
+        when(fileName){
+            BOOKS_SUBSCRIBE_FILE -> saveBooksSubscription(content)
+            AUTHORS_SUBSCRIBE_FILE -> saveAuthorsSubscription(content)
+            SEQUENCES_SUBSCRIBE_FILE -> saveSequencesSubscription(content)
+            GENRES_SUBSCRIBE_FILE -> saveGenresSubscription(content)
+        }
     }
 }

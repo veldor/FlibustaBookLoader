@@ -27,7 +27,11 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup"
         tools:targetApi="q">
-        <activity android:name=".ui.ShowDownloadFolderContentActivity"/>
+        <activity
+            android:name=".ui.BrowserActivity"
+            android:exported="true"
+            android:label="@string/title_activity_browser" />
+        <activity android:name=".ui.DirContentActivity" />
         <activity
             android:name=".ui.FlibustaNotAvailableActivity"
             android:launchMode="singleInstance" />
@@ -43,7 +47,8 @@
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:theme="@style/SplashTheme">
+            android:theme="@style/SplashTheme"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -57,22 +62,14 @@
 
                 <data android:scheme="http" />
                 <data android:host="flibusta.is" />
+                <data android:scheme="http" />
+                <data android:host="flibustahezeous3.onion" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.OPDSActivity"
-            android:label="@string/title_activity_opds"
-            android:launchMode="singleTask" />
-        <activity
-            android:name=".ui.WebViewActivity"
-            android:configChanges="uiMode"
-            android:label="@string/title_activity_webview"
-            android:launchMode="singleInstance" />
         <activity
             android:name=".ui.ActivityBookDownloadSchedule"
             android:label="@string/title_activity_download_schedule"
             android:launchMode="singleInstance"
-            android:parentActivityName=".ui.OPDSActivity"
             android:theme="@style/OldAppTheme" />
         <activity android:name=".ui.SettingsActivity" />
         <activity
@@ -81,7 +78,8 @@
 
         <receiver android:name=".receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />
-        <receiver android:name=".receivers.MiscActionsReceiver">
+        <receiver android:name=".receivers.MiscActionsReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

@@ -14,6 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import net.veldor.flibustaloader.App
+import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
 import net.veldor.flibustaloader.http.TorWebClient
 import net.veldor.flibustaloader.notificatons.NotificationHandler
 import net.veldor.flibustaloader.utils.URLHelper
@@ -25,46 +26,59 @@ class StartViewModel : ViewModel() {
     val connectionTestSuccess: LiveData<Boolean> = _connectionTestSuccess
     private val _connectionTestFailed = MutableLiveData<Boolean>().apply {}
     val connectionTestFailed: LiveData<Boolean> = _connectionTestFailed
+    private val _torStartFailed = MutableLiveData<Boolean>().apply {}
+    val torStartFailed: LiveData<Boolean> = _connectionTestFailed
     private var testInProgress = false
 
     fun checkFlibustaAvailability() {
         currentWork?.cancel()
         currentWork = viewModelScope.launch(Dispatchers.IO) {
-            if (!testInProgress) {
-                testInProgress = true
-                try {
-                    val url = URLHelper.getFlibustaUrl();
-                    Log.d("surprise", "checkFlibustaAvailability: check $url")
-                    val result = TorWebClient().directRequest(url)
-                    if (result.isNullOrEmpty()) {
-                        Log.d("surprise", "checkFlibustaAvailability: can't request base mirror")
-                    } else {
-                        Log.d("surprise", "checkFlibustaAvailability: base url available")
-                        _connectionTestSuccess.postValue(true)
-                        testInProgress = false
-                        return@launch
+            try {
+                if (!testInProgress) {
+                    testInProgress = true
+                    try {
+                        val url = URLHelper.getFlibustaUrl();
+                        Log.d("surprise", "checkFlibustaAvailability: check $url")
+                        val result = TorWebClient().directRequest(url)
+                        if (result.isNullOrEmpty()) {
+                            Log.d(
+                                "surprise",
+                                "checkFlibustaAvailability: can't request base mirror"
+                            )
+                        } else {
+                            Log.d("surprise", "checkFlibustaAvailability: base url available")
+                            _connectionTestSuccess.postValue(true)
+                            testInProgress = false
+                            return@launch
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Log.d("surprise", "checkFlibustaAvailability: error then request mirror")
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Log.d("surprise", "checkFlibustaAvailability: error then request mirror")
-                }
-                Log.d("surprise", "checkFlibustaAvailability: check ${URLHelper.getFlibustaMirrorUrl()}")
-                val result = TorWebClient().directRequest(URLHelper.getFlibustaMirrorUrl())
-                testInProgress = if (result.isNullOrEmpty()) {
-                    Log.d("surprise", "checkFlibustaAvailability: totally connection wrong")
-                    _connectionTestFailed.postValue(true)
-                    false
-                } else{
-                    Log.d("surprise", "checkFlibustaAvailability: mirror url available")
-                    // set use alternative mirror
-                    App.instance.useMirror = true
-                    NotificationHandler.instance.notifyUseAlternativeMirror()
-                    _connectionTestSuccess.postValue(true)
-                    false
+                    Log.d(
+                        "surprise",
+                        "checkFlibustaAvailability: check ${URLHelper.getFlibustaMirrorUrl()}"
+                    )
+                    val result = TorWebClient().directRequest(URLHelper.getFlibustaMirrorUrl())
+                    testInProgress = if (result.isNullOrEmpty()) {
+                        Log.d("surprise", "checkFlibustaAvailability: totally connection wrong")
+                        _connectionTestFailed.postValue(true)
+                        false
+                    } else {
+                        Log.d("surprise", "checkFlibustaAvailability: mirror url available")
+                        // set use alternative mirror
+                        App.instance.useMirror = true
+                        NotificationHandler.instance.notifyUseAlternativeMirror()
+                        _connectionTestSuccess.postValue(true)
+                        false
+                    }
+                } else {
+                    Log.d("surprise", "checkFlibustaAvailability: test already start")
                 }
             }
-            else{
-                Log.d("surprise", "checkFlibustaAvailability: test already start")
+            catch (err: ConnectionLostException){
+                // не удалось запустить TOR
+                _torStartFailed.postValue(true)
             }
         }
     }

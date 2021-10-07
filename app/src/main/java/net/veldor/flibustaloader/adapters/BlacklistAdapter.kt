@@ -1,24 +1,29 @@
 package net.veldor.flibustaloader.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
-import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.BR
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.databinding.BlacklistItemBinding
 import net.veldor.flibustaloader.selections.BlacklistItem
+import net.veldor.flibustaloader.utils.BlacklistAuthors
+import net.veldor.flibustaloader.utils.BlacklistBooks
+import net.veldor.flibustaloader.utils.BlacklistGenres
+import net.veldor.flibustaloader.utils.BlacklistSequences
 import java.util.*
 
 class BlacklistAdapter(private var mItems: ArrayList<BlacklistItem>) :
     RecyclerView.Adapter<BlacklistAdapter.ViewHolder>() {
-    private var mLayoutInflater: LayoutInflater = LayoutInflater.from(App.instance.applicationContext)
+    private var mLayoutInflater: LayoutInflater =
+        LayoutInflater.from(App.instance.applicationContext)
+
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ViewHolder {
-        val binding = BlacklistItemBinding.inflate(mLayoutInflater)
+        val binding = BlacklistItemBinding.inflate(mLayoutInflater, viewGroup, false)
         return ViewHolder(binding)
     }
 
@@ -31,10 +36,36 @@ class BlacklistAdapter(private var mItems: ArrayList<BlacklistItem>) :
     }
 
     fun changeList(autocompleteValues: ArrayList<BlacklistItem>) {
+        val prevSize = mItems.size
+        notifyItemRangeRemoved(0, prevSize)
         mItems = autocompleteValues
+        notifyItemRangeInserted(0, mItems.size)
     }
 
-    class ViewHolder(private val mBinding: ViewDataBinding) : RecyclerView.ViewHolder(
+    fun itemAdded(item: BlacklistItem?) {
+        if (item != null) {
+            // add item to top of list
+            mItems.add(0, item)
+            notifyItemInserted(0)
+        }
+    }
+
+    fun itemRemoved(item: BlacklistItem?) {
+        if(item != null){
+            var foundedItem: BlacklistItem? = null
+            mItems.forEach {
+                if(it.name == item.name && it.type == item.type){
+                    foundedItem = it
+                }
+            }
+            if(foundedItem != null){
+                notifyItemRemoved(mItems.indexOf(foundedItem))
+                mItems.remove(foundedItem)
+            }
+        }
+    }
+
+    class ViewHolder(private val mBinding: BlacklistItemBinding) : RecyclerView.ViewHolder(
         mBinding.root
     ) {
         fun bind(item: BlacklistItem) {
@@ -43,18 +74,42 @@ class BlacklistAdapter(private var mItems: ArrayList<BlacklistItem>) :
             val container = mBinding.root
             val name = container.findViewById<TextView>(R.id.name)
             when (item.type) {
-                "book" -> name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.book_name_color, null))
-                "author" -> name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.author_text_color, null))
-                "sequence" -> name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.sequences_text, null))
-                "genre" -> name.setTextColor(ResourcesCompat.getColor(App.instance.resources, R.color.genre_text_color, null))
+                "book" -> name.setTextColor(
+                    ResourcesCompat.getColor(
+                        App.instance.resources,
+                        R.color.book_name_color,
+                        null
+                    )
+                )
+                "author" -> name.setTextColor(
+                    ResourcesCompat.getColor(
+                        App.instance.resources,
+                        R.color.author_text_color,
+                        null
+                    )
+                )
+                "sequence" -> name.setTextColor(
+                    ResourcesCompat.getColor(
+                        App.instance.resources,
+                        R.color.sequences_text,
+                        null
+                    )
+                )
+                "genre" -> name.setTextColor(
+                    ResourcesCompat.getColor(
+                        App.instance.resources,
+                        R.color.genre_text_color,
+                        null
+                    )
+                )
             }
-            val deleteBtn = container.findViewById<View>(R.id.deleteItemBtn)
-            deleteBtn?.setOnClickListener {
+            mBinding.deleteItemBtn.setOnClickListener {
+                Log.d("surprise", "bind: del blacklist item")
                 when (item.type) {
-                    "book" -> App.instance.booksBlacklist.deleteValue(item.name!!)
-                    "author" -> App.instance.authorsBlacklist.deleteValue(item.name!!)
-                    "sequence" -> App.instance.sequencesBlacklist.deleteValue(item.name!!)
-                    "genre" -> App.instance.genresBlacklist.deleteValue(item.name!!)
+                    "book" -> BlacklistBooks.instance.deleteValue(item.name)
+                    "author" -> BlacklistAuthors.instance.deleteValue(item.name)
+                    "sequence" -> BlacklistSequences.instance.deleteValue(item.name)
+                    "genre" -> BlacklistGenres.instance.deleteValue(item.name)
                 }
             }
         }

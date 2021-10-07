@@ -1,126 +1,141 @@
 package net.veldor.flibustaloader.ui.fragments
 
-import net.veldor.flibustaloader.view_models.SubscriptionsViewModel
-import androidx.recyclerview.widget.RecyclerView
-import net.veldor.flibustaloader.utils.SubscribeBooks
-import net.veldor.flibustaloader.adapters.SubscribesAdapter
-import net.veldor.flibustaloader.utils.SubscribeAuthors
-import net.veldor.flibustaloader.utils.SubscribeSequences
 import android.os.Bundle
-import androidx.lifecycle.ViewModelProvider
-import net.veldor.flibustaloader.R
-import androidx.lifecycle.LiveData
-import androidx.recyclerview.widget.LinearLayoutManager
-import net.veldor.flibustaloader.App
-import androidx.appcompat.widget.SwitchCompat
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
 import android.view.*
+import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.fragment.app.Fragment
-import net.veldor.flibustaloader.utils.PreferencesHandler
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import co.mobiwise.materialintro.shape.Focus
+import co.mobiwise.materialintro.shape.FocusGravity
+import co.mobiwise.materialintro.shape.ShapeType
+import co.mobiwise.materialintro.view.MaterialIntroView
+import net.veldor.flibustaloader.R
+import net.veldor.flibustaloader.adapters.SubscribesAdapter
+import net.veldor.flibustaloader.databinding.FragmentSubscribeBinding
+import net.veldor.flibustaloader.utils.*
+import net.veldor.flibustaloader.view_models.SubscriptionsViewModel
 
 class SubscriptionsFragment : Fragment() {
-    private var mRoot: View? = null
-    private var mSubscribeInput: EditText? = null
-    private var mViewModel: SubscriptionsViewModel? = null
-    private var mRadioContainer: RadioGroup? = null
-    private lateinit var mRecycler: RecyclerView
-    private var mBooksSubscribeContainer: SubscribeBooks? = null
-    private lateinit var mSubscribesAdapter: SubscribesAdapter
-    private var mAuthorsSubscribeContainer: SubscribeAuthors? = null
-    private var mSequencesSubscribeContainer: SubscribeSequences? = null
+    lateinit var binding: FragmentSubscribeBinding
+    private lateinit var mViewModel: SubscriptionsViewModel
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
+
         mViewModel = ViewModelProvider(this).get(SubscriptionsViewModel::class.java)
-        mRoot = inflater.inflate(R.layout.fragment_subscribe, container, false)
-        if (mRoot != null) {
-            Log.d("surprise", "SubscriptionsFragment onCreate 32: setup ui")
-            setupUI()
-            val activity = activity
-            if (activity != null) {
-                // буду отслеживать изменения списка книг
-                val refresh: LiveData<Boolean> = mBooksSubscribeContainer!!.mListRefreshed
-                refresh.observe(requireActivity(), { aBoolean: Boolean? ->
-                    if (aBoolean != null && aBoolean && mRadioContainer!!.checkedRadioButtonId == R.id.searchBook) {
-                        refreshSubscriptionList()
-                    }
-                })
+        binding = FragmentSubscribeBinding.inflate(inflater, container, false)
+        val root = binding.root
 
-                // буду отслеживать изменения списка авторов
-                val authorRefresh: LiveData<Boolean> = mAuthorsSubscribeContainer!!.mListRefreshed
-                authorRefresh.observe(requireActivity(), { aBoolean: Boolean? ->
-                    if (aBoolean != null && aBoolean && mRadioContainer!!.checkedRadioButtonId == R.id.searchAuthor) {
-                        refreshAuthorSubscriptionList()
-                    }
-                })
+        setupUI()
+        setupObservers()
 
-                // буду отслеживать изменения списка серий
-                val sequenceRefresh: LiveData<Boolean> =
-                    mSequencesSubscribeContainer!!.mListRefreshed
-                sequenceRefresh.observe(requireActivity(), { aBoolean: Boolean? ->
-                    if (aBoolean != null && aBoolean && mRadioContainer!!.checkedRadioButtonId == R.id.searchSequence) {
-                        refreshSequenceSubscriptionList()
-                    }
-                })
+
+        return root
+    }
+
+    private fun setupObservers() {
+        // буду отслеживать изменения списка книг
+        SubscribeBooks.instance.liveSubscribeListAdd.observe(viewLifecycleOwner, {
+            if (it != null) {
+                if (binding.subscribeType.checkedRadioButtonId == R.id.searchBook) {
+                    (binding.resultsList.adapter as SubscribesAdapter).itemAdded(it)
+                    SubscribeBooks.instance.liveSubscribeListAdd.value = null
+                }
             }
-        }
-        return mRoot
+        })
+        SubscribeBooks.instance.liveSubscribeListRemove.observe(viewLifecycleOwner, {
+            if (binding.subscribeType.checkedRadioButtonId == R.id.searchBook) {
+                (binding.resultsList.adapter as SubscribesAdapter).itemRemoved(it)
+            }
+        })
+        // буду отслеживать изменения списка авторов
+        SubscribeAuthors.instance.liveSubscribeListAdd.observe(viewLifecycleOwner, {
+            if (it != null) {
+                if (binding.subscribeType.checkedRadioButtonId == R.id.searchAuthor) {
+                    (binding.resultsList.adapter as SubscribesAdapter).itemAdded(it)
+                    SubscribeAuthors.instance.liveSubscribeListAdd.value = null
+                }
+            }
+        })
+        SubscribeAuthors.instance.liveSubscribeListRemove.observe(viewLifecycleOwner, {
+            if (binding.subscribeType.checkedRadioButtonId == R.id.searchAuthor) {
+                (binding.resultsList.adapter as SubscribesAdapter).itemRemoved(it)
+            }
+        })
+        // буду отслеживать изменения списка серий
+        SubscribeSequences.instance.liveSubscribeListAdd.observe(viewLifecycleOwner, {
+            if (it != null) {
+                if (binding.subscribeType.checkedRadioButtonId == R.id.searchSequence) {
+                    (binding.resultsList.adapter as SubscribesAdapter).itemAdded(it)
+                    SubscribeSequences.instance.liveSubscribeListAdd.value = null
+                }
+            }
+        })
+        SubscribeSequences.instance.liveSubscribeListRemove.observe(viewLifecycleOwner, {
+            if (binding.subscribeType.checkedRadioButtonId == R.id.searchSequence) {
+                (binding.resultsList.adapter as SubscribesAdapter).itemRemoved(it)
+            }
+        })
+        // буду отслеживать изменения списка жанров
+        SubscribeGenre.instance.liveSubscribeListAdd.observe(viewLifecycleOwner, {
+            if (it != null) {
+                if (binding.subscribeType.checkedRadioButtonId == R.id.searchGenre) {
+                    (binding.resultsList.adapter as SubscribesAdapter).itemAdded(it)
+                    SubscribeGenre.instance.liveSubscribeListAdd.value = null
+                }
+            }
+        })
+        SubscribeGenre.instance.liveSubscribeListRemove.observe(viewLifecycleOwner, {
+            if (binding.subscribeType.checkedRadioButtonId == R.id.searchGenre) {
+                (binding.resultsList.adapter as SubscribesAdapter).itemRemoved(it)
+            }
+        })
     }
 
-    private fun refreshAuthorSubscriptionList() {
-        val autocompleteValues = mAuthorsSubscribeContainer!!.getSubscribes()
-        mSubscribesAdapter.changeList(autocompleteValues)
-        mSubscribesAdapter!!.notifyDataSetChanged()
-    }
-
-    private fun refreshSequenceSubscriptionList() {
-        val autocompleteValues = mSequencesSubscribeContainer!!.getSubscribes()
-        mSubscribesAdapter.changeList(autocompleteValues)
-        mSubscribesAdapter!!.notifyDataSetChanged()
-    }
-
-    private fun refreshSubscriptionList() {
-        val autocompleteValues = mBooksSubscribeContainer!!.getSubscribes()
-        mSubscribesAdapter.changeList(autocompleteValues)
-        mSubscribesAdapter!!.notifyDataSetChanged()
-    }
 
     private fun setupUI() {
-        mRecycler = mRoot!!.findViewById(R.id.resultsList)
-        mRecycler.setLayoutManager(LinearLayoutManager(context))
-        mBooksSubscribeContainer = App.instance.booksSubscribe
-        mAuthorsSubscribeContainer = App.instance.authorsSubscribe
-        mSequencesSubscribeContainer = App.instance.sequencesSubscribe
-        showBooks()
+        showHints()
+        binding.subscribeItemInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                // Do whatever you want here
+                addSubscribe()
+                true
+            } else false
+        }
 
-        // отслежу переключение типа подписки
-        mRadioContainer = mRoot!!.findViewById(R.id.subscribe_type)
-        if (mRadioContainer != null) {
-            mRadioContainer!!.setOnCheckedChangeListener { group: RadioGroup?, checkedId: Int ->
-                if (checkedId == R.id.searchBook) {
-                    showBooks()
-                } else if (checkedId == R.id.searchAuthor) {
-                    showAuthors()
-                } else if (checkedId == R.id.searchSequence) {
-                    showSequences()
+        binding.resultsList.layoutManager = LinearLayoutManager(context)
+        binding.resultsList.adapter = SubscribesAdapter(SubscribeBooks.instance.getSubscribes())
+        binding.subscribeType.setOnCheckedChangeListener { _: RadioGroup?, checkedId: Int ->
+            when (checkedId) {
+                R.id.searchBook -> {
+                    (binding.resultsList.adapter as SubscribesAdapter).changeList(SubscribeBooks.instance.getSubscribes())
+                }
+                R.id.searchAuthor -> {
+                    (binding.resultsList.adapter as SubscribesAdapter).changeList(SubscribeAuthors.instance.getSubscribes())
+                }
+                R.id.searchSequence -> {
+                    (binding.resultsList.adapter as SubscribesAdapter).changeList(SubscribeSequences.instance.getSubscribes())
+                }
+                R.id.searchGenre -> {
+                    (binding.resultsList.adapter as SubscribesAdapter).changeList(SubscribeGenre.instance.getSubscribes())
                 }
             }
         }
 
-        // обработаю добавление книги в список загрузки
-        // добавлю идентификатор строки поиска
-        mSubscribeInput = mRoot!!.findViewById(R.id.subscribe_name)
-        val subscribeBtn = mRoot!!.findViewById<Button>(R.id.add_to_blacklist_btn)
-        subscribeBtn?.setOnClickListener { view: View? -> addSubscribe(view) }
+        binding.addSubscriptionBtn.setOnClickListener { addSubscribe() }
 
         // назначу действие переключателю автоматической подписки
-        val switcher: SwitchCompat = mRoot!!.findViewById(R.id.switchAutoCheckSubscribes)
-        switcher.isChecked = PreferencesHandler.instance.isSubscriptionsAutoCheck
-        switcher.setOnCheckedChangeListener { buttonView: CompoundButton?, isChecked: Boolean ->
-            PreferencesHandler.instance.isSubscriptionsAutoCheck = !PreferencesHandler.instance.isSubscriptionsAutoCheck
-            mViewModel!!.switchSubscriptionsAutoCheck()
+        binding.switchAutoCheckSubscribes.isChecked =
+            PreferencesHandler.instance.isSubscriptionsAutoCheck
+        binding.switchAutoCheckSubscribes.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
+            PreferencesHandler.instance.isSubscriptionsAutoCheck =
+                !PreferencesHandler.instance.isSubscriptionsAutoCheck
+            mViewModel.switchSubscriptionsAutoCheck()
             if (isChecked) {
                 Toast.makeText(
                     context,
@@ -135,73 +150,82 @@ class SubscriptionsFragment : Fragment() {
                 ).show()
             }
         }
-        // назначу действие кнопкам проверки подписок
-        val fullSubCheckBtn = mRoot!!.findViewById<Button>(R.id.totalCheckButton)
-        fullSubCheckBtn?.setOnClickListener { v: View ->
-            Toast.makeText(
-                context,
-                "Выполняю поиск подписок по всем новинкам, это займёт время. Найденные результаты будут отображаться во вкладке 'Найденное'.",
-                Toast.LENGTH_SHORT
-            ).show()
-            v.isEnabled = false
-            mViewModel!!.fullCheckSubscribes()
-        }
-        // назначу действие кнопкам проверки подписок
-        val subCheckBtn = mRoot!!.findViewById<Button>(R.id.fastCheckButton)
-        if (fullSubCheckBtn != null) {
-            subCheckBtn.setOnClickListener { v: View ->
-                Toast.makeText(
-                    context,
-                    "Выполняю поиск по книгам, которые поступили после последней проверки. Найденные результаты будут отображаться во вкладке 'Найденное'.",
-                    Toast.LENGTH_SHORT
-                ).show()
-                v.isEnabled = false
-                mViewModel!!.checkSubscribes()
-            }
-        }
     }
 
-    private fun showBooks() {
-        // получу подписки на книги
-        val autocompleteValues = mBooksSubscribeContainer!!.getSubscribes()
-        mSubscribesAdapter = SubscribesAdapter(autocompleteValues!!)
-        mRecycler!!.adapter = mSubscribesAdapter
+    private fun showHints() {
+        showFirstHelp()
     }
 
-    private fun showAuthors() {
-        // получу подписки на авторов
-        val autocompleteValues = mAuthorsSubscribeContainer!!.getSubscribes()
-        mSubscribesAdapter = SubscribesAdapter(autocompleteValues!!)
-        mRecycler!!.adapter = mSubscribesAdapter
-    }
-
-    private fun showSequences() {
-        // получу подписки на серии
-        val autocompleteValues = mSequencesSubscribeContainer!!.getSubscribes()
-        mSubscribesAdapter = SubscribesAdapter(autocompleteValues!!)
-        mRecycler!!.adapter = mSubscribesAdapter
-    }
-
-    fun addSubscribe(view: View?) {
-        val value = mSubscribeInput!!.text.toString().trim { it <= ' ' }
-        if (!value.isEmpty()) {
+    private fun addSubscribe() {
+        val value = binding.subscribeItemInput.text.toString().trim { it <= ' ' }
+        if (value.isNotEmpty()) {
             // добавлю подписку в зависимости от типа
-            val checkedRadioButtonId = mRadioContainer!!.checkedRadioButtonId
-            if (checkedRadioButtonId == R.id.searchBook) {
-                Log.d("surprise", "SubscribeActivity addSubscribe add book")
-                mBooksSubscribeContainer!!.addValue(value)
-            } else if (checkedRadioButtonId == R.id.searchAuthor) {
-                Log.d("surprise", "SubscribeActivity addSubscribe add author")
-                mAuthorsSubscribeContainer!!.addValue(value)
-            } else if (checkedRadioButtonId == R.id.searchSequence) {
-                Log.d("surprise", "SubscribeActivity addSubscribe add sequence")
-                mSequencesSubscribeContainer!!.addValue(value)
+            when (binding.subscribeType.checkedRadioButtonId) {
+                R.id.searchBook -> {
+                    SubscribeBooks.instance.addValue(value)
+                }
+                R.id.searchAuthor -> {
+                    SubscribeAuthors.instance.addValue(value)
+                }
+                R.id.searchSequence -> {
+                    SubscribeSequences.instance.addValue(value)
+                }
+                R.id.searchGenre -> {
+                    SubscribeGenre.instance.addValue(value)
+                }
             }
-            mSubscribeInput!!.setText("")
+            binding.subscribeItemInput.setText("")
             Toast.makeText(context, "Добавляю значение $value", Toast.LENGTH_LONG).show()
         } else {
             Toast.makeText(context, "Введите значение для подписки", Toast.LENGTH_LONG).show()
-            mSubscribeInput!!.requestFocus()
+            binding.subscribeItemInput.requestFocus()
         }
     }
+}
+
+
+private fun SubscriptionsFragment.showFirstHelp() {
+    Handler(Looper.getMainLooper()).postDelayed({
+        kotlin.run {
+            MaterialIntroView.Builder(requireActivity())
+                .enableDotAnimation(true)
+                .enableIcon(false)
+                .setFocusGravity(FocusGravity.CENTER)
+                .setFocusType(Focus.MINIMUM)
+                .setDelayMillis(300)
+                .setUsageId("subscribe type select")
+                .enableFadeAnimation(true)
+                .performClick(true)
+                .setListener {
+                    showSecondHelp()
+                }
+                .setInfoText(getString(R.string.select_subscription_type_message))
+                .setTarget(binding.searchBook)
+                .setShape(ShapeType.CIRCLE)
+                .show()
+        }
+    }, 100)
+}
+
+private fun SubscriptionsFragment.showSecondHelp() {
+    Handler(Looper.getMainLooper()).postDelayed({
+        kotlin.run {
+            MaterialIntroView.Builder(requireActivity())
+                .enableDotAnimation(true)
+                .enableIcon(false)
+                .setFocusGravity(FocusGravity.CENTER)
+                .setFocusType(Focus.MINIMUM)
+                .setDelayMillis(700)
+                .setUsageId("subscribe value enter")
+                .enableFadeAnimation(true)
+                .performClick(true)
+                .setListener {
+
+                }
+                .setInfoText(getString(R.string.subscription_second_hint_text))
+                .setTarget(binding.subscribeItemInput)
+                .setShape(ShapeType.CIRCLE)
+                .show()
+        }
+    }, 100)
 }

@@ -29,7 +29,9 @@
     </style>
 
     <style name="MyActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
-        <item name="colorControlNormal">@color/app_bar_icons_color</item>
+        <item name="android:textColorHint">@android:color/white</item>
+        <item name="colorControlNormal">@color/tintColor</item>
+        <item name="android:editTextColor">@android:color/white</item>
     </style>
     <style name="MyEinkActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
         <item name="colorControlNormal">#000000</item>

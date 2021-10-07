@@ -17,6 +17,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.util.Log
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.workers.DownloadBooksWorker
 import kotlin.system.exitProcess
 
 class MiscActionsReceiver : BroadcastReceiver() {
@@ -24,8 +25,6 @@ class MiscActionsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val mainAction = intent.action
         val action = intent.getStringExtra(EXTRA_ACTION_TYPE)
-        Log.d("surprise", "MiscActionsReceiver onReceive 33: receiver action is $mainAction")
-        Log.d("surprise", "MiscActionsReceiver onReceive 43: receiver action is $action")
         if (action != null) {
             when (action) {
                 ACTION_CANCEL_MASS_DOWNLOAD -> {
@@ -61,17 +60,15 @@ class MiscActionsReceiver : BroadcastReceiver() {
                     Log.d("surprise", "MiscActionsReceiver onReceive: resume mass download")
                     NotificationHandler.instance.mNotificationManager.cancel(NotificationHandler.DOWNLOAD_PAUSED_NOTIFICATION)
                     // возобновлю скачивание
-                    App.instance.initializeDownload()
                 }
                 ACTION_RESUME_MASS_DOWNLOAD -> {
                     Log.d("surprise", "MiscActionsReceiver onReceive: resume mass download")
                     NotificationHandler.instance.mNotificationManager.cancel(NotificationHandler.DOWNLOAD_PAUSED_NOTIFICATION)
-                    App.instance.initializeDownload()
+                    Log.d("surprise", "onReceive: start")
                 }
-                ACTION_REPEAT_DOWNLOAD -> App.instance.initializeDownload()
+                ACTION_REPEAT_DOWNLOAD -> Log.d("surprise", "onReceive: start")
                 ACTION_RESTART_TOR -> {
                     NotificationHandler.instance.hideMassDownloadInQueueMessage()
-                    App.sTorStartTry = 0
                     App.instance.startTor()
                 }
                 ACTION_SEND_LOGS -> {

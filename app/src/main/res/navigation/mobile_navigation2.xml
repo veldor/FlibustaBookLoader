@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation2"
+    app:startDestination="@+id/navigation_opds">
+
+    <fragment
+        android:id="@+id/navigation_opds"
+        android:name="net.veldor.flibustaloader.ui.fragments.OpdsFragment"
+        android:label="@string/navigation_go_opds"
+        tools:layout="@layout/fragment_opds" />
+
+    <fragment
+        android:id="@+id/navigation_web_view"
+        android:name="net.veldor.flibustaloader.ui.fragments.WebViewFragment"
+        android:label="@string/title_dashboard"
+        tools:layout="@layout/fragment_web_view" />
+</navigation>

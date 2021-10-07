@@ -1,22 +1,30 @@
 package net.veldor.flibustaloader.view_models
 
-import net.veldor.flibustaloader.workers.AddBooksToDownloadQueueWorker.Companion.addLink
-import net.veldor.flibustaloader.utils.SubscribesHandler.getAllSubscribes
+import android.util.Log
 import net.veldor.flibustaloader.App
-import androidx.lifecycle.LiveData
-import net.veldor.flibustaloader.selections.DownloadLink
 import androidx.lifecycle.ViewModel
 import android.widget.Toast
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.workers.CheckSubscriptionsWorker
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import androidx.work.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import net.veldor.flibustaloader.handlers.DownloadLinkHandler
+import net.veldor.flibustaloader.selections.DownloadLink
+import net.veldor.flibustaloader.selections.FoundedEntity
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.SubscribesHandler
 import java.util.concurrent.TimeUnit
 
 class SubscriptionsViewModel : ViewModel() {
+
+    var liveFoundedSubscription = MutableLiveData<FoundedEntity>()
+
     fun switchSubscriptionsAutoCheck() {
-        PreferencesHandler.instance.isSubscriptionsAutoCheck = !PreferencesHandler.instance.isSubscriptionsAutoCheck
+        PreferencesHandler.instance.isSubscriptionsAutoCheck =
+            !PreferencesHandler.instance.isSubscriptionsAutoCheck
         if (PreferencesHandler.instance.isSubscriptionsAutoCheck) {
             Toast.makeText(
                 App.instance,
@@ -44,62 +52,33 @@ class SubscriptionsViewModel : ViewModel() {
     }
 
     fun checkSubscribes() {
-        // проверю, подписан ли я на новинки
-        val subscribes = getAllSubscribes()
-        if (subscribes.size > 0) {
-            // запущу рабочего, который проверит все новинки
-            val checkSubscribes = OneTimeWorkRequest.Builder(
-                CheckSubscriptionsWorker::class.java
-            ).addTag(CheckSubscriptionsWorker.CHECK_SUBSCRIBES).build()
-            WorkManager.getInstance(App.instance).enqueueUniqueWork(
-                CheckSubscriptionsWorker.CHECK_SUBSCRIBES,
-                ExistingWorkPolicy.REPLACE,
-                checkSubscribes
-            )
-        } else {
-            Toast.makeText(
-                App.instance,
-                App.instance.getString(R.string.not_found_subscribes_message),
-                Toast.LENGTH_SHORT
-            ).show()
+        viewModelScope.launch(Dispatchers.IO) {
+            foundedSubscribes.postValue(arrayListOf())
+            liveCheckInProgress.postValue(true)
+            val lastCheckedBookId = SubscribesHandler.checkSubscribes(liveFoundedSubscription, true)
+            if(lastCheckedBookId != null){
+                PreferencesHandler.instance.lastCheckedBookId = lastCheckedBookId
+            }
         }
     }
 
     fun fullCheckSubscribes() {
-        val subscribes = getAllSubscribes()
-        if (subscribes.size > 0) {
-            val inputData = Data.Builder()
-                .putBoolean(CheckSubscriptionsWorker.FULL_CHECK, true)
-                .build()
-            // запущу рабочего, который проверит все новинки
-            val checkSubscribes = OneTimeWorkRequest.Builder(
-                CheckSubscriptionsWorker::class.java
-            ).setInputData(inputData).addTag(CheckSubscriptionsWorker.CHECK_SUBSCRIBES).build()
-            WorkManager.getInstance(App.instance).enqueueUniqueWork(
-                CheckSubscriptionsWorker.CHECK_SUBSCRIBES,
-                ExistingWorkPolicy.REPLACE,
-                checkSubscribes
-            )
-        } else {
-            Toast.makeText(
-                App.instance,
-                App.instance.getString(R.string.not_found_subscribes_message),
-                Toast.LENGTH_SHORT
-            ).show()
+        viewModelScope.launch(Dispatchers.IO) {
+            foundedSubscribes.postValue(arrayListOf())
+            liveCheckInProgress.postValue(true)
+            SubscribesHandler.checkSubscribes(liveFoundedSubscription, false)
         }
     }
 
-    val checkData: LiveData<Boolean>
-        get() = sSubscriptionsChecked
-
-    fun addToDownloadQueue(downloadLink: DownloadLink?) {
-        addLink(downloadLink!!)
-        if (PreferencesHandler.instance.isDownloadAutostart) {
-            App.instance.initializeDownload()
+    fun addToDownloadQueue(downloadLink: DownloadLink) {
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d("surprise", "addToDownloadQueue: adding download link: " + downloadLink.url)
+            DownloadLinkHandler().addLink(downloadLink)
         }
     }
 
     companion object {
-        val sSubscriptionsChecked = MutableLiveData<Boolean>()
+        val liveCheckInProgress = MutableLiveData(false)
+        val foundedSubscribes = MutableLiveData<ArrayList<FoundedEntity>>(arrayListOf())
     }
 }

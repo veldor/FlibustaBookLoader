@@ -3,74 +3,73 @@ package net.veldor.flibustaloader.ui
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
-import androidx.work.WorkInfo
+import androidx.recyclerview.widget.LinearLayoutManager
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.DownloadScheduleAdapter
-import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
-import net.veldor.flibustaloader.notificatons.NotificationHandler
-import net.veldor.flibustaloader.view_models.OPDSViewModel
-import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.downloadProgress
-import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.noActiveDownloadProcess
+import net.veldor.flibustaloader.databinding.ActivityDownloadScheduleBinding
+import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
+import net.veldor.flibustaloader.workers.DownloadBooksWorker
 
 class ActivityBookDownloadSchedule : BaseActivity() {
-    private lateinit var myViewModel: OPDSViewModel
-    private lateinit var booksAdapter: DownloadScheduleAdapter
-    private lateinit var stopDownloadBtn: View
-    private lateinit var continueDownloadBtn: View
+    private lateinit var binding: ActivityDownloadScheduleBinding
+    private lateinit var viewModel: DownloadScheduleViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.new_download_schedule_activity)
+        viewModel = ViewModelProvider(this).get(DownloadScheduleViewModel::class.java)
+        viewModel.loadDownloadQueue()
+        binding = ActivityDownloadScheduleBinding.inflate(layoutInflater)
+        setContentView(binding.drawerLayout)
         setupInterface()
-        myViewModel = ViewModelProvider(this).get(OPDSViewModel::class.java)
-        observeChanges()
+        setupObservers()
     }
 
-    private fun observeChanges() {
-        // получу состояние загрузки
-        val loadProgress: LiveData<List<WorkInfo>> = downloadProgress
-        loadProgress.observe(this, { workInfos: List<WorkInfo?>? ->
-            if (workInfos != null && workInfos.size > 0) {
-                // получу статус закачки
-                val work = workInfos[0]
-                if (work != null) {
-                    when (work.state) {
-                        WorkInfo.State.CANCELLED, WorkInfo.State.SUCCEEDED, WorkInfo.State.FAILED, WorkInfo.State.BLOCKED -> showContinue()
-                        WorkInfo.State.RUNNING, WorkInfo.State.ENQUEUED -> showStop()
-                    }
-                }
+    override fun setupObservers() {
+        super.setupObservers()
+        DownloadScheduleViewModel.schedule.observe(this, {
+            Log.d("surprise", "setupObservers: list updated")
+            (binding.resultsList.adapter as DownloadScheduleAdapter).setData(it)
+        })
+        App.instance.liveDownloadState.observe(this, {
+            if(it == DownloadBooksWorker.DOWNLOAD_FINISHED){
+                binding.actionButton.text = getString(R.string.start_download)
+            }
+            else if(it == DownloadBooksWorker.DOWNLOAD_IN_PROGRESS){
+                binding.actionButton.text = getString(R.string.stop_download_message)
             }
         })
-    }
 
-    private fun showContinue() {
-        stopDownloadBtn.visibility = View.GONE
-        continueDownloadBtn.visibility = View.VISIBLE
-    }
-
-    private fun showStop() {
-        stopDownloadBtn.visibility = View.VISIBLE
-        continueDownloadBtn.visibility = View.GONE
+        App.instance.liveBookJustLoaded.observe(this, {
+            (binding.resultsList.adapter as DownloadScheduleAdapter).notifyBookDownloaded(it)
+        })
+        App.instance.liveBookJustRemovedFromQueue.observe(this, {
+            (binding.resultsList.adapter as DownloadScheduleAdapter).notifyBookRemovedFromQueue(it)
+        })
+        App.instance.liveBookJustError.observe(this, {
+            (binding.resultsList.adapter as DownloadScheduleAdapter).notifyBookDownloadError(it)
+        })
+        App.instance.liveBookDownloadInProgress.observe(this, {
+            (binding.resultsList.adapter as DownloadScheduleAdapter).notifyBookDownloadInProgress(it)
+        })
     }
 
     override fun setupInterface() {
         super.setupInterface()
-
+        binding.resultsList.adapter = DownloadScheduleAdapter(arrayListOf())
+        binding.resultsList.layoutManager = LinearLayoutManager(this)
+        binding.actionButton.setOnClickListener {
+            App.instance.switchDownloadState()
+        }
         // скрою переход на данное активити
-        val menuNav = mNavigationView!!.menu
+        val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToDownloadsList)
         item.isEnabled = false
         item.isChecked = true
-        val statusContainer = App.instance.mDownloadAllWork
-
-        // проверю, есть ли активный процесс загрузки
-        val noActiveDownload = noActiveDownloadProcess()
 
         // активирую кнопку возвращения к предыдущему окну
         val actionBar = supportActionBar
@@ -82,58 +81,11 @@ class ActivityBookDownloadSchedule : BaseActivity() {
             Toast.makeText(this, R.string.download_schedule_empty_message, Toast.LENGTH_LONG).show()
             finish()
         }
-
-        // получу данные о книгах в очереди в виде liveData
-        val schedule = App.instance.mDatabase.booksDownloadScheduleDao().allBooksLive
-        schedule!!.observe(this, { booksDownloadSchedules: List<BooksDownloadSchedule> ->
-            if (booksDownloadSchedules.isNotEmpty()) {
-                booksAdapter.setData(booksDownloadSchedules)
-                booksAdapter.notifyDataSetChanged()
-            } else {
-                finish()
-            }
-        })
-
-
-        // найду кнопку остановки скачивания
-        stopDownloadBtn = findViewById(R.id.stopMassDownload)
-        continueDownloadBtn = findViewById(R.id.continueMassDownload)
-        if (statusContainer != null && statusContainer.value != null && statusContainer.value!!
-                .state == WorkInfo.State.RUNNING
-        ) {
-            stopDownloadBtn.visibility = View.GONE
-            continueDownloadBtn.visibility = View.VISIBLE
-        }
-        stopDownloadBtn.setOnClickListener {
-            Log.d("surprise", "ActivityBookDownloadSchedule onClick: work cancelled")
-            myViewModel.cancelMassDownload()
-            NotificationHandler.instance.cancelBookLoadNotification()
-            NotificationHandler.instance.createMassDownloadStoppedNotification()
-            stopDownloadBtn.visibility = View.GONE
-            Toast.makeText(
-                this@ActivityBookDownloadSchedule,
-                "Загрузка книг остановлена",
-                Toast.LENGTH_LONG
-            ).show()
-            continueDownloadBtn.visibility = View.VISIBLE
-        }
-        continueDownloadBtn.setOnClickListener {
-            myViewModel.initiateMassDownload()
-            continueDownloadBtn.visibility = View.GONE
-            stopDownloadBtn.visibility = View.VISIBLE
-        }
-        if (noActiveDownload) {
-            continueDownloadBtn.visibility = View.VISIBLE
-            stopDownloadBtn.visibility = View.GONE
-        } else {
-            continueDownloadBtn.visibility = View.GONE
-            stopDownloadBtn.visibility = View.VISIBLE
-        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
-            val intent = Intent(this, OPDSActivity::class.java)
+            val intent = Intent(this, BrowserActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
         }

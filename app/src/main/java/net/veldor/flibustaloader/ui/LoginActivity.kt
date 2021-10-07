@@ -1,25 +1,24 @@
 package net.veldor.flibustaloader.ui
 
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextSwitcher
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import net.veldor.flibustaloader.R
-import androidx.lifecycle.LiveData
-import net.veldor.flibustaloader.App
-import androidx.appcompat.app.AppCompatActivity
-import android.content.Intent
-import androidx.work.WorkInfo
 import net.veldor.flibustaloader.view_models.LoginViewModel
-import android.text.TextWatcher
-import android.text.Editable
-import android.os.Handler
-import android.view.*
-import android.widget.*
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var mLoginButton: Button
     private var mPasswordReady = false
     private var mLoginReady = false
-    private lateinit var mMyViewModel: LoginViewModel
+    private lateinit var viewModel: LoginViewModel
     private lateinit var mTextSwitcher: TextSwitcher
     private lateinit var mLogin: EditText
     private lateinit var mPassword: EditText
@@ -27,8 +26,22 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-        mMyViewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
         handleInput()
+        setupObservers()
+    }
+
+    private fun setupObservers() {
+        viewModel.liveLoginResult.observe(this, {
+            if(it == LoginViewModel.LOGIN_SUCCESS){
+                setStatusText(getString(R.string.done_message))
+                done()
+            }
+            else if(it == LoginViewModel.LOGIN_FAILED){
+                setStatusText(getString(R.string.failed_message))
+                unlockElements()
+            }
+        })
     }
 
     private fun handleInput() {
@@ -43,9 +56,9 @@ class LoginActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable) {
-                mLoginReady = if (s.length > 0) {
+                mLoginReady = if (s.isNotEmpty()) {
                     if (mPasswordReady) {
-                        mLoginButton.setEnabled(true)
+                        mLoginButton.isEnabled = true
                     }
                     true
                 } else {
@@ -57,9 +70,9 @@ class LoginActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable) {
-                mPasswordReady = if (s.length > 0) {
+                mPasswordReady = if (s.isNotEmpty()) {
                     if (mLoginReady) {
-                        mLoginButton.setEnabled(true)
+                        mLoginButton.isEnabled = true
                     }
                     true
                 } else {
@@ -67,40 +80,11 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         })
-        mLoginButton.setOnClickListener(View.OnClickListener { v: View? ->
-            mProgressBar.setVisibility(View.VISIBLE)
+        mLoginButton.setOnClickListener {
+            mProgressBar.visibility = View.VISIBLE
             lockElements()
-            val worker =
-                mMyViewModel.logMeIn(mLogin.getText().toString(), mPassword.getText().toString())
-            observeRequest(worker)
-        })
-    }
-
-    private fun observeRequest(worker: LiveData<WorkInfo>) {
-        // также подпишусь на обновления статуса запроса
-        val requestStatus: LiveData<String> = App.instance.requestStatus
-        worker.observe(this, { workInfo: WorkInfo? ->
-            if (workInfo != null) {
-                if (workInfo.state == WorkInfo.State.SUCCEEDED) {
-                    setStatusText(getString(R.string.done_message))
-                    requestStatus.removeObservers(this@LoginActivity)
-                    done()
-                } else if (workInfo.state == WorkInfo.State.FAILED) {
-                    setStatusText(getString(R.string.failed_message))
-                    unlockElements()
-                    // разблокирую всё
-                } else if (workInfo.state == WorkInfo.State.RUNNING) {
-                    setStatusText(getString(R.string.wait_for_initialize))
-                } else if (workInfo.state == WorkInfo.State.ENQUEUED) {
-                    setStatusText(getString(R.string.wait_for_internet_message))
-                }
-            }
-        })
-        requestStatus.observe(this, { s: String? ->
-            if (s != null && s.isNotEmpty()) {
-                setStatusText(s)
-            }
-        })
+                viewModel.logMeIn(mLogin.text.toString(), mPassword.text.toString())
+        }
     }
 
     private fun done() {

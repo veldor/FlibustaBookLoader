@@ -25,7 +25,7 @@ class MyConnectionSocketFactory : ConnectionSocketFactory {
         localAddress: InetSocketAddress?,
         context: HttpContext
     ): Socket {
-        Log.d("surprise", "connectSocket: create connection to ${host.hostName}")
+        //Log.d("surprise", "connectSocket: create connection to ${host.hostName}")
         val socksaddr = context.getAttribute("socks.address") as InetSocketAddress
         val socket = Socket()
         val connectTimeout = 100000

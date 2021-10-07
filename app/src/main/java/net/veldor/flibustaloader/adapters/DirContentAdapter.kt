@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnCreateContextMenuListener
 import android.view.ViewGroup
-import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.BR
@@ -27,7 +26,7 @@ class DirContentAdapter(private val mItems: ArrayList<Book>) :
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ViewHolder {
-        val binding = FileItemBinding.inflate(mLayoutInflater)
+        val binding = FileItemBinding.inflate(mLayoutInflater, viewGroup, false)
         return ViewHolder(binding)
     }
 
@@ -59,7 +58,7 @@ class DirContentAdapter(private val mItems: ArrayList<Book>) :
         notifyItemRangeChanged(0, mItems.size)
     }
 
-    class ViewHolder(private val mBinding: ViewDataBinding) : RecyclerView.ViewHolder(
+    class ViewHolder(private val mBinding: FileItemBinding) : RecyclerView.ViewHolder(
         mBinding.root
     ), OnCreateContextMenuListener {
         fun bind(item: Book?) {

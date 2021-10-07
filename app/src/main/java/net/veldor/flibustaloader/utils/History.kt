@@ -5,9 +5,13 @@ import java.util.*
 
 class History private constructor() {
     private val mHistory = Stack<String>()
+    private val clickHistory = Stack<Int>()
+    fun addToClickHistory(position: Int) {
+        clickHistory.push(position)
+    }
     fun addToHistory(url: String) {
+        Log.d("surprise", "addToHistory: add to history $url")
         mHistory.push(url)
-        Log.d("surprise", "History addToHistory 23: now history size is " + mHistory.size)
     }
 
     val isEmpty: Boolean
@@ -31,6 +35,10 @@ class History private constructor() {
         get() = if (mHistory.size > 0) {
             mHistory.pop()
         } else null
+    val lastClickedElementIndex: Int
+        get() = if (clickHistory.size > 0) {
+            clickHistory.pop()
+        } else -1
 
     //        Log.d("surprise", "History getLastPage 34: first backward? " + firstBackward + ", history size is " + mHistory.size());
 //        if (mHistory.size() > 1) {

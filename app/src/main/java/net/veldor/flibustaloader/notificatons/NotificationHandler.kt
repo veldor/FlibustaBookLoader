@@ -27,12 +27,14 @@ import java.util.*
 @SuppressLint("UnspecifiedImmutableFlag")
 class NotificationHandler private constructor(private var context: Context) {
 
+    private var lastDownloadTickTime: Long = 0L
+
     // system notification manager
     @JvmField
     val mNotificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    var mDownloadScheduleBuilder: NotificationCompat.Builder? = null
+    private var mDownloadScheduleBuilder: NotificationCompat.Builder? = null
 
     private var bookLoadedId = 100
 
@@ -192,9 +194,9 @@ class NotificationHandler private constructor(private var context: Context) {
         )
         mDownloadScheduleBuilder = NotificationCompat.Builder(context, BOOK_DOWNLOADS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
-            .setContentTitle("Скачивание книг")
+            .setContentTitle(context.getString(R.string.notification_downloader_header))
             .setOngoing(true)
-            .setContentText("Загружаю книги")
+            .setContentText(context.getString(R.string.notification_downloader_prepare_body))
             .setProgress(0, 0, true)
             .addAction(R.drawable.ic_list_white_24dp, "Очередь", showWindowPending)
             .addAction(R.drawable.fp_ic_action_cancel, "Отмена", cancelMassDownloadPendingIntent)
@@ -461,6 +463,55 @@ class NotificationHandler private constructor(private var context: Context) {
         )
     }
 
+
+    fun sendLoadedBookNotification(bookName: String) {
+
+        val shareIntent = Intent(context, BookActionReceiver::class.java)
+        shareIntent.putExtra(
+            BookLoadedReceiver.EXTRA_ACTION_TYPE,
+            BookLoadedReceiver.ACTION_TYPE_SHARE
+        )
+        shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, bookName)
+        shareIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
+
+        val sharePendingIntent = PendingIntent.getBroadcast(
+            context,
+            START_SHARING_REQUEST_CODE,
+            shareIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val openIntent = Intent(context, BookActionReceiver::class.java)
+        openIntent.putExtra(
+            BookLoadedReceiver.EXTRA_ACTION_TYPE,
+            BookLoadedReceiver.ACTION_TYPE_OPEN
+        )
+        openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, bookName)
+        openIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
+        val openPendingIntent = PendingIntent.getBroadcast(
+            context,
+            START_OPEN_REQUEST_CODE,
+            openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notificationBuilder = NotificationCompat.Builder(context, BOOKS_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_book_black_24dp)
+            .setContentTitle(bookName)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("$bookName :успешно загружено")
+            )
+            .setDefaults(Notification.DEFAULT_ALL)
+            .setGroup(DOWNLOADED_BOOKS_GROUP)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .addAction(R.drawable.ic_share_white_24dp, "Отправить", sharePendingIntent)
+            .addAction(R.drawable.ic_open_black_24dp, "Открыть", openPendingIntent)
+        mNotificationManager.notify(bookLoadedId, notificationBuilder.build())
+        ++bookLoadedId
+    }
+
     fun sendLoadedBookNotification(queuedElement: BooksDownloadSchedule) {
 
         // Добавлю группу
@@ -570,6 +621,11 @@ class NotificationHandler private constructor(private var context: Context) {
         name: String,
         startTime: Long
     ) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastDownloadTickTime < 1000) {
+            return
+        }
+        lastDownloadTickTime = currentTime
         // пересчитаю байты в килобайты
         val total = contentLength.toDouble() / 1024
         val nowLoaded = loaded.toDouble() / 1024
@@ -578,7 +634,7 @@ class NotificationHandler private constructor(private var context: Context) {
             percentDone = loaded.toDouble() / contentLength.toDouble() * 100
         }
         var timeLeftInMillis = 0
-        val left = System.currentTimeMillis() - startTime
+        val left = currentTime - startTime
         if (percentDone >= 1) {
             val timeForPercent = left.toInt() / percentDone.toInt()
             val percentsLeft = 100 - percentDone.toInt()
@@ -700,32 +756,6 @@ class NotificationHandler private constructor(private var context: Context) {
         mNotificationManager.notify(IS_TEST_VERSION_NOTIFICATION, notificationBuilder.build())
     }
 
-    fun showNotTorLoadNotification() {
-        val enableVPNModeIntent = Intent(context, MiscActionsReceiver::class.java)
-        enableVPNModeIntent.putExtra(
-            MiscActionsReceiver.EXTRA_ACTION_TYPE,
-            MiscActionsReceiver.ACTION_ENABLE_VPN_MODE
-        )
-        val enableVPNIntent = PendingIntent.getBroadcast(
-            context,
-            SEND_LOG_CODE,
-            enableVPNModeIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val notificationBuilder = NotificationCompat.Builder(context, MISC_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
-            .setContentTitle(App.instance.getString(R.string.too_large_version_message))
-            .addAction(
-                R.drawable.ic_baseline_bookmark_24,
-                App.instance.getString(R.string.enable_vpn_message),
-                enableVPNIntent
-            )
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(App.instance.getString(R.string.too_large_version_text))
-            )
-        mNotificationManager.notify(VERSION_TOO_LARGE_NOTIFICATION, notificationBuilder.build())
-    }
 
     companion object {
 

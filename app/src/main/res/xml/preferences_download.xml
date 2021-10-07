@@ -11,56 +11,52 @@
     <PreferenceCategory android:title="Настройки для OPDS">
 
         <SwitchPreferenceCompat
-            app:key="download auto start"
             android:defaultValue="true"
-            android:summary="Автоматический старт загрузки книг при добавлении в очередь."
-            android:title="Загружать автоматически" />
+            android:summaryOff="Книги не загружаются автоматически. Перейдите во вкладку 'Очередь загрузки' в боковом меню и нажмите на кнопку для начала загрузки"
+            android:summaryOn="Загрузка книг начинается сразу после добавления в очередь"
+            android:title="Автозагрузка книг"
+            app:key="download auto start" />
         <SwitchPreferenceCompat
-            app:key="show download progress"
             android:defaultValue="false"
-            android:summary="Отображать прогресс загрузки книги в уведомлении."
-            android:title="Прогресс загрузки" />
+            android:summaryOff="Уведомление прогресса загрузки книги не отображается"
+            android:summaryOn="Будет показано уведомление с деталями загрузки книги"
+            android:title="Прогресс загрузки книги"
+            app:key="show download progress" />
         <SwitchPreferenceCompat
-            app:key="re download"
             android:defaultValue="true"
-            android:summary="Если отключено- файлы, которые были загружены раньше не будут загружены повторно."
-            android:title="Повторная загрузка файлов" />
+            android:summaryOff="Ранее скачанные файлы не будут загружены заново при добавлении в очередь скачивания"
+            android:summaryOn="Ранее скачанные файлы будут загружены повторно при повторном добавлени в очередь"
+            android:title="Повторная загрузка"
+            app:key="re download" />
 
         <SwitchPreferenceCompat
-            app:key="save only selected"
             android:defaultValue="false"
-            android:summary="Файлы будут скачаны в выбранном формате или пропущены"
-            android:summaryOff="Если файл недоступен в выбранном формате- он будет скачан в доступном"
-            android:title="Только выбранный формат" />
-
-        <SwitchPreferenceCompat
-            app:key="@string/pref_create_author_folder"
-            android:defaultValue="false"
-            android:title="Папки авторов"
-            android:summary="Будут созданы отдельные папки под каждого автора"
             android:summaryOff="Отдельные папки для авторов не создаются"
-            />
+            android:summaryOn="Будут созданы отдельные папки под каждого автора"
+            android:title="Папки авторов"
+            app:key="@string/pref_create_author_folder" />
 
         <SwitchPreferenceCompat
-            app:key="@string/pref_create_sequence_folder"
             android:defaultValue="false"
+            android:summaryOff="Отдельные папки для серий не создаются"
+            android:summaryOn="Будут созданы отдельные папки под каждой серии"
             android:title="Папки серий"
-            android:summary="Будут созданы отдельные папки под каждой серии"
-            android:summaryOff="Отдельные папки для серий не создаются" />
+            app:key="@string/pref_create_sequence_folder" />
 
         <SwitchPreferenceCompat
-            app:key="@string/pref_create_additional_folders"
             android:defaultValue="false"
+            android:summaryOff="Серии скачиваются в папку автора (если папка автора создаётся)"
+            android:summaryOn="Серии не добавляются в папку автора а скачиваются в отдельную папку в корне"
             android:title="Доп. папки"
-            android:summary="Создать в папке загрузок отдельные папки для скачиваемых авторов и серий"/>
+            app:key="@string/pref_create_additional_folders" />
 
         <DropDownPreference
-            app:key="favorite format"
-            android:title="@string/title_favorite_format_preference"
             android:entries="@array/favorite_mime_names"
-            app:useSimpleSummaryProvider="true"
+            android:entryValues="@array/favorite_mime_types"
             android:summary="Книги будут по возможности скачиваться в выбранном формате без запроса"
-            android:entryValues="@array/favorite_mime_types"/>
+            android:title="@string/title_favorite_format_preference"
+            app:key="favorite format"
+            app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
 </PreferenceScreen>

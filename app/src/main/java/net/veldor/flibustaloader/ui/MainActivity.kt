@@ -10,6 +10,7 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -20,9 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ViewModelProvider
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -31,6 +30,7 @@ import lib.folderpicker.FolderPicker
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.databinding.ActivityMainBinding
+import net.veldor.flibustaloader.http.TorStarter
 import net.veldor.flibustaloader.utils.Grammar.appVersion
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.TransportUtils.intentCanBeHandled
@@ -42,15 +42,11 @@ import kotlin.system.exitProcess
 class MainActivity : BaseActivity() {
     private var previousText: String = ""
     private lateinit var binding: ActivityMainBinding
-    private var mLink: Uri? = null
+    private var link: Uri? = null
     private var mProgressCounter = 0
     private var flibustaCheckCounter = 0
-    private lateinit var mCdt: CountDownTimer
+    private var mCdt: CountDownTimer? = null
     private var mTor: AndroidOnionProxyManager? = null
-
-    // отмечу готовность к старту приложения
-    private var mReadyToStart = false
-    private var mActivityVisible = false
     private var mTorLoadTooLong = false
     private lateinit var viewModel: StartViewModel
 
@@ -66,7 +62,6 @@ class MainActivity : BaseActivity() {
                         )
                     ) {
                         Toast.makeText(this, "Папка сохранена!", Toast.LENGTH_SHORT).show()
-                        handleStart()
                     } else {
                         Toast.makeText(
                             this,
@@ -102,7 +97,6 @@ class MainActivity : BaseActivity() {
                                     )
                                 }
                                 PreferencesHandler.instance.downloadDir = dl
-                                handleStart()
                             } catch (e: Exception) {
                                 Toast.makeText(
                                     this,
@@ -128,41 +122,30 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("surprise", "onCreate: launch main activity")
         viewModel = ViewModelProvider(this).get(StartViewModel::class.java)
-        // буду отслеживать проверку доступности флибусты
-        viewModel.connectionTestSuccess.observe(this, {
-            if (it) {
-                launchView()
-            }
-        })
-        viewModel.connectionTestFailed.observe(this, {
-            if (it) {
-                availabilityTestFailed()
-            }
-        })
-        // проверю на пропуск главного экрана
-        if (PreferencesHandler.instance.isSkipMainScreen() || PreferencesHandler.instance.isExternalVpn) {
-            Toast.makeText(this, getString(R.string.lockscreen_scipped_message), Toast.LENGTH_LONG)
-                .show()
-            launchView()
-            finish()
-            return
+        if (intent.data != null) {
+            Log.d("surprise", "onCreate: external link here")
+            link = intent.data
         }
-        setupUI()
-
+        setupObservers()
         // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
         if (!viewModel.permissionGranted()) {
             // показываю диалог с требованием предоставить разрешения
             showPermissionDialog()
         } else {
+            App.instance.startTorInit()
             // если не выбрана папка для загрузки
             if (!PreferencesHandler.instance.downloadDirAssigned) {
                 showSelectDownloadFolderDialog()
-            } else {
-                handleStart()
             }
         }
+        // проверю на пропуск главного экрана
+        if (PreferencesHandler.instance.isSkipMainScreen() || PreferencesHandler.instance.isExternalVpn) {
+            launchView()
+            finish()
+            return
+        }
+        setupUI()
     }
 
     private fun showSelectDownloadFolderDialog() {
@@ -237,6 +220,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun setupUI() {
+        setupInterface()
         if (PreferencesHandler.instance.hardwareAcceleration) {
             // проверю аппаратное ускорение
             window.setFlags(
@@ -364,15 +348,61 @@ class MainActivity : BaseActivity() {
         dialog.show()
     }
 
-
-    private fun removeObservers() {
-        App.instance.mLoadedTor.removeObservers(this)
-        WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(App.START_TOR)
-            .removeObservers(this)
-    }
-
     override fun setupObservers() {
+
+        val workInfoData =
+            WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(App.START_TOR)
+        workInfoData.observe(this, { workInfos: List<WorkInfo>? ->
+            if (workInfos != null && workInfos.isNotEmpty()) {
+                // переберу статусы
+                val data = workInfos[0]
+                when (data.state) {
+                    WorkInfo.State.ENQUEUED -> {
+                        binding.statusWrapper.setText(
+                            getString(R.string.tor_load_waiting_internet_message)
+                        )
+                    }
+                    WorkInfo.State.RUNNING -> {
+                        // запускаю таймер
+                        startTimer()
+                        binding.statusWrapper.setText(
+                            getString(R.string.launch_begin_message)
+                        )
+                    }
+                    WorkInfo.State.FAILED -> showTorNotWorkDialog()
+                }
+            }
+        })
+
+        TorStarter.liveTorLaunchState.observe(this, {
+            if(it == TorStarter.TOR_LAUNCH_SUCCESS){
+                torLoaded()
+                TorStarter.liveTorLaunchState.removeObservers(this)
+            }
+            else if (it == TorStarter.TOR_LAUNCH_FAILED){
+                showTorNotWorkDialog()
+            }
+        })
+        // буду отслеживать проверку доступности флибусты
+        viewModel.connectionTestSuccess.observe(this, {
+            if (it) {
+                launchView()
+            }
+        })
+        viewModel.connectionTestFailed.observe(this, {
+            if (it) {
+                Log.d("surprise", "setupObservers: TOR START ERROR!!!")
+                availabilityTestFailed()
+            }
+        })
+        viewModel.torStartFailed.observe(this, {
+            if (it) {
+                showTorNotWorkDialog()
+            }
+        })
+
         if (!PreferencesHandler.instance.isExternalVpn) {
+
             // зарегистрирую отслеживание загружающегося TOR
             val loadedTor: LiveData<AndroidOnionProxyManager> = App.instance.mLoadedTor
             loadedTor.observe(this, { tor: AndroidOnionProxyManager? ->
@@ -381,100 +411,44 @@ class MainActivity : BaseActivity() {
                 }
             })
             // получу данные о работе
-            val workInfoData =
-                WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(App.START_TOR)
-            workInfoData.observe(this, { workInfos: List<WorkInfo>? ->
-                if (workInfos != null && workInfos.isNotEmpty()) {
-                    // переберу статусы
-                    val data = workInfos[0]
-                    when (data.state) {
-                        WorkInfo.State.ENQUEUED -> {
-                            binding.statusWrapper.setText(
-                                getString(R.string.tor_load_waiting_internet_message)
-                            )
-                            stopTimer()
-                        }
-                        WorkInfo.State.RUNNING -> {
-                            // запускаю таймер
-                            startTimer()
-                            binding.statusWrapper.setText(
-                                getString(R.string.launch_begin_message)
-                            )
-                        }
-                        WorkInfo.State.CANCELLED -> {
-                            stopTimer()
-                            binding.statusWrapper.setText(
-                                getString(R.string.launch_cancelled_message)
-                            )
-                        }
-                        WorkInfo.State.FAILED -> showTorNotWorkDialog()
-                        else -> {
-                            torLoaded()
-                            workInfoData.removeObservers(this)
-                        }
-                    }
-                }
-            })
+//            val workInfoData =
+//                WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(App.START_TOR)
+//            workInfoData.observe(this, { workInfos: List<WorkInfo>? ->
+//                if (workInfos != null && workInfos.isNotEmpty()) {
+//                    // переберу статусы
+//                    val data = workInfos[0]
+//                    when (data.state) {
+//                        WorkInfo.State.ENQUEUED -> {
+//                            binding.statusWrapper.setText(
+//                                getString(R.string.tor_load_waiting_internet_message)
+//                            )
+//                            stopTimer()
+//                        }
+//                        WorkInfo.State.RUNNING -> {
+//                            // запускаю таймер
+//                            startTimer()
+//                            binding.statusWrapper.setText(
+//                                getString(R.string.launch_begin_message)
+//                            )
+//                        }
+//                        WorkInfo.State.CANCELLED -> {
+//                            stopTimer()
+//                            binding.statusWrapper.setText(
+//                                getString(R.string.launch_cancelled_message)
+//                            )
+//                        }
+//                        WorkInfo.State.FAILED -> showTorNotWorkDialog()
+//                    }
+//                }
+//            })
         }
     }
 
     private fun torLoaded() {
-        // сбрасываю таймер. Если выбран вид приложения- запущу Activity согласно виду. Иначе- отмечу, что TOR загружен и буду ждать выбора вида
-        if (PreferencesHandler.instance.view != 0) {
-            if (PreferencesHandler.instance.isCheckAvailability()) {
-                checkFlibustaAvailability()
-            } else {
-                launchView()
-            }
+        if (PreferencesHandler.instance.isCheckAvailability()) {
+            checkFlibustaAvailability()
         } else {
-            mReadyToStart = true
-        }
-    }
-
-    private fun handleStart() {
-        // проверю, выбран ли внешний вид приложения
-        if (PreferencesHandler.instance.view != 0) {
-            // если приложению передана ссылка на страницу
-            if (intent.data != null) {
-                mLink = intent.data
-            }
-        } else {
-            selectView()
-        }
-    }
-
-    private fun selectView() {
-        if (!this@MainActivity.isFinishing) {
-            // покажу диалог выбора вида приложения
-            val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
-            dialogBuilder
-                .setTitle(getString(R.string.select_view_title))
-                .setMessage(getString(R.string.select_view_body))
-                .setCancelable(false)
-                .setPositiveButton(getString(R.string.web_view_mode_button)) { _: DialogInterface?, _: Int ->
-                    PreferencesHandler.instance.view = App.VIEW_WEB
-                    if (mReadyToStart) {
-                        if (PreferencesHandler.instance.isCheckAvailability()) {
-                            checkFlibustaAvailability()
-                        } else {
-                            launchView()
-                        }
-                    }
-                }
-                .setNegativeButton(getString(R.string.opds_view_button)) { _: DialogInterface?, _: Int ->
-                    PreferencesHandler.instance.view = App.VIEW_OPDS
-                    if (mReadyToStart) {
-                        if (PreferencesHandler.instance.isCheckAvailability()) {
-                            checkFlibustaAvailability()
-                        } else {
-                            launchView()
-                        }
-                    }
-                }
-
-            val dialog = dialogBuilder.create()
-            lifecycle.addObserver(DialogDismissLifecycleObserver(dialog))
-            dialog.show()
+            launchView()
         }
     }
 
@@ -521,11 +495,10 @@ class MainActivity : BaseActivity() {
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 showPermissionDialog()
             } else {
+                App.instance.startTorInit()
                 // проверю, выбрана ли папка
                 if (!PreferencesHandler.instance.downloadDirAssigned) {
                     showSelectDownloadFolderDialog()
-                } else {
-                    handleStart()
                 }
             }
         } else {
@@ -535,6 +508,7 @@ class MainActivity : BaseActivity() {
 
     // запущу таймер отсчёта
     private fun startTimer() {
+        mProgressCounter = 0
         val waitingTime = TOR_LOAD_MAX_TIME * 1000 // 3 minute in milli seconds
         val checkAvailabilityLimit: Int = if (PreferencesHandler.instance.isEInk) {
             60
@@ -593,44 +567,44 @@ class MainActivity : BaseActivity() {
                     torLoadTooLongDialog()
                 }
             }
-            mCdt.start()
+            mCdt?.start()
+        }
+    }
+
+    private fun torLoadTooLongDialog() {
+        if (!this@MainActivity.isFinishing) {
+            val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
+            dialogBuilder.setTitle(getString(R.string.tor_load_long_message))
+                .setMessage(getString(R.string.wait_or_restart_message))
+                .setPositiveButton(getString(R.string.reset_title)) { _: DialogInterface?, _: Int ->
+                    // reset app
+                    Handler().postDelayed(ResetApp(), 100)
+                }
+                .setNegativeButton(getString(R.string.wait_more_message)) { _: DialogInterface?, _: Int -> startTimer() }
+
+            val dialog = dialogBuilder.create()
+            lifecycle.addObserver(DialogDismissLifecycleObserver(dialog))
+            dialog.show()
+        } else {
+            mTorLoadTooLong = true
         }
     }
 
     private fun stopTimer() {
         mProgressCounter = 0
         binding.progressBarCircle.progress = 0
-        mCdt.cancel()
-    }
-
-    private fun torLoadTooLongDialog() {
-        if (!this@MainActivity.isFinishing) {
-            if (mActivityVisible) {
-                val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
-                dialogBuilder.setTitle("Tor load too long")
-                    .setMessage("Подождём ещё или перезапустим?")
-                    .setPositiveButton("Перезапуск") { _: DialogInterface?, _: Int ->
-                        App.sTorStartTry = 0
-                        App.instance.startTor()
-                    }
-                    .setNegativeButton("Подождать ещё") { _: DialogInterface?, _: Int -> startTimer() }
-
-                val dialog = dialogBuilder.create()
-                lifecycle.addObserver(DialogDismissLifecycleObserver(dialog))
-                dialog.show()
-            } else {
-                mTorLoadTooLong = true
-            }
-        }
+        mCdt?.cancel()
     }
 
     private fun showTorNotWorkDialog() {
+        stopTimer()
         if (!this@MainActivity.isFinishing) {
             val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
             dialogBuilder.setTitle(getString(R.string.tor_cant_load_message))
                 .setMessage(getString(R.string.tor_not_start_body))
                 .setPositiveButton(getString(R.string.try_again_message)) { _: DialogInterface?, _: Int ->
                     App.instance.startTor()
+                    startTimer()
                 }
                 .setNegativeButton(getString(R.string.try_later_message)) { _: DialogInterface?, _: Int -> finishAffinity() }
                 .setNeutralButton(getString(R.string.use_external_proxy_message)) { _: DialogInterface?, _: Int -> handleUseExternalVpn() }
@@ -660,20 +634,14 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        mActivityVisible = false
-        removeObservers()
-    }
-
-
     override fun onResume() {
         super.onResume()
-        setupObservers()
-        mActivityVisible = true
         if (mTorLoadTooLong) {
             mTorLoadTooLong = false
             torLoadTooLongDialog()
+        }
+        if(viewModel.connectionTestSuccess.value == true){
+            launchView()
         }
     }
 
@@ -687,18 +655,10 @@ class MainActivity : BaseActivity() {
         viewModel.cancelCheck()
         // проверю очередь скачивания. Если она не пуста- предложу продолжить закачку
         // проверю, не запущено ли приложение с помощью интента. Если да- запущу программу в webView режиме
-        val targetActivityIntent: Intent
-        if (mLink != null) {
-            //check if intent is not null
-            targetActivityIntent = Intent(this, WebViewActivity::class.java)
-            targetActivityIntent.data = mLink
-        } else {
-            // проверю, если используем OPDS- перенаправлю в другую активность
-            targetActivityIntent = if (PreferencesHandler.instance.view == App.VIEW_OPDS) {
-                Intent(this, OPDSActivity::class.java)
-            } else {
-                Intent(this, WebViewActivity::class.java)
-            }
+        val targetActivityIntent = Intent(this, BrowserActivity::class.java)
+        if(link != null) {
+            Log.d("surprise", "launchView: send link")
+            targetActivityIntent.putExtra(BrowserActivity.EXTERNAL_LINK, link.toString())
         }
         targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(targetActivityIntent)
@@ -707,7 +667,7 @@ class MainActivity : BaseActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mCdt.cancel()
+        mCdt?.cancel()
         viewModel.connectionTestSuccess.removeObservers(this)
     }
 
@@ -715,5 +675,4 @@ class MainActivity : BaseActivity() {
         private const val REQUEST_WRITE_READ = 22
         private const val TOR_LOAD_MAX_TIME = 180
     }
-
 }

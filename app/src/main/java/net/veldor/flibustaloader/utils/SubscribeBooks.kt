@@ -21,105 +21,17 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
-class SubscribeBooks {
-    private var mDom: Document? = null
-    private var mSubscribeValues: ArrayList<SubscriptionItem> = arrayListOf()
-    private val mExistentValues = ArrayList<String>()
-    @kotlin.jvm.JvmField
-    val mListRefreshed = MutableLiveData<Boolean>()
-    private fun refreshSubscribes() {
-        // получу данны файла подписок
-        val rawData = MyFileReader.getBooksSubscribe()
-        mDom = getDocument(rawData)
-        mSubscribeValues = ArrayList()
-        if (mDom != null) {
-            val values = mDom!!.getElementsByTagName(SUBSCRIBE_NAME)
-            var counter = 0
-            var subscriptionItem: SubscriptionItem
-            while (values.item(counter) != null) {
-                subscriptionItem = SubscriptionItem()
-                subscriptionItem.name = values.item(counter).firstChild.nodeValue
-                mExistentValues.add(subscriptionItem.name!!)
-                subscriptionItem.type = "book"
-                mSubscribeValues.add(subscriptionItem)
-                ++counter
-            }
-        }
-    }
-
-    fun getSubscribes(): ArrayList<SubscriptionItem>{
-        refreshSubscribes()
-        return mSubscribeValues
-    }
-
-    fun addValue(value: String) {
-        if (!mExistentValues.contains(value)) {
-            val elem = mDom!!.createElement(SUBSCRIBE_NAME)
-            val text = mDom!!.createTextNode(value)
-            elem.appendChild(text)
-            mDom!!.documentElement.insertBefore(elem, mDom!!.documentElement.firstChild)
-            MyFileReader.saveBooksSubscription(getStringFromDocument(mDom))
-            App.instance.booksSubscribe.mListRefreshed.postValue(true)
-        }
-    }
-
-    fun deleteValue(name: String) {
-        val books = mDom!!.getElementsByTagName(SUBSCRIBE_NAME)
-        var book: Node
-        val length = books.length
-        var counter = 0
-        if (length > 0) {
-            while (counter < length) {
-                book = books.item(counter)
-                if (name == book.textContent) {
-                    book.parentNode.removeChild(book)
-                    break
-                }
-                counter++
-            }
-            MyFileReader.saveBooksSubscription(getStringFromDocument(mDom))
-            App.instance.booksSubscribe.mListRefreshed.postValue(true)
-        }
-    }
+class SubscribeBooks private constructor() : SubscribeType(){
+    override val subscribeName = "book"
 
     companion object {
-        private const val SUBSCRIBE_NAME = "book"
-        private fun getDocument(rawText: String?): Document? {
-            val dbFactory = DocumentBuilderFactory.newInstance()
-            val dBuilder: DocumentBuilder
-            try {
-                dBuilder = dbFactory.newDocumentBuilder()
-                val `is` = InputSource(StringReader(rawText))
-                return dBuilder.parse(`is`)
-            } catch (e: ParserConfigurationException) {
-                e.printStackTrace()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } catch (e: SAXException) {
-                e.printStackTrace()
-            }
-            return null
-        }
-
-        private fun getStringFromDocument(doc: Document?): String {
-            val domSource = DOMSource(doc)
-            val writer = StringWriter()
-            val result = StreamResult(writer)
-            val tf = TransformerFactory.newInstance()
-            val transformer: Transformer
-            try {
-                transformer = tf.newTransformer()
-                transformer.transform(domSource, result)
-            } catch (e: TransformerConfigurationException) {
-                e.printStackTrace()
-            } catch (e: TransformerException) {
-                e.printStackTrace()
-            }
-            return writer.toString()
-        }
+        @JvmStatic
+        var instance: SubscribeBooks = SubscribeBooks()
+            private set
     }
 
+
     init {
-        refreshSubscribes()
+        subscribeFileName = MyFileReader.BOOKS_SUBSCRIBE_FILE
     }
 }

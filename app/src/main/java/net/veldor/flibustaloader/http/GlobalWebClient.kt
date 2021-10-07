@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.http
 
+import android.net.Uri
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.MutableLiveData
@@ -11,6 +12,7 @@ import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
 import net.veldor.flibustaloader.ecxeptions.ZeroBookSizeException
 import net.veldor.flibustaloader.notificatons.NotificationHandler
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.URLHelper
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -21,6 +23,7 @@ object GlobalWebClient {
     val mConnectionState = MutableLiveData<Int?>()
     const val CONNECTED = 1
     const val DISCONNECTED = 2
+
     @Throws(IOException::class)
     fun request(requestString: String): String? {
         Log.d("surprise", "request: requesting $requestString")
@@ -32,6 +35,7 @@ object GlobalWebClient {
             }
         } else {
             try {
+                Log.d("surprise", "request: request trough tor client")
                 val result = TorWebClient().directRequest(requestString)
                 if (!result.isNullOrEmpty()) {
                     return result

@@ -6,6 +6,7 @@ import android.text.Html
 import android.util.Log
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.selections.Author
+import net.veldor.flibustaloader.selections.FoundedEntity
 import java.util.*
 
 object Grammar {
@@ -50,10 +51,17 @@ object Grammar {
             dirname.substring(0, 100)
         } else dirname
     }
+    @kotlin.jvm.JvmStatic
+    fun createAuthorDirName(author: FoundedEntity): String {
+        val dirname: String = author.name!!
+        return if (dirname.length > 100) {
+            dirname.substring(0, 100)
+        } else dirname
+    }
 
     @kotlin.jvm.JvmStatic
     fun clearDirName(dirName: String): String {
-        return dirName.replace("[^ а-яА-Яa-zA-Z0-9.\\-]".toRegex(), "")
+        return Regex("[^\\d\\w ]").replace(dirName, "")
     }
 
     @kotlin.jvm.JvmStatic
@@ -73,5 +81,13 @@ object Grammar {
         return if (length > 1024) {
             (length / 1024).toString() + " кб."
         } else "$length байт"
+    }
+
+    fun removeExtension(name: String): String {
+        return name.substring(0, name.lastIndexOf("."))
+    }
+
+    fun isValidUrl(newValue: String): Boolean {
+        return "^https?://\\w+.\\w+\$".toRegex().matches(newValue)
     }
 }

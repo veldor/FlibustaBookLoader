@@ -12,18 +12,19 @@
         android:defaultValue="false"
         android:summary="Следующая страница будет грузиться после нажатия на кнопку внизу списка книг"
         android:summaryOff="Следующая страница грузится автоматически при пролистывании списка книг до конца"
-        android:title="Кнопка следующей страницы" />
+        android:title="Кнопка страницы" />
     <SwitchPreferenceCompat
         app:key="@string/pref_is_eink"
         android:defaultValue="false"
         android:summary="Отключены фоновые изображения и GIF"
         android:summaryOff="Обычный вид"
-        android:title="Электронная книга" />
+        android:title="Тема для e-ink" />
     <SwitchPreferenceCompat
         app:key="@string/pref_autostart_search"
         android:defaultValue="true"
-        android:summary="Автофокус на строке ввода"
-        android:title="Автоматически открывать окно ввода, когда переключен тип поиска" />
+        android:title="Автофокус поиска"
+        android:summaryOn="Автоматически открывать окно ввода, когда переключен тип поиска"
+        android:summaryOff="Окно поиска автоматически не открывается" />
     <SwitchPreferenceCompat
         app:key="@string/pref_clear_view"
         android:defaultValue="false"

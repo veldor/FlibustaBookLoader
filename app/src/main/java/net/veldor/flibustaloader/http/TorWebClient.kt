@@ -1,13 +1,11 @@
 package net.veldor.flibustaloader.http
 
 import android.net.Uri
-import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import cz.msebera.android.httpclient.HttpHeaders
 import cz.msebera.android.httpclient.HttpResponse
 import cz.msebera.android.httpclient.NameValuePair
-import cz.msebera.android.httpclient.NoHttpResponseException
 import cz.msebera.android.httpclient.client.HttpClient
 import cz.msebera.android.httpclient.client.entity.UrlEncodedFormEntity
 import cz.msebera.android.httpclient.client.methods.HttpGet
@@ -21,12 +19,7 @@ import cz.msebera.android.httpclient.message.BasicNameValuePair
 import cz.msebera.android.httpclient.ssl.SSLContexts
 import net.veldor.flibustaloader.*
 import net.veldor.flibustaloader.MyWebViewClient.FakeDnsResolver
-import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
-import net.veldor.flibustaloader.ecxeptions.BookNotFoundException
 import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
-import net.veldor.flibustaloader.utils.FilesHandler.getBaseDownloadFile
-import net.veldor.flibustaloader.utils.FilesHandler.getCompatDownloadFile
-import net.veldor.flibustaloader.utils.FilesHandler.getDownloadFile
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.URLHelper
 import java.io.*
@@ -45,9 +38,8 @@ class TorWebClient {
         }
 
     fun request(incomingText: String): String? {
-        var text = incomingText
         try {
-            val httpGet = HttpGet(text)
+            val httpGet = HttpGet(incomingText)
             httpGet.setHeader(
                 "User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
@@ -84,21 +76,22 @@ class TorWebClient {
     @Throws(java.lang.Exception::class)
     fun directRequest(text: String?): String? {
         Log.d("surprise", "directRequest: make direct request $text")
-            val httpGet = HttpGet(text)
-            httpGet.setHeader(
-                "User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
-            )
-            httpGet.setHeader("X-Compress", "null")
-            val httpResponse = mHttpClient.execute(httpGet, mContext)
-            val `is`: InputStream = httpResponse.entity.content
-            return inputStreamToString(`is`)
+        val httpGet = HttpGet(text)
+        httpGet.setHeader(
+            "User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
+        )
+        httpGet.setHeader("X-Compress", "null")
+        val httpResponse = mHttpClient.execute(httpGet, mContext)
+        Log.d("surprise", "directRequest:response status is ${httpResponse.statusLine.statusCode}")
+        val `is`: InputStream = httpResponse.entity.content
+        return inputStreamToString(`is`)
     }
 
     @Throws(IOException::class)
-    private fun simpleGetRequest(incomingUrl: String): HttpResponse {
-        var url = incomingUrl
-        val httpGet = HttpGet(url)
+    fun simpleGetRequest(incomingUrl: String): HttpResponse {
+        Log.d("surprise", "simpleGetRequest: load $incomingUrl")
+        val httpGet = HttpGet(incomingUrl)
         httpGet.setHeader(
             "Accept",
             "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
@@ -136,190 +129,6 @@ class TorWebClient {
             e.printStackTrace()
         }
         return null
-    }
-
-    @Throws(BookNotFoundException::class)
-    fun downloadBook(book: BooksDownloadSchedule) {
-        try {
-            var response = simpleGetRequest(URLHelper.getBaseUrl() + book.link)
-            // проверю, что запрос выполнен и файл не пуст. Если это не так- попорбую загрузить книгу с основного домена
-            if (response.statusLine.statusCode == 200 && response.entity.contentLength < 1) {
-                var result: Boolean
-                // тут может быть загрузка книги без указания длины контента, попробую загрузить
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    try {
-                        val newFile = getDownloadFile(book, response)
-                        result = GlobalWebClient.handleBookLoadRequestNoContentLength(
-                            response,
-                            newFile
-                        )
-                        if (newFile.isFile && newFile.length() > 0) {
-                            if (book.format.isEmpty()) {
-                                val receivedContentType = response.getLastHeader("Content-Type")
-                                book.format = receivedContentType.value
-                            }
-                            book.loaded = true
-                        }
-                    } catch (e: Exception) {
-                        try {
-                            val file = getCompatDownloadFile(book)
-                            result =
-                                GlobalWebClient.handleBookLoadRequestNoContentLength(response, file)
-                            if (file.isFile && file.length() > 0) {
-                                book.loaded = true
-                            }
-                        } catch (e1: Exception) {
-                            // скачаю файл просто в папку загрузок
-                            val file = getBaseDownloadFile(book)
-                            result =
-                                GlobalWebClient.handleBookLoadRequestNoContentLength(response, file)
-                            if (file.isFile && file.length() > 0) {
-                                if (book.format.isEmpty()) {
-                                    val receivedContentType = response.getLastHeader("Content-Type")
-                                    book.format = receivedContentType.value
-                                }
-                                book.loaded = true
-                            }
-                        }
-                    }
-                } else {
-                    val file = getCompatDownloadFile(book)
-                    result = GlobalWebClient.handleBookLoadRequestNoContentLength(response, file)
-                    if (file.isFile && file.length() > 0) {
-                        if (book.format.isEmpty()) {
-                            val receivedContentType = response.getLastHeader("Content-Type")
-                            book.format = receivedContentType.value
-                        }
-                        book.loaded = true
-                    }
-                }
-                if (result) {
-                    return
-                }
-            }
-            if (response.statusLine.statusCode != 200 || response.entity.contentLength < 1) {
-                // попробую загрузку с резервного адреса
-                response = simpleGetRequest(URLHelper.getBaseUrl() + book.link)
-                if (response.statusLine.statusCode == 200 && response.entity.contentLength < 1) {
-                    var result: Boolean
-                    // тут может быть загрузка книги без указания длины контента, попробую загрузить
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        try {
-                            val newFile = getDownloadFile(book, response)
-                            result = GlobalWebClient.handleBookLoadRequestNoContentLength(
-                                response,
-                                newFile
-                            )
-                            if (newFile.isFile && newFile.length() > 0) {
-                                if (book.format.isEmpty()) {
-                                    val receivedContentType =
-                                        response.getLastHeader("Content-Type")
-                                    book.format = receivedContentType.value
-                                }
-                                book.loaded = true
-                            }
-                        } catch (e: Exception) {
-                            try {
-                                val file = getCompatDownloadFile(book)
-                                result = GlobalWebClient.handleBookLoadRequestNoContentLength(
-                                    response,
-                                    file
-                                )
-                                if (file.isFile && file.length() > 0) {
-                                    if (book.format.isEmpty()) {
-                                        val receivedContentType =
-                                            response.getLastHeader("Content-Type")
-                                        book.format = receivedContentType.value
-                                    }
-                                    book.loaded = true
-                                }
-                            } catch (e1: Exception) {
-                                // скачаю файл просто в папку загрузок
-                                val file = getBaseDownloadFile(book)
-                                result = GlobalWebClient.handleBookLoadRequestNoContentLength(
-                                    response,
-                                    file
-                                )
-                                if (file.isFile && file.length() > 0) {
-                                    if (book.format.isEmpty()) {
-                                        val receivedContentType =
-                                            response.getLastHeader("Content-Type")
-                                        book.format = receivedContentType.value
-                                    }
-                                    book.loaded = true
-                                }
-                            }
-                        }
-                    } else {
-                        val file = getCompatDownloadFile(book)
-                        result =
-                            GlobalWebClient.handleBookLoadRequestNoContentLength(response, file)
-                        if (file.isFile && file.length() > 0) {
-                            if (book.format.isEmpty()) {
-                                val receivedContentType = response.getLastHeader("Content-Type")
-                                book.format = receivedContentType.value
-                            }
-                            book.loaded = true
-                        }
-                    }
-                    if (result) {
-                        return
-                    }
-                }
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                try {
-                    val newFile = getDownloadFile(book, response)
-                    GlobalWebClient.handleBookLoadRequest(response, newFile)
-                    if (newFile.isFile && newFile.length() > 0) {
-                        if (book.format.isEmpty()) {
-                            val receivedContentType = response.getLastHeader("Content-Type")
-                            book.format = receivedContentType.value
-                        }
-                        book.loaded = true
-                    }
-                } catch (e: Exception) {
-                    try {
-                        val file = getCompatDownloadFile(book)
-                        GlobalWebClient.handleBookLoadRequest(response, file)
-                        if (file.isFile && file.length() > 0) {
-                            if (book.format.isEmpty()) {
-                                val receivedContentType = response.getLastHeader("Content-Type")
-                                book.format = receivedContentType.value
-                            }
-                            book.loaded = true
-                        }
-                    } catch (e1: Exception) {
-                        // скачаю файл просто в папку загрузок
-                        val file = getBaseDownloadFile(book)
-                        GlobalWebClient.handleBookLoadRequest(response, file)
-                        if (file.isFile && file.length() > 0) {
-                            if (book.format.isEmpty()) {
-                                val receivedContentType = response.getLastHeader("Content-Type")
-                                book.format = receivedContentType.value
-                            }
-                            book.loaded = true
-                        }
-                    }
-                }
-            } else {
-                val file = getCompatDownloadFile(book)
-                GlobalWebClient.handleBookLoadRequest(response, file)
-                if (file.isFile && file.length() > 0) {
-                    if (book.format.isEmpty()) {
-                        val receivedContentType = response.getLastHeader("Content-Type")
-                        book.format = receivedContentType.value
-                    }
-                    book.loaded = true
-                }
-            }
-        } catch (e: NoHttpResponseException) {
-            // книга недоступна для скачивания
-            throw BookNotFoundException()
-        } catch (e: IOException) {
-            e.printStackTrace()
-            //throw new TorNotLoadedException();
-        }
     }
 
     @Throws(Exception::class)
@@ -412,6 +221,17 @@ class TorWebClient {
         return null
     }
 
+    fun rawRequest(link: String): HttpResponse? {
+        //Log.d("surprise", "rawRequest: make raw request $link")
+        val httpGet = HttpGet(link)
+        httpGet.setHeader(
+            "User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36"
+        )
+        httpGet.setHeader("X-Compress", "null")
+        return mHttpClient.execute(httpGet, mContext)
+    }
+
     companion object {
         const val ERROR_DETAILS = "error details"
         private fun get2post(url: Uri, login: String, password: String): UrlEncodedFormEntity? {
@@ -448,48 +268,49 @@ class TorWebClient {
     }
 
     init {
-        while (App.instance.torInitInProgress) {
+        while (TorStarter.liveTorLaunchState.value == TorStarter.TOR_LAUNCH_IN_PROGRESS) {
             try {
                 Thread.sleep(100)
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
         }
-        App.instance.torInitInProgress = true
-        // попробую стартовать TOR
+
         val starter = TorStarter()
-        App.sTorStartTry = 0
-        while (App.sTorStartTry < 4) {
+        while (TorStarter.torStartTry < 4) {
             // есть три попытки, если все три неудачны- верну ошибку
             if (starter.startTor()) {
                 GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED)
-                App.sTorStartTry = 0
+                TorStarter.liveTorLaunchState.postValue(TorStarter.TOR_LAUNCH_SUCCESS)
+                // обнулю счётчик попыток
+                TorStarter.torStartTry = 0
                 break
-            } else {
-                App.sTorStartTry++
             }
+            Log.d("surprise", "doWork: failed tor start try")
+            // попытка неудачна, плюсую счётчик попыток
+            TorStarter.torStartTry++
         }
-        App.instance.torInitInProgress = false
-        // если счётчик больше 3- не удалось запустить TOR, вызову исключение
-        if (App.sTorStartTry > 3) {
+        if (TorStarter.liveTorLaunchState.value != TorStarter.TOR_LAUNCH_SUCCESS) {
+            TorStarter.liveTorLaunchState.postValue(TorStarter.TOR_LAUNCH_FAILED)
             connectionError
-        }
-        try {
-            mHttpClient = newHttpClient
-            val onionProxyManager = starter.tor
-            val port = onionProxyManager!!.iPv4LocalHostSocksPort
-            val socksaddr = InetSocketAddress("127.0.0.1", port)
-            mContext = HttpClientContext.create()
-            mContext.setAttribute("socks.address", socksaddr)
-        } catch (e: IOException) {
-            e.printStackTrace()
-            if (e.message != null && e.message == MyWebViewClient.TOR_NOT_RUNNING_ERROR) {
-                connectionError
-            }
-        } catch (e: RuntimeException) {
-            e.printStackTrace()
-            if (e.message != null && e.message == MyWebViewClient.TOR_NOT_RUNNING_ERROR) {
-                connectionError
+        } else {
+            try {
+                mHttpClient = newHttpClient
+                val onionProxyManager = starter.tor
+                val port = onionProxyManager!!.iPv4LocalHostSocksPort
+                val socksaddr = InetSocketAddress("127.0.0.1", port)
+                mContext = HttpClientContext.create()
+                mContext.setAttribute("socks.address", socksaddr)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                if (e.message != null && e.message == MyWebViewClient.TOR_NOT_RUNNING_ERROR) {
+                    connectionError
+                }
+            } catch (e: RuntimeException) {
+                e.printStackTrace()
+                if (e.message != null && e.message == MyWebViewClient.TOR_NOT_RUNNING_ERROR) {
+                    connectionError
+                }
             }
         }
     }

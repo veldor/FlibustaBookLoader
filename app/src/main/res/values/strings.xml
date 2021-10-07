@@ -9,7 +9,7 @@
     <string name="file_not_found_message">File not found!</string>
     <string name="go_home">go home</string>
     <string name="use_dark_mode">Use dark mode</string>
-    <string name="show_last">Last loaded books</string>
+    <string name="show_last">New books</string>
     <string name="look">View</string>
     <string name="show_random">Random book</string>
     <string name="navigation">Navigation</string>
@@ -226,13 +226,13 @@
     <string name="wifi_enable_message">Looks like wi-fi disabled. You can enable it for surfing</string>
     <string name="skip_load_screen_message">Skip load screen</string>
     <string name="skip_load_screen_summary">Very alpha! Skip load screen and dot\'t wait for TOR load on start</string>
-    <string name="lockscreen_scipped_message">Load screen skipped. You can enable it in connectivity settings</string>
+    <string name="lockscreen_skipped_message">Load screen skipped. You can enable it in connectivity settings</string>
     <string name="navigation_close_app">Close app</string>
     <string name="test_version_message">This is test version</string>
     <string name="send_log_message">Send log</string>
     <string name="connection_lost_message">Connection lost</string>
     <string name="reload_page_message">Reload page</string>
-    <string name="navigation_go_filelist">File list</string>
+    <string name="navigation_go_file_list">File list</string>
     <string name="books_options_message">Book options</string>
     <string name="open_with_menu_item">Open with…</string>
     <string name="item_deleted_message">Item deleted</string>
@@ -246,14 +246,14 @@
     <string name="too_large_version_message">Too large version</string>
     <string name="too_large_version_text">Tor can\'t load on this version of Android yet. Please, use external VPN</string>
     <string name="enable_vpn_message">Enable VPN mode</string>
-    <string name="tor_not_availiable_title">Tor not available</string>
-    <string name="tor_not_availiable_message" translatable="false">In this version you require external VPN to show content. Install it or rollback on previous version of app. Sorry for that</string>
+    <string name="tor_not_available_title">Tor not available</string>
+    <string name="tor_not_available_message" translatable="false">In this version you require external VPN to show content. Install it or rollback on previous version of app. Sorry for that</string>
     <string name="pref_custom_pic_mirror" translatable="false">custom_pic_mirror</string>
     <string name="send_book_title">Send book</string>
     <string name="permissions_required_message">Permissions required for books download</string>
     <string name="permissions_required_title">Required permissions</string>
     <string name="accept_permissions_button">Accept</string>
-    <string name="dismiss_permissions_button">Descline and close app</string>
+    <string name="dismiss_permissions_button">Decline and close app</string>
     <string name="download_title">Download</string>
     <string name="e_ink_enabled_title">Enabled e-ink theme</string>
     <string name="e_ink_enabled_message">It not support night mode and can be switched off here or on settings screen</string>
@@ -271,4 +271,38 @@
     <string name="used_title">used</string>
     <string name="disabled_title">disabled</string>
     <string name="custom_mirror_hint">Mirror for use</string>
+    <string name="show_message">Show</string>
+    <string name="action_cancelled_message">Action cancelled</string>
+    <string name="book_cover_hint" translatable="false">book cover</string>
+    <string name="load_data_message">Load data</string>
+    <string name="book_loaded_text">" Book is loaded"</string>
+    <string name="book_load_failed_text">Can\'t load book now</string>
+    <string name="book_load_in_progress_text">Load in progress</string>
+    <string name="blacklist_first_help_text">Check filter type</string>
+    <string name="blacklist_second_hint_text">Enter value for filter and press button to add it</string>
+    <string name="select_subscription_type_message">Select subscription text</string>
+    <string name="subscription_second_hint_text">Enter a value of subscribe. Then you can activate auto-check subscriptions (once in day) or check manually by pressing buttons</string>
+    <string name="title_activity_browser">BrowserActivity</string>
+    <string name="title_home">Catalog</string>
+    <string name="title_dashboard">Browser</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="search_title">Search</string>
+    <string name="custom_mirror_pref_title">Custom mirror</string>
+    <string name="tor_load_long_message">Tor load too long</string>
+    <string name="wait_or_restart_message">Wait more or restart?</string>
+    <string name="reset_title">Reset</string>
+    <string name="wait_more_message">Wait more</string>
+    <string name="filtrating_title">Filtrating</string>
+    <string name="view_title">View</string>
+    <string name="downloads_title">Downloads</string>
+    <string name="browser_first_help_text">Choose search type here</string>
+    <string name="notification_downloader_header">Books downloader</string>
+    <string name="notification_downloader_prepare_body">Prepare book downloading</string>
+    <string name="wait_for_download">Waiting download</string>
+    <string name="start_download">Start load</string>
+    <string name="details_in_browser_menu">Details in browser</string>
+    <string name="mark_read">Mark as read</string>
+    <string name="mark_downloaded">Mark as downloaded</string>
+    <string name="share_book">Share book</string>
+    <string name="settings_restored_message">Settings restored, reboot app to apply</string>
 </resources>

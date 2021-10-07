@@ -17,18 +17,6 @@
         android:gravity="center_horizontal" />
 
     <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/save_only_selected"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/download_only_this_format"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        android:padding="30dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/save_type_selection"
-        android:gravity="center_horizontal" />
-
-    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/reDownload"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -37,7 +25,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/save_only_selected"
+        app:layout_constraintTop_toBottomOf="@+id/save_type_selection"
         android:gravity="center_horizontal" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

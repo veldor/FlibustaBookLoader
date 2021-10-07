@@ -4,27 +4,33 @@
     <SwitchPreferenceCompat
         app:key="check availability"
         android:title="@string/check_server_on_start"
+        android:summaryOn="Во время запуска приложения проводится проверка подключения к серверу. Если сервер недоступен- будет использовано резервное зеркало"
+       android:summaryOff="Проверка не проводится"
         android:defaultValue="true"/>
     <SwitchPreferenceCompat
         app:key="skip load screen"
         android:title="@string/skip_load_screen_message"
-        android:summary="@string/skip_load_screen_summary"
+        android:summaryOff="Загрузка приложения в обычном режиме"
+        android:summaryOn="@string/skip_load_screen_summary"
         android:defaultValue="false"/>
-    <CheckBoxPreference
+    <SwitchPreferenceCompat
         android:defaultValue="false"
-        android:summary="Оповестить об использовании внешнего VPN. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. В этом случае вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно."
+        android:summaryOff="Используется встроенный клиент TOR"
+        android:summaryOn="Использовать VPN\Orbot. В этом случае внутренний клиент TOR будет отключен и траффик приложения не будет обрабатываться. Вся ответственность за получение контента ложится на внешний VPN. Если вы будете получать сообщения об ошибках загрузки- значит, он работает неправильно."
         app:key="external vpn"
-        app:title="Использование внешнего VPN" />
+        app:title="VPN-соединение" />
     <SwitchPreferenceCompat
         app:key="@string/pref_use_custom_mirror"
-        android:title="Использовать кастомное зеркало"
+        android:summaryOff="Используется адрес Флибусты по умолчанию"
+        android:summaryOn="Используется адрес, введённый ниже"
+        android:title="@string/custom_mirror_pref_title"
         android:defaultValue="false"/>
     <EditTextPreference
         android:title="Назначить зеркало Флибусты"
         android:summary="@string/custom_mirror_hint"
         app:key="@string/pref_custom_flibusta_mirror"/>
     <EditTextPreference
-        android:title="Зеркало загрузки обложек"
-        android:summary="Зеркало в виде https://mirror.net Тут можно назначить зеркало, с которого будут загружаться обложки книг. При проблемах с соединением поставьте пустое значение"
+        android:title="Изменить зеркало загрузки картинок"
+        android:summary="@string/custom_mirror_hint"
         app:key="@string/pref_custom_pic_mirror"/>
 </PreferenceScreen>

@@ -1,32 +1,33 @@
 package net.veldor.flibustaloader.ui
 
 import android.app.Dialog
-import android.os.Bundle
-import net.veldor.flibustaloader.R
-import net.veldor.flibustaloader.App
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.navigation.NavigationView
-import androidx.drawerlayout.widget.DrawerLayout
-import android.os.Build
-import androidx.core.view.GravityCompat
-import android.graphics.Typeface
 import android.content.Intent
-import androidx.lifecycle.MutableLiveData
+import android.graphics.Typeface
+import android.os.Build
 import android.util.Log
-import android.view.*
+import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
+import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.OnLifecycleEvent
+import com.google.android.material.navigation.NavigationView
+import net.veldor.flibustaloader.App
+import net.veldor.flibustaloader.R
+import net.veldor.flibustaloader.dialogs.ChangelogDialog
 import net.veldor.flibustaloader.utils.MyFileReader.SUBSCRIPTIONS_FILE
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import java.io.File
 import java.io.FileInputStream
 import java.io.ObjectInputStream
-import java.lang.Exception
 import java.util.*
 
 open class BaseActivity : AppCompatActivity() {
@@ -34,11 +35,14 @@ open class BaseActivity : AppCompatActivity() {
     private lateinit var mSubscriptionsListTextView: TextView
     protected lateinit var mNavigationView: NavigationView
     private var mDrawer: DrawerLayout? = null
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
     protected open fun setupInterface() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // change status bar color
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.statusBarColor = ResourcesCompat.getColor(resources, R.color.bottomNavigationColor, null)
+            window.navigationBarColor = ResourcesCompat.getColor(resources, R.color.bottomNavigationColor, null)
+        }
         // включу аппаратное ускорение, если оно активно
         if (PreferencesHandler.instance.hardwareAcceleration) {
             window.setFlags(
@@ -66,11 +70,11 @@ open class BaseActivity : AppCompatActivity() {
             mNavigationView = findViewById(R.id.nav_view)
             mNavigationView.setNavigationItemSelectedListener(NavigatorSelectHandler(this))
             // отображу бейджи в меню
-            mNavigationView.getMenu().findItem(R.id.goToDownloadsList).actionView
+            mNavigationView.menu.findItem(R.id.goToDownloadsList).actionView
             mDownloadsListTextView =
-                mNavigationView.getMenu().findItem(R.id.goToDownloadsList).actionView as TextView
+                mNavigationView.menu.findItem(R.id.goToDownloadsList).actionView as TextView
             mSubscriptionsListTextView =
-                mNavigationView.getMenu().findItem(R.id.goToSubscriptions).actionView as TextView
+                mNavigationView.menu.findItem(R.id.goToSubscriptions).actionView as TextView
             // метод для счетчиков
             initializeCountDrawer()
         }
@@ -79,12 +83,6 @@ open class BaseActivity : AppCompatActivity() {
     private fun initializeCountDrawer() {
         setDownloadsLength()
         setSubscriptionsLength()
-    }
-
-    protected fun changeTitle(s: String?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Objects.requireNonNull(supportActionBar)!!.title = s
-        }
     }
 
     override fun onBackPressed() {
@@ -99,7 +97,7 @@ open class BaseActivity : AppCompatActivity() {
 
     protected open fun setupObservers() {
         // Отслежу изменение числа книг в очереди закачек
-        sLiveDownloadScheduleCount.observe(this, { changed: Boolean ->
+        sLiveDownloadScheduleCountChanged.observe(this, { changed: Boolean ->
             if (changed) {
                 setDownloadsLength()
             }
@@ -110,6 +108,8 @@ open class BaseActivity : AppCompatActivity() {
                 setSubscriptionsLength()
             }
         })
+
+
     }
 
     private fun setSubscriptionsLength() {
@@ -128,7 +128,7 @@ open class BaseActivity : AppCompatActivity() {
                 if (listLength > 0) {
                     mSubscriptionsListTextView.gravity = Gravity.CENTER_VERTICAL
                     mSubscriptionsListTextView.setTypeface(null, Typeface.BOLD)
-                    mSubscriptionsListTextView.setTextColor(resources.getColor(R.color.book_name_color))
+                    mSubscriptionsListTextView.setTextColor(ResourcesCompat.getColor(resources, R.color.book_name_color, null))
                     mSubscriptionsListTextView.text = listLength.toString()
                 }
             }
@@ -143,7 +143,7 @@ open class BaseActivity : AppCompatActivity() {
             mDownloadsListTextView.visibility = View.VISIBLE
             mDownloadsListTextView.gravity = Gravity.CENTER_VERTICAL
             mDownloadsListTextView.setTypeface(null, Typeface.BOLD)
-            mDownloadsListTextView.setTextColor(resources.getColor(R.color.book_name_color))
+            mDownloadsListTextView.setTextColor(ResourcesCompat.getColor(resources, R.color.book_name_color, null))
             mDownloadsListTextView.text = queueSize.toString()
         } else {
             mDownloadsListTextView.visibility = View.INVISIBLE
@@ -168,9 +168,18 @@ open class BaseActivity : AppCompatActivity() {
         }
     }
 
+    protected fun showChangesList() {
+        // покажу список изменений, если он ещё не показан для этой версии
+        if (PreferencesHandler.instance.isShowChanges()) {
+            ChangelogDialog.Builder(this).build().show()
+            PreferencesHandler.instance.setChangesViewed()
+        }
+    }
+
+
     companion object {
         @JvmField
-        val sLiveDownloadScheduleCount = MutableLiveData<Boolean>()
+        val sLiveDownloadScheduleCountChanged = MutableLiveData<Boolean>()
         val sLiveFoundedSubscriptionsCount = MutableLiveData<Boolean>()
     }
 }

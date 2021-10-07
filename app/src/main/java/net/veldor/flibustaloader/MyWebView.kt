@@ -5,11 +5,13 @@ import android.content.Context
 import android.util.AttributeSet
 import android.webkit.WebChromeClient
 import android.webkit.WebView
-import android.widget.ProgressBar
-import net.veldor.flibustaloader.ui.WebViewActivity
+import net.veldor.flibustaloader.ui.BrowserActivity
+import net.veldor.flibustaloader.ui.fragments.WebViewFragment
+import net.veldor.flibustaloader.utils.URLHelper
 
 class MyWebView(context: Context?, attrs: AttributeSet?) : WebView(context, attrs) {
     private var init = false
+
     @SuppressLint("SetJavaScriptEnabled")
     fun setup() {
         if (!this.isInEditMode) {
@@ -22,8 +24,9 @@ class MyWebView(context: Context?, attrs: AttributeSet?) : WebView(context, attr
         }
     }
 
+
     override fun loadUrl(url: String) {
-        super.loadUrl(url)
+        super.loadUrl(URLHelper.getBaseUrl() + url)
         initProgressBar()
     }
 
@@ -32,21 +35,21 @@ class MyWebView(context: Context?, attrs: AttributeSet?) : WebView(context, attr
             return
         }
         init = true
-        val progressBar =
-            (context as WebViewActivity).findViewById<ProgressBar>(R.id.pageLoadedProgressBar)
-        // попробую скрыть бар для начала
-        progressBar.visibility = GONE
-        this.webChromeClient = object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView, progress: Int) {
-                if (progress > 90) {
-                    if (progressBar.visibility == VISIBLE) {
-                        progressBar.visibility = GONE
+        val fragment = (context as BrowserActivity).getCurrentFragment()
+        if (fragment is WebViewFragment) {
+            fragment.binding.pageLoadedProgressBar.visibility = GONE
+            this.webChromeClient = object : WebChromeClient() {
+                override fun onProgressChanged(view: WebView, progress: Int) {
+                    if (progress > 90) {
+                        if (fragment.binding.pageLoadedProgressBar.visibility == VISIBLE) {
+                            fragment.binding.pageLoadedProgressBar.visibility = GONE
+                        }
+                    } else {
+                        if (fragment.binding.pageLoadedProgressBar.visibility == GONE) {
+                            fragment.binding.pageLoadedProgressBar.visibility = VISIBLE
+                        }
+                        fragment.binding.pageLoadedProgressBar.progress = progress
                     }
-                } else {
-                    if (progressBar.visibility == GONE) {
-                        progressBar.visibility = VISIBLE
-                    }
-                    progressBar.progress = progress
                 }
             }
         }
