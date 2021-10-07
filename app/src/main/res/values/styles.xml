@@ -23,6 +23,7 @@
         <item name="windowNoTitle">true</item>
         <item name="autoCompleteTextViewStyle">@style/cursorColor</item>
     </style>
+
     <style name="EInkAppTheme" parent="Theme.AppCompat.DayNight">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/black</item>
@@ -50,11 +51,15 @@
     <style name="cursorColor" parent="Widget.AppCompat.AutoCompleteTextView">
         <item name="android:textCursorDrawable">@drawable/cursor</item>
     </style>
+
     <style name="eInkCursorColor" parent="Widget.AppCompat.AutoCompleteTextView">
         <item name="android:textCursorDrawable">@drawable/cursor_eink</item>
     </style>
 
     <style name="MyActionBar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
+        <item name="android:textColorHint">@android:color/white</item>
+        <item name="android:editTextColor">@android:color/white</item>
+        <item name="android:textColorSecondary">@android:color/white</item>
         <item name="colorControlNormal">@color/app_bar_icons_color</item>
         <item name="color">@color/app_bar_icons_color</item>
     </style>

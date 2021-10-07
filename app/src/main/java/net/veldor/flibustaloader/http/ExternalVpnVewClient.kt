@@ -28,7 +28,6 @@ object ExternalVpnVewClient {
             return httpclient.execute(httpget, context)
         } catch (e: IOException) {
             e.printStackTrace()
-            GlobalWebClient.mConnectionState.postValue(GlobalWebClient.DISCONNECTED)
         }
         return null
     }

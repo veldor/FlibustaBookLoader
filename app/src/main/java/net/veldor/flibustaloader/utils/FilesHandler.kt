@@ -11,36 +11,19 @@ import androidx.annotation.RequiresApi
 import androidx.documentfile.provider.DocumentFile
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
-import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 
 object FilesHandler {
-    fun shareFile(zip: File) {
-        //todo По возможности- разобраться и заменить на валидное решение
-        val builder = VmPolicy.Builder()
-        StrictMode.setVmPolicy(builder.build())
-        // отправлю запрос на открытие файла
-        val shareIntent = Intent(Intent.ACTION_SEND)
-        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(zip))
-        shareIntent.type = getMimeType(zip.name)
-        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-        App.instance.startActivity(
-            Intent.createChooser(
-                shareIntent,
-                App.instance.getString(R.string.send_book_title)
-            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-    }
 
     @kotlin.jvm.JvmStatic
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     fun shareFile(incomingDocumentFile: DocumentFile) {
         shareFile(
-            incomingDocumentFile,
-            App.instance.getString(R.string.send_book_title)
+                incomingDocumentFile,
+                App.instance.getString(R.string.send_book_title)
         )
     }
 
@@ -55,10 +38,10 @@ object FilesHandler {
                 shareIntent.type = getMimeType(file.name)
                 shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                 App.instance.startActivity(
-                    Intent.createChooser(
-                        shareIntent,
-                        chooserPromise
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        Intent.createChooser(
+                                shareIntent,
+                                chooserPromise
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } else {
                 val docId = DocumentsContract.getDocumentId(file.uri)
@@ -68,7 +51,7 @@ object FilesHandler {
                 if (file1 != null) {
                     if (!file1.exists()) {
                         file1 = File(
-                            Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+                                Environment.getExternalStorageDirectory().toString() + "/" + split[1]
                         )
                     }
                     if (file1.exists()) {
@@ -81,10 +64,10 @@ object FilesHandler {
                         shareIntent.type = mime
                         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                         App.instance.startActivity(
-                            Intent.createChooser(
-                                shareIntent,
-                                chooserPromise
-                            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                Intent.createChooser(
+                                        shareIntent,
+                                        chooserPromise
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         )
                     }
                 }
@@ -131,27 +114,6 @@ object FilesHandler {
     }
 
     @kotlin.jvm.JvmStatic
-    fun getCompatDownloadFile(book: BooksDownloadSchedule): File {
-        var file: File? = PreferencesHandler.instance.compatDownloadDir
-        // проверю, нужно ли создавать папку под автора
-        if (PreferencesHandler.instance
-                .isCreateSequencesDir() && book.reservedSequenceName.isNotEmpty()
-        ) {
-            file = File(file, book.reservedSequenceName)
-        } else {
-            if (PreferencesHandler.instance.isCreateAuthorsDir()) {
-                file = File(file, book.authorDirName)
-            }
-            if (PreferencesHandler.instance
-                    .isCreateSequencesDir() && book.sequenceDirName.isNotEmpty()
-            ) {
-                file = File(file, book.sequenceDirName)
-            }
-        }
-        return File(file, book.name)
-    }
-
-    @kotlin.jvm.JvmStatic
     fun openFile(file: DocumentFile) {
         val mime = getMimeType(file.name)
         if (mime != null) {
@@ -159,10 +121,10 @@ object FilesHandler {
             intent.setDataAndType(file.uri, mime)
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
             App.instance.startActivity(
-                Intent.createChooser(
-                    intent,
-                    App.instance.getString(R.string.open_with_menu_item)
-                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    Intent.createChooser(
+                            intent,
+                            App.instance.getString(R.string.open_with_menu_item)
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         }
     }
@@ -179,6 +141,28 @@ object FilesHandler {
             }
         }
         return null
+    }
+
+
+    fun shareFile(zip: File) {
+        shareFile(zip, App.instance.getString(R.string.send_book_title))
+    }
+
+    fun shareFile(file: File, chooserPromise: String) {
+        //todo По возможности- разобраться и заменить на валидное решение
+        val builder = VmPolicy.Builder()
+        StrictMode.setVmPolicy(builder.build())
+        // отправлю запрос на открытие файла
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file))
+        shareIntent.type = getMimeType(file.name)
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        App.instance.startActivity(
+                Intent.createChooser(
+                        shareIntent,
+                        chooserPromise
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
     }
 
 

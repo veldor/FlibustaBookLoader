@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="EInkAppTheme" parent="Theme.AppCompat.DayNight">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.AppTheme.ActionBar</item>
+        <item name="colorAccent">@color/black</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowBackground">@color/white</item>
+        <item name="background">@color/white</item>
+        <item name="windowNoTitle">true</item>
+        <item name="autoCompleteTextViewStyle">@style/eInkCursorColor</item>
+    </style>
+</resources>

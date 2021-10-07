@@ -204,9 +204,8 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                 _searchResults.postValue(searchResult)
                 return parser.nextPageLink
             }
-        } else {
-            _isLoadError.postValue(true)
         }
+        _isLoadError.postValue(true)
         return null
     }
 

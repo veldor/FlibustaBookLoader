@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import net.veldor.flibustaloader.http.GlobalWebClient
 import net.veldor.flibustaloader.http.TorStarter
 
 class StartTorWorker(context: Context, workerParams: WorkerParameters) :
@@ -15,7 +14,6 @@ class StartTorWorker(context: Context, workerParams: WorkerParameters) :
         while (TorStarter.torStartTry < 4 && !isStopped) {
             // есть три попытки, если все три неудачны- верну ошибку
             if (starter.startTor()) {
-                GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED)
                 TorStarter.liveTorLaunchState.postValue(TorStarter.TOR_LAUNCH_SUCCESS)
                 // обнулю счётчик попыток
                 TorStarter.torStartTry = 0

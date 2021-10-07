@@ -14,11 +14,15 @@ import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.handlers.BackupSettings
 import net.veldor.flibustaloader.ui.MainActivity
+import java.io.File
 
 class SettingsViewModel(application: Application) : GlobalViewModel(application) {
 
     private val _liveBackupFile = MutableLiveData<DocumentFile>()
     val liveBackupData: LiveData<DocumentFile> = _liveBackupFile
+
+    private val _liveCompatBackupFile = MutableLiveData<File>()
+    val liveCompatBackupData: LiveData<File> = _liveCompatBackupFile
 
     private val _livePrefsRestored = MutableLiveData<Boolean>()
     val livePrefsRestored: LiveData<Boolean> = _livePrefsRestored
@@ -35,6 +39,12 @@ class SettingsViewModel(application: Application) : GlobalViewModel(application)
             Log.d("surprise", "restore: now reboot app")
             // notify about settings restored
             _livePrefsRestored.postValue(true)
+        }
+    }
+
+    fun backup(dl: File) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _liveCompatBackupFile.postValue(BackupSettings.backup(dl))
         }
     }
 }

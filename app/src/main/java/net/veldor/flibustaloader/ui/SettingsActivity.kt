@@ -124,7 +124,7 @@ class SettingsActivity : BaseActivity(),
                                             or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
                                 )
                             }
-                            //compatBackupDirSelectResultLauncher.launch(intent)
+                            compatBackupDirSelectResultLauncher.launch(intent)
                         }
                         false
                     }
@@ -198,29 +198,85 @@ class SettingsActivity : BaseActivity(),
                 }
             }
 
+        private var compatBackupDirSelectResultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    if (result != null) {
+                        val data: Intent? = result.data
+                        if (data != null && data.extras != null && data.extras!!.containsKey("data")) {
+                            val folderLocation = data.extras!!.getString("data")
+                            val file = File(folderLocation)
+                            if (file.isDirectory) {
+                                (requireActivity() as SettingsActivity).viewModel.backup(file)
+
+                                (requireActivity() as SettingsActivity).viewModel.liveCompatBackupData.observe(
+                                        viewLifecycleOwner,
+                                        {
+                                            if (it != null) {
+                                                // send file
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                                    FilesHandler.shareFile(it, getString(R.string.share_settings_message))
+                                                }
+                                                (requireActivity() as SettingsActivity).viewModel.liveCompatBackupData.removeObservers(
+                                                        viewLifecycleOwner
+                                                )
+                                            } else {
+                                                Toast.makeText(
+                                                        requireContext(),
+                                                        "Can't create backup file, try again!",
+                                                        Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                        })
+                            } else {
+                                Toast.makeText(
+                                        requireContext(),
+                                        "Не удалось сохранить папку, попробуйте ещё раз!",
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                }
+            }
+
         private var restoreFileSelectResultLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
-                    val uri: Uri?
-                    if (result != null) {
-                        uri = result.data?.data
-                        if (uri != null) {
-                            val dl = DocumentFile.fromSingleUri(App.instance, uri)
-                            if(dl != null) {
-                                Log.d("surprise", "${dl.name}: ")
-                                (requireActivity() as SettingsActivity).viewModel.restore(dl)
-                                (requireActivity() as SettingsActivity).viewModel.livePrefsRestored.observe(
-                                    viewLifecycleOwner,
-                                    {
-                                       if(it){
-                                           Toast.makeText(
-                                               requireContext(),
-                                               "Preferences restored, reboot app",
-                                               Toast.LENGTH_LONG
-                                           ).show()
-                                           Handler().postDelayed(ResetApp(), 3000)
-                                       }
-                                    })
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        val uri: Uri?
+                        if (result != null) {
+                            uri = result.data?.data
+                            if (uri != null) {
+                                val dl = DocumentFile.fromSingleUri(App.instance, uri)
+                                if (dl != null) {
+                                    Log.d("surprise", "${dl.name}: ")
+                                    (requireActivity() as SettingsActivity).viewModel.restore(dl)
+                                    (requireActivity() as SettingsActivity).viewModel.livePrefsRestored.observe(
+                                            viewLifecycleOwner,
+                                            {
+                                                if (it) {
+                                                    Toast.makeText(
+                                                            requireContext(),
+                                                            "Preferences restored, reboot app",
+                                                            Toast.LENGTH_LONG
+                                                    ).show()
+                                                    Handler().postDelayed(ResetApp(), 3000)
+                                                }
+                                            })
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        if (result != null) {
+                            val data: Intent? = result.data
+                            if (data != null && data.extras != null && data.extras!!.containsKey("data")) {
+                                val folderLocation = data.extras!!.getString("data")
+                                val file = File(folderLocation)
+                                if (file.isFile) {
+                                    Log.d("surprise", "SettingsActivity.kt 278  restore...: ")
+                                }
                             }
                         }
                     }

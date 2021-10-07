@@ -6,6 +6,9 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Point
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -26,7 +29,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.FoundedItemAdapter
@@ -42,6 +44,10 @@ import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.view_models.OPDSViewModel
 import java.net.URLEncoder
 import java.util.*
+import com.google.android.material.navigation.NavigationView
+import android.widget.TextView
+import java.lang.reflect.Field
+
 
 class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActionDelegate,
     View.OnCreateContextMenuListener {
@@ -69,7 +75,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         if (link != null) {
             load(link, append = false, addToHistory = true, -1)
         } else if (viewModel.getCurrentPage() != null) {
-            load(viewModel.getCurrentPage()!!,
+            load(
+                viewModel.getCurrentPage()!!,
                 append = false,
                 addToHistory = false,
                 clickedElementIndex = -1
@@ -146,6 +153,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
         viewModel.isLoadError.observe(viewLifecycleOwner, { hasError: Boolean ->
             if (hasError) {
+                binding.progressBar.visibility = View.INVISIBLE
                 // покажу окошко и сообщу, что загрузка не удалась
                 Toast.makeText(
                     requireContext(),
@@ -178,10 +186,18 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 R.id.searchBook -> {
                     mSearchView?.visibility = View.VISIBLE
                     binding.showAllSwitcher.visibility = View.VISIBLE
+                    if (PreferencesHandler.instance.isAutofocusSearch()) {
+                        mSearchView?.isIconified = false
+                        mSearchView?.requestFocus()
+                    }
                 }
                 R.id.searchAuthor -> {
                     mSearchView?.visibility = View.VISIBLE
                     binding.showAuthorsListButton.visibility = View.VISIBLE
+                    if (PreferencesHandler.instance.isAutofocusSearch()) {
+                        mSearchView?.isIconified = false
+                        mSearchView?.requestFocus()
+                    }
                 }
                 R.id.searchGenre -> {
                     mSearchView?.visibility = View.GONE
@@ -242,8 +258,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
         // варианты поиска
         if (PreferencesHandler.instance.isEInk) {
-            //Toast.makeText(this, "Читалка", Toast.LENGTH_SHORT).show();
-            Log.d("surprise", "OPDSActivity setupInterface 529: use reader")
+            //requireActivity().setTheme(R.style.EInkAppTheme)
         } else {
             if (!PreferencesHandler.instance.isPicHide()) {
                 // назначу фон
@@ -330,23 +345,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         }
     }
 
-    private fun makeUpdateSnackbar() {
-        val updateSnackbar = Snackbar.make(
-            binding.rootView,
-            getString(R.string.snackbar_found_update_message),
-            Snackbar.LENGTH_LONG
-        )
-        updateSnackbar.setAction(getString(R.string.snackbar_update_action_message)) { viewModel.initializeUpdate() }
-        updateSnackbar.setActionTextColor(
-            ResourcesCompat.getColor(
-                resources,
-                android.R.color.white,
-                null
-            )
-        )
-        updateSnackbar.show()
-    }
-
     override fun onResume() {
         super.onResume()
         if (PreferencesHandler.instance.isExternalVpn) {
@@ -366,10 +364,34 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         val searchMenuItem = menu.findItem(R.id.action_search)
         mSearchView = searchMenuItem.actionView as SearchView
         if (mSearchView != null) {
+            Log.d("surprise", "OpdsFragment.kt 365  onCreateOptionsMenu: setup search view")
             if (PreferencesHandler.instance.isEInk) {
+                Log.d("surprise", "OpdsFragment.kt 367  onCreateOptionsMenu: for eink")
+                val colorFilter = PorterDuffColorFilter(ResourcesCompat.getColor(resources, R.color.black, null), PorterDuff.Mode.MULTIPLY)
                 mSearchView!!.queryHint = ""
+                mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
+                    ?.setTextColor(Color.BLACK)
+                mSearchView!!.findViewById<ImageView>(androidx.appcompat.R.id.search_button)
+                    ?.colorFilter = colorFilter
+                mSearchView!!.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
+                    ?.colorFilter = colorFilter
+
+                val mCursorDrawableRes: Field =
+                    TextView::class.java.getDeclaredField("mCursorDrawableRes")
+                mCursorDrawableRes.isAccessible = true
+                mCursorDrawableRes.set(mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text), R.drawable.cursor)
+
+                var myItem = menu.findItem(R.id.action_sort_by)
+                myItem?.icon?.colorFilter = colorFilter
+            }
+            else{
+                mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
+                    ?.setTextColor(Color.WHITE)
             }
             mSearchView!!.inputType = InputType.TYPE_CLASS_TEXT
+            val size = Point()
+            requireActivity().windowManager.defaultDisplay.getSize(size)
+            mSearchView!!.maxWidth = size.x - 340
             mSearchView!!.setOnQueryTextListener(this)
             mSearchView!!.setOnSuggestionListener(object : SearchView.OnSuggestionListener {
                 override fun onSuggestionSelect(i: Int): Boolean {
@@ -383,9 +405,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 }
             })
             mSearchAutoComplete = mSearchView!!.findViewById(R.id.search_src_text)!!
-            if (PreferencesHandler.instance.isEInk) {
-                mSearchAutoComplete.setTextColor(Color.WHITE)
-            }
             mSearchAutoComplete.setDropDownBackgroundResource(R.color.background_color)
             mSearchAutoComplete.threshold = 0
             mSearchAutoComplete.dropDownHeight = ViewGroup.LayoutParams.WRAP_CONTENT

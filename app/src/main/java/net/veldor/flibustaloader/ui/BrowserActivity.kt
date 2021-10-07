@@ -1,13 +1,12 @@
 package net.veldor.flibustaloader.ui
 
 import android.content.Intent
-import android.os.Build
+import android.content.res.Resources
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
@@ -32,6 +31,18 @@ import net.veldor.flibustaloader.ui.fragments.WebViewFragment
 import net.veldor.flibustaloader.utils.History
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.view_models.WebViewViewModel
+import android.graphics.PorterDuff
+
+import android.R.attr.foreground
+
+import android.graphics.PorterDuffColorFilter
+import android.graphics.drawable.Drawable
+import android.view.View
+
+import androidx.appcompat.view.menu.ActionMenuItemView
+
+import android.widget.ImageButton
+import androidx.appcompat.widget.ActionMenuView
 
 
 class BrowserActivity : BaseActivity() {
@@ -40,6 +51,15 @@ class BrowserActivity : BaseActivity() {
     lateinit var viewModel: WebViewViewModel
     lateinit var binding: ActivityBrowserBinding
     lateinit var mBottomNavView: BottomNavigationView
+
+    override fun getTheme(): Resources.Theme {
+        if(PreferencesHandler.instance.isEInk){
+            val theme = super.getTheme()
+            theme.applyStyle(R.style.EInkAppTheme, true)
+            return theme
+        }
+        return super.getTheme()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +99,52 @@ class BrowserActivity : BaseActivity() {
         val item = menuNav.findItem(R.id.goBrowse)
         item.isEnabled = false
         item.isChecked = true
+
+        if(PreferencesHandler.instance.isEInk){
+            binding.toolbar.setBackgroundColor(ResourcesCompat.getColor(resources, R.color.white, null))
+            binding.toolbar.setTitleTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+            binding.toolbar.setSubtitleTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+            val colorFilter = PorterDuffColorFilter(ResourcesCompat.getColor(resources, R.color.black, null), PorterDuff.Mode.MULTIPLY)
+
+            for (i in 0 until binding.toolbar.childCount) {
+                val view: View = binding.toolbar.getChildAt(i)
+                //Back button or drawer open button
+                if (view is ImageButton) {
+                    Log.d("surprise", "BrowserActivity.kt 113  setupInterface: have imagepaint")
+                    view.drawable.colorFilter = colorFilter
+                }
+                if (view is ActionMenuView) {
+                    for (j in 0 until view.childCount) {
+                        val innerView: View = view.getChildAt(j)
+
+                        //Any ActionMenuViews - icons that are not back button, text or overflow menu
+                        if (innerView is ActionMenuItemView) {
+                            val drawables = innerView.compoundDrawables
+                            for (k in drawables.indices) {
+                                val drawable = drawables[k]
+                                if (drawable != null) {
+                                    //Set the color filter in separate thread
+                                    //by adding it to the message queue - won't work otherwise
+                                    innerView.post({
+                                        innerView.compoundDrawables[k].colorFilter =
+                                            colorFilter
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Overflow icon
+
+            //Overflow icon
+            val overflowIcon: Drawable? = binding.toolbar.overflowIcon
+            if (overflowIcon != null) {
+                overflowIcon.colorFilter = colorFilter
+                binding.toolbar.overflowIcon = overflowIcon
+            }
+        }
 
         // активирую нижнее меню
         mBottomNavView = findViewById(R.id.bottom_nav_view)

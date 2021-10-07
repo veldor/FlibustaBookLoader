@@ -3,80 +3,24 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/drawable/button_pressed.xml" value="0.4430769230769231" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/drawable/drawable_circle_dark_blue.xml" value="0.4430769230769231" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/drawable/genre_layout.xml" value="0.4430769230769231" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/drawable/genre_routine.xml" value="0.4430769230769231" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/drawable/image_border.xml" value="0.45" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/drawable/navigation_view_colored.xml" value="0.4430769230769231" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/drawable/transparent_bg_bordered.xml" value="0.25277777777777777" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/drawable/transparent_bg_bordered_button.xml" value="0.25277777777777777" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout-v23/activity_blacklist.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout-v23/fragment_subscribe.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout-v23/searched_book_item.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout-w600dp/searched_book_item.xml" value="0.22" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_blacklist.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_bookmarks.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_browser.xml" value="0.16666666666666666" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_download_schedule.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_login.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_main.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_main_eink.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_odps.xml" value="0.2101851851851852" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_odps_e_ink.xml" value="0.42717948717948717" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_preferences.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_subscriptions.xml" value="0.42717948717948717" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_web_view.xml" value="0.42717948717948717" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/blacklist_item.xml" value="0.3648148148148148" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/book_cover.xml" value="0.16666666666666666" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/bookmark_item.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/confirm_book_type_select.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/download_schedule_book_item.xml" value="0.20572916666666666" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/founded_item.xml" value="0.4466666666666667" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_odps.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_opds.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_subscribe.xml" value="0.4466666666666667" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_subscribe_results.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_web_view.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_webview.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/gifdialog.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/new_blacklist_activity.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/new_bookmarks_activity.xml" value="0.42717948717948717" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/new_download_schedule_activity.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/new_preferences_activity.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/new_subscriptions_activity.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/searched_author_item.xml" value="0.42717948717948717" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/searched_book_item.xml" value="0.2101851851851852" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/searched_book_with_preview_item.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/subscription_item.xml" value="0.16666666666666666" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/subscriptions_activity.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/menu/book_menu.xml" value="0.44583333333333336" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/menu/bottom_nav_menu.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/menu/browser_bottom_nav_menu.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/menu/loaded_books_menu.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/menu/main_menu.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/menu/navigation_menu.xml" value="0.2708333333333333" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/menu/odps_menu.xml" value="0.42717948717948717" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_connection.xml" value="0.2708333333333333" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_download.xml" value="0.2708333333333333" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_root.xml" value="0.43385416666666665" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_update.xml" value="0.2708333333333333" />
-        <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_view.xml" value="0.2708333333333333" />
-        <entry key="..\:/distribution/android projects/FlibustaBookLoader/app/src/main/res/layout-land-v23/activity_main.xml" value="0.42574786324786323" />
-        <entry key="..\:/distribution/android projects/FlibustaBookLoader/app/src/main/res/layout-land/activity_main.xml" value="0.42574786324786323" />
-        <entry key="..\:/distribution/android projects/FlibustaBookLoader/app/src/main/res/layout-v23/activity_main.xml" value="0.536" />
-        <entry key="..\:/distribution/android projects/FlibustaBookLoader/app/src/main/res/layout/activity_login.xml" value="0.7" />
-        <entry key="..\:/distribution/android projects/FlibustaBookLoader/app/src/main/res/layout/activity_main.xml" value="0.7" />
-        <entry key="..\:/distribution/android projects/FlibustaBookLoader/app/src/main/res/layout/activity_main_eink.xml" value="0.4" />
-        <entry key="..\:/distribution/android projects/FlibustaBookLoader/app/src/main/res/xml/preferences_connection.xml" value="0.462037037037037" />
-        <entry key="..\:/distribution/android projects/FlibustaBookLoader/app/src/main/res/xml/preferences_view.xml" value="0.4083333333333333" />
+        <entry key="../../../../layout/custom_preview.xml" value="0.21666666666666667" />
+        <entry key="app/src/main/res/drawable/cursor.xml" value="0.21041666666666667" />
+        <entry key="app/src/main/res/drawable/ic_search_white_24dp.xml" value="0.21041666666666667" />
+        <entry key="app/src/main/res/layout/activity_browser.xml" value="0.2015625" />
+        <entry key="app/src/main/res/layout/activity_main_eink.xml" value="0.2015625" />
+        <entry key="app/src/main/res/layout/activity_odps.xml" value="0.2015625" />
+        <entry key="app/src/main/res/layout/activity_odps_e_ink.xml" value="0.3120471014492754" />
+        <entry key="app/src/main/res/layout/fragment_opds.xml" value="0.2269021739130435" />
+        <entry key="app/src/main/res/layout/nav_header_main.xml" value="0.3120471014492754" />
+        <entry key="app/src/main/res/layout/new_eink_opds_activity.xml" value="0.2015625" />
+        <entry key="app/src/main/res/menu/odps_menu.xml" value="0.36041666666666666" />
       </map>
     </option>
   </component>
-  <component name="EntryPointsManager">
-    <list size="1">
-      <item index="0" class="java.lang.String" itemvalue="androidx.lifecycle.OnLifecycleEvent" />
-    </list>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK" />
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
 </project>

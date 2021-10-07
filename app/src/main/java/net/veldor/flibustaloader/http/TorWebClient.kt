@@ -33,7 +33,6 @@ class TorWebClient {
     @get:Throws(ConnectionLostException::class)
     private val connectionError: Unit
         get() {
-            GlobalWebClient.mConnectionState.postValue(GlobalWebClient.DISCONNECTED)
             throw ConnectionLostException()
         }
 
@@ -280,7 +279,6 @@ class TorWebClient {
         while (TorStarter.torStartTry < 4) {
             // есть три попытки, если все три неудачны- верну ошибку
             if (starter.startTor()) {
-                GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED)
                 TorStarter.liveTorLaunchState.postValue(TorStarter.TOR_LAUNCH_SUCCESS)
                 // обнулю счётчик попыток
                 TorStarter.torStartTry = 0

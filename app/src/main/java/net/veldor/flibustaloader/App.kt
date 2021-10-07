@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader
 
 import android.net.Uri
-import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.MutableLiveData
 import androidx.multidex.MultiDexApplication
@@ -12,7 +11,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.veldor.flibustaloader.database.AppDatabase
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
-import net.veldor.flibustaloader.http.GlobalWebClient
 import net.veldor.flibustaloader.http.TorStarter
 import net.veldor.flibustaloader.notificatons.NotificationHandler
 import net.veldor.flibustaloader.utils.LogHandler
@@ -132,9 +130,6 @@ class App : MultiDexApplication() {
                 WorkManager.getInstance(this)
                     .enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork)
             }
-        } else {
-            // по умолчанию считаю, что соединение успешно
-            GlobalWebClient.mConnectionState.postValue(GlobalWebClient.CONNECTED)
         }
     }
 

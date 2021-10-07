@@ -305,4 +305,5 @@
     <string name="mark_downloaded">Mark as downloaded</string>
     <string name="share_book">Share book</string>
     <string name="settings_restored_message">Settings restored, reboot app to apply</string>
+    <string name="share_settings_message">Share settings</string>
 </resources>

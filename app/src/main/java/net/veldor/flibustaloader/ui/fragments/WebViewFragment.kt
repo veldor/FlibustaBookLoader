@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Point
 import android.os.Bundle
 import android.os.Handler
 import android.text.InputType
@@ -156,6 +157,9 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
         val searchMenuItem = menu.findItem(R.id.action_search)
         mSearchView = searchMenuItem.actionView as SearchView
         mSearchView.inputType = InputType.TYPE_CLASS_TEXT
+        val size = Point()
+        requireActivity().windowManager.defaultDisplay.getSize(size)
+        mSearchView.maxWidth = size.x - 340
         mSearchView.setOnQueryTextListener(this)
         mSearchView.setOnSuggestionListener(object : SearchView.OnSuggestionListener {
             override fun onSuggestionSelect(i: Int): Boolean {

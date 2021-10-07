@@ -15,13 +15,158 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 object BackupSettings {
-    fun backup(dir: DocumentFile) : DocumentFile?{
+
+
+    fun backup(dir: File): File? {
+        try {
+            if (dir.exists() && dir.isDirectory) {
+                if (!dir.canWrite()) {
+                    Log.d("surprise", "can't write in dir $dir")
+                } else {
+                    val sdf = SimpleDateFormat("yyyy MM dd", Locale.ENGLISH)
+                    val filename = "Резервная копия Flibusta downloader от " + sdf.format(Date()) + ".zip"
+                    sCompatBackupFile =
+                            File(dir, filename)
+                    sCompatBackupFile!!.createNewFile()
+                    val dest = FileOutputStream(sCompatBackupFile)
+                    val out = ZipOutputStream(BufferedOutputStream(dest))
+                    val dataBuffer = ByteArray(BUFFER)
+                    val sharedPrefsFile = File(
+                            Environment.getDataDirectory()
+                                    .toString() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml"
+                    )
+                    writeToZip(
+                            out, dataBuffer, sharedPrefsFile,
+                            PREF_BACKUP_NAME
+                    )
+
+                    // сохраню автозаполнение поиска
+                    val autocompleteFile =
+                            File(App.instance.filesDir, MyFileReader.SEARCH_AUTOCOMPLETE_FILE)
+                    if (autocompleteFile.isFile) {
+                        writeToZip(
+                                out, dataBuffer, autocompleteFile,
+                                AUTOFILL_BACKUP_NAME
+                        )
+                    }
+                    // сохраню подписки
+                    var subscriptionFile =
+                            File(App.instance.filesDir, MyFileReader.BOOKS_SUBSCRIBE_FILE)
+                    if (autocompleteFile.isFile) {
+                        writeToZip(
+                                out, dataBuffer, subscriptionFile,
+                                BOOKS_SUBSCRIBE_BACKUP_NAME
+                        )
+                    }
+                    subscriptionFile =
+                            File(App.instance.filesDir, MyFileReader.AUTHORS_SUBSCRIBE_FILE)
+                    if (autocompleteFile.isFile) {
+                        writeToZip(
+                                out, dataBuffer, subscriptionFile,
+                                AUTHORS_SUBSCRIBE_BACKUP_NAME
+                        )
+                    }
+                    subscriptionFile =
+                            File(App.instance.filesDir, MyFileReader.SEQUENCES_SUBSCRIBE_FILE)
+                    if (autocompleteFile.isFile) {
+                        writeToZip(
+                                out,
+                                dataBuffer,
+                                subscriptionFile,
+                                SEQUENCES_SUBSCRIBE_BACKUP_NAME
+                        )
+                    }
+                    subscriptionFile =
+                            File(App.instance.filesDir, MyFileReader.GENRES_SUBSCRIBE_FILE)
+                    if (autocompleteFile.isFile) {
+                        writeToZip(
+                                out,
+                                dataBuffer,
+                                subscriptionFile,
+                                GENRE_SUBSCRIBE_BACKUP_NAME
+                        )
+                    }
+
+                    // первым делом- получу из базы данных списки прочитанных и скачанных книг
+                    val db = App.instance.mDatabase
+                    val books = db.downloadedBooksDao().allBooks
+                    if (books != null && books.isNotEmpty()) {
+                        // создам XML
+                        val xmlBuilder = StringBuilder()
+                        xmlBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><downloaded_books>")
+                        for (book in books) {
+                            xmlBuilder.append("<book id=\"")
+                            xmlBuilder.append(book!!.bookId)
+                            xmlBuilder.append("\"/>")
+                        }
+                        xmlBuilder.append("</downloaded_books>")
+                        val text = xmlBuilder.toString()
+                        Log.d("surprise", "ReserveSettingsWorker doWork $text")
+                        val f1 = File(dir, "downloaded_books")
+                        val writer = FileWriter(f1)
+                        writer.append(text)
+                        writer.flush()
+                        writer.close()
+                        writeToZip(
+                                out, dataBuffer, f1,
+                                DOWNLOADED_BOOKS_BACKUP_NAME
+                        )
+                        val result = f1.delete()
+                        if (!result) {
+                            Log.d(
+                                    "surprise",
+                                    "ReserveSettingsWorker doWork не удалось удалить временный файл"
+                            )
+                        }
+                    }
+                    val rBooks = db.readBooksDao().allBooks
+                    if (rBooks != null && rBooks.isNotEmpty()) {
+                        // создам XML
+                        val xmlBuilder = StringBuilder()
+                        xmlBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><readed_books>")
+                        for (book in rBooks) {
+                            xmlBuilder.append("<book id=\"")
+                            xmlBuilder.append(book!!.bookId)
+                            xmlBuilder.append("\"/>")
+                        }
+                        xmlBuilder.append("</readed_books>")
+                        val text = xmlBuilder.toString()
+                        val f1 = File(dir, "readed_books")
+                        val writer = FileWriter(f1)
+                        writer.append(text)
+                        writer.flush()
+                        writer.close()
+                        writeToZip(
+                                out, dataBuffer, f1,
+                                READED_BOOKS_BACKUP_NAME
+                        )
+                        val result = f1.delete()
+                        if (!result) {
+                            Log.d(
+                                    "surprise",
+                                    "ReserveSettingsWorker doWork не удалось удалить временный файл"
+                            )
+                        }
+                    }
+                    out.close()
+                }
+            }
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        Log.d("surprise", "BackupSettings.kt 159  backup: size is ${sCompatBackupFile?.length()}")
+        return sCompatBackupFile
+    }
+
+    fun backup(dir: DocumentFile): DocumentFile? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // сохраню файл в выбранную директорию
             val sdf = SimpleDateFormat("yyyy/MM/dd HH-mm-ss", Locale.ENGLISH)
             val filename = "Резервная копия Flibusta downloader от " + sdf.format(Date())
             sBackupFile =
-                dir.createFile("application/zip", filename)
+                    dir.createFile("application/zip", filename)
             var zip: File? = null
             try {
                 val backupDir = File(Environment.getExternalStorageDirectory(), App.BACKUP_DIR_NAME)
@@ -39,82 +184,82 @@ object BackupSettings {
                     File(App.instance.dataDir.toString() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml")
                 } else {
                     File(
-                        Environment.getDataDirectory()
-                            .toString() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml"
+                            Environment.getDataDirectory()
+                                    .toString() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml"
                     )
                 }
                 writeToZip(out, dataBuffer, sharedPrefsFile, PREF_BACKUP_NAME)
                 // сохраню автозаполнение поиска
                 val autocompleteFile =
-                    File(App.instance.filesDir, MyFileReader.SEARCH_AUTOCOMPLETE_FILE)
+                        File(App.instance.filesDir, MyFileReader.SEARCH_AUTOCOMPLETE_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, autocompleteFile,
-                        AUTOFILL_BACKUP_NAME
+                            out, dataBuffer, autocompleteFile,
+                            AUTOFILL_BACKUP_NAME
                     )
                 } // сохраню чёрные списки
                 var blacklistFile =
-                    File(App.instance.filesDir, MyFileReader.BOOKS_BLACKLIST_FILE)
+                        File(App.instance.filesDir, MyFileReader.BOOKS_BLACKLIST_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, blacklistFile,
-                        BLACKLIST_BOOKS_BACKUP_NAME
+                            out, dataBuffer, blacklistFile,
+                            BLACKLIST_BOOKS_BACKUP_NAME
                     )
                 }
                 blacklistFile =
-                    File(App.instance.filesDir, MyFileReader.AUTHORS_BLACKLIST_FILE)
+                        File(App.instance.filesDir, MyFileReader.AUTHORS_BLACKLIST_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, blacklistFile,
-                        BLACKLIST_AUTHORS_BACKUP_NAME
+                            out, dataBuffer, blacklistFile,
+                            BLACKLIST_AUTHORS_BACKUP_NAME
                     )
                 }
                 blacklistFile = File(App.instance.filesDir, MyFileReader.GENRES_BLACKLIST_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, blacklistFile,
-                        BLACKLIST_GENRES_BACKUP_NAME
+                            out, dataBuffer, blacklistFile,
+                            BLACKLIST_GENRES_BACKUP_NAME
                     )
                 }
                 blacklistFile =
-                    File(App.instance.filesDir, MyFileReader.SEQUENCES_BLACKLIST_FILE)
+                        File(App.instance.filesDir, MyFileReader.SEQUENCES_BLACKLIST_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, blacklistFile,
-                        BLACKLIST_SEQUENCES_BACKUP_NAME
+                            out, dataBuffer, blacklistFile,
+                            BLACKLIST_SEQUENCES_BACKUP_NAME
                     )
                 }
                 // сохраню подписки
                 var subscriptionFile =
-                    File(App.instance.filesDir, MyFileReader.BOOKS_SUBSCRIBE_FILE)
+                        File(App.instance.filesDir, MyFileReader.BOOKS_SUBSCRIBE_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, subscriptionFile,
-                        BOOKS_SUBSCRIBE_BACKUP_NAME
+                            out, dataBuffer, subscriptionFile,
+                            BOOKS_SUBSCRIBE_BACKUP_NAME
                     )
                 }
                 subscriptionFile =
-                    File(App.instance.filesDir, MyFileReader.AUTHORS_SUBSCRIBE_FILE)
+                        File(App.instance.filesDir, MyFileReader.AUTHORS_SUBSCRIBE_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, subscriptionFile,
-                        AUTHORS_SUBSCRIBE_BACKUP_NAME
+                            out, dataBuffer, subscriptionFile,
+                            AUTHORS_SUBSCRIBE_BACKUP_NAME
                     )
                 }
                 subscriptionFile =
-                    File(App.instance.filesDir, MyFileReader.SEQUENCES_SUBSCRIBE_FILE)
+                        File(App.instance.filesDir, MyFileReader.SEQUENCES_SUBSCRIBE_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, subscriptionFile,
-                        SEQUENCES_SUBSCRIBE_BACKUP_NAME
+                            out, dataBuffer, subscriptionFile,
+                            SEQUENCES_SUBSCRIBE_BACKUP_NAME
                     )
                 }
                 subscriptionFile =
-                    File(App.instance.filesDir, MyFileReader.GENRES_SUBSCRIBE_FILE)
+                        File(App.instance.filesDir, MyFileReader.GENRES_SUBSCRIBE_FILE)
                 if (autocompleteFile.isFile) {
                     writeToZip(
-                        out, dataBuffer, subscriptionFile,
-                        GENRE_SUBSCRIBE_BACKUP_NAME
+                            out, dataBuffer, subscriptionFile,
+                            GENRE_SUBSCRIBE_BACKUP_NAME
                     )
                 }
 
@@ -139,14 +284,14 @@ object BackupSettings {
                     writer.flush()
                     writer.close()
                     writeToZip(
-                        out, dataBuffer, f1,
-                        DOWNLOADED_BOOKS_BACKUP_NAME
+                            out, dataBuffer, f1,
+                            DOWNLOADED_BOOKS_BACKUP_NAME
                     )
                     val result = f1.delete()
                     if (!result) {
                         Log.d(
-                            "surprise",
-                            "ReserveSettingsWorker doWork не удалось удалить временный файл"
+                                "surprise",
+                                "ReserveSettingsWorker doWork не удалось удалить временный файл"
                         )
                     }
                 }
@@ -171,8 +316,8 @@ object BackupSettings {
                     val result = f1.delete()
                     if (!result) {
                         Log.d(
-                            "surprise",
-                            "ReserveSettingsWorker doWork не удалось удалить временный файл"
+                                "surprise",
+                                "ReserveSettingsWorker doWork не удалось удалить временный файл"
                         )
                     }
                 }
@@ -200,8 +345,8 @@ object BackupSettings {
                     val result = f1.delete()
                     if (!result) {
                         Log.d(
-                            "surprise",
-                            "ReserveSettingsWorker doWork не удалось удалить временный файл"
+                                "surprise",
+                                "ReserveSettingsWorker doWork не удалось удалить временный файл"
                         )
                     }
                 }
@@ -240,14 +385,14 @@ object BackupSettings {
                     writer.flush()
                     writer.close()
                     writeToZip(
-                        out, dataBuffer, f1,
-                        DOWNLOAD_SCHEDULE_BACKUP_NAME
+                            out, dataBuffer, f1,
+                            DOWNLOAD_SCHEDULE_BACKUP_NAME
                     )
                     val result = f1.delete()
                     if (!result) {
                         Log.d(
-                            "surprise",
-                            "ReserveSettingsWorker doWork не удалось удалить временный файл"
+                                "surprise",
+                                "ReserveSettingsWorker doWork не удалось удалить временный файл"
                         )
                     }
                 }
@@ -259,7 +404,7 @@ object BackupSettings {
             }
             try {
                 val fileStream = App.instance.contentResolver.openOutputStream(
-                    sBackupFile!!.uri
+                        sBackupFile!!.uri
                 )
                 if (fileStream != null) {
                     val inputStream = FileInputStream(zip)
@@ -272,139 +417,14 @@ object BackupSettings {
                     inputStream.close()
                     val deleteResult = zip!!.delete()
                     Log.d(
-                        "surprise",
-                        "ReserveSettingsWorker doWork 171: transfer file delete status is $deleteResult"
+                            "surprise",
+                            "ReserveSettingsWorker doWork 171: transfer file delete status is $deleteResult"
                     )
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
-        /* else {
-             try {
-                 if (sCompatSaveDir != null && ReserveSettingsWorker.sCompatSaveDir!!.exists() && ReserveSettingsWorker.sCompatSaveDir!!.isDirectory) {
-                     val sdf = SimpleDateFormat("yyyy/MM/dd HH-mm-ss", Locale.ENGLISH)
-                     val filename = "Резервная копия Flibusta downloader от " + sdf.format(Date())
-                     ReserveSettingsWorker.sCompatBackupFile =
-                         File(ReserveSettingsWorker.sCompatSaveDir, filename)
-                     val dest = FileOutputStream(ReserveSettingsWorker.sCompatBackupFile)
-                     val out = ZipOutputStream(BufferedOutputStream(dest))
-                     val dataBuffer = ByteArray(ReserveSettingsWorker.BUFFER)
-                     val sharedPrefsFile = File(
-                         Environment.getDataDirectory()
-                             .toString() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml"
-                     )
-                     writeToZip(
-                         out, dataBuffer, sharedPrefsFile,
-                         ReserveSettingsWorker.PREF_BACKUP_NAME
-                     )
-
-                     // сохраню автозаполнение поиска
-                     val autocompleteFile =
-                         File(App.instance.filesDir, MyFileReader.SEARCH_AUTOCOMPLETE_FILE)
-                     if (autocompleteFile.isFile) {
-                         writeToZip(
-                             out, dataBuffer, autocompleteFile,
-                             ReserveSettingsWorker.AUTOFILL_BACKUP_NAME
-                         )
-                     }
-                     // сохраню подписки
-                     var subscriptionFile =
-                         File(App.instance.filesDir, MyFileReader.BOOKS_SUBSCRIBE_FILE)
-                     if (autocompleteFile.isFile) {
-                         writeToZip(
-                             out, dataBuffer, subscriptionFile,
-                             ReserveSettingsWorker.BOOKS_SUBSCRIBE_BACKUP_NAME
-                         )
-                     }
-                     subscriptionFile =
-                         File(App.instance.filesDir, MyFileReader.AUTHORS_SUBSCRIBE_FILE)
-                     if (autocompleteFile.isFile) {
-                         writeToZip(
-                             out, dataBuffer, subscriptionFile,
-                             ReserveSettingsWorker.AUTHORS_SUBSCRIBE_BACKUP_NAME
-                         )
-                     }
-                     subscriptionFile =
-                         File(App.instance.filesDir, MyFileReader.SEQUENCES_SUBSCRIBE_FILE)
-                     if (autocompleteFile.isFile) {
-                         writeToZip(
-                             out,
-                             dataBuffer,
-                             subscriptionFile,
-                             ReserveSettingsWorker.SEQUENCES_SUBSCRIBE_BACKUP_NAME
-                         )
-                     }
-
-                     // первым делом- получу из базы данных списки прочитанных и скачанных книг
-                     val db = App.instance.mDatabase
-                     val books = db.downloadedBooksDao().allBooks
-                     if (books != null && books.isNotEmpty()) {
-                         // создам XML
-                         val xmlBuilder = StringBuilder()
-                         xmlBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><downloaded_books>")
-                         for (book in books) {
-                             xmlBuilder.append("<book id=\"")
-                             xmlBuilder.append(book!!.bookId)
-                             xmlBuilder.append("\"/>")
-                         }
-                         xmlBuilder.append("</downloaded_books>")
-                         val text = xmlBuilder.toString()
-                         Log.d("surprise", "ReserveSettingsWorker doWork $text")
-                         val f1 = File(ReserveSettingsWorker.sCompatSaveDir, "downloaded_books")
-                         val writer = FileWriter(f1)
-                         writer.append(text)
-                         writer.flush()
-                         writer.close()
-                         writeToZip(
-                             out, dataBuffer, f1,
-                             ReserveSettingsWorker.DOWNLOADED_BOOKS_BACKUP_NAME
-                         )
-                         val result = f1.delete()
-                         if (!result) {
-                             Log.d(
-                                 "surprise",
-                                 "ReserveSettingsWorker doWork не удалось удалить временный файл"
-                             )
-                         }
-                     }
-                     val rBooks = db.readBooksDao().allBooks
-                     if (rBooks != null && rBooks.isNotEmpty()) {
-                         // создам XML
-                         val xmlBuilder = StringBuilder()
-                         xmlBuilder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><readed_books>")
-                         for (book in rBooks) {
-                             xmlBuilder.append("<book id=\"")
-                             xmlBuilder.append(book!!.bookId)
-                             xmlBuilder.append("\"/>")
-                         }
-                         xmlBuilder.append("</readed_books>")
-                         val text = xmlBuilder.toString()
-                         val f1 = File(sCompatSaveDir, "readed_books")
-                         val writer = FileWriter(f1)
-                         writer.append(text)
-                         writer.flush()
-                         writer.close()
-                         writeToZip(
-                             out, dataBuffer, f1,
-                             READED_BOOKS_BACKUP_NAME
-                         )
-                         val result = f1.delete()
-                         if (!result) {
-                             Log.d(
-                                 "surprise",
-                                 "ReserveSettingsWorker doWork не удалось удалить временный файл"
-                             )
-                         }
-                     }
-                     out.close()
-                 }
-             } catch (e: FileNotFoundException) {
-                 e.printStackTrace()
-             } catch (e: IOException) {
-                 e.printStackTrace()
-             }
-         }*/
         return sBackupFile
     }
 
@@ -422,73 +442,73 @@ object BackupSettings {
                                 File(App.instance.dataDir.toString() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml")
                             } else {
                                 File(
-                                    Environment.getDataDirectory()
-                                        .toString() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml"
+                                        Environment.getDataDirectory()
+                                                .toString() + "/shared_prefs/net.veldor.flibustaloader_preferences.xml"
                                 )
                             }
                             extractFromZip(zin, targetFile)
                         }
                         AUTOFILL_BACKUP_NAME -> {
                             targetFile = File(
-                                App.instance.filesDir,
-                                MyFileReader.SEARCH_AUTOCOMPLETE_FILE
+                                    App.instance.filesDir,
+                                    MyFileReader.SEARCH_AUTOCOMPLETE_FILE
                             )
                             extractFromZip(zin, targetFile)
                         }
                         BLACKLIST_BOOKS_BACKUP_NAME -> {
                             targetFile = File(
-                                App.instance.filesDir,
-                                MyFileReader.BOOKS_BLACKLIST_FILE
+                                    App.instance.filesDir,
+                                    MyFileReader.BOOKS_BLACKLIST_FILE
                             )
                             extractFromZip(zin, targetFile)
                         }
                         BLACKLIST_AUTHORS_BACKUP_NAME -> {
                             targetFile = File(
-                                App.instance.filesDir,
-                                MyFileReader.AUTHORS_BLACKLIST_FILE
+                                    App.instance.filesDir,
+                                    MyFileReader.AUTHORS_BLACKLIST_FILE
                             )
                             extractFromZip(zin, targetFile)
                         }
                         BLACKLIST_GENRES_BACKUP_NAME -> {
                             targetFile = File(
-                                App.instance.filesDir,
-                                MyFileReader.GENRES_BLACKLIST_FILE
+                                    App.instance.filesDir,
+                                    MyFileReader.GENRES_BLACKLIST_FILE
                             )
                             extractFromZip(zin, targetFile)
                         }
                         BLACKLIST_SEQUENCES_BACKUP_NAME -> {
                             targetFile = File(
-                                App.instance.filesDir,
-                                MyFileReader.SEQUENCES_BLACKLIST_FILE
+                                    App.instance.filesDir,
+                                    MyFileReader.SEQUENCES_BLACKLIST_FILE
                             )
                             extractFromZip(zin, targetFile)
                         }
                         BOOKS_SUBSCRIBE_BACKUP_NAME -> {
                             targetFile = File(
-                                App.instance.filesDir,
-                                MyFileReader.BOOKS_SUBSCRIBE_FILE
+                                    App.instance.filesDir,
+                                    MyFileReader.BOOKS_SUBSCRIBE_FILE
                             )
                             extractFromZip(zin, targetFile)
                         }
                         AUTHORS_SUBSCRIBE_BACKUP_NAME -> {
                             targetFile =
-                                File(App.instance.filesDir, MyFileReader.AUTHORS_SUBSCRIBE_FILE)
+                                    File(App.instance.filesDir, MyFileReader.AUTHORS_SUBSCRIBE_FILE)
                             extractFromZip(zin, targetFile)
                         }
                         SEQUENCES_SUBSCRIBE_BACKUP_NAME -> {
                             targetFile =
-                                File(
-                                    App.instance.filesDir,
-                                    MyFileReader.SEQUENCES_SUBSCRIBE_FILE
-                                )
+                                    File(
+                                            App.instance.filesDir,
+                                            MyFileReader.SEQUENCES_SUBSCRIBE_FILE
+                                    )
                             extractFromZip(zin, targetFile)
                         }
                         GENRE_SUBSCRIBE_BACKUP_NAME -> {
                             targetFile =
-                                File(
-                                    App.instance.filesDir,
-                                    MyFileReader.GENRES_SUBSCRIBE_FILE
-                                )
+                                    File(
+                                            App.instance.filesDir,
+                                            MyFileReader.GENRES_SUBSCRIBE_FILE
+                                    )
                             extractFromZip(zin, targetFile)
                         }
                         DOWNLOADED_BOOKS_BACKUP_NAME, READED_BOOKS_BACKUP_NAME, BOOKMARKS_BACKUP_NAME, DOWNLOAD_SCHEDULE_BACKUP_NAME ->                                 // преобразую файл из XML в массив значений
@@ -507,10 +527,10 @@ object BackupSettings {
 
 
     private fun writeToZip(
-        stream: ZipOutputStream,
-        dataBuffer: ByteArray,
-        oldFileName: File,
-        newFileName: String
+            stream: ZipOutputStream,
+            dataBuffer: ByteArray,
+            oldFileName: File,
+            newFileName: String
     ) {
         if (oldFileName.exists()) {
             val fis: FileInputStream
@@ -521,7 +541,7 @@ object BackupSettings {
                 stream.putNextEntry(entry)
                 var count: Int
                 while (origin.read(dataBuffer, 0, BUFFER)
-                        .also { count = it } != -1
+                                .also { count = it } != -1
                 ) {
                     stream.write(dataBuffer, 0, count)
                 }
@@ -571,4 +591,5 @@ object BackupSettings {
 
     @JvmField
     var sBackupFile: DocumentFile? = null
+    private var sCompatBackupFile: File? = null
 }
