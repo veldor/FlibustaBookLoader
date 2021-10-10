@@ -18,7 +18,7 @@ import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.DOWNLOAD_IN_PROGRESS
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.removeFromQueue
 
-class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule?>) :
+class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule>) :
     RecyclerView.Adapter<DownloadScheduleAdapter.ViewHolder>() {
     private var mLayoutInflater: LayoutInflater =
         LayoutInflater.from(App.instance.applicationContext)
@@ -36,43 +36,39 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
         return links.size
     }
 
-    fun setData(booksDownloadSchedules: ArrayList<BooksDownloadSchedule?>) {
+    fun setData(booksDownloadSchedules: ArrayList<BooksDownloadSchedule>) {
         notifyItemRangeRemoved(0, links.size)
         links = booksDownloadSchedules
         notifyItemRangeInserted(0, links.size)
     }
 
-    fun notifyBookDownloaded(book: BooksDownloadSchedule?) {
-        if (book != null) {
-            var index: Int = -1
-            links.forEach {
-                if (it!!.link == book.link) {
-                    index = links.indexOf(it)
-                }
+    fun notifyBookDownloaded(book: BooksDownloadSchedule) {
+        var index: Int = -1
+        links.forEach {
+            if (it.link == book.link) {
+                index = links.indexOf(it)
             }
-            if (index >= 0) {
-                links[index] = book
-                notifyItemChanged(index)
-                Handler(getMainLooper()).postDelayed({
-                    links.removeAt(index)
-                    notifyItemRemoved(index)
-                }, 1000)
-            }
+        }
+        if (index >= 0) {
+            links[index] = book
+            notifyItemChanged(index)
+            Handler(getMainLooper()).postDelayed({
+                links.removeAt(index)
+                notifyItemRemoved(index)
+            }, 1000)
         }
     }
 
-    fun notifyBookRemovedFromQueue(book: BooksDownloadSchedule?) {
-        if (book != null) {
-            var index: Int = -1
-            links.forEach {
-                if (it!!.link == book.link) {
-                    index = links.indexOf(it)
-                }
+    fun notifyBookRemovedFromQueue(book: BooksDownloadSchedule) {
+        var index: Int = -1
+        links.forEach {
+            if (it.link == book.link) {
+                index = links.indexOf(it)
             }
-            if (index >= 0) {
-                links.removeAt(index)
-                notifyItemRemoved(index)
-            }
+        }
+        if (index >= 0) {
+            links.removeAt(index)
+            notifyItemRemoved(index)
         }
     }
 
@@ -80,7 +76,7 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
         if (book != null) {
             var index: Int = -1
             links.forEach {
-                if (it!!.link == book.link) {
+                if (it.link == book.link) {
                     index = links.indexOf(it)
                 }
             }
@@ -96,7 +92,7 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
         if (book != null) {
             var index: Int = -1
             links.forEach {
-                if (it!!.link == book.link) {
+                if (it.link == book.link) {
                     index = links.indexOf(it)
                 }
             }
@@ -114,7 +110,7 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
             val bookInProgress = App.instance.liveBookDownloadInProgress.value
             if (bookInProgress != null) {
                 links.forEach {
-                    if (it?.link == bookInProgress.link) {
+                    if (it.link == bookInProgress.link) {
                         val index = links.indexOf(it)
                         it.inProgress = true
                         it.progress = progress

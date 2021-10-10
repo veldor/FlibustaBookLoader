@@ -149,7 +149,7 @@ class PreferencesHandler private constructor() {
             preferences.edit().putBoolean(PREF_PREVIEWS, state).apply()
         }
     var isHideDigests: Boolean
-        get() = preferences.getBoolean(HIDE_DIGESTS_PREF, true)
+        get() = preferences.getBoolean(HIDE_DIGESTS_PREF, false)
         set(state) {
             preferences.edit().putBoolean(HIDE_DIGESTS_PREF, state).apply()
         }

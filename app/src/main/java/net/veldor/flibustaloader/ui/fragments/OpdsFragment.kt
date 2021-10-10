@@ -1235,7 +1235,9 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     fun load(link: String, append: Boolean, addToHistory: Boolean, clickedElementIndex: Int) {
         if (!append) {
             binding.resultsCount.visibility = View.GONE
+            binding.resultsCount.text = "0"
             binding.filteredCount.visibility = View.GONE
+            binding.filteredCount.text = "0"
         }
         binding.progressBar.visibility = View.VISIBLE
         viewModel.request(link, append, addToHistory, clickedElementIndex = clickedElementIndex)

@@ -19,7 +19,7 @@ interface BooksDownloadScheduleDao {
     fun getBookById(id: String?): BooksDownloadSchedule?
 
     @get:Query("SELECT * FROM BooksDownloadSchedule")
-    val allBooks: List<BooksDownloadSchedule?>?
+    val allBooks: List<BooksDownloadSchedule>?
 
     @get:Query("SELECT * FROM BooksDownloadSchedule")
     val allBooksLive: LiveData<List<BooksDownloadSchedule>>?

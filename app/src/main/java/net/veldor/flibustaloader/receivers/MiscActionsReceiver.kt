@@ -76,18 +76,6 @@ class MiscActionsReceiver : BroadcastReceiver() {
                     val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
                     context.sendBroadcast(it)
                     getInstance()!!.sendLogs()
-                    PreferencesHandler.instance.isExternalVpn = !PreferencesHandler.instance.isExternalVpn
-                    val mStartActivity = Intent(context, MainActivity::class.java)
-                    val mPendingIntentId = 123456
-                    val mPendingIntent = PendingIntent.getActivity(
-                        context,
-                        mPendingIntentId,
-                        mStartActivity,
-                        PendingIntent.FLAG_CANCEL_CURRENT
-                    )
-                    val mgr = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                    mgr[AlarmManager.RTC, System.currentTimeMillis() + 100] = mPendingIntent
-                    exitProcess(0)
                 }
                 ACTION_ENABLE_VPN_MODE -> {
                     PreferencesHandler.instance.isExternalVpn = !PreferencesHandler.instance.isExternalVpn

@@ -93,6 +93,11 @@ class DownloadScheduleActivity : BaseActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        (binding.resultsList.adapter as DownloadScheduleAdapter).setData(DownloadScheduleViewModel.schedule.value!!)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
             val intent = Intent(this, BrowserActivity::class.java)

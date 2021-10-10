@@ -19,7 +19,7 @@ class DownloadScheduleViewModel(application: Application) : OPDSViewModel(applic
     }
 
     companion object {
-        val schedule: MutableLiveData<ArrayList<BooksDownloadSchedule?>> = MutableLiveData()
+        val schedule: MutableLiveData<ArrayList<BooksDownloadSchedule>> = MutableLiveData()
         val downloadState: MutableLiveData<Boolean> = MutableLiveData(false)
         val liveCurrentBookDownloadProgress: MutableLiveData<CurrentBookDownloadProgress> =
             MutableLiveData()
