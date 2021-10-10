@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.DirContentAdapter
+import net.veldor.flibustaloader.databinding.ActivityShowDownloadFolderContentBinding
 import net.veldor.flibustaloader.selections.*
 import net.veldor.flibustaloader.utils.FilesHandler.openFile
 import net.veldor.flibustaloader.utils.FilesHandler.shareFile
@@ -22,11 +23,13 @@ import java.io.File
 import java.util.*
 
 class DirContentActivity : BaseActivity() {
+    private lateinit var binding: ActivityShowDownloadFolderContentBinding
     private lateinit var recycler: RecyclerView
     private var adapter: DirContentAdapter? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_show_download_folder_content)
+        binding = ActivityShowDownloadFolderContentBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         setupInterface()
         // получу recyclerView
         recycler = findViewById(R.id.showDirContent)
@@ -65,7 +68,7 @@ class DirContentActivity : BaseActivity() {
 
     override fun setupInterface() {
         super.setupInterface()
-
+        paintToolbar(binding.toolbar)
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToFileList)

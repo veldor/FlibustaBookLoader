@@ -54,6 +54,7 @@ class SettingsActivity : BaseActivity(),
 
     override fun setupInterface() {
         super.setupInterface()
+        paintToolbar(binding.toolbar)
         setTheme(R.style.preferencesStyle)
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu

@@ -31,24 +31,25 @@
             android:name=".ui.BrowserActivity"
             android:exported="true"
             android:label="@string/title_activity_browser" />
-        <activity android:name=".ui.DirContentActivity" />
+        <activity android:name=".ui.DirContentActivity"
+            android:label="@string/title_activity_dir_content" />
         <activity
             android:name=".ui.FlibustaNotAvailableActivity"
-            android:launchMode="singleInstance" />
+            android:label="@string/title_activity_not_available" />
         <activity
             android:name=".ui.LoginActivity"
-            android:launchMode="singleInstance" />
+            android:label="@string/title_activity_login" />
         <activity
             android:name=".ui.BlacklistActivity"
-            android:launchMode="singleInstance" />
+            android:label="@string/title_activity_blacklist"/>
         <activity
             android:name=".ui.BookmarksActivity"
-            android:launchMode="singleInstance" />
+            android:label="@string/title_activity_bookmarks"/>
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:theme="@style/SplashTheme"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -67,18 +68,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.ActivityBookDownloadSchedule"
+            android:name=".ui.DownloadScheduleActivity"
             android:label="@string/title_activity_download_schedule"
-            android:launchMode="singleInstance"
             android:theme="@style/OldAppTheme" />
-        <activity android:name=".ui.SettingsActivity" />
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:label="@string/title_activity_settings" />
         <activity
             android:name=".ui.SubscriptionsActivity"
-            android:launchMode="singleInstance" />
+            android:label="@string/title_activity_subscriptions"
+            />
 
         <receiver android:name=".receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />
-        <receiver android:name=".receivers.MiscActionsReceiver"
+        <receiver
+            android:name=".receivers.MiscActionsReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

@@ -31,7 +31,7 @@ class DownloadLinkHandler {
         newScheduleElement.size = link.size!!
         newScheduleElement.authorDirName = link.authorDirName!!
         newScheduleElement.sequenceDirName = link.sequenceDirName!!
-        newScheduleElement.reservedSequenceName = link.reservedSequenceName!!
+        newScheduleElement.reservedSequenceName = link.reservedSequenceName
         // определю имя ссылки для скачивания =======================================
         val authorLastName: String
         if (link.author != null && link.author!!.isNotEmpty()) {
@@ -46,13 +46,14 @@ class DownloadLinkHandler {
             authorLastName = "Автор неизвестен"
             newScheduleElement.author = "Автор неизвестен"
         }
+
         val bookName =
             link.name!!.replace(" ".toRegex(), "_").replace("[^\\d\\w-_]".toRegex(), "")
         val bookMime = MimeTypes.getDownloadMime(link.mime!!)
         // если сумма символов меньше 255- создаю полное имя
-        if (authorLastName.length + bookName.length + bookMime!!.length + 2 < 255 / 2 - 6) {
+        if (authorLastName.length + link.reservedSequenceName.length + bookName.length + bookMime!!.length + 2 < 255 / 2 - 7) {
             newScheduleElement.name =
-                authorLastName + "_" + bookName + "_" + Grammar.random + "." + bookMime
+                authorLastName + "_" + link.reservedSequenceName + "_" + bookName + "_" + Grammar.random + "." + bookMime
         } else {
             // сохраняю книгу по имени автора и тому, что влезет от имени книги
             newScheduleElement.name = authorLastName + "_" + bookName.substring(

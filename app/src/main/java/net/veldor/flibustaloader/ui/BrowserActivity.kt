@@ -1,7 +1,9 @@
 package net.veldor.flibustaloader.ui
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.content.res.Resources
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -31,18 +33,6 @@ import net.veldor.flibustaloader.ui.fragments.WebViewFragment
 import net.veldor.flibustaloader.utils.History
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.view_models.WebViewViewModel
-import android.graphics.PorterDuff
-
-import android.R.attr.foreground
-
-import android.graphics.PorterDuffColorFilter
-import android.graphics.drawable.Drawable
-import android.view.View
-
-import androidx.appcompat.view.menu.ActionMenuItemView
-
-import android.widget.ImageButton
-import androidx.appcompat.widget.ActionMenuView
 
 
 class BrowserActivity : BaseActivity() {
@@ -101,49 +91,21 @@ class BrowserActivity : BaseActivity() {
         item.isChecked = true
 
         if(PreferencesHandler.instance.isEInk){
-            binding.toolbar.setBackgroundColor(ResourcesCompat.getColor(resources, R.color.white, null))
-            binding.toolbar.setTitleTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
-            binding.toolbar.setSubtitleTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
-            val colorFilter = PorterDuffColorFilter(ResourcesCompat.getColor(resources, R.color.black, null), PorterDuff.Mode.MULTIPLY)
+            val colors = intArrayOf(
+                Color.LTGRAY,
+                Color.BLACK
+            )
 
-            for (i in 0 until binding.toolbar.childCount) {
-                val view: View = binding.toolbar.getChildAt(i)
-                //Back button or drawer open button
-                if (view is ImageButton) {
-                    Log.d("surprise", "BrowserActivity.kt 113  setupInterface: have imagepaint")
-                    view.drawable.colorFilter = colorFilter
-                }
-                if (view is ActionMenuView) {
-                    for (j in 0 until view.childCount) {
-                        val innerView: View = view.getChildAt(j)
+            val states = arrayOf(
+                intArrayOf(android.R.attr.state_enabled, -android.R.attr.state_checked),
+                intArrayOf(android.R.attr.state_enabled, android.R.attr.state_checked)
+            )
+            binding.bottomNavView.itemTextColor = ColorStateList(states, colors)
+            binding.bottomNavView.itemIconTintList = ColorStateList(states, colors)
 
-                        //Any ActionMenuViews - icons that are not back button, text or overflow menu
-                        if (innerView is ActionMenuItemView) {
-                            val drawables = innerView.compoundDrawables
-                            for (k in drawables.indices) {
-                                val drawable = drawables[k]
-                                if (drawable != null) {
-                                    //Set the color filter in separate thread
-                                    //by adding it to the message queue - won't work otherwise
-                                    innerView.post({
-                                        innerView.compoundDrawables[k].colorFilter =
-                                            colorFilter
-                                    })
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            //Overflow icon
-
-            //Overflow icon
-            val overflowIcon: Drawable? = binding.toolbar.overflowIcon
-            if (overflowIcon != null) {
-                overflowIcon.colorFilter = colorFilter
-                binding.toolbar.overflowIcon = overflowIcon
-            }
+            binding.bottomNavView.setBackgroundColor(ResourcesCompat.getColor(resources, R.color.white, null))
+            binding.bottomNavView.itemTextColor
+            paintToolbar(binding.toolbar)
         }
 
         // активирую нижнее меню

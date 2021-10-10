@@ -7,6 +7,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.CompoundButton
 import android.widget.RadioGroup
 import android.widget.Toast
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import co.mobiwise.materialintro.shape.Focus
 import co.mobiwise.materialintro.shape.FocusGravity
@@ -30,6 +31,13 @@ class BlacklistActivity : BaseActivity() {
 
     private fun setupUi() {
         setupInterface()
+        if(PreferencesHandler.instance.isEInk){
+            binding.blacklistBook.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+            binding.blacklistAuthor.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+            binding.blacklistSequence.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+            binding.blacklistGenre.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+        }
+        paintToolbar(binding.toolbar)
         showHints()
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu

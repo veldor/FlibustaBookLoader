@@ -61,10 +61,18 @@ class DownloadBooksWorker(
                     return Result.success()
                 }
                 var downloadCounter = 1
+                // получу оставшееся количество книг для загрузки
+                totalBooksCount = booksDownloadedYet + dao.queueSize
+
+                NotificationHandler.instance.updateDownloadProgress(
+                    totalBooksCount,
+                    downloadCounter,
+                    downloadStartTime
+                )
                 while (true) {
                     // получу первый элемент из очереди
                     queuedElement = dao.firstQueuedBook
-                    if(queuedElement == null || isStopped){
+                    if (queuedElement == null || isStopped) {
                         break
                     }
                     // получу оставшееся количество книг для загрузки
@@ -117,36 +125,21 @@ class DownloadBooksWorker(
                             }
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
                         Log.d(
                             "surprise",
                             "DownloadBooksWorker doWork 173: catch book not found error"
                         )
+                        e.printStackTrace()
                         // ошибка загрузки книг, выведу сообщение об ошибке
                         App.instance.liveBookJustError.postValue(queuedElement)
-                        NotificationHandler.instance.sendBookNotFoundInCurrentFormatNotification(queuedElement)
+                        NotificationHandler.instance.sendBookNotFoundInCurrentFormatNotification(
+                            queuedElement
+                        )
                         bookDownloadsWithErrors++
                         downloadErrors.add(queuedElement)
                         dao.delete(queuedElement)
                         // уведомлю, что размер списка закачек изменился
                         BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
-                    } catch (e: TorNotLoadedException) {
-                        Log.d(
-                            "surprise",
-                            "DownloadBooksWorker doWork 172: catch tor load exception, download work stopped"
-                        )
-                        e.printStackTrace()
-                        // при ошибке загрузки TOR остановлю работу
-                        if (downloadErrors.size > 0) {
-                            for (b in downloadErrors) {
-                                dao.insert(b)
-                                downloadErrors.remove(b)
-                            }
-                        }
-                        NotificationHandler.instance.cancelBookLoadNotification()
-                        NotificationHandler.instance.showTorNotLoadedNotification()
-                        App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
-                        return Result.success()
                     }
                     ++downloadCounter
                     ++booksDownloadedYet
@@ -156,21 +149,14 @@ class DownloadBooksWorker(
                 if (booksCount == 0 && !isStopped) {
                     // ура, всё загружено, выведу сообщение об успешной загрузке
                     NotificationHandler.instance.showBooksLoadedNotification(bookDownloadsWithErrors)
-                    // Добавлю все книги с ошибками обратно в список загрузки
-                    for (b in downloadErrors) {
-                        dao.insert(b)
-                        downloadErrors.remove(b)
-                    }
-                    // уведомлю, что размер списка закачек изменился
-                    BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
                 }
             }
         } finally {
-            if (downloadErrors.size > 0) {
-                for (b in downloadErrors) {
-                    dao.insert(b)
-                    downloadErrors.remove(b)
+            if (!downloadErrors.isNullOrEmpty()) {
+                downloadErrors.forEach {
+                    dao.insert(it)
                 }
+                BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
             }
         }
         NotificationHandler.instance.cancelBookLoadNotification()
@@ -183,6 +169,7 @@ class DownloadBooksWorker(
     private fun downloadBook(book: BooksDownloadSchedule): Boolean {
         val startTime = System.currentTimeMillis()
         val bookUrl = URLHelper.getBaseUrl() + book.link
+        Log.d("surprise", "downloadBook: download $bookUrl")
         // получу response доступным способом
         val response =
             if (PreferencesHandler.instance.isExternalVpn) ExternalVpnVewClient.rawRequest(bookUrl) else TorWebClient().rawRequest(
@@ -283,15 +270,4 @@ class DownloadBooksWorker(
         const val DOWNLOAD_IN_PROGRESS = "download in progress"
         const val DOWNLOAD_FINISHED = "download finished"
     }
-
-    override fun onStopped() {
-        super.onStopped()
-        val dao = App.instance.mDatabase.booksDownloadScheduleDao()
-        // сохраню список книг с ошибками
-        for (b in downloadErrors) {
-            dao.insert(b)
-            downloadErrors.remove(b)
-        }
-    }
-
 }

@@ -117,6 +117,10 @@ class SubscriptionsResultFragment : Fragment(), FoundedItemActionDelegate {
 
     }
 
+    override fun nameClicked(item: FoundedEntity) {
+
+    }
+
     private fun showDownloadsDialog(downloadLinks: ArrayList<DownloadLink>) {
         val inflate = layoutInflater
         @SuppressLint("InflateParams") val view =

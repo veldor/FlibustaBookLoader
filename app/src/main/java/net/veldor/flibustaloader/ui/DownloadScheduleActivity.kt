@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.ui
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -16,7 +17,7 @@ import net.veldor.flibustaloader.databinding.ActivityDownloadScheduleBinding
 import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import net.veldor.flibustaloader.workers.DownloadBooksWorker
 
-class ActivityBookDownloadSchedule : BaseActivity() {
+class DownloadScheduleActivity : BaseActivity() {
     private lateinit var binding: ActivityDownloadScheduleBinding
     private lateinit var viewModel: DownloadScheduleViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,17 +30,26 @@ class ActivityBookDownloadSchedule : BaseActivity() {
         setupObservers()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun setupObservers() {
         super.setupObservers()
         DownloadScheduleViewModel.schedule.observe(this, {
-            Log.d("surprise", "setupObservers: list updated")
             (binding.resultsList.adapter as DownloadScheduleAdapter).setData(it)
         })
+
+        DownloadScheduleViewModel.liveCurrentBookDownloadProgress.observe(this, {
+            Log.d("surprise", "setupObservers: have download progress")
+            (binding.resultsList.adapter as DownloadScheduleAdapter).setDownloadProgressChanged(it)
+        })
+
         App.instance.liveDownloadState.observe(this, {
+            Log.d("surprise", "setupObservers: state changed on $it")
             if(it == DownloadBooksWorker.DOWNLOAD_FINISHED){
                 binding.actionButton.text = getString(R.string.start_download)
+                (binding.resultsList.adapter as DownloadScheduleAdapter).notifyDataSetChanged()
             }
             else if(it == DownloadBooksWorker.DOWNLOAD_IN_PROGRESS){
+                (binding.resultsList.adapter as DownloadScheduleAdapter).notifyDataSetChanged()
                 binding.actionButton.text = getString(R.string.stop_download_message)
             }
         })
@@ -56,6 +66,7 @@ class ActivityBookDownloadSchedule : BaseActivity() {
         App.instance.liveBookDownloadInProgress.observe(this, {
             (binding.resultsList.adapter as DownloadScheduleAdapter).notifyBookDownloadInProgress(it)
         })
+
     }
 
     override fun setupInterface() {
@@ -70,7 +81,6 @@ class ActivityBookDownloadSchedule : BaseActivity() {
         val item = menuNav.findItem(R.id.goToDownloadsList)
         item.isEnabled = false
         item.isChecked = true
-
         // активирую кнопку возвращения к предыдущему окну
         val actionBar = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)

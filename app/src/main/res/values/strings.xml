@@ -58,7 +58,7 @@
     <string name="discard_favorite_type">Discard favorite type</string>
     <string name="book_readed_message">Book readed</string>
     <string name="book_downloaded_message">Book downloaded</string>
-    <string name="download_only_this_format">Download only this format</string>
+    <string name="download_only_this_format">Download only this format. Other will be ignored</string>
     <string name="remember_format">Remember type</string>
     <string name="do_not_re_download">Download again</string>
     <string name="go_to_test_message">Test app</string>
@@ -306,4 +306,15 @@
     <string name="share_book">Share book</string>
     <string name="settings_restored_message">Settings restored, reboot app to apply</string>
     <string name="share_settings_message">Share settings</string>
+    <string name="this_search_not_accepted_message">Search by sequence or genre not accepted, select book or type for search</string>
+    <string name="bookmarks_title">Bookmarks</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_subscriptions">Subscriptions</string>
+    <string name="title_activity_bookmarks">Bookmarks</string>
+    <string name="title_activity_blacklist">Blacklist</string>
+    <string name="title_activity_login">Log-in</string>
+    <string name="title_activity_not_available">Not available</string>
+    <string name="title_activity_dir_content">Dir content</string>
+    <string name="wrong_format_ignored">Book not in this format will be ignored</string>
+    <string name="wrong_format_accepted">Book in other format will be loaded</string>
 </resources>

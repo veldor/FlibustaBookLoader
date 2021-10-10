@@ -13,4 +13,5 @@ interface FoundedItemActionDelegate {
     fun loadMoreBtnClicked()
     fun authorClicked(item: FoundedEntity)
     fun sequenceClicked(item: FoundedEntity)
+    fun nameClicked(item: FoundedEntity)
 }

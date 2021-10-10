@@ -39,9 +39,9 @@ object Updater {
     fun checkUpdate(): Boolean {
         var updateAvailable = false
         // даю задание worker-у
-//        if (App.isTestVersion) {
-//            return false
-//        }
+        if (App.isTestVersion) {
+            return false
+        }
         val httpclient: CloseableHttpClient = HttpClients.createDefault()
         val httpget = HttpGet(GITHUB_RELEASES_URL)
         try {

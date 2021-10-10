@@ -14,6 +14,7 @@ import javax.xml.parsers.SAXParser
 import javax.xml.parsers.SAXParserFactory
 
 class TestParser(private val text: String) {
+    var filtered: Int = 0
     var nextPageLink: String? = null
 
     fun parse(): ArrayList<FoundedEntity> {
@@ -116,10 +117,8 @@ class TestParser(private val text: String) {
                                         entity = FoundedEntity()
                                         entity.type = TYPE_SEQUENCE
                                         entity.link = attributeValue
-                                        Log.d("surprise", "startElement: link is ${entity.link}")
                                         attributeIndex = attributes.getIndex("title")
                                         entity.name = attributes.getValue(attributeIndex)
-                                        Log.d("surprise", "startElement: link is ${entity.name}")
                                         foundedEntity!!.sequences.add(entity)
 
                                     }
@@ -167,12 +166,12 @@ class TestParser(private val text: String) {
                         }
                         authorDirName = Grammar.clearDirName(authorDirName)
 
-                        foundedEntity?.downloadLinks?.forEach {
-                            it.author = foundedEntity!!.author
-                            it.id = foundedEntity!!.id
-                            it.name = foundedEntity!!.name
-                            it.size = foundedEntity!!.size
-                            it.authorDirName = authorDirName
+                        foundedEntity?.downloadLinks?.forEach { link ->
+                            link.author = foundedEntity!!.author
+                            link.id = foundedEntity!!.id
+                            link.name = foundedEntity!!.name
+                            link.size = foundedEntity!!.size
+                            link.authorDirName = authorDirName
                             // так, как книга может входить в несколько серий- совмещу назначения
                             if(foundedEntity!!.sequences.size > 0){
                                 simpleStringBuilder.clear()
@@ -182,12 +181,12 @@ class TestParser(private val text: String) {
                                     prefix = "$|$"
                                     simpleStringBuilder.append(Regex("[^\\d\\w ]").replace(it.name!!.replace("Все книги серии", ""), ""))
                                 }
-                                it.sequenceDirName = simpleStringBuilder.toString()
-                                it.reservedSequenceName = it.sequenceDirName
+                                link.sequenceDirName = simpleStringBuilder.toString()
+                                link.reservedSequenceName = foundedEntity!!.sequencesComplex
                             }
                             else{
-                                it.sequenceDirName = ""
-                                it.reservedSequenceName = it.sequenceDirName
+                                link.sequenceDirName = ""
+                                link.reservedSequenceName = ""
                             }
                         }
                         if (Filter.check(foundedEntity!!)) {
@@ -197,6 +196,9 @@ class TestParser(private val text: String) {
                                 // load pic in new Thread
                                 PicHandler().loadPic(parsed.last())
                             }
+                        }
+                        else{
+                            filtered++
                         }
                     } else if (qName.equals("content")) {
                         contentFound = false
@@ -267,7 +269,7 @@ class TestParser(private val text: String) {
     }
 
     private fun parseContent(foundedEntity: FoundedEntity?, content: String) {
-        foundedEntity!!.content = content
+        foundedEntity!!.content = foundedEntity.content + content
         when {
             content.startsWith("Скачиваний") -> {
                 foundedEntity.downloadsCount = content

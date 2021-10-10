@@ -2,15 +2,21 @@ package net.veldor.flibustaloader.ui
 
 import android.app.Dialog
 import android.content.Intent
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.menu.ActionMenuItemView
+import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
@@ -38,10 +44,22 @@ open class BaseActivity : AppCompatActivity() {
 
     protected open fun setupInterface() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // change status bar color
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            window.statusBarColor = ResourcesCompat.getColor(resources, R.color.bottomNavigationColor, null)
-            window.navigationBarColor = ResourcesCompat.getColor(resources, R.color.bottomNavigationColor, null)
+            if(PreferencesHandler.instance.isEInk){
+                // change status bar color
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                window.statusBarColor =
+                    ResourcesCompat.getColor(resources, R.color.white, null)
+                window.navigationBarColor =
+                    ResourcesCompat.getColor(resources, R.color.white, null)
+            }
+            else {
+                // change status bar color
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                window.statusBarColor =
+                    ResourcesCompat.getColor(resources, R.color.bottomNavigationColor, null)
+                window.navigationBarColor =
+                    ResourcesCompat.getColor(resources, R.color.bottomNavigationColor, null)
+            }
         }
         // включу аппаратное ускорение, если оно активно
         if (PreferencesHandler.instance.hardwareAcceleration) {
@@ -173,6 +191,52 @@ open class BaseActivity : AppCompatActivity() {
         if (PreferencesHandler.instance.isShowChanges()) {
             ChangelogDialog.Builder(this).build().show()
             PreferencesHandler.instance.setChangesViewed()
+        }
+    }
+
+    protected fun paintToolbar(toolbar: Toolbar){
+        toolbar.setBackgroundColor(ResourcesCompat.getColor(resources, R.color.white, null))
+        toolbar.setTitleTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+        toolbar.setSubtitleTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+        val colorFilter = PorterDuffColorFilter(ResourcesCompat.getColor(resources, R.color.black, null), PorterDuff.Mode.MULTIPLY)
+
+        for (i in 0 until toolbar.childCount) {
+            val view: View = toolbar.getChildAt(i)
+            //Back button or drawer open button
+            if (view is ImageButton) {
+                Log.d("surprise", "BrowserActivity.kt 113  setupInterface: have imagepaint")
+                view.drawable.colorFilter = colorFilter
+            }
+            if (view is ActionMenuView) {
+                for (j in 0 until view.childCount) {
+                    val innerView: View = view.getChildAt(j)
+
+                    //Any ActionMenuViews - icons that are not back button, text or overflow menu
+                    if (innerView is ActionMenuItemView) {
+                        val drawables = innerView.compoundDrawables
+                        for (k in drawables.indices) {
+                            val drawable = drawables[k]
+                            if (drawable != null) {
+                                //Set the color filter in separate thread
+                                //by adding it to the message queue - won't work otherwise
+                                innerView.post({
+                                    innerView.compoundDrawables[k].colorFilter =
+                                        colorFilter
+                                })
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //Overflow icon
+
+        //Overflow icon
+        val overflowIcon: Drawable? = toolbar.overflowIcon
+        if (overflowIcon != null) {
+            overflowIcon.colorFilter = colorFilter
+            toolbar.overflowIcon = overflowIcon
         }
     }
 

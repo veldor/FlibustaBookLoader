@@ -179,21 +179,69 @@ class FoundedItemAdapter(
                     binding.firstGroup.visibility = View.VISIBLE
                     binding.secondGroup.visibility = View.VISIBLE
                     binding.thirdGroup.visibility = View.VISIBLE
-                    binding.name.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.book_name_color,
-                            null
+                    if(PreferencesHandler.instance.isEInk){
+                        binding.firstInfoBlockLeftParam.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
+                        binding.firstInfoBlockRightParam.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
+                        )
+                        binding.secondInfoBlockLeftParam.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
+                        )
+                        binding.secondInfoBlockRightParam.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
+                        )
 
-                    binding.centerActionBtn.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.book_name_color,
-                            null
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
+
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
+                        )
+                    }
+                    else{
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.book_name_color,
+                                null
+                            )
+                        )
+
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.book_name_color,
+                                null
+                            )
+                        )
+                    }
                     binding.menuButton.visibility = View.VISIBLE
                     binding.leftActionBtn.visibility =
                         if (item.read) View.VISIBLE else View.INVISIBLE
@@ -209,6 +257,10 @@ class FoundedItemAdapter(
                     binding.secondInfoBlockRightParam.setOnClickListener {
                         menuClicked = binding.item
                         delegate.sequenceClicked(item)
+                    }
+                    binding.name.setOnClickListener{
+                        menuClicked = binding.item
+                        delegate.nameClicked(item)
                     }
                     binding.firstInfoBlockRightParam.text = item.translate
                     binding.firstInfoBlockRightParam.visibility = View.VISIBLE
@@ -256,78 +308,144 @@ class FoundedItemAdapter(
                     }
                 }
                 TYPE_AUTHOR -> {
+                    binding.previewImage.visibility = View.GONE
                     binding.leftActionBtn.visibility = View.INVISIBLE
                     binding.rightActionBtn.visibility = View.INVISIBLE
                     binding.firstGroup.visibility = View.GONE
                     binding.secondGroup.visibility = View.GONE
-                    binding.thirdGroup.visibility = View.GONE
-                    binding.name.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.author_text_color,
-                            null
-                        )
-                    )
 
-                    binding.centerActionBtn.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.author_text_color,
-                            null
+                    if (PreferencesHandler.instance.isEInk) {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
+
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
+                        )
+                    } else {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.author_text_color,
+                                null
+                            )
+                        )
+
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.author_text_color,
+                                null
+                            )
+                        )
+                    }
+                    binding.thirdBlocRightElement.text = ""
+                    binding.thirdBlockLeftElement.text = ""
+                    binding.thirdBlockCenterElement.text = item.content
+                    binding.thirdGroup.visibility = View.VISIBLE
                     binding.menuButton.visibility = View.GONE
                     binding.centerActionBtn.text = App.instance.getString(R.string.show_message)
                 }
                 TYPE_SEQUENCE -> {
+                    binding.previewImage.visibility = View.GONE
                     binding.leftActionBtn.visibility = View.INVISIBLE
                     binding.rightActionBtn.visibility = View.INVISIBLE
                     binding.previewImage.visibility = View.GONE
                     binding.firstGroup.visibility = View.GONE
                     binding.secondGroup.visibility = View.GONE
-                    binding.thirdGroup.visibility = View.GONE
+                    binding.thirdBlocRightElement.text = ""
+                    binding.thirdBlockLeftElement.text = ""
+                    binding.thirdBlockCenterElement.text = item.content
+                    binding.thirdGroup.visibility = View.VISIBLE
                     binding.thirdBlockCenterElement.visibility = View.VISIBLE
-                    binding.name.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.sequences_text,
-                            null
+                    if (PreferencesHandler.instance.isEInk) {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
 
-                    binding.centerActionBtn.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.sequences_text,
-                            null
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
+                    } else {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.sequences_text,
+                                null
+                            )
+                        )
+
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.sequences_text,
+                                null
+                            )
+                        )
+                    }
                     binding.menuButton.visibility = View.GONE
                     binding.centerActionBtn.text = App.instance.getString(R.string.show_message)
                     binding.thirdBlockCenterElement.text = item.description
                     binding.thirdBlockCenterElement.visibility = View.VISIBLE
                 }
                 TYPE_GENRE -> {
+                    binding.previewImage.visibility = View.GONE
                     binding.leftActionBtn.visibility = View.INVISIBLE
                     binding.rightActionBtn.visibility = View.INVISIBLE
                     binding.previewImage.visibility = View.GONE
                     binding.firstGroup.visibility = View.GONE
                     binding.secondGroup.visibility = View.GONE
-                    binding.thirdGroup.visibility = View.GONE
-                    binding.name.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.genre_text_color,
-                            null
+                    binding.thirdBlocRightElement.text = ""
+                    binding.thirdBlockLeftElement.text = ""
+                    binding.thirdBlockCenterElement.text = item.content
+                    binding.thirdGroup.visibility = View.VISIBLE
+                    if (PreferencesHandler.instance.isEInk) {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
-                    binding.centerActionBtn.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.genre_text_color,
-                            null
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
+                    } else {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.genre_text_color,
+                                null
+                            )
+                        )
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.genre_text_color,
+                                null
+                            )
+                        )
+                    }
                     binding.menuButton.visibility = View.GONE
                     binding.centerActionBtn.text = App.instance.getString(R.string.show_message)
                 }
@@ -338,20 +456,37 @@ class FoundedItemAdapter(
                     binding.firstGroup.visibility = View.GONE
                     binding.secondGroup.visibility = View.GONE
                     binding.thirdGroup.visibility = View.GONE
-                    binding.name.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.author_text_color,
-                            null
+                    if (PreferencesHandler.instance.isEInk) {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
-                    binding.centerActionBtn.setTextColor(
-                        ResourcesCompat.getColor(
-                            App.instance.resources,
-                            R.color.author_text_color,
-                            null
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.black,
+                                null
+                            )
                         )
-                    )
+                    } else {
+                        binding.name.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.author_text_color,
+                                null
+                            )
+                        )
+                        binding.centerActionBtn.setTextColor(
+                            ResourcesCompat.getColor(
+                                App.instance.resources,
+                                R.color.author_text_color,
+                                null
+                            )
+                        )
+                    }
                     binding.menuButton.visibility = View.GONE
                     binding.centerActionBtn.text = App.instance.getString(R.string.show_message)
                 }
@@ -468,7 +603,6 @@ class FoundedItemAdapter(
     }
 
     fun markClickedElement(clickedElementIndex: Int) {
-        Log.d("surprise", "markClickedElement: mark clicked $clickedElementIndex")
         values[clickedElementIndex].selected = true
         notifyItemChanged(clickedElementIndex)
     }

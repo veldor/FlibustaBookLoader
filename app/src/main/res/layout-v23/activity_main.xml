@@ -6,6 +6,7 @@
     android:layout_height="match_parent">
 
     <TextView
+        android:id="@+id/stateTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
@@ -36,6 +37,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            android:id="@+id/statusFirstValue"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
@@ -48,6 +50,7 @@
             android:textSize="12sp" />
 
         <TextView
+            android:id="@+id/statusSecondValue"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
@@ -66,6 +69,7 @@
         android:layout_height="wrap_content"
         android:shadowColor="#000000"
         android:shadowDx="3"
+        android:layout_marginBottom="10dp"
         android:shadowDy="3"
         android:shadowRadius="3"
         android:text="@string/default_app_version"
@@ -84,6 +88,7 @@
         android:padding="10dp"
         android:shadowColor="#000000"
         android:shadowDx="3"
+        android:layout_marginBottom="10dp"
         android:shadowDy="3"
         android:shadowRadius="3"
         android:text="@string/force_start"

@@ -1,5 +1,7 @@
 package net.veldor.flibustaloader.ui
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import net.veldor.flibustaloader.R
 import androidx.drawerlayout.widget.DrawerLayout
@@ -9,6 +11,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.Navigation
 import net.veldor.flibustaloader.databinding.ActivitySubscriptionsBinding
+import net.veldor.flibustaloader.utils.PreferencesHandler
 
 class SubscriptionsActivity : BaseActivity() {
 
@@ -39,6 +42,21 @@ class SubscriptionsActivity : BaseActivity() {
 
     override fun setupInterface() {
         super.setupInterface()
+
+        if(PreferencesHandler.instance.isEInk){
+            paintToolbar(binding.toolbar)
+            val colors = intArrayOf(
+                Color.LTGRAY,
+                Color.BLACK
+            )
+
+            val states = arrayOf(
+                intArrayOf(android.R.attr.state_enabled, -android.R.attr.state_checked),
+                intArrayOf(android.R.attr.state_enabled, android.R.attr.state_checked)
+            )
+            binding.bottomNavView.itemTextColor = ColorStateList(states, colors)
+            binding.bottomNavView.itemIconTintList = ColorStateList(states, colors)
+        }
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToSubscriptions)

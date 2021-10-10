@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.ui
 
 import android.Manifest
+import android.app.ActionBar
 import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
@@ -16,9 +17,11 @@ import android.view.*
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.marginBottom
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
@@ -233,6 +236,95 @@ class MainActivity : BaseActivity() {
         if (PreferencesHandler.instance.isEInk) {
             // prepare window for eInk
             checkWiFiEnabled()
+            binding.progressBarCircle.rotation = 0F
+            binding.progressBarCircle.background =
+                ResourcesCompat.getDrawable(resources, R.drawable.eink_progressbar_background, null)
+            binding.progressBarCircle.progressDrawable =
+                ResourcesCompat.getDrawable(resources, R.drawable.eink_progressbar, null)
+            binding.stateTextView?.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.stateTextView?.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.stateTextView?.setShadowLayer(0F, 0F, 0F, R.color.transparent)
+            binding.appVersion.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.appVersion.setShadowLayer(0F, 0F, 0F, R.color.transparent)
+            binding.testStartApp.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.testStartApp.setShadowLayer(0F, 0F, 0F, R.color.transparent)
+
+            binding.isEbook.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.isEbook.setShadowLayer(0F, 0F, 0F, R.color.transparent)
+
+            binding.useHardwareAccelerationSwitcher.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.useHardwareAccelerationSwitcher.setShadowLayer(0F, 0F, 0F, R.color.transparent)
+
+            binding.statusFirstValue?.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.statusFirstValue?.setShadowLayer(0F, 0F, 0F, R.color.transparent)
+
+            binding.statusSecondValue?.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.statusSecondValue?.setShadowLayer(0F, 0F, 0F, R.color.transparent)
+
+            binding.stateTextView?.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.stateTextView?.setShadowLayer(0F, 0F, 0F, R.color.transparent)
+
+
+            binding.statusWrapper.setInAnimation(this, android.R.anim.fade_in)
+            binding.statusWrapper.setOutAnimation(this, android.R.anim.fade_out)
+            val params = binding.statusWrapper.layoutParams as ConstraintLayout.LayoutParams
+            params.setMargins(0,30,0,30)
+            binding.statusWrapper.layoutParams = params
+
         } else {
             if (!PreferencesHandler.instance.isPicHide()) {
                 // назначу фон
@@ -375,11 +467,10 @@ class MainActivity : BaseActivity() {
         })
 
         TorStarter.liveTorLaunchState.observe(this, {
-            if(it == TorStarter.TOR_LAUNCH_SUCCESS){
+            if (it == TorStarter.TOR_LAUNCH_SUCCESS) {
                 torLoaded()
                 TorStarter.liveTorLaunchState.removeObservers(this)
-            }
-            else if (it == TorStarter.TOR_LAUNCH_FAILED){
+            } else if (it == TorStarter.TOR_LAUNCH_FAILED) {
                 showTorNotWorkDialog()
             }
         })
@@ -603,8 +694,7 @@ class MainActivity : BaseActivity() {
             dialogBuilder.setTitle(getString(R.string.tor_cant_load_message))
                 .setMessage(getString(R.string.tor_not_start_body))
                 .setPositiveButton(getString(R.string.try_again_message)) { _: DialogInterface?, _: Int ->
-                    App.instance.startTor()
-                    startTimer()
+                    Handler().postDelayed(BaseActivity.ResetApp(), 100)
                 }
                 .setNegativeButton(getString(R.string.try_later_message)) { _: DialogInterface?, _: Int -> finishAffinity() }
                 .setNeutralButton(getString(R.string.use_external_proxy_message)) { _: DialogInterface?, _: Int -> handleUseExternalVpn() }
@@ -640,7 +730,7 @@ class MainActivity : BaseActivity() {
             mTorLoadTooLong = false
             torLoadTooLongDialog()
         }
-        if(viewModel.connectionTestSuccess.value == true){
+        if (viewModel.connectionTestSuccess.value == true) {
             launchView()
         }
     }
@@ -656,7 +746,7 @@ class MainActivity : BaseActivity() {
         // проверю очередь скачивания. Если она не пуста- предложу продолжить закачку
         // проверю, не запущено ли приложение с помощью интента. Если да- запущу программу в webView режиме
         val targetActivityIntent = Intent(this, BrowserActivity::class.java)
-        if(link != null) {
+        if (link != null) {
             Log.d("surprise", "launchView: send link")
             targetActivityIntent.putExtra(BrowserActivity.EXTERNAL_LINK, link.toString())
         }

@@ -12,5 +12,5 @@ class DownloadLink : Serializable {
     var size: String? = null
     var authorDirName: String? = null
     var sequenceDirName: String? = null
-    var reservedSequenceName: String? = null
+    var reservedSequenceName: String = ""
 }

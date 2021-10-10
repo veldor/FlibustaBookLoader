@@ -3,7 +3,6 @@ package net.veldor.flibustaloader.ui
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.util.Log
 import android.view.MenuItem
 import androidx.core.view.GravityCompat
@@ -12,7 +11,6 @@ import com.google.android.material.navigation.NavigationView
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.dialogs.DonationDialog
-import kotlin.system.exitProcess
 
 class NavigatorSelectHandler(private val mContext: Activity) :
     NavigationView.OnNavigationItemSelectedListener {
@@ -25,7 +23,7 @@ class NavigatorSelectHandler(private val mContext: Activity) :
             mContext.startActivity(intent)
             mContext.finish()
         } else if (itemId == R.id.goToDownloadsList) {
-            val intent = Intent(mContext, ActivityBookDownloadSchedule::class.java)
+            val intent = Intent(mContext, DownloadScheduleActivity::class.java)
             mContext.startActivity(intent)
             tryCloseDrawer()
         } else if (itemId == R.id.goToSubscriptions) {

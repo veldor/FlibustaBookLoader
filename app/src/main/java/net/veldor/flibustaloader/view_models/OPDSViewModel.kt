@@ -112,11 +112,12 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         clearAutocomplete()
     }
 
-    fun downloadAll(books: ArrayList<FoundedEntity>, format: String, unloaded: Boolean) {
+    fun downloadAll(books: ArrayList<FoundedEntity>, format: String, unloaded: Boolean, strictFormat: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             // проверю, нужно ли загружать книги только в выбранном формате
             if (books.isNotEmpty()) {
                 books.forEach { foundedEntity ->
+                    var linkFound = false
                     // ищу книгу в выбранном формате
                     if (foundedEntity.downloadLinks.isNotEmpty()) {
                         foundedEntity.downloadLinks.forEach {
@@ -124,8 +125,12 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                                 // найдена ссылка на формат
                                 if (!unloaded || !foundedEntity.downloaded) {
                                     DownloadLinkHandler().addLink(it)
+                                    linkFound = true
                                 }
                             }
+                        }
+                        if(!linkFound && !strictFormat){
+                            DownloadLinkHandler().addLink(foundedEntity.downloadLinks[0])
                         }
                     }
                 }
@@ -133,6 +138,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
             }
         }
     }
+
 
     fun addToDownloadQueue(downloadLink: DownloadLink) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -197,6 +203,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                 }
                 searchResult.results = results
                 searchResult.nextPageLink = parser.nextPageLink
+                searchResult.filtered = parser.filtered
                 if(searchResult.nextPageLink == null && lastClicked >= 0){
                     searchResult.clickedElementIndex = lastClicked
                     searchResult.isBackSearch = true

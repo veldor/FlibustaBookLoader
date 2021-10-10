@@ -12,12 +12,14 @@ import android.graphics.PorterDuffColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.text.Html
 import android.text.InputType
 import android.text.TextUtils
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
@@ -42,11 +44,9 @@ import net.veldor.flibustaloader.ui.BlacklistActivity
 import net.veldor.flibustaloader.ui.BrowserActivity
 import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.view_models.OPDSViewModel
+import java.lang.reflect.Field
 import java.net.URLEncoder
 import java.util.*
-import com.google.android.material.navigation.NavigationView
-import android.widget.TextView
-import java.lang.reflect.Field
 
 
 class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActionDelegate,
@@ -111,7 +111,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             }
         })
         viewModel.searchResults.observe(viewLifecycleOwner, {
-            Log.d("surprise", "setupObservers: get search result ${it.appended}")
             lastScrolled = 0
             if (it.type == TestParser.TYPE_BOOK && (it.results.size > 0 || it.appended)) {
                 // покажу кнопку скачивания всех книг
@@ -124,8 +123,20 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             }
 
             if (it.appended) {
+                val previousSize = binding.resultsCount.text.toString().toInt()
+                binding.resultsCount.text = (it.size + previousSize).toString()
+                val previousFilteredSize = binding.filteredCount.text.toString().toInt()
+                if (previousFilteredSize > 0 || it.filtered > 0) {
+                    binding.filteredCount.visibility = View.VISIBLE
+                }
                 (binding.resultsList.adapter as FoundedItemAdapter).appendContent(it.results)
             } else {
+                if (it.filtered > 0) {
+                    binding.filteredCount.visibility = View.VISIBLE
+                    binding.filteredCount.text = it.filtered.toString()
+                }
+                binding.resultsCount.visibility = View.VISIBLE
+                binding.resultsCount.text = it.size.toString()
                 (binding.resultsList.adapter as FoundedItemAdapter).setContent(it.results)
                 binding.resultsList.scrollToPosition(0)
             }
@@ -171,6 +182,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
 
     fun setupInterface() {
+        binding.mirrorUsed.setOnClickListener {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.used_mirror_message),
+                Toast.LENGTH_LONG
+            ).show()
+        }
         // обработаю клик на кнопку отображения списка авторов
 
         binding.showAuthorsListButton.setOnClickListener {
@@ -184,7 +202,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             binding.showAuthorsListButton.visibility = View.GONE
             when (which) {
                 R.id.searchBook -> {
-                    mSearchView?.visibility = View.VISIBLE
                     binding.showAllSwitcher.visibility = View.VISIBLE
                     if (PreferencesHandler.instance.isAutofocusSearch()) {
                         mSearchView?.isIconified = false
@@ -192,7 +209,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     }
                 }
                 R.id.searchAuthor -> {
-                    mSearchView?.visibility = View.VISIBLE
                     binding.showAuthorsListButton.visibility = View.VISIBLE
                     if (PreferencesHandler.instance.isAutofocusSearch()) {
                         mSearchView?.isIconified = false
@@ -200,25 +216,16 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     }
                 }
                 R.id.searchGenre -> {
-                    mSearchView?.visibility = View.GONE
+                    mSearchView?.isIconified = true
                     load("/opds/genres", false, addToHistory = true, -1)
                     showLoadWaiter()
                 }
                 R.id.searchSequence -> {
-                    mSearchView?.visibility = View.GONE
+                    mSearchView?.isIconified = true
                     load("/opds/sequencesindex", false, addToHistory = true, -1)
                     showLoadWaiter()
                 }
             }
-        }
-
-        binding.mirrorUsed.visibility = if (App.instance.useMirror) View.VISIBLE else View.GONE
-        binding.mirrorUsed.setOnClickListener {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.used_mirror_message),
-                Toast.LENGTH_LONG
-            ).show()
         }
         binding.resultsList.adapter = FoundedItemAdapter(arrayListOf(), this)
 //        binding.resultsList.recycledViewPool.setMaxRecycledViews(0, 0);
@@ -258,7 +265,42 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
         // варианты поиска
         if (PreferencesHandler.instance.isEInk) {
-            //requireActivity().setTheme(R.style.EInkAppTheme)
+            binding.searchGenre.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.searchBook.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.searchAuthor.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.searchSequence.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.connectionType.setBackgroundColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.preferencesGroup.visibility = View.GONE
         } else {
             if (!PreferencesHandler.instance.isPicHide()) {
                 // назначу фон
@@ -284,7 +326,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 viewModel.downloadAll(
                     (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                     favoriteFormat,
-                    false
+                    false,
+                    strictFormat = true
                 )
             } else {
                 // покажу диалог выбора предпочтительнго типа скачивания
@@ -299,7 +342,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 viewModel.downloadAll(
                     (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                     favoriteFormat,
-                    true
+                    true,
+                    strictFormat = true
                 )
             } else {
                 // покажу диалог выбора предпочтительнго типа скачивания
@@ -354,9 +398,16 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             binding.connectionType.text = getString(R.string.tor_title)
             binding.connectionType.setBackgroundColor(Color.parseColor("#4CAF50"))
         }
+
+        binding.mirrorUsed.visibility = if (App.instance.useMirror) View.VISIBLE else View.GONE
+        if (App.instance.useMirror) {
+            Log.d("surprise", "onResume: using mirror")
+        } else {
+            Log.d("surprise", "onResume: no using mirror")
+        }
     }
 
-    @SuppressLint("RestrictedApi")
+    @SuppressLint("RestrictedApi", "DiscouragedPrivateApi")
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         requireActivity().menuInflater.inflate(R.menu.odps_menu, menu)
 
@@ -364,10 +415,11 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         val searchMenuItem = menu.findItem(R.id.action_search)
         mSearchView = searchMenuItem.actionView as SearchView
         if (mSearchView != null) {
-            Log.d("surprise", "OpdsFragment.kt 365  onCreateOptionsMenu: setup search view")
             if (PreferencesHandler.instance.isEInk) {
-                Log.d("surprise", "OpdsFragment.kt 367  onCreateOptionsMenu: for eink")
-                val colorFilter = PorterDuffColorFilter(ResourcesCompat.getColor(resources, R.color.black, null), PorterDuff.Mode.MULTIPLY)
+                val colorFilter = PorterDuffColorFilter(
+                    ResourcesCompat.getColor(resources, R.color.black, null),
+                    PorterDuff.Mode.MULTIPLY
+                )
                 mSearchView!!.queryHint = ""
                 mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
                     ?.setTextColor(Color.BLACK)
@@ -379,12 +431,23 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 val mCursorDrawableRes: Field =
                     TextView::class.java.getDeclaredField("mCursorDrawableRes")
                 mCursorDrawableRes.isAccessible = true
-                mCursorDrawableRes.set(mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text), R.drawable.cursor)
+                mCursorDrawableRes.set(
+                    mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text),
+                    R.drawable.cursor
+                )
 
-                var myItem = menu.findItem(R.id.action_sort_by)
+                val myItem = menu.findItem(R.id.action_sort_by)
                 myItem?.icon?.colorFilter = colorFilter
-            }
-            else{
+
+                mSearchView?.setOnQueryTextFocusChangeListener { _, hasFocus ->
+                    if (hasFocus) {
+                        Log.d("surprise", "onCreateOptionsMenu: have focus")
+                        binding.preferencesGroup.visibility = View.VISIBLE
+                    } else {
+                        binding.preferencesGroup.visibility = View.GONE
+                    }
+                }
+            } else {
                 mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
                     ?.setTextColor(Color.WHITE)
             }
@@ -491,6 +554,40 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             Handler().postDelayed(BaseActivity.ResetApp(), 100)
             return true
         }
+
+        if (id == R.id.hideDigests) {
+            PreferencesHandler.instance.isHideDigests = !PreferencesHandler.instance.isHideDigests
+            requireActivity().invalidateOptionsMenu()
+            if (PreferencesHandler.instance.isHideDigests) {
+                Toast.makeText(
+                    requireContext(),
+                    "Скрываю книги, у которых больше 3 авторов",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            return true
+        }
+        if (id == R.id.hideDownloadedSwitcher) {
+            PreferencesHandler.instance.isHideDownloaded =
+                !PreferencesHandler.instance.isHideDownloaded
+            requireActivity().invalidateOptionsMenu()
+            if (PreferencesHandler.instance.isHideDownloaded) {
+                Toast.makeText(
+                    requireContext(),
+                    "Скрываю ранее скачанные книги",
+                    Toast.LENGTH_SHORT
+                ).show()
+                hideDownloadedBooks()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "Показываю ранее скачанные книги",
+                    Toast.LENGTH_SHORT
+                ).show()
+                showDownloadedBooks()
+            }
+            return true
+        }
         if (id == R.id.hideReadSwitcher) {
             PreferencesHandler.instance.isHideRead = !PreferencesHandler.instance.isHideRead
             // скрою книги, если они есть
@@ -534,18 +631,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             PreferencesHandler.instance.isLinearLayout = !PreferencesHandler.instance.isLinearLayout
             requireActivity().recreate()
         }
-        if (id == R.id.hideDigests) {
-            PreferencesHandler.instance.isHideDigests = !PreferencesHandler.instance.isHideDigests
-            requireActivity().invalidateOptionsMenu()
-            if (PreferencesHandler.instance.isHideDigests) {
-                Toast.makeText(
-                    requireContext(),
-                    "Скрываю книги, у которых больше 3 авторов",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            return true
-        }
         if (id == R.id.menuCreateAuthorDir) {
             PreferencesHandler.instance.setCreateAuthorsDir(!item.isChecked)
             requireActivity().invalidateOptionsMenu()
@@ -579,27 +664,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     "Не создаю папки для отдельных серий",
                     Toast.LENGTH_SHORT
                 ).show()
-            }
-            return true
-        }
-        if (id == R.id.hideDownloadedSwitcher) {
-            PreferencesHandler.instance.isHideDownloaded =
-                PreferencesHandler.instance.isHideDownloaded
-            requireActivity().invalidateOptionsMenu()
-            if (PreferencesHandler.instance.isHideDownloaded) {
-                Toast.makeText(
-                    requireContext(),
-                    "Скрываю ранее скачанные книги",
-                    Toast.LENGTH_SHORT
-                ).show()
-                hideDownloadedBooks()
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Показываю ранее скачанные книги",
-                    Toast.LENGTH_SHORT
-                ).show()
-                showDownloadedBooks()
             }
             return true
         }
@@ -691,7 +755,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 viewModel.downloadAll(
                     (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                     MimeTypes.getFullMime(MimeTypes.MIMES_LIST[i])!!,
-                    onlyNotLoaded
+                    onlyNotLoaded,
+                    dialog.findViewById<SwitchCompat>(R.id.onlyThisType).isChecked
                 )
                 requireActivity().invalidateOptionsMenu()
             }
@@ -749,6 +814,14 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     override fun onQueryTextSubmit(s: String): Boolean {
+        if (binding.searchType.checkedRadioButtonId == R.id.searchSequence || binding.searchType.checkedRadioButtonId == R.id.searchSequence) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.this_search_not_accepted_message),
+                Toast.LENGTH_LONG
+            ).show()
+            return false
+        }
         hideKeyboard(binding.rootView)
         if (!TextUtils.isEmpty(s.trim { it <= ' ' })) {
             binding.floatingMenu.visibility = View.GONE
@@ -919,10 +992,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             var item: DownloadLink
             while (counter1 < linksLength1) {
                 item = downloadLinks[counter1]
-                Log.d("surprise", "OPDSActivity: 2064 item mime is " + item.mime)
                 if (item.mime == longMime) {
                     viewModel.addToDownloadQueue(item)
-                    Log.d("surprise", "OPDSActivity: 2064 add " + item.mime)
                     break
                 }
                 counter1++
@@ -1133,6 +1204,28 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         }
     }
 
+    override fun nameClicked(item: FoundedEntity) {
+        if (item.type == TestParser.TYPE_BOOK) {
+            // show dialog window with content
+            if (item.content.isNotEmpty()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle(item.name)
+                        .setMessage(Html.fromHtml(item.content, Html.FROM_HTML_MODE_COMPACT))
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
+                else{
+                    AlertDialog.Builder(requireContext())
+                        .setTitle(item.name)
+                        .setMessage(Html.fromHtml(item.content))
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
+            }
+        }
+    }
+
     private fun hideKeyboard(view: View) {
         val inputMethodManager =
             requireActivity().getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -1140,6 +1233,10 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     fun load(link: String, append: Boolean, addToHistory: Boolean, clickedElementIndex: Int) {
+        if (!append) {
+            binding.resultsCount.visibility = View.GONE
+            binding.filteredCount.visibility = View.GONE
+        }
         binding.progressBar.visibility = View.VISIBLE
         viewModel.request(link, append, addToHistory, clickedElementIndex = clickedElementIndex)
     }

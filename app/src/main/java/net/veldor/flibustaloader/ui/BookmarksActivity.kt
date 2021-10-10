@@ -6,6 +6,7 @@ import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.BookmarksAdapter
 import net.veldor.flibustaloader.databinding.ActivityBookmarksBinding
+import net.veldor.flibustaloader.utils.PreferencesHandler
 
 class BookmarksActivity : BaseActivity() {
     private lateinit var binding: ActivityBookmarksBinding
@@ -19,6 +20,10 @@ class BookmarksActivity : BaseActivity() {
 
     override fun setupInterface() {
         super.setupInterface()
+        if(PreferencesHandler.instance.isEInk){
+            paintToolbar(binding.toolbar)
+        }
+        binding.toolbar.title = getString(R.string.bookmarks_title)
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToBookmarks)

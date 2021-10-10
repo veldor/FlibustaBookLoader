@@ -3,10 +3,14 @@ package net.veldor.flibustaloader.database.entity
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
 
 @Entity
 class BooksDownloadSchedule {
 
+
+    @Ignore
+    var progress: CurrentBookDownloadProgress? = null
 
     @PrimaryKey(autoGenerate = true)
     var id = 0

@@ -6,6 +6,7 @@ import android.os.Looper
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.*
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -100,6 +101,12 @@ class SubscriptionsFragment : Fragment() {
 
     private fun setupUI() {
         showHints()
+        if(PreferencesHandler.instance.isEInk){
+            binding.searchBook.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+            binding.searchAuthor.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+            binding.searchSequence.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+            binding.searchGenre.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+        }
         binding.subscribeItemInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 // Do whatever you want here

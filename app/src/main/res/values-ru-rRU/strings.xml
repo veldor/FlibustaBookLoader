@@ -280,4 +280,17 @@
     <string name="mark_read">Отметить прочитанной</string>
     <string name="mark_downloaded">Отметить загруженной</string>
     <string name="share_book">Поделиться ссылкой</string>
+    <string name="this_search_not_accepted_message">Поиск по значению возможен только для книг и авторов. Переключите тип поиска</string>
+    <string name="share_settings_message">Отправить резервную копию</string>
+    <string name="settings_restored_message">Резервная копия восстановлена, перезапуск приложения</string>
+    <string name="bookmarks_title">Закладки</string>
+    <string name="title_activity_settings">Настройки</string>
+    <string name="title_activity_subscriptions">Подписки</string>
+    <string name="title_activity_bookmarks">Закладки</string>
+    <string name="title_activity_blacklist">Фильтры</string>
+    <string name="title_activity_login">Вход</string>
+    <string name="title_activity_not_available">Сервер недоступен</string>
+    <string name="title_activity_dir_content">Скачанное</string>
+    <string name="wrong_format_ignored">Книги, недоступные в выбранном формате не будут загружены</string>
+    <string name="wrong_format_accepted">Книги, недоступные в выбранном формате, будут загружены в доступном</string>
 </resources>

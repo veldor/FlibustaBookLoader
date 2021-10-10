@@ -11,6 +11,12 @@
     tools:ignore="Overdraw">
 
 
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/preferencesGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="connectionType,search_type,showAllSwitcher" />
+
     <ProgressBar
         android:id="@+id/progressBar"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
@@ -19,6 +25,34 @@
         android:indeterminate="true"
         android:visibility="invisible"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/resultsCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:background="@color/white"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        app:drawableLeftCompat="@drawable/ic_book_mini_24dp"
+        app:drawableStartCompat="@drawable/ic_book_mini_24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_type" />
+
+    <TextView
+        android:id="@+id/filteredCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:background="@color/white"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        app:drawableLeftCompat="@drawable/ic_baseline_filter_alt_24"
+        app:drawableStartCompat="@drawable/ic_baseline_filter_alt_24"
+        app:layout_constraintStart_toEndOf="@id/resultsCount"
+        app:layout_constraintTop_toBottomOf="@id/search_type" />
 
     <TextView
         android:id="@+id/connectionType"

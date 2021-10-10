@@ -37,20 +37,22 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            android:id="@+id/statusFirstValue"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textSize="12sp"
             android:gravity="center_horizontal"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="12sp" />
 
         <TextView
+            android:id="@+id/statusSecondValue"
             android:layout_width="match_parent"
-            android:textColor="@color/white"
-            android:textSize="12sp"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:textAlignment="center"/>
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="12sp" />
     </TextSwitcher>
 
     <TextView
@@ -72,6 +74,8 @@
         android:id="@+id/testStartApp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:background="@drawable/transparent_bg_bordered_button"
         android:padding="10dp"
         android:shadowColor="#000000"

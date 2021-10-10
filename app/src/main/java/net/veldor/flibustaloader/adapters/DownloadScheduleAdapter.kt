@@ -2,7 +2,9 @@ package net.veldor.flibustaloader.adapters
 
 import android.os.Handler
 import android.os.Looper.getMainLooper
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
@@ -12,6 +14,8 @@ import net.veldor.flibustaloader.BR
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.databinding.DownloadScheduleBookItemBinding
+import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
+import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.DOWNLOAD_IN_PROGRESS
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.removeFromQueue
 
 class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule?>) :
@@ -49,7 +53,6 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
             if (index >= 0) {
                 links[index] = book
                 notifyItemChanged(index)
-
                 Handler(getMainLooper()).postDelayed({
                     links.removeAt(index)
                     notifyItemRemoved(index)
@@ -105,6 +108,23 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
         }
     }
 
+    fun setDownloadProgressChanged(progress: CurrentBookDownloadProgress?) {
+        if (progress != null) {
+            // get current downloaded book link
+            val bookInProgress = App.instance.liveBookDownloadInProgress.value
+            if (bookInProgress != null) {
+                links.forEach {
+                    if (it?.link == bookInProgress.link) {
+                        val index = links.indexOf(it)
+                        it.inProgress = true
+                        it.progress = progress
+                        notifyItemChanged(index)
+                    }
+                }
+            }
+        }
+    }
+
     class ViewHolder(private val mBinding: DownloadScheduleBookItemBinding) :
         RecyclerView.ViewHolder(
             mBinding.root
@@ -129,6 +149,7 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                             null
                         )
                     )
+                    mBinding.bookLoadProgress.visibility = View.GONE
                 }
                 scheduleItem.failed -> {
                     mBinding.bookStateText.text =
@@ -140,6 +161,7 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                             null
                         )
                     )
+                    mBinding.bookLoadProgress.visibility = View.GONE
                 }
                 scheduleItem.inProgress -> {
                     mBinding.bookStateText.text =
@@ -151,6 +173,17 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                             null
                         )
                     )
+                    mBinding.bookLoadProgress.visibility = View.VISIBLE
+                    if(scheduleItem.progress != null){
+                        mBinding.bookLoadProgress.isIndeterminate = false
+                        val progress = scheduleItem.progress!!.percentDone.toInt()
+                        Log.d("surprise", "bind: progress is $progress")
+                        mBinding.bookLoadProgress.progress = progress
+                    }
+                    else{
+                        mBinding.bookLoadProgress.isIndeterminate = false
+                        mBinding.bookLoadProgress.progress = 0
+                    }
                 }
                 else -> {
                     mBinding.bookStateText.text =
@@ -162,6 +195,12 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                             null
                         )
                     )
+                    if (App.instance.liveDownloadState.value == DOWNLOAD_IN_PROGRESS) {
+                        mBinding.bookLoadProgress.visibility = View.VISIBLE
+                        mBinding.bookLoadProgress.isIndeterminate = true
+                    } else {
+                        mBinding.bookLoadProgress.visibility = View.GONE
+                    }
                 }
             }
             // добавлю действие при клике на кнопку скачивания

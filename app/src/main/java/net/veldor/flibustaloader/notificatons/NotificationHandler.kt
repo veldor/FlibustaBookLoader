@@ -18,10 +18,12 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.receivers.BookActionReceiver
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver
 import net.veldor.flibustaloader.receivers.MiscActionsReceiver
-import net.veldor.flibustaloader.ui.ActivityBookDownloadSchedule
+import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
+import net.veldor.flibustaloader.ui.DownloadScheduleActivity
 import net.veldor.flibustaloader.ui.MainActivity
 import net.veldor.flibustaloader.ui.SubscriptionsActivity
 import net.veldor.flibustaloader.utils.MimeTypes.getDownloadMime
+import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import java.util.*
 
 @SuppressLint("UnspecifiedImmutableFlag")
@@ -159,7 +161,7 @@ class NotificationHandler private constructor(private var context: Context) {
     fun createMassBookLoadNotification(): Notification {
         cancelTorErrorMessage()
         // при нажатии на уведомление- открою экран ожидания очереди
-        val openWindowIntent = Intent(context, ActivityBookDownloadSchedule::class.java)
+        val openWindowIntent = Intent(context, DownloadScheduleActivity::class.java)
         openWindowIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         val showWindowPending = PendingIntent.getActivity(
             context,
@@ -227,17 +229,17 @@ class NotificationHandler private constructor(private var context: Context) {
         mNotificationManager.notify(BOOKS_SUCCESS_NOTIFICATION, downloadCompleteBuilder.build())
     }
 
-    fun createMassDownloadStoppedNotification() {
-        cancelTorErrorMessage()
-        val downloadStoppedBuilder = NotificationCompat.Builder(context, BOOK_DOWNLOADS_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
-            .setContentTitle("Скачивание книг")
-            .setContentText("Скачивание книг остановлено!")
-        mNotificationManager.notify(
-            DOWNLOAD_PROGRESS_NOTIFICATION,
-            downloadStoppedBuilder.build()
-        )
-    }
+//    fun createMassDownloadStoppedNotification() {
+//        cancelTorErrorMessage()
+//        val downloadStoppedBuilder = NotificationCompat.Builder(context, BOOK_DOWNLOADS_CHANNEL_ID)
+//            .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
+//            .setContentTitle("Скачивание книг")
+//            .setContentText("Скачивание книг остановлено!")
+//        mNotificationManager.notify(
+//            DOWNLOAD_PROGRESS_NOTIFICATION,
+//            downloadStoppedBuilder.build()
+//        )
+//    }
 
     fun createMassDownloadPausedNotification() {
         cancelTorErrorMessage()
@@ -336,7 +338,7 @@ class NotificationHandler private constructor(private var context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT
         )
         // добавлю интент для отображения экрана очереди скачивания
-        val openScheduleIntent = Intent(context, ActivityBookDownloadSchedule::class.java)
+        val openScheduleIntent = Intent(context, DownloadScheduleActivity::class.java)
         openScheduleIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         val openSchedulePendingIntent = PendingIntent.getActivity(
             context,
@@ -394,25 +396,12 @@ class NotificationHandler private constructor(private var context: Context) {
             return notificationBuilder.build()
         }
 
-    fun sendNotFoundSubscribesNotification() {
-        val notificationBuilder = NotificationCompat.Builder(context, SUBSCRIBES_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_book_black_24dp)
-            .setContentTitle("Новых книг не найдено")
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText("Ничего интересного в этот раз не нашлось")
-            )
-            .setAutoCancel(true)
-        val notification = notificationBuilder.build()
-        mNotificationManager.notify(SUBSCRIBE_NOTIFICATION, notification)
-    }
-
     fun updateDownloadProgress(mBooksCount: Int, currentDownload: Int, beginningTime: Long) {
         val left = System.currentTimeMillis() - beginningTime
         val forBook = left / currentDownload
         (mBooksCount - currentDownload) * forBook / 1000
         // при нажатии на уведомление- открою экран ожидания очереди
-        val openWindowIntent = Intent(context, ActivityBookDownloadSchedule::class.java)
+        val openWindowIntent = Intent(context, DownloadScheduleActivity::class.java)
         openWindowIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         val showWindowPending = PendingIntent.getActivity(
             context,
@@ -512,86 +501,6 @@ class NotificationHandler private constructor(private var context: Context) {
         ++bookLoadedId
     }
 
-    fun sendLoadedBookNotification(queuedElement: BooksDownloadSchedule) {
-
-        // Добавлю группу
-        val mBuilder = NotificationCompat.Builder(context, BOOK_DOWNLOADS_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_book_black_24dp)
-            .setContentInfo("Загруженные книги")
-            .setGroup(DOWNLOADED_BOOKS_GROUP)
-            .setGroupSummary(true)
-        mNotificationManager.notify(-100, mBuilder.build())
-        // создам интент для функции отправки файла
-        val shareIntent = Intent(context, BookActionReceiver::class.java)
-        shareIntent.putExtra(
-            BookLoadedReceiver.EXTRA_ACTION_TYPE,
-            BookLoadedReceiver.ACTION_TYPE_SHARE
-        )
-        shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, queuedElement.format)
-        shareIntent.putExtra(BookLoadedReceiver.EXTRA_AUTHOR_FOLDER, queuedElement.authorDirName)
-        shareIntent.putExtra(
-            BookLoadedReceiver.EXTRA_SEQUENCE_FOLDER,
-            queuedElement.sequenceDirName
-        )
-        shareIntent.putExtra(
-            BookLoadedReceiver.EXTRA_RESERVED_SEQUENCE_FOLDER,
-            queuedElement.reservedSequenceName
-        )
-        shareIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
-        shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, queuedElement.name)
-        val sharePendingIntent = PendingIntent.getBroadcast(
-            context,
-            START_SHARING_REQUEST_CODE,
-            shareIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        // создам интент для функции открытия файла
-        val openIntent = Intent(context, BookActionReceiver::class.java)
-        openIntent.putExtra(
-            BookLoadedReceiver.EXTRA_ACTION_TYPE,
-            BookLoadedReceiver.ACTION_TYPE_OPEN
-        )
-        openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_TYPE, queuedElement.format)
-        openIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
-        openIntent.putExtra(BookLoadedReceiver.EXTRA_AUTHOR_FOLDER, queuedElement.authorDirName)
-        openIntent.putExtra(BookLoadedReceiver.EXTRA_SEQUENCE_FOLDER, queuedElement.sequenceDirName)
-        openIntent.putExtra(
-            BookLoadedReceiver.EXTRA_RESERVED_SEQUENCE_FOLDER,
-            queuedElement.reservedSequenceName
-        )
-        openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, queuedElement.name)
-        val openPendingIntent = PendingIntent.getBroadcast(
-            context,
-            START_OPEN_REQUEST_CODE,
-            openIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val openMainIntent = Intent(context, MainActivity::class.java)
-        val startMainPending = PendingIntent.getActivity(
-            context,
-            START_APP_CODE,
-            openMainIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val notificationBuilder = NotificationCompat.Builder(context, BOOKS_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_book_black_24dp)
-            .setContentTitle(queuedElement.name)
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(queuedElement.name + " :успешно загружено")
-            )
-            .setContentIntent(startMainPending)
-            .setDefaults(Notification.DEFAULT_ALL)
-            .setGroup(DOWNLOADED_BOOKS_GROUP)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .addAction(R.drawable.ic_share_white_24dp, "Отправить", sharePendingIntent)
-            .addAction(R.drawable.ic_open_black_24dp, "Открыть", openPendingIntent)
-        mNotificationManager.notify(bookLoadedId, notificationBuilder.build())
-        ++bookLoadedId
-    }
-
     fun begDonation() {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse("https://money.yandex.ru/to/41001269882689")
@@ -646,6 +555,10 @@ class NotificationHandler private constructor(private var context: Context) {
         } else {
             (timeLeftInSeconds % 60).toString() + " сек."
         }
+        val progress = CurrentBookDownloadProgress()
+        progress.timeLeft = textLeft
+        progress.percentDone = percentDone
+        DownloadScheduleViewModel.liveCurrentBookDownloadProgress.postValue(progress)
         val notification = NotificationCompat.Builder(context, BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
             .setContentTitle("Качаю $name")
@@ -700,20 +613,6 @@ class NotificationHandler private constructor(private var context: Context) {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
         val incomingCallNotification = notificationBuilder.build()
         mNotificationManager.notify(MIRROR_DOWNLOAD_USING_NOTIFICATION, incomingCallNotification)
-    }
-
-    fun notifyUseMirror() {
-        val notificationBuilder = NotificationCompat.Builder(App.instance, MISC_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_baseline_bookmark_24)
-            .setContentTitle("Используется альтернативное зеркало!")
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText("Нет доступа к основному зеркалу. Вы можете просматривать каталог, но со скачиванием книг скорее всего будут проблемы. Лучше зайдите попозже.")
-            )
-            .setColor(Color.RED)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-        val incomingCallNotification = notificationBuilder.build()
-        mNotificationManager.notify(MIRROR_USING_NOTIFICATION, incomingCallNotification)
     }
 
     val checkAvailabilityNotification: Notification
@@ -789,8 +688,6 @@ class NotificationHandler private constructor(private var context: Context) {
         private const val MIRROR_DOWNLOAD_USING_NOTIFICATION = 13
         const val CHECK_AVAILABILITY_NOTIFICATION = 15
         const val IS_TEST_VERSION_NOTIFICATION = 16
-        private const val MIRROR_USING_NOTIFICATION = 14
-        private const val VERSION_TOO_LARGE_NOTIFICATION = 17
         private const val SEND_LOG_CODE = 5
 
         @JvmStatic
