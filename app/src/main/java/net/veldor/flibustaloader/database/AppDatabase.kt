@@ -15,7 +15,7 @@ import net.veldor.flibustaloader.database.entity.ReadedBooks
 
 @Database(
     entities = [ReadedBooks::class, DownloadedBooks::class, BooksDownloadSchedule::class, Bookmark::class],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -63,6 +63,11 @@ abstract class AppDatabase : RoomDatabase() {
                 database.execSQL(
                     "CREATE TABLE Bookmark (id INTEGER primary key autoincrement NOT NULL, name TEXT NOT NULL, link TEXT NOT NULL)"
                 )
+            }
+        }
+        @JvmField
+        val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
             }
         }
     }

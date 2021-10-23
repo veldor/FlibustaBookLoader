@@ -173,18 +173,24 @@ class TestParser(private val text: String) {
                             link.size = foundedEntity!!.size
                             link.authorDirName = authorDirName
                             // так, как книга может входить в несколько серий- совмещу назначения
-                            if(foundedEntity!!.sequences.size > 0){
+                            if (foundedEntity!!.sequences.size > 0) {
                                 simpleStringBuilder.clear()
                                 var prefix = ""
                                 foundedEntity!!.sequences.forEach {
                                     simpleStringBuilder.append(prefix)
                                     prefix = "$|$"
-                                    simpleStringBuilder.append(Regex("[^\\d\\w ]").replace(it.name!!.replace("Все книги серии", ""), ""))
+                                    simpleStringBuilder.append(
+                                        Regex("[^\\d\\w ]").replace(
+                                            it.name!!.replace(
+                                                "Все книги серии",
+                                                ""
+                                            ), ""
+                                        )
+                                    )
                                 }
                                 link.sequenceDirName = simpleStringBuilder.toString()
                                 link.reservedSequenceName = foundedEntity!!.sequencesComplex
-                            }
-                            else{
+                            } else {
                                 link.sequenceDirName = ""
                                 link.reservedSequenceName = ""
                             }
@@ -196,8 +202,7 @@ class TestParser(private val text: String) {
                                 // load pic in new Thread
                                 PicHandler().loadPic(parsed.last())
                             }
-                        }
-                        else{
+                        } else {
                             filtered++
                         }
                     } else if (qName.equals("content")) {
@@ -212,24 +217,21 @@ class TestParser(private val text: String) {
                     if (idFound) {
                         idFound = false
                         textValue = String(ch!!, start, length)
-                        // считаю, что все найденные элементы одного типа
-                        if (contentType == null) {
-                            when {
-                                textValue!!.contains(TYPE_BOOK) -> {
-                                    contentType = TYPE_BOOK
-                                }
-                                textValue!!.contains(TYPE_AUTHORS) -> {
-                                    contentType = TYPE_AUTHORS
-                                }
-                                textValue!!.contains(TYPE_AUTHOR) -> {
-                                    contentType = TYPE_AUTHOR
-                                }
-                                textValue!!.contains(TYPE_GENRE) -> {
-                                    contentType = TYPE_GENRE
-                                }
-                                textValue!!.contains(TYPE_SEQUENCE) -> {
-                                    contentType = TYPE_SEQUENCE
-                                }
+                        when {
+                            textValue!!.contains(TYPE_BOOK) -> {
+                                contentType = TYPE_BOOK
+                            }
+                            textValue!!.contains(TYPE_AUTHORS) -> {
+                                contentType = TYPE_AUTHORS
+                            }
+                            textValue!!.contains(TYPE_AUTHOR) -> {
+                                contentType = TYPE_AUTHOR
+                            }
+                            textValue!!.contains(TYPE_GENRE) -> {
+                                contentType = TYPE_GENRE
+                            }
+                            textValue!!.contains(TYPE_SEQUENCE) -> {
+                                contentType = TYPE_SEQUENCE
                             }
                         }
                         foundedEntity!!.type = contentType!!

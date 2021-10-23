@@ -53,8 +53,18 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
             links[index] = book
             notifyItemChanged(index)
             Handler(getMainLooper()).postDelayed({
-                links.removeAt(index)
-                notifyItemRemoved(index)
+                if(links.isNotEmpty()){
+                    var position = -1
+                    links.forEach {
+                        if(it.bookId == book.bookId){
+                            position = links.indexOf(it)
+                        }
+                    }
+                    if(position >= 0 && links.size > position){
+                        links.removeAt(position)
+                        notifyItemRemoved(position)
+                    }
+                }
             }, 1000)
         }
     }

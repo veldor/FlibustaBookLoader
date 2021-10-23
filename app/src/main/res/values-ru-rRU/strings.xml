@@ -275,7 +275,7 @@
     <string name="notification_downloader_header">Загрузчик книг</string>
     <string name="notification_downloader_prepare_body">Подготовка загрузки книг</string>
     <string name="wait_for_download">В очереди</string>
-    <string name="start_download">Скачать</string>
+    <string name="start_download">Начать загрузку</string>
     <string name="details_in_browser_menu">Подробнее в браузере</string>
     <string name="mark_read">Отметить прочитанной</string>
     <string name="mark_downloaded">Отметить загруженной</string>

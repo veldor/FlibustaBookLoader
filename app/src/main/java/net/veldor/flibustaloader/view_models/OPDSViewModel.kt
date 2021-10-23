@@ -152,8 +152,10 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
             currentWork!!.cancel()
         }
         if (addToHistory && currentPageUrl != null) {
+            Log.d("surprise", "request: add to history $currentPageUrl")
             History.instance!!.addToHistory(currentPageUrl!!)
             History.instance!!.addToClickHistory(clickedElementIndex)
+            Log.d("surprise", "request: save click on $clickedElementIndex")
         }
 
         if (!append) {
@@ -204,7 +206,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                 searchResult.results = results
                 searchResult.nextPageLink = parser.nextPageLink
                 searchResult.filtered = parser.filtered
-                if(searchResult.nextPageLink == null && lastClicked >= 0){
+                if(lastClicked >= 0){
                     searchResult.clickedElementIndex = lastClicked
                     searchResult.isBackSearch = true
                 }

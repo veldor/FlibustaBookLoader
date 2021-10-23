@@ -23,7 +23,6 @@ class DownloadScheduleActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this).get(DownloadScheduleViewModel::class.java)
-        viewModel.loadDownloadQueue()
         binding = ActivityDownloadScheduleBinding.inflate(layoutInflater)
         setContentView(binding.drawerLayout)
         setupInterface()
@@ -35,6 +34,7 @@ class DownloadScheduleActivity : BaseActivity() {
         super.setupObservers()
         DownloadScheduleViewModel.schedule.observe(this, {
             (binding.resultsList.adapter as DownloadScheduleAdapter).setData(it)
+            binding.swipeLayout.isRefreshing = false
         })
 
         DownloadScheduleViewModel.liveCurrentBookDownloadProgress.observe(this, {
@@ -43,12 +43,11 @@ class DownloadScheduleActivity : BaseActivity() {
         })
 
         App.instance.liveDownloadState.observe(this, {
-            Log.d("surprise", "setupObservers: state changed on $it")
-            if(it == DownloadBooksWorker.DOWNLOAD_FINISHED){
+            if (it == DownloadBooksWorker.DOWNLOAD_FINISHED) {
+                viewModel.loadDownloadQueue()
                 binding.actionButton.text = getString(R.string.start_download)
                 (binding.resultsList.adapter as DownloadScheduleAdapter).notifyDataSetChanged()
-            }
-            else if(it == DownloadBooksWorker.DOWNLOAD_IN_PROGRESS){
+            } else if (it == DownloadBooksWorker.DOWNLOAD_IN_PROGRESS) {
                 (binding.resultsList.adapter as DownloadScheduleAdapter).notifyDataSetChanged()
                 binding.actionButton.text = getString(R.string.stop_download_message)
             }
@@ -91,11 +90,21 @@ class DownloadScheduleActivity : BaseActivity() {
             Toast.makeText(this, R.string.download_schedule_empty_message, Toast.LENGTH_LONG).show()
             finish()
         }
+
+        binding.swipeLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        )
+        binding.swipeLayout.setOnRefreshListener {
+            viewModel.loadDownloadQueue()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        (binding.resultsList.adapter as DownloadScheduleAdapter).setData(DownloadScheduleViewModel.schedule.value!!)
+        viewModel.loadDownloadQueue()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

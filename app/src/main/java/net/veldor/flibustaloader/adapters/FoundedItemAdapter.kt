@@ -606,4 +606,10 @@ class FoundedItemAdapter(
         values[clickedElementIndex].selected = true
         notifyItemChanged(clickedElementIndex)
     }
+
+    fun getSize(): Int {
+        return values.size
+    }
+
+    var isScrolledToLast: Boolean = false
 }

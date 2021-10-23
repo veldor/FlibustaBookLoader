@@ -23,7 +23,7 @@ import kotlin.system.exitProcess
 class MiscActionsReceiver : BroadcastReceiver() {
     @SuppressLint("UnspecifiedImmutableFlag")
     override fun onReceive(context: Context, intent: Intent) {
-        val mainAction = intent.action
+        intent.action
         val action = intent.getStringExtra(EXTRA_ACTION_TYPE)
         if (action != null) {
             when (action) {
@@ -34,6 +34,7 @@ class MiscActionsReceiver : BroadcastReceiver() {
                         .cancelAllWorkByTag(OPDSViewModel.MULTIPLY_DOWNLOAD)
                     // отменяю работу и очищу очередь скачивания
                     NotificationHandler.instance.cancelBookLoadNotification()
+                    App.instance.liveDownloadState.postValue(DownloadBooksWorker.DOWNLOAD_FINISHED)
                     Toast.makeText(
                         App.instance,
                         "Скачивание книг отменено и очередь скачивания очищена!",
@@ -42,7 +43,6 @@ class MiscActionsReceiver : BroadcastReceiver() {
                 }
                 ACTION_PAUSE_MASS_DOWNLOAD -> {
                     NotificationHandler.instance.hideMassDownloadInQueueMessage()
-                    Log.d("surprise", "MiscActionsReceiver onReceive: pause")
                     WorkManager.getInstance(App.instance)
                         .cancelAllWorkByTag(OPDSViewModel.MULTIPLY_DOWNLOAD)
                     Toast.makeText(
@@ -52,19 +52,17 @@ class MiscActionsReceiver : BroadcastReceiver() {
                     ).show()
                     // покажу уведомление о приостановленной загрузке
                     NotificationHandler.instance.createMassDownloadPausedNotification()
+                    App.instance.liveDownloadState.postValue(DownloadBooksWorker.DOWNLOAD_FINISHED)
                 }
                 ACTION_SKIP_BOOK -> {
-                    Log.d("surprise", "MiscActionsReceiver onReceive: skip first book")
                     // пропущу первую книгу в очереди и продолжу скачивание
                     skipFirstBook()
-                    Log.d("surprise", "MiscActionsReceiver onReceive: resume mass download")
                     NotificationHandler.instance.mNotificationManager.cancel(NotificationHandler.DOWNLOAD_PAUSED_NOTIFICATION)
-                    // возобновлю скачивание
                 }
                 ACTION_RESUME_MASS_DOWNLOAD -> {
                     Log.d("surprise", "MiscActionsReceiver onReceive: resume mass download")
                     NotificationHandler.instance.mNotificationManager.cancel(NotificationHandler.DOWNLOAD_PAUSED_NOTIFICATION)
-                    Log.d("surprise", "onReceive: start")
+                    App.instance.requestDownloadBooksStart()
                 }
                 ACTION_REPEAT_DOWNLOAD -> Log.d("surprise", "onReceive: start")
                 ACTION_RESTART_TOR -> {

@@ -242,17 +242,16 @@ class NotificationHandler private constructor(private var context: Context) {
 //    }
 
     fun createMassDownloadPausedNotification() {
-        cancelTorErrorMessage()
         // интент возобновления скачивания
-        val pauseIntent = Intent(context, MiscActionsReceiver::class.java)
-        pauseIntent.putExtra(
+        val resumeIntent = Intent(context, MiscActionsReceiver::class.java)
+        resumeIntent.putExtra(
             MiscActionsReceiver.EXTRA_ACTION_TYPE,
             MiscActionsReceiver.ACTION_RESUME_MASS_DOWNLOAD
         )
-        val pauseMassDownloadPendingIntent = PendingIntent.getBroadcast(
+        val resumeMassDownloadPendingIntent = PendingIntent.getBroadcast(
             context,
-            START_APP_CODE,
-            pauseIntent,
+            RESUME_DOWNLOAD_CODE,
+            resumeIntent,
             PendingIntent.FLAG_UPDATE_CURRENT
         )
         val downloadCompleteBuilder =
@@ -262,7 +261,7 @@ class NotificationHandler private constructor(private var context: Context) {
                 .addAction(
                     R.drawable.ic_play_arrow_white_24dp,
                     "Возобновить",
-                    pauseMassDownloadPendingIntent
+                    resumeMassDownloadPendingIntent
                 )
                 .setContentText("Скачивание приостановлено!")
         mNotificationManager.notify(DOWNLOAD_PAUSED_NOTIFICATION, downloadCompleteBuilder.build())
@@ -674,6 +673,7 @@ class NotificationHandler private constructor(private var context: Context) {
         const val DOWNLOAD_PROGRESS_NOTIFICATION = 5
         private const val TOR_LOAD_ERROR_NOTIFICATION = 6
         const val DOWNLOAD_PAUSED_NOTIFICATION = 7
+        const val RESUME_DOWNLOAD_NOTIFICATION = 18
         private const val BOOKS_SUCCESS_NOTIFICATION = 8
         private const val MASS_DOWNLOAD_PAUSED_NOTIFICATION = 9
         const val CHECK_SUBSCRIBES_WORKER_NOTIFICATION = 10
@@ -688,6 +688,7 @@ class NotificationHandler private constructor(private var context: Context) {
         private const val MIRROR_DOWNLOAD_USING_NOTIFICATION = 13
         const val CHECK_AVAILABILITY_NOTIFICATION = 15
         const val IS_TEST_VERSION_NOTIFICATION = 16
+        const val RESUME_DOWNLOAD_CODE = 17
         private const val SEND_LOG_CODE = 5
 
         @JvmStatic

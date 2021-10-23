@@ -25,6 +25,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
@@ -123,10 +124,19 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             }
 
             if (it.appended) {
-                val previousSize = binding.resultsCount.text.toString().toInt()
-                binding.resultsCount.text = (it.size + previousSize).toString()
-                val previousFilteredSize = binding.filteredCount.text.toString().toInt()
-                if (previousFilteredSize > 0 || it.filtered > 0) {
+                if (binding.resultsCount.text.isDigitsOnly()) {
+                    val previousSize = binding.resultsCount.text.toString().toInt()
+                    binding.resultsCount.text = (it.size + previousSize).toString()
+                } else {
+                    binding.resultsCount.text = (it.size).toString()
+                }
+                val previousSize: Int = if (binding.filteredCount.text.isDigitsOnly()) {
+                    binding.filteredCount.text.toString().toInt()
+                } else {
+                    0
+                }
+                if (previousSize > 0 || it.filtered > 0) {
+                    binding.resultsCount.text = (it.filtered + previousSize).toString()
                     binding.filteredCount.visibility = View.VISIBLE
                 }
                 (binding.resultsList.adapter as FoundedItemAdapter).appendContent(it.results)
@@ -152,10 +162,12 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             if (it.size == 0) {
                 Toast.makeText(requireContext(), "Поиск завершен", Toast.LENGTH_LONG).show()
             }
-
-            // проверю, не является ли страница последней загруженной страницей результатов
-            if (it.nextPageLink.isNullOrEmpty()) {
-                if (it.isBackSearch && it.clickedElementIndex >= 0) {
+            if (it.isBackSearch && it.clickedElementIndex >= 0) {
+                // проверю, что элемент входит в выборку
+                if ((binding.resultsList.adapter as FoundedItemAdapter).getSize() >= it.clickedElementIndex &&
+                    !(binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast
+                ) {
+                    (binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast = true
                     binding.resultsList.scrollToPosition(it.clickedElementIndex)
                     (binding.resultsList.adapter as FoundedItemAdapter).markClickedElement(it.clickedElementIndex)
                 }
@@ -1214,8 +1226,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         .setMessage(Html.fromHtml(item.content, Html.FROM_HTML_MODE_COMPACT))
                         .setPositiveButton(R.string.ok, null)
                         .show()
-                }
-                else{
+                } else {
                     AlertDialog.Builder(requireContext())
                         .setTitle(item.name)
                         .setMessage(Html.fromHtml(item.content))
@@ -1238,6 +1249,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             binding.resultsCount.text = "0"
             binding.filteredCount.visibility = View.GONE
             binding.filteredCount.text = "0"
+            (binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast = false
         }
         binding.progressBar.visibility = View.VISIBLE
         viewModel.request(link, append, addToHistory, clickedElementIndex = clickedElementIndex)
