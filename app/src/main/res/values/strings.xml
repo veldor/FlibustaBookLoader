@@ -317,4 +317,5 @@
     <string name="title_activity_dir_content">Dir content</string>
     <string name="wrong_format_ignored">Book not in this format will be ignored</string>
     <string name="wrong_format_accepted">Book in other format will be loaded</string>
+    <string name="wallet_copied_message">Wallet address copied to clipboard</string>
 </resources>

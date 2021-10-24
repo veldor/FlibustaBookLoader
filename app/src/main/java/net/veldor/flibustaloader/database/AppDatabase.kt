@@ -47,14 +47,14 @@ abstract class AppDatabase : RoomDatabase() {
         @JvmField
         val MIGRATION_4_5: Migration = object : Migration(4, 5) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN authorDirName TEXT")
-                database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN sequenceDirName TEXT")
+                database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN authorDirName TEXT NOT NULL")
+                database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN sequenceDirName TEXT NOT NULL")
             }
         }
         @JvmField
         val MIGRATION_5_6: Migration = object : Migration(5, 6) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN reservedSequenceName TEXT")
+                database.execSQL("ALTER TABLE BooksDownloadSchedule ADD COLUMN reservedSequenceName TEXT NOT NULL")
             }
         }
         @JvmField
@@ -68,6 +68,21 @@ abstract class AppDatabase : RoomDatabase() {
         @JvmField
         val MIGRATION_7_8: Migration = object : Migration(7, 8) {
             override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("create table ScheduleTemp (" +
+                        "id integer primary key autoincrement NOT NULL," +
+                        "bookId TEXT NOT NULL, " +
+                        "link TEXT NOT NULL, " +
+                        "name TEXT NOT NULL, " +
+                        "size TEXT NOT NULL, " +
+                        "author TEXT NOT NULL, " +
+                        "format TEXT NOT NULL, " +
+                        "authorDirName TEXT NOT NULL, " +
+                        "sequenceDirName TEXT NOT NULL, " +
+                        "reservedSequenceName TEXT NOT NULL);")
+
+                database.execSQL ("INSERT INTO ScheduleTemp (id, bookId, link, name, size, author, format, authorDirName,sequenceDirName,reservedSequenceName) SELECT id, bookId, link, name, size, author, format, authorDirName,sequenceDirName,reservedSequenceName FROM BooksDownloadSchedule")
+                database.execSQL ("DROP TABLE BooksDownloadSchedule")
+                database.execSQL ("ALTER TABLE ScheduleTemp RENAME TO BooksDownloadSchedule")
             }
         }
     }
