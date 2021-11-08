@@ -32,10 +32,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import com.google.android.material.snackbar.Snackbar
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.FoundedItemAdapter
 import net.veldor.flibustaloader.databinding.FragmentOpdsBinding
+import net.veldor.flibustaloader.delegates.BooksAddedToQueueDelegate
 import net.veldor.flibustaloader.delegates.FoundedItemActionDelegate
 import net.veldor.flibustaloader.parsers.TestParser
 import net.veldor.flibustaloader.selections.DownloadLink
@@ -43,14 +47,17 @@ import net.veldor.flibustaloader.selections.FoundedEntity
 import net.veldor.flibustaloader.ui.BaseActivity
 import net.veldor.flibustaloader.ui.BlacklistActivity
 import net.veldor.flibustaloader.ui.BrowserActivity
+import net.veldor.flibustaloader.ui.DownloadScheduleActivity
 import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.view_models.OPDSViewModel
+import net.veldor.flibustaloader.workers.SendLogWorker
 import java.lang.reflect.Field
 import java.net.URLEncoder
 import java.util.*
 
 
 class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActionDelegate,
+    BooksAddedToQueueDelegate,
     View.OnCreateContextMenuListener {
 
     private lateinit var binding: FragmentOpdsBinding
@@ -61,6 +68,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        super.onCreateView(inflater, container, savedInstanceState)
         activity?.invalidateOptionsMenu()
         viewModel = ViewModelProvider(this).get(OPDSViewModel::class.java)
         binding = FragmentOpdsBinding.inflate(inflater, container, false)
@@ -112,44 +120,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             }
         })
         viewModel.searchResults.observe(viewLifecycleOwner, {
-            lastScrolled = 0
-            if (it.type == TestParser.TYPE_BOOK && (it.results.size > 0 || it.appended)) {
-                // покажу кнопку скачивания всех книг
-                binding.floatingMenu.visibility = View.VISIBLE
-            } else {
-                binding.floatingMenu.visibility = View.GONE
-            }
-            if (it.nextPageLink == null || (PreferencesHandler.instance.opdsPagedResultsLoad && it.type == TestParser.TYPE_BOOK)) {
-                binding.progressBar.visibility = View.INVISIBLE
-            }
-
-            if (it.appended) {
-                if (binding.resultsCount.text.isDigitsOnly()) {
-                    val previousSize = binding.resultsCount.text.toString().toInt()
-                    binding.resultsCount.text = (it.size + previousSize).toString()
-                } else {
-                    binding.resultsCount.text = (it.size).toString()
-                }
-                val previousSize: Int = if (binding.filteredCount.text.isDigitsOnly()) {
-                    binding.filteredCount.text.toString().toInt()
-                } else {
-                    0
-                }
-                if (previousSize > 0 || it.filtered > 0) {
-                    binding.resultsCount.text = (it.filtered + previousSize).toString()
-                    binding.filteredCount.visibility = View.VISIBLE
-                }
-                (binding.resultsList.adapter as FoundedItemAdapter).appendContent(it.results)
-            } else {
-                if (it.filtered > 0) {
-                    binding.filteredCount.visibility = View.VISIBLE
-                    binding.filteredCount.text = it.filtered.toString()
-                }
-                binding.resultsCount.visibility = View.VISIBLE
-                binding.resultsCount.text = it.size.toString()
-                (binding.resultsList.adapter as FoundedItemAdapter).setContent(it.results)
-                binding.resultsList.scrollToPosition(0)
-            }
             // set next page
             sNextPage = if (it.nextPageLink.isNullOrEmpty()) {
                 (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
@@ -158,19 +128,56 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(true)
                 it.nextPageLink!!
             }
-            // если нет результатов- заявлю об этом
-            if (it.size == 0) {
-                Toast.makeText(requireContext(), "Поиск завершен", Toast.LENGTH_LONG).show()
+            lastScrolled = 0
+            if (it.nextPageLink == null || (PreferencesHandler.instance.opdsPagedResultsLoad && it.type == TestParser.TYPE_BOOK)) {
+                binding.progressBar.visibility = View.INVISIBLE
+            }
+            if (it.appended) {
+                if(binding.filteredCount.text.isDigitsOnly()){
+                    if(it.filtered > 0){
+                        binding.filteredCount.text = (binding.filteredCount.text.toString().toInt() + it.filtered).toString()
+                    }
+                }
+                if(binding.resultsCount.text.isDigitsOnly()){
+                    if(it.size > 0){
+                        binding.resultsCount.text = (binding.resultsCount.text.toString().toInt() + it.size).toString()
+                    }
+                }
+                (binding.resultsList.adapter as FoundedItemAdapter).appendContent(it.results)
+            } else {
+                binding.filteredCount.visibility = View.VISIBLE
+                binding.resultsCount.visibility = View.VISIBLE
+                binding.filteredCount.text = "0"
+                binding.resultsCount.text = "0"
+
+                if (it.filtered > 0) {
+                    binding.filteredCount.text = it.filtered.toString()
+                }
+                if(it.size > 0){
+                    binding.resultsCount.text = it.size.toString()
+                }
+                (binding.resultsList.adapter as FoundedItemAdapter).setContent(it.results)
+                binding.resultsList.scrollToPosition(0)
             }
             if (it.isBackSearch && it.clickedElementIndex >= 0) {
                 // проверю, что элемент входит в выборку
                 if ((binding.resultsList.adapter as FoundedItemAdapter).getSize() >= it.clickedElementIndex &&
                     !(binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast
                 ) {
+                    Log.d("surprise", "setupObservers: FOUND CLICKED ELEMENT!!")
                     (binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast = true
                     binding.resultsList.scrollToPosition(it.clickedElementIndex)
                     (binding.resultsList.adapter as FoundedItemAdapter).markClickedElement(it.clickedElementIndex)
                 }
+                else if(sNextPage != null){
+                    Log.d("surprise", "setupObservers: load next page while not search element")
+                    load(sNextPage!!, append = true, addToHistory = false, it.clickedElementIndex)
+                }
+            }
+            if ((binding.resultsList.adapter as FoundedItemAdapter).hasBooks()) {
+                binding.floatingMenu.visibility = View.VISIBLE
+            } else {
+                binding.floatingMenu.visibility = View.GONE
             }
         })
 
@@ -239,7 +246,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 }
             }
         }
-        binding.resultsList.adapter = FoundedItemAdapter(arrayListOf(), this)
+        binding.resultsList.adapter = FoundedItemAdapter(viewModel.getPreviouslyLoaded(), this)
 //        binding.resultsList.recycledViewPool.setMaxRecycledViews(0, 0);
 //        binding.resultsList.setItemViewCacheSize(50);
 //        binding.resultsList.setDrawingCacheEnabled(true);
@@ -339,7 +346,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                     favoriteFormat,
                     false,
-                    strictFormat = true
+                    strictFormat = true,
+                    this
                 )
             } else {
                 // покажу диалог выбора предпочтительнго типа скачивания
@@ -355,13 +363,17 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                     favoriteFormat,
                     true,
-                    strictFormat = true
+                    strictFormat = true,
+                    this
                 )
             } else {
                 // покажу диалог выбора предпочтительнго типа скачивания
                 selectBookTypeDialog(true)
             }
             binding.floatingMenu.close(true)
+        }
+        binding.fabDownloadSelected.setOnClickListener {
+            Toast.makeText(requireContext(), "В разработке", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -635,9 +647,9 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             return true
         }
         if (id == R.id.showPreviews) {
-            PreferencesHandler.instance.isPreviews
+            PreferencesHandler.instance.isPreviews = !PreferencesHandler.instance.isPreviews
             requireActivity().invalidateOptionsMenu()
-            return true
+            return false
         }
         if (id == R.id.switchLayout) {
             PreferencesHandler.instance.isLinearLayout = !PreferencesHandler.instance.isLinearLayout
@@ -740,6 +752,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
 
     private fun selectBookTypeDialog(onlyNotLoaded: Boolean) {
+        Log.d("surprise", "selectBookTypeDialog: showing dialog")
         val inflate = layoutInflater
         @SuppressLint("InflateParams") val view =
             inflate.inflate(R.layout.confirm_book_type_select, null)
@@ -768,7 +781,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                     MimeTypes.getFullMime(MimeTypes.MIMES_LIST[i])!!,
                     onlyNotLoaded,
-                    dialog.findViewById<SwitchCompat>(R.id.onlyThisType).isChecked
+                    dialog.findViewById<SwitchCompat>(R.id.onlyThisType).isChecked,
+                    this
                 )
                 requireActivity().invalidateOptionsMenu()
             }
@@ -1005,7 +1019,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             while (counter1 < linksLength1) {
                 item = downloadLinks[counter1]
                 if (item.mime == longMime) {
-                    viewModel.addToDownloadQueue(item)
+                    viewModel.addToDownloadQueue(item, this)
                     break
                 }
                 counter1++
@@ -1062,15 +1076,23 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         // проверю, нет ли в списке выбранного формата
                         item.downloadLinks.forEach {
                             if (it.mime!!.contains(savedMime)) {
-                                viewModel.addToDownloadQueue(it)
+                                viewModel.addToDownloadQueue(it, this)
                                 return
                             }
                         }
                     }
                     showDownloadsDialog(item.downloadLinks)
 
+                } else if (item.downloadLinks.size == 1) {
+                    viewModel.addToDownloadQueue(item.downloadLinks[0], this)
                 } else {
-                    viewModel.addToDownloadQueue(item.downloadLinks[0])
+                    Toast.makeText(
+                        requireContext(),
+                        "Не удалось найти ссылки для скачивания книги. Отправьте мне отчёт, сообщив подробности действия",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    val work = OneTimeWorkRequest.Builder(SendLogWorker::class.java).build()
+                    WorkManager.getInstance(App.instance).enqueue(work)
                 }
             }
             TestParser.TYPE_AUTHOR -> {
@@ -1091,30 +1113,35 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     override fun imageClicked(item: FoundedEntity) {
-        // покажу картинку
-        val dialogBuilder = AlertDialog.Builder(requireContext(), R.style.MyDialogStyle)
-        val inflater = layoutInflater
-        @SuppressLint("InflateParams") val dialogLayout =
-            inflater.inflate(R.layout.book_cover, null)
-        val imageContainer = dialogLayout.findViewById<ImageView>(R.id.cover_view)
-        if (item.cover != null) {
-            imageContainer.setImageBitmap(item.cover)
-        } else {
-            imageContainer.setImageDrawable(
-                ResourcesCompat.getDrawable(
-                    App.instance.resources,
-                    R.drawable.image_wait_load,
-                    null
+        if(item.coverUrl != null){
+            // покажу картинку
+            val dialogBuilder = AlertDialog.Builder(requireContext(), R.style.MyDialogStyle)
+            val inflater = layoutInflater
+            @SuppressLint("InflateParams") val dialogLayout =
+                inflater.inflate(R.layout.book_cover, null)
+            val imageContainer = dialogLayout.findViewById<ImageView>(R.id.cover_view)
+            if (item.cover != null) {
+                imageContainer.setImageBitmap(item.cover)
+            } else {
+                imageContainer.setImageDrawable(
+                    ResourcesCompat.getDrawable(
+                        App.instance.resources,
+                        R.drawable.image_wait_load,
+                        null
+                    )
                 )
-            )
-            viewModel.loadImage(imageContainer, item)
+                viewModel.loadImage(imageContainer, item)
+            }
+            dialogBuilder
+                .setView(dialogLayout)
+                .setCancelable(true)
+                .setPositiveButton("Ок", null)
+                .create()
+                .show()
         }
-        dialogBuilder
-            .setView(dialogLayout)
-            .setCancelable(true)
-            .setPositiveButton("Ок", null)
-            .create()
-            .show()
+        else{
+            Toast.makeText(requireContext(), "У этой книги нет обложки", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreateContextMenu(
@@ -1151,7 +1178,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             }
             R.id.actionShowDetails -> {
                 val entity = (binding.resultsList.adapter as FoundedItemAdapter).getContentItem()
-                if (entity != null) {
+                if (entity != null && entity.downloadLinks.isNotEmpty()) {
                     // открою страницу в браузере
                     val link = Regex("[^0-9]").replace(
                         entity.downloadLinks[0].url!!.replace("fb2", ""),
@@ -1167,7 +1194,22 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     override fun itemPressed(item: FoundedEntity) {
-
+        when (item.type) {
+            TestParser.TYPE_AUTHOR -> {
+                // выдам список действий по автору
+                showAuthorViewSelect(item)
+            }
+            else -> {
+                // перейду по ссылке
+                load(
+                    item.link!!,
+                    append = false,
+                    addToHistory = true,
+                    (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem()
+                )
+                showLoadWaiter()
+            }
+        }
     }
 
     override fun buttonLongPressed(item: FoundedEntity) {
@@ -1255,4 +1297,31 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         viewModel.request(link, append, addToHistory, clickedElementIndex = clickedElementIndex)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // save loaded data from recycler
+        if (::viewModel.isInitialized) {
+            viewModel.saveLoaded((binding.resultsList.adapter as FoundedItemAdapter).getList());
+        }
+    }
+
+    override fun booksAdded(count: Int) {
+        val snackbar = Snackbar.make(
+            binding.root,
+            "Скачиваю книг " + count,
+            Snackbar.LENGTH_LONG
+        )
+        snackbar.setAction(getString(R.string.title_activity_download_schedule)) {
+            val intent = Intent(requireContext(), DownloadScheduleActivity::class.java)
+            requireActivity().startActivity(intent)
+        }
+        snackbar.setActionTextColor(
+            ResourcesCompat.getColor(
+                resources,
+                android.R.color.white,
+                null
+            )
+        )
+        snackbar.show()
+    }
 }

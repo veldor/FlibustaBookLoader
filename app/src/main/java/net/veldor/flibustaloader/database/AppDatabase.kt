@@ -68,10 +68,7 @@ abstract class AppDatabase : RoomDatabase() {
         @JvmField
         val MIGRATION_7_8: Migration = object : Migration(7, 8) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("create table ScheduleTemp (" +
-                        "id integer primary key autoincrement NOT NULL," +
-                        "bookId TEXT NOT NULL, " +
-                        "link TEXT NOT NULL, " +
+                database.execSQL("create table ScheduleTemp (id integer primary key autoincrement NOT NULL, bookId TEXT NOT NULL, link TEXT NOT NULL, " +
                         "name TEXT NOT NULL, " +
                         "size TEXT NOT NULL, " +
                         "author TEXT NOT NULL, " +
@@ -79,8 +76,7 @@ abstract class AppDatabase : RoomDatabase() {
                         "authorDirName TEXT NOT NULL, " +
                         "sequenceDirName TEXT NOT NULL, " +
                         "reservedSequenceName TEXT NOT NULL);")
-
-                database.execSQL ("INSERT INTO ScheduleTemp (id, bookId, link, name, size, author, format, authorDirName,sequenceDirName,reservedSequenceName) SELECT id, bookId, link, name, size, author, format, authorDirName,sequenceDirName,reservedSequenceName FROM BooksDownloadSchedule")
+                //database.execSQL ("INSERT INTO ScheduleTemp (id, bookId, link, name, size, author, format, authorDirName,sequenceDirName,reservedSequenceName) SELECT id, bookId, link, name, size, author, format, authorDirName,sequenceDirName,reservedSequenceName FROM BooksDownloadSchedule")
                 database.execSQL ("DROP TABLE BooksDownloadSchedule")
                 database.execSQL ("ALTER TABLE ScheduleTemp RENAME TO BooksDownloadSchedule")
             }

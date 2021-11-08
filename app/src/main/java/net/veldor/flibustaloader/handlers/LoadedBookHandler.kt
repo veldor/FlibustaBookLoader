@@ -6,6 +6,7 @@ import androidx.documentfile.provider.DocumentFile
 import cz.msebera.android.httpclient.HttpResponse
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
+import net.veldor.flibustaloader.ecxeptions.DownloadsDirNotFoundException
 import net.veldor.flibustaloader.notificatons.NotificationHandler
 import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.MimeTypes
@@ -17,6 +18,10 @@ class LoadedBookHandler {
     fun saveBook(book: BooksDownloadSchedule, response: HttpResponse, tempFile: File) {
         // получу конечное расположение файла
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            var downloadsDir = PreferencesHandler.instance.getDownloadDir()
+            if (downloadsDir == null || !downloadsDir.isDirectory || !downloadsDir.canWrite()) {
+                throw DownloadsDirNotFoundException()
+            }
             //val file = FilesHandler.getDownloadFile(book, response)
             var extensionSet = false
             // try to get file name with extension
@@ -40,115 +45,105 @@ class LoadedBookHandler {
                     book.name = Grammar.changeExtension(book.name, trueFormatExtension)
                 }
             }
-            var file: DocumentFile?
-            var downloadsDir = PreferencesHandler.instance.downloadDir
-            // если не нужно создавать папки- просто сохраню книгу в корень
+            var file: DocumentFile
             if (!PreferencesHandler.instance.isCreateSequencesDir() &&
                 !PreferencesHandler.instance.isCreateAuthorsDir()
             ) {
-                file = downloadsDir?.createFile(book.format, book.name)
-                copyBook(tempFile, file)
-            } else if (PreferencesHandler.instance.isCreateAuthorsDir() && !PreferencesHandler.instance.isCreateSequencesDir()) {
-                Log.d("surprise", "saveBook: save book to author dir")
-                if (book.authorDirName.isNotEmpty()) {
-                    // создам папку автора при её отсутствии, и сохраню файл туда
-                    if (downloadsDir!!.findFile(book.authorDirName) == null) {
-                        downloadsDir.createDirectory(book.authorDirName)
-                    }
-                    file = downloadsDir.findFile(book.authorDirName)!!
-                        .createFile(book.format, book.name)
-                    copyBook(tempFile, file)
-                    Log.d("surprise", "saveBook: book saved")
-                } else {
-                    file = downloadsDir?.createFile(book.format, book.name)
-                    copyBook(tempFile, file)
+                //==== папки не нужны, сохраняю в корень
+                Log.d("surprise", "saveBook: no additional dirs required, save to root")
+                pullBook(downloadsDir, book, tempFile)
+            } else if (PreferencesHandler.instance.isCreateAuthorsDir()
+                && !PreferencesHandler.instance.isCreateSequencesDir()
+            ) {
+                //==== создаю только папку автора
+                if (PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()) {
+                    downloadsDir = appendDir(downloadsDir, "Авторы")
+                    Log.d("surprise", "saveBook: save to authors sub-dir")
                 }
-            } else if (!PreferencesHandler.instance.isCreateAuthorsDir() && PreferencesHandler.instance.isCreateSequencesDir()) {
+                if (book.authorDirName.trim().isNotEmpty()) {
+                    downloadsDir = appendDir(downloadsDir, book.authorDirName.trim())
+                    Log.d("surprise", "saveBook: save to author dir")
+                }
+                pullBook(downloadsDir, book, tempFile)
+            } else if (!PreferencesHandler.instance.isCreateAuthorsDir()
+                && PreferencesHandler.instance.isCreateSequencesDir()
+            ) {
+                //==== создаю только папку серии
                 // придётся копировать файл в папку каждой серии по отдельности
                 if (book.sequenceDirName.isNotEmpty()) {
-                    Log.d("surprise", "saveBook: sequence string is ${book.sequenceDirName}")
+                    if (PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()) {
+                        downloadsDir = appendDir(downloadsDir, "Серии")
+                        Log.d("surprise", "saveBook: save to sequences sub-dir")
+                    }
                     val subDirs = book.sequenceDirName.split("$|$")
                     subDirs.forEach {
-                        Log.d("surprise", "saveBook: sequence dir $it")
                         // create dir if not exists and save file to it
-                        if (downloadsDir!!.findFile(it) == null) {
-                            downloadsDir!!.createDirectory(it)
+                        if (downloadsDir!!.findFile(it.trim()) == null) {
+                            downloadsDir!!.createDirectory(it.trim())
                         }
-                        file = downloadsDir!!.findFile(it)!!
-                            .createFile(book.format, book.name)
-                        copyBook(tempFile, file)
+                        pullBook(downloadsDir!!.findFile(it.trim())!!, book, tempFile)
+                        Log.d("surprise", "saveBook: save to sequence dir")
                     }
                 } else {
-                    file = downloadsDir?.createFile(book.format, book.name)
-                    copyBook(tempFile, file)
+                    pullBook(downloadsDir, book, tempFile)
+                    Log.d("surprise", "saveBook: no sequence in book, save it in root")
                 }
             } else if (
                 PreferencesHandler.instance.isCreateAuthorsDir() &&
                 PreferencesHandler.instance.isCreateSequencesDir()
             ) {
-                // если не надо создавать отдельные папки- создам папку автора, в ней- папки серий
-                if (PreferencesHandler.instance.isCreateAdditionalDir()) {
-                    // создам папку для серий и папку для авторов. Авторов буду качать в авторов, серии- в серии
-                    when {
-                        book.sequenceDirName.isNotEmpty() -> {
-                            if (downloadsDir!!.findFile("Серии") == null) {
-                                downloadsDir.createDirectory("Серии")
-                            }
-                            downloadsDir = downloadsDir.findFile("Серии")
-                            val subDirs = book.sequenceDirName.split("$|$")
-                            subDirs.forEach {
-                                Log.d("surprise", "saveBook: sequence dir $it")
-                                // create dir if not exists and save file to it
-                                if (downloadsDir!!.findFile(it) == null) {
-                                    downloadsDir!!.createDirectory(it)
-                                }
-                                file = downloadsDir!!.findFile(it)!!
-                                    .createFile(book.format, book.name)
-                                copyBook(tempFile, file)
+                // если есть серия
+                if (book.sequenceDirName.isNotEmpty()) {
+                    // если выбрано сохранение серий внутри папки автора- сохраню внутри
+                    if (PreferencesHandler.instance.isLoadSequencesInAuthorDir()) {
+                        if (PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()) {
+                            if (PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()) {
+                                downloadsDir = appendDir(downloadsDir, "Авторы")
+                                Log.d("surprise", "saveBook: save to authors sub-dir")
                             }
                         }
-                        book.authorDirName.isNotEmpty() -> {
-                            if (downloadsDir!!.findFile("Авторы") == null) {
-                                downloadsDir.createDirectory("Авторы")
-                            }
-                            downloadsDir = downloadsDir.findFile("Авторы")
-                            // создам папку автора при её отсутствии, и сохраню файл туда
-                            if (downloadsDir!!.findFile(book.authorDirName) == null) {
-                                downloadsDir.createDirectory(book.authorDirName)
-                            }
-                            file = downloadsDir.findFile(book.authorDirName)!!
-                                .createFile(book.format, book.name)
-                            copyBook(tempFile, file)
+                        if (book.authorDirName.trim().isNotEmpty()) {
+                            downloadsDir = appendDir(downloadsDir, book.authorDirName.trim())
+                            Log.d("surprise", "saveBook: save to author dir")
                         }
-                        else -> {
-                            file = downloadsDir?.createFile(book.format, book.name)
-                            copyBook(tempFile, file)
+                        val subDirs = book.sequenceDirName.split("$|$")
+                        subDirs.forEach {
+                            // create dir if not exists and save file to it
+                            if (downloadsDir!!.findFile(it.trim()) == null) {
+                                downloadsDir!!.createDirectory(it.trim())
+                            }
+                            pullBook(downloadsDir!!.findFile(it.trim())!!, book, tempFile)
+                            Log.d("surprise", "saveBook: save to sequence dir")
+                        }
+                    } else {
+                        if (PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()) {
+                            if (PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()) {
+                                downloadsDir = appendDir(downloadsDir, "Серии")
+                                Log.d("surprise", "saveBook: save to authors sub-dir")
+                            }
+                        }
+                        val subDirs = book.sequenceDirName.split("$|$")
+                        subDirs.forEach {
+                            // create dir if not exists and save file to it
+                            if (downloadsDir!!.findFile(it.trim()) == null) {
+                                downloadsDir!!.createDirectory(it.trim())
+                            }
+                            pullBook(downloadsDir!!.findFile(it.trim())!!, book, tempFile)
+                            Log.d("surprise", "saveBook: save to sequence dir")
                         }
                     }
                 } else {
-                    if (book.authorDirName.isNotEmpty()) {
-                        if (downloadsDir!!.findFile(book.authorDirName) == null) {
-                            downloadsDir.createDirectory(book.authorDirName)
+                    if (PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()) {
+                        if (PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()) {
+                            downloadsDir = appendDir(downloadsDir, "Авторы")
+                            Log.d("surprise", "saveBook: save to authors sub-dir")
                         }
-                        downloadsDir = downloadsDir.findFile(book.authorDirName)
                     }
-                    if (book.sequenceDirName.isNotEmpty()) {
-                        Log.d("surprise", "saveBook: sequence string is ${book.sequenceDirName}")
-                        val subDirs = book.sequenceDirName.split("$|$")
-                        subDirs.forEach {
-                            Log.d("surprise", "saveBook: sequence dir $it")
-                            // create dir if not exists and save file to it
-                            if (downloadsDir!!.findFile(it) == null) {
-                                downloadsDir!!.createDirectory(it)
-                            }
-                            file = downloadsDir!!.findFile(it)!!
-                                .createFile(book.format, book.name)
-                            copyBook(tempFile, file)
-                        }
-                    } else {
-                        file = downloadsDir?.createFile(book.format, book.name)
-                        copyBook(tempFile, file)
+                    if (book.authorDirName.trim().isNotEmpty()) {
+                        downloadsDir = appendDir(downloadsDir, book.authorDirName.trim())
+                        Log.d("surprise", "saveBook: save to author dir")
                     }
+                    pullBook(downloadsDir, book, tempFile)
                 }
             }
             // create book loaded notification
@@ -191,10 +186,10 @@ class LoadedBookHandler {
                 Log.d("surprise", "saveBook: save book to author dir")
                 if (book.authorDirName.isNotEmpty()) {
                     // создам папку автора при её отсутствии, и сохраню файл туда
-                    if (!File(downloadsDir, book.authorDirName).isDirectory) {
-                        File(downloadsDir, book.authorDirName).mkdir()
+                    if (!File(downloadsDir, book.authorDirName.trim()).isDirectory) {
+                        File(downloadsDir, book.authorDirName.trim()).mkdir()
                     }
-                    downloadsDir = File(downloadsDir, book.authorDirName)
+                    downloadsDir = File(downloadsDir, book.authorDirName.trim())
                     file = File(downloadsDir, book.name)
                     copyBook(tempFile, file)
                     Log.d("surprise", "saveBook: book saved")
@@ -210,10 +205,10 @@ class LoadedBookHandler {
                     subDirs.forEach {
                         Log.d("surprise", "saveBook: sequence dir $it")
                         // create dir if not exists and save file to it
-                        if (!File(downloadsDir, it).isDirectory) {
-                            File(downloadsDir, it).mkdir()
+                        if (!File(downloadsDir, it.trim()).isDirectory) {
+                            File(downloadsDir, it.trim()).mkdir()
                         }
-                        downloadsDir = File(downloadsDir, it)
+                        downloadsDir = File(downloadsDir, it.trim())
                         file = File(downloadsDir, book.name)
                         copyBook(tempFile, file)
                         downloadsDir = PreferencesHandler.instance.compatDownloadDir
@@ -226,67 +221,67 @@ class LoadedBookHandler {
                 PreferencesHandler.instance.isCreateAuthorsDir() &&
                 PreferencesHandler.instance.isCreateSequencesDir()
             ) {
-                // если не надо создавать отдельные папки- создам папку автора, в ней- папки серий
-                if (PreferencesHandler.instance.isCreateAdditionalDir()) {
-                    // создам папку для серий и папку для авторов. Авторов буду качать в авторов, серии- в серии
-                    when {
-                        book.sequenceDirName.isNotEmpty() -> {
-                            if (!File(downloadsDir, "Серии").isDirectory) {
-                                File(downloadsDir, "Серии").mkdir()
-                            }
-                            downloadsDir = File(downloadsDir, "Серии")
+                /* // если не надо создавать отдельные папки- создам папку автора, в ней- папки серий
+                 if (PreferencesHandler.instance.isCreateAdditionalDir()) {
+                     // создам папку для серий и папку для авторов. Авторов буду качать в авторов, серии- в серии
+                     when {
+                         book.sequenceDirName.isNotEmpty() -> {
+                             if (!File(downloadsDir, "Серии").isDirectory) {
+                                 File(downloadsDir, "Серии").mkdir()
+                             }
+                             downloadsDir = File(downloadsDir, "Серии")
 
 
-                            val subDirs = book.sequenceDirName.split("$|$")
-                            subDirs.forEach {
-                                if (!File(downloadsDir, it).isDirectory) {
-                                    File(downloadsDir, it).mkdir()
-                                }
-                                downloadsDir = File(downloadsDir, it)
-                                file = File(downloadsDir, book.name)
-                                copyBook(tempFile, file)
-                                downloadsDir = downloadsDir!!.parentFile
-                            }
-                        }
-                        book.authorDirName.isNotEmpty() -> {
-                            if (!File(downloadsDir, "Авторы").isDirectory) {
-                                File(downloadsDir, "Авторы").mkdir()
-                            }
-                            downloadsDir = File(downloadsDir, "Авторы")
-                            if (!File(downloadsDir, book.authorDirName).isDirectory) {
-                                File(downloadsDir, book.authorDirName).mkdir()
-                            }
-                            downloadsDir = File(downloadsDir, book.authorDirName)
-                            file = File(downloadsDir, book.name)
-                            copyBook(tempFile, file)
-                        }
-                        else -> {
-                            file = File(downloadsDir, book.name)
-                            copyBook(tempFile, file)
-                        }
-                    }
-                } else {
-                    if (!File(downloadsDir, book.authorDirName).isDirectory) {
-                        File(downloadsDir, book.authorDirName).mkdir()
-                    }
-                    downloadsDir = File(downloadsDir, book.authorDirName)
-                    if (book.sequenceDirName.isNotEmpty()) {
-                        Log.d("surprise", "saveBook: sequence string is ${book.sequenceDirName}")
-                        val subDirs = book.sequenceDirName.split("$|$")
-                        subDirs.forEach {
-                            if (!File(downloadsDir, it).isDirectory) {
-                                File(downloadsDir, it).mkdir()
-                            }
-                            downloadsDir = File(downloadsDir, it)
-                            file = File(downloadsDir, book.name)
-                            copyBook(tempFile, file)
-                            downloadsDir = downloadsDir!!.parentFile
-                        }
-                    } else {
-                        file = File(downloadsDir, book.name)
-                        copyBook(tempFile, file)
-                    }
-                }
+                             val subDirs = book.sequenceDirName.split("$|$")
+                             subDirs.forEach {
+                                 if (!File(downloadsDir, it.trim()).isDirectory) {
+                                     File(downloadsDir, it.trim()).mkdir()
+                                 }
+                                 downloadsDir = File(downloadsDir, it.trim())
+                                 file = File(downloadsDir, book.name)
+                                 copyBook(tempFile, file)
+                                 downloadsDir = downloadsDir!!.parentFile
+                             }
+                         }
+                         book.authorDirName.isNotEmpty() -> {
+                             if (!File(downloadsDir, "Авторы").isDirectory) {
+                                 File(downloadsDir, "Авторы").mkdir()
+                             }
+                             downloadsDir = File(downloadsDir, "Авторы")
+                             if (!File(downloadsDir, book.authorDirName.trim()).isDirectory) {
+                                 File(downloadsDir, book.authorDirName.trim()).mkdir()
+                             }
+                             downloadsDir = File(downloadsDir, book.authorDirName.trim())
+                             file = File(downloadsDir, book.name)
+                             copyBook(tempFile, file)
+                         }
+                         else -> {
+                             file = File(downloadsDir, book.name)
+                             copyBook(tempFile, file)
+                         }
+                     }
+                 } else {
+                     if (!File(downloadsDir, book.authorDirName.trim()).isDirectory) {
+                         File(downloadsDir, book.authorDirName.trim()).mkdir()
+                     }
+                     downloadsDir = File(downloadsDir, book.authorDirName.trim())
+                     if (book.sequenceDirName.isNotEmpty()) {
+                         Log.d("surprise", "saveBook: sequence string is ${book.sequenceDirName}")
+                         val subDirs = book.sequenceDirName.split("$|$")
+                         subDirs.forEach {
+                             if (!File(downloadsDir, it.trim()).isDirectory) {
+                                 File(downloadsDir, it.trim()).mkdir()
+                             }
+                             downloadsDir = File(downloadsDir, it.trim())
+                             file = File(downloadsDir, book.name)
+                             copyBook(tempFile, file)
+                             downloadsDir = downloadsDir!!.parentFile
+                         }
+                     } else {
+                         file = File(downloadsDir, book.name)
+                         copyBook(tempFile, file)
+                     }
+                 }*/
             }
             // create book loaded notification
             NotificationHandler.instance.sendLoadedBookNotification(book.name)
@@ -311,5 +306,17 @@ class LoadedBookHandler {
         if (file != null) {
             tempFile.copyTo(file, true)
         }
+    }
+
+    private fun appendDir(srcDir: DocumentFile, innerDirName: String): DocumentFile {
+        if (srcDir.findFile(innerDirName) == null) {
+            srcDir.createDirectory(innerDirName)
+        }
+        return srcDir.findFile(innerDirName)!!
+    }
+
+    private fun pullBook(dstDir: DocumentFile, book: BooksDownloadSchedule, tempFile: File) {
+        val file = dstDir.createFile(book.format, book.name)
+        copyBook(tempFile, file)
     }
 }

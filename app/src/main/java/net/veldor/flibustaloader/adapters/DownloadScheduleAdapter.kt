@@ -183,7 +183,6 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                     if(scheduleItem.progress != null){
                         mBinding.bookLoadProgress.isIndeterminate = false
                         val progress = scheduleItem.progress!!.percentDone.toInt()
-                        Log.d("surprise", "bind: progress is $progress")
                         mBinding.bookLoadProgress.progress = progress
                     }
                     else{

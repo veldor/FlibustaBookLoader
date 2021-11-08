@@ -2,15 +2,19 @@ package net.veldor.flibustaloader.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
 import android.net.Uri
 import android.util.Log
 import android.view.MenuItem
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import com.google.android.material.navigation.NavigationView
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.dialogs.DonationDialog
+import net.veldor.flibustaloader.workers.SendLogWorker
 
 class NavigatorSelectHandler(private val mContext: Activity) :
     NavigationView.OnNavigationItemSelectedListener {
@@ -19,7 +23,7 @@ class NavigatorSelectHandler(private val mContext: Activity) :
         val itemId = item.itemId
         if (itemId == R.id.goBrowse) {
             val intent = Intent(mContext, BrowserActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            intent.flags = FLAG_ACTIVITY_CLEAR_TOP
             mContext.startActivity(intent)
             mContext.finish()
         } else if (itemId == R.id.goToDownloadsList) {
@@ -59,6 +63,10 @@ class NavigatorSelectHandler(private val mContext: Activity) :
             tryCloseDrawer()
         } else if (itemId == R.id.exitApp) {
             Runtime.getRuntime().exit(0)
+        } else if (itemId == R.id.sendLog) {
+            val work = OneTimeWorkRequest.Builder(SendLogWorker::class.java).build()
+            WorkManager.getInstance(App.instance).enqueue(work)
+            tryCloseDrawer()
         }
         return false
     }

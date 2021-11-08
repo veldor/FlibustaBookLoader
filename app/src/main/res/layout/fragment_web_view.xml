@@ -2,15 +2,14 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:fab="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingBottom="50dp">
+    android:layout_height="match_parent">
 
     <net.veldor.flibustaloader.MyWebView
         android:id="@+id/myWebView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingBottom="50dp"
         app:layout_constraintTop_toBottomOf="@+id/pageLoadedProgressBar" />
 
     <ProgressBar
@@ -51,6 +50,15 @@
             fab:fab_label="@string/download_all_button"
             fab:fab_size="mini" />
     </com.github.clans.fab.FloatingActionMenu>
+    <ImageButton
+        android:id="@+id/togglePanelsButton"
+        android:layout_width="wrap_content"
+        android:layout_marginBottom="70dp"
+        android:src="@drawable/ic_baseline_open_in_full_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/fill" />
 </androidx.constraintlayout.widget.ConstraintLayout>
 
 

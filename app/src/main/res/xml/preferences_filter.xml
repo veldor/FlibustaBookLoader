@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <SwitchPreferenceCompat
+        app:key="strict name in books"
+        android:defaultValue="false"
+        android:summary="Названия книг фильтруются по строгому соответствию"
+        android:summaryOff="Названия книг фильтруются по наличию паттерна"
+        android:title="Названия книг" />
+    <SwitchPreferenceCompat
+        app:key="strict author in books"
+        android:defaultValue="false"
+        android:summary="Книги фильтруются строго по автору"
+        android:summaryOff="Книги фильтруются по наличию паттерна автора"
+        android:title="Автор книг" />
+    <SwitchPreferenceCompat
+        app:key="strict genre in books"
+        android:defaultValue="false"
+        android:summary="Книги фильтруются строго по жанру"
+        android:summaryOff="Книги фильтруются по наличию паттерна жанра"
+        android:title="Жанр книг" />
+    <SwitchPreferenceCompat
+        app:key="strict sequence in books"
+        android:defaultValue="false"
+        android:summary="Книги фильтруются строго по серии"
+        android:summaryOff="Книги фильтруются по наличию паттерна серии"
+        android:title="Серии книг" />
+    <SwitchPreferenceCompat
+        app:key="strict author filter"
+        android:defaultValue="false"
+        android:summary="Результаты поиска авторов фильтруются строго по шаблону"
+        android:summaryOff="Результаты поиска авторов фильтруются по наличию паттерна"
+        android:title="Фильтр авторов" />
+    <SwitchPreferenceCompat
+        app:key="strict genre filter"
+        android:defaultValue="false"
+        android:summary="Результаты поиска жанров фильтруются строго по шаблону"
+        android:summaryOff="Результаты поиска жанров фильтруются по наличию паттерна"
+        android:title="Фильтр жанров" />
+    <SwitchPreferenceCompat
+        app:key="strict sequence filter"
+        android:defaultValue="false"
+        android:summary="Результаты поиска серий фильтруются строго по шаблону"
+        android:summaryOff="Результаты поиска серий фильтруются по наличию паттерна"
+        android:title="Фильтр серий" />
+</PreferenceScreen>

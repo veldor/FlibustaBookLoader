@@ -26,4 +26,5 @@
     <color name="app_bar_icons_color">#FFFFFF</color>
     <color name="bottomNavigationColor">#3e5f75</color>
     <color name="inactive">#C8C8C8</color>
+    <color name="test">#FF9800</color>
 </resources>

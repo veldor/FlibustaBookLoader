@@ -36,7 +36,7 @@ class DirContentActivity : BaseActivity() {
         recycler.layoutManager = LinearLayoutManager(this)
         // получу список файлов из папки
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val downloadsDir = PreferencesHandler.instance.downloadDir
+            val downloadsDir = PreferencesHandler.instance.getDownloadDir()
             if (downloadsDir != null && downloadsDir.isDirectory) {
                 val files = downloadsDir.listFiles()
                 val books = recursiveScan(files, "")
@@ -50,7 +50,7 @@ class DirContentActivity : BaseActivity() {
                 }
             }
         } else {
-            val downloadDir = PreferencesHandler.instance.downloadDir
+            val downloadDir = PreferencesHandler.instance.getDownloadDir()
             if (downloadDir != null && downloadDir.isDirectory) {
                 val files = downloadDir.listFiles()
                 val books = recursiveScan(files, "")
@@ -102,42 +102,6 @@ class DirContentActivity : BaseActivity() {
                     bookItem.file = df
                     bookItem.extension = getExtension(value)
                     answer.add(bookItem)
-                } else if (df.isDirectory) {
-                    answer.addAll(recursiveScan(df.listFiles(), prefix + df.name + "/"))
-                }
-            }
-        }
-        return answer
-    }
-
-    private fun recursiveScan(files: Array<File>?, prefix: String): ArrayList<Book?> {
-        val answer = ArrayList<Book?>()
-        if (files != null && files.isNotEmpty()) {
-            var bookItem: Book
-            var value: String
-            var value1: String
-            for (df in files) {
-                if (df.isFile) {
-                    value = df.name
-                    if (value != null) {
-                        bookItem = Book()
-                        // получу имя автора- это значение до первого слеша
-                        val index = value.indexOf("_")
-                        val lastIndex = value.lastIndexOf("_")
-                        if (index > 0 && lastIndex > 0 && index != lastIndex) {
-                            value1 = value.substring(0, index)
-                            bookItem.author = prefix + value1
-                            value1 = value.substring(index + 1, lastIndex)
-                            bookItem.name = value1
-                        } else {
-                            bookItem.author = prefix + "Неизвестно"
-                            bookItem.name = value
-                        }
-                        bookItem.size = getLiteralSize(df.length())
-                        bookItem.fileCompat = df
-                        bookItem.extension = getExtension(value)
-                        answer.add(bookItem)
-                    }
                 } else if (df.isDirectory) {
                     answer.addAll(recursiveScan(df.listFiles(), prefix + df.name + "/"))
                 }

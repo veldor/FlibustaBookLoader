@@ -7,10 +7,11 @@ import net.veldor.flibustaloader.selections.DownloadLink
 import net.veldor.flibustaloader.ui.BaseActivity
 import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.MimeTypes
+import net.veldor.flibustaloader.utils.PreferencesHandler
 
 class DownloadLinkHandler {
     fun addDownloadSchedule(link: BooksDownloadSchedule) {
-        val dao =App.instance.mDatabase.booksDownloadScheduleDao()
+        val dao = App.instance.mDatabase.booksDownloadScheduleDao()
         dao.insert(link)
     }
 
@@ -28,7 +29,7 @@ class DownloadLinkHandler {
         newScheduleElement.author = link.author!!
         newScheduleElement.link = link.url!!
         newScheduleElement.format = link.mime!!
-        newScheduleElement.size = link.size!!
+        newScheduleElement.size = link.size ?: "0"
         newScheduleElement.authorDirName = link.authorDirName!!
         newScheduleElement.sequenceDirName = link.sequenceDirName!!
         newScheduleElement.reservedSequenceName = link.reservedSequenceName
@@ -47,20 +48,24 @@ class DownloadLinkHandler {
             newScheduleElement.author = "Автор неизвестен"
         }
 
-        val bookName =
+        var bookName =
             link.name!!.replace(" ".toRegex(), "_").replace("[^\\d\\w-_]".toRegex(), "")
         val bookMime = MimeTypes.getDownloadMime(link.mime!!)
-        // если сумма символов меньше 255- создаю полное имя
-        if (authorLastName.length + link.reservedSequenceName.length + bookName.length + bookMime!!.length + 2 < 255 / 2 - 7) {
-            newScheduleElement.name =
-                authorLastName + "_" + link.reservedSequenceName + "_" + bookName + "_" + Grammar.random + "." + bookMime
-        } else {
-            // сохраняю книгу по имени автора и тому, что влезет от имени книги
-            newScheduleElement.name = authorLastName + "_" + bookName.substring(
-                0,
-                127 - (authorLastName.length + bookMime.length + 2 + 6)
-            ) + "_" + Grammar.random + "." + bookMime
+
+        if (PreferencesHandler.instance.isAuthorInBookName) {
+            if (bookName.length / 2 + authorLastName.length / 2 < 110) {
+                bookName = authorLastName + "_" + bookName
+            }
         }
+        if (PreferencesHandler.instance.isSequenceInBookName) {
+            if (bookName.length / 2 + link.reservedSequenceName.length / 2 < 110) {
+                bookName = bookName + "_" + link.reservedSequenceName
+            }
+        }
+        if (bookName.length / 2 > 220) {
+            bookName = bookName.substring(0, 110) + "..."
+        }
+        newScheduleElement.name = bookName + "_" + Grammar.random + "." + bookMime
         //===========================================================================
         dao.insert(newScheduleElement)
     }

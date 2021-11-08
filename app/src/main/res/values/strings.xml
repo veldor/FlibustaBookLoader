@@ -318,4 +318,14 @@
     <string name="wrong_format_ignored">Book not in this format will be ignored</string>
     <string name="wrong_format_accepted">Book in other format will be loaded</string>
     <string name="wallet_copied_message">Wallet address copied to clipboard</string>
+    <string name="toggle_panels">Toggle panels</string>
+    <string name="pref_author_in_book_name" translatable="false">pref author in book name</string>
+    <string name="pref_sequence_in_book_name" translatable="false">pref sequence in book name</string>
+    <string name="book_names">Downloaded book names</string>
+    <string name="fill" translatable="false">fill</string>
+    <string name="send_email" translatable="false">send me errors</string>
+    <string name="pref_no_item_buttons" translatable="false">no item buttons</string>
+    <string name="title_strict_filter">Strict equal</string>
+    <string name="filter_preferences">Filter preferences</string>
+    <string name="pref_load_series_to_author_dir" translatable="false">load series to author dir</string>
 </resources>

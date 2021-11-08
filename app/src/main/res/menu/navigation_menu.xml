@@ -47,6 +47,10 @@
     <item android:title="@string/actions">
         <menu>
             <item
+                android:id="@+id/sendLog"
+                android:icon="@drawable/ic_baseline_send_24"
+                android:title="@string/send_log_message" />
+            <item
                 android:id="@+id/testAppInvite"
                 android:icon="@drawable/ic_test_black_24"
                 android:title="@string/go_to_test_message" />

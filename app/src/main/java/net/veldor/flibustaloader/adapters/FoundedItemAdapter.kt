@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,8 +27,11 @@ import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_BOOK
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_GENRE
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_SEQUENCE
 import net.veldor.flibustaloader.selections.FoundedEntity
+import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.SortHandler
+import net.veldor.flibustaloader.workers.SendLogWorker
+import java.lang.IllegalArgumentException
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -37,6 +42,7 @@ class FoundedItemAdapter(
     CoroutineScope,
     RecyclerView.Adapter<FoundedItemAdapter.ViewHolder>(), MyAdapterInterface {
 
+    private var lastSortOption: Int = -1
     private var hasNext: Boolean = false
     private var job: Job = Job()
     private var menuClicked: FoundedEntity? = null
@@ -59,7 +65,12 @@ class FoundedItemAdapter(
         if (i < values.size) {
             viewHolder.bind(values[i])
         } else {
-            viewHolder.bindButton()
+            if (hasNext) {
+                viewHolder.bindButton()
+            }
+            else{
+                viewHolder.bindInvisible()
+            }
         }
     }
 
@@ -68,14 +79,12 @@ class FoundedItemAdapter(
     }
 
     override fun getItemCount(): Int {
-        if (PreferencesHandler.instance.isShowLoadMoreBtn() && values.size > 0 && hasNext && values[0].type == TYPE_BOOK) {
-            return values.size + 1
-        }
-        return values.size
+        return values.size + 1
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun setContent(newData: ArrayList<FoundedEntity>) {
+        lastSortOption = -1
         values = newData
         notifyDataSetChanged()
     }
@@ -91,6 +100,7 @@ class FoundedItemAdapter(
     }
 
     fun appendContent(results: ArrayList<FoundedEntity>) {
+        lastSortOption = -1
         val oldLength = values.size
         values.addAll(results)
         notifyItemRangeInserted(oldLength, results.size)
@@ -117,10 +127,11 @@ class FoundedItemAdapter(
         }
 
         fun bind(item: FoundedEntity) {
+            binding.rootView.visibility = View.VISIBLE
             this.item = item
             binding.setVariable(BR.item, item)
             binding.executePendingBindings()
-
+            binding.loadingMoreBar.visibility = View.GONE
             if (item.selected) {
                 Log.d("surprise", "bind: i selected!!!!")
                 binding.rootView.setBackgroundColor(
@@ -176,10 +187,20 @@ class FoundedItemAdapter(
 //                )
             when (item.type) {
                 TYPE_BOOK -> {
+                    Grammar.getAvailableDownloadFormats(item, binding.availableLinkFormats)
+                    binding.availableLinkFormats.visibility = View.VISIBLE
+                    binding.availableLinkFormats.setOnClickListener {
+                        Toast.makeText(
+                            App.instance,
+                            "Это список доступных форматов. Скачать книгу можно нажав на кнопку нниже",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                     binding.firstGroup.visibility = View.VISIBLE
                     binding.secondGroup.visibility = View.VISIBLE
                     binding.thirdGroup.visibility = View.VISIBLE
-                    if(PreferencesHandler.instance.isEInk){
+                    binding.centerActionBtn.visibility = View.VISIBLE
+                    if (PreferencesHandler.instance.isEInk) {
                         binding.firstInfoBlockLeftParam.setTextColor(
                             ResourcesCompat.getColor(
                                 App.instance.resources,
@@ -224,8 +245,7 @@ class FoundedItemAdapter(
                                 null
                             )
                         )
-                    }
-                    else{
+                    } else {
                         binding.name.setTextColor(
                             ResourcesCompat.getColor(
                                 App.instance.resources,
@@ -252,13 +272,15 @@ class FoundedItemAdapter(
                     binding.firstInfoBlockLeftParam.visibility = View.VISIBLE
                     binding.firstInfoBlockLeftParam.setOnClickListener {
                         menuClicked = binding.item
+                        centerItemPressed = binding.item
                         delegate.authorClicked(item)
                     }
                     binding.secondInfoBlockRightParam.setOnClickListener {
                         menuClicked = binding.item
+                        centerItemPressed = binding.item
                         delegate.sequenceClicked(item)
                     }
-                    binding.name.setOnClickListener{
+                    binding.name.setOnClickListener {
                         menuClicked = binding.item
                         delegate.nameClicked(item)
                     }
@@ -274,7 +296,17 @@ class FoundedItemAdapter(
                     binding.thirdBlockCenterElement.visibility = View.VISIBLE
                     binding.thirdBlocRightElement.text = item.size
                     binding.thirdBlocRightElement.visibility = View.VISIBLE
-                    if (PreferencesHandler.instance.isPreviews && item.coverUrl != null) {
+                    if (PreferencesHandler.instance.isPreviews) {
+                        if(item.coverUrl == null){
+                            binding.previewImage.setImageDrawable(
+                                ResourcesCompat.getDrawable(
+                                    App.instance.resources,
+                                    R.drawable.no_cover,
+                                    null
+                                )
+                            )
+                        }
+                        else{
                         // гружу обложку
                         binding.previewImage.visibility = View.VISIBLE
                         if (item.cover != null) {
@@ -302,12 +334,23 @@ class FoundedItemAdapter(
                                 }
                             timer?.start()
                         }
+                        }
                     } else {
                         // скрою окно иконки
                         binding.previewImage.visibility = View.GONE
                     }
                 }
                 TYPE_AUTHOR -> {
+                    binding.availableLinkFormats.visibility = View.GONE
+                    if (PreferencesHandler.instance.isHideButtons()) {
+                        binding.centerActionBtn.visibility = View.GONE
+                        binding.rootView.setOnClickListener {
+                            centerItemPressed = binding.item
+                            delegate.itemPressed(item)
+                        }
+                    } else {
+                        binding.centerActionBtn.visibility = View.VISIBLE
+                    }
                     binding.previewImage.visibility = View.GONE
                     binding.leftActionBtn.visibility = View.INVISIBLE
                     binding.rightActionBtn.visibility = View.INVISIBLE
@@ -355,6 +398,16 @@ class FoundedItemAdapter(
                     binding.centerActionBtn.text = App.instance.getString(R.string.show_message)
                 }
                 TYPE_SEQUENCE -> {
+                    binding.availableLinkFormats.visibility = View.GONE
+                    if (PreferencesHandler.instance.isHideButtons()) {
+                        binding.centerActionBtn.visibility = View.GONE
+                        binding.rootView.setOnClickListener {
+                            centerItemPressed = binding.item
+                            delegate.itemPressed(item)
+                        }
+                    } else {
+                        binding.centerActionBtn.visibility = View.VISIBLE
+                    }
                     binding.previewImage.visibility = View.GONE
                     binding.leftActionBtn.visibility = View.INVISIBLE
                     binding.rightActionBtn.visibility = View.INVISIBLE
@@ -405,6 +458,16 @@ class FoundedItemAdapter(
                     binding.thirdBlockCenterElement.visibility = View.VISIBLE
                 }
                 TYPE_GENRE -> {
+                    binding.availableLinkFormats.visibility = View.GONE
+                    if (PreferencesHandler.instance.isHideButtons()) {
+                        binding.centerActionBtn.visibility = View.GONE
+                        binding.rootView.setOnClickListener {
+                            centerItemPressed = binding.item
+                            delegate.itemPressed(item)
+                        }
+                    } else {
+                        binding.centerActionBtn.visibility = View.VISIBLE
+                    }
                     binding.previewImage.visibility = View.GONE
                     binding.leftActionBtn.visibility = View.INVISIBLE
                     binding.rightActionBtn.visibility = View.INVISIBLE
@@ -450,6 +513,16 @@ class FoundedItemAdapter(
                     binding.centerActionBtn.text = App.instance.getString(R.string.show_message)
                 }
                 TYPE_AUTHORS -> {
+                    binding.availableLinkFormats.visibility = View.GONE
+                    if (PreferencesHandler.instance.isHideButtons()) {
+                        binding.centerActionBtn.visibility = View.GONE
+                        binding.rootView.setOnClickListener {
+                            centerItemPressed = binding.item
+                            delegate.itemPressed(item)
+                        }
+                    } else {
+                        binding.centerActionBtn.visibility = View.VISIBLE
+                    }
                     binding.leftActionBtn.visibility = View.INVISIBLE
                     binding.rightActionBtn.visibility = View.INVISIBLE
                     binding.previewImage.visibility = View.GONE
@@ -494,24 +567,41 @@ class FoundedItemAdapter(
         }
 
         fun bindButton() {
+            binding.rootView.visibility = View.VISIBLE
+            binding.root.background =
+                ResourcesCompat.getDrawable(
+                    App.instance.resources,
+                    R.drawable.genre_layout,
+                    null
+                )
             binding.firstGroup.visibility = View.GONE
             binding.secondGroup.visibility = View.GONE
             binding.thirdGroup.visibility = View.GONE
             binding.previewImage.visibility = View.GONE
             binding.menuButton.visibility = View.GONE
             binding.name.visibility = View.GONE
-            binding.centerActionBtn.text = App.instance.getString(R.string.load_more_button)
-            binding.centerActionBtn.setOnClickListener {
-                it.isEnabled = false
-                binding.centerActionBtn.setTextColor(
-                    ResourcesCompat.getColor(
-                        App.instance.resources,
-                        R.color.dark_gray,
-                        null
+            if (PreferencesHandler.instance.isShowLoadMoreBtn()) {
+                binding.centerActionBtn.text = App.instance.getString(R.string.load_more_button)
+                binding.centerActionBtn.setOnClickListener {
+                    it.isEnabled = false
+                    binding.centerActionBtn.setTextColor(
+                        ResourcesCompat.getColor(
+                            App.instance.resources,
+                            R.color.dark_gray,
+                            null
+                        )
                     )
-                )
-                delegate.loadMoreBtnClicked()
+                    delegate.loadMoreBtnClicked()
+                }
+            } else {
+                binding.centerActionBtn.visibility = View.GONE
+                binding.availableLinkFormats.visibility = View.GONE
+                binding.loadingMoreBar.visibility = View.VISIBLE
             }
+        }
+
+        fun bindInvisible(){
+            binding.rootView.visibility = View.GONE
         }
     }
 
@@ -521,16 +611,19 @@ class FoundedItemAdapter(
 
     fun bookLoaded(book: BooksDownloadSchedule?) {
         if (book != null) {
+            var position: Int = -1
             values.forEach {
                 if (it.id == book.bookId) {
-                    val position = values.lastIndexOf(it)
-                    if (PreferencesHandler.instance.isHideDownloaded) {
-                        values.remove(it)
-                        notifyItemRemoved(position)
-                    } else {
-                        it.downloaded = true
-                        notifyItemChanged(position)
-                    }
+                    position = values.lastIndexOf(it)
+                }
+            }
+            if (position >= 0 && values.size > position) {
+                if (PreferencesHandler.instance.isHideDownloaded) {
+                    values.removeAt(position)
+                    notifyItemRemoved(position)
+                } else {
+                    values[position].downloaded = true
+                    notifyItemChanged(position)
                 }
             }
         }
@@ -538,45 +631,67 @@ class FoundedItemAdapter(
 
 
     fun bookRead(book: FoundedEntity) {
+        var position: Int = -1
         values.forEach {
             if (it.id == book.id) {
-                val position = values.lastIndexOf(it)
-                if (PreferencesHandler.instance.isHideRead) {
-                    values.remove(it)
-                    notifyItemRemoved(position)
-                } else {
-                    it.read = true
-                    notifyItemChanged(position)
-                }
+                position = values.lastIndexOf(it)
+            }
+        }
+        if (position >= 0 && values.size > position) {
+            if (PreferencesHandler.instance.isHideRead) {
+                values.removeAt(position)
+                notifyItemRemoved(position)
+            } else {
+                values[position].read = true
+                notifyItemChanged(position)
             }
         }
     }
 
     fun bookDownloaded(book: FoundedEntity) {
-
+        var position: Int = -1
         values.forEach {
             if (it.id == book.id) {
-                val position = values.lastIndexOf(it)
-                if (PreferencesHandler.instance.isHideDownloaded) {
-                    values.remove(it)
-                    notifyItemRemoved(position)
-                } else {
-                    it.downloaded = true
-                    notifyItemChanged(position)
-                }
+                position = values.lastIndexOf(it)
+            }
+        }
+        if (position >= 0 && values.size > position) {
+            if (PreferencesHandler.instance.isHideDownloaded) {
+                values.removeAt(position)
+                notifyItemRemoved(position)
+            } else {
+                values[position].downloaded = true
+                notifyItemChanged(position)
             }
         }
     }
 
     fun sortList(sortOption: Int) {
+        Log.d("surprise", "sortList: sort option is $sortOption")
         if (values.isNotEmpty()) {
-            // отсортирую в зависимости от типа
-            when (values[0].type!!) {
-                TYPE_BOOK -> SortHandler.sortBooks(values, sortOption)
-                TYPE_AUTHOR -> SortHandler.sortAuthors(values, sortOption)
-                else -> SortHandler.sortList(values, sortOption)
+            try {
+                // отсортирую в зависимости от типа
+                when (values[0].type!!) {
+                    TYPE_BOOK -> SortHandler.sortBooks(values, sortOption, lastSortOption)
+                    TYPE_AUTHOR -> SortHandler.sortAuthors(values, sortOption)
+                    else -> SortHandler.sortList(values, sortOption)
+                }
+                notifyItemRangeChanged(0, values.size)
+            } catch (e: IllegalArgumentException) {
+                e.printStackTrace()
+                Toast.makeText(
+                    App.instance,
+                    "Не удалось отсортировать значения. Отправьте мне отчёт, указав, как получили эту ошибку",
+                    Toast.LENGTH_LONG
+                ).show()
+                val work = OneTimeWorkRequest.Builder(SendLogWorker::class.java).build()
+                WorkManager.getInstance(App.instance).enqueue(work)
             }
-            notifyItemRangeChanged(0, values.size)
+        }
+        lastSortOption = if (lastSortOption == sortOption) {
+            -1
+        } else {
+            sortOption
         }
     }
 
@@ -594,6 +709,7 @@ class FoundedItemAdapter(
 
     init {
         if (arrayList.size > 0) {
+            Log.d("surprise", "i have books on start: ${arrayList.size}")
             values = arrayList
         }
     }
@@ -603,12 +719,25 @@ class FoundedItemAdapter(
     }
 
     fun markClickedElement(clickedElementIndex: Int) {
-        values[clickedElementIndex].selected = true
-        notifyItemChanged(clickedElementIndex)
+        if (clickedElementIndex < values.size) {
+            values[clickedElementIndex].selected = true
+            notifyItemChanged(clickedElementIndex)
+        }
     }
 
     fun getSize(): Int {
         return values.size
+    }
+
+    fun hasBooks(): Boolean {
+        if (values.isNotEmpty()) {
+            values.forEach {
+                if (it.type == TYPE_BOOK) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     var isScrolledToLast: Boolean = false

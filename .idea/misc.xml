@@ -23,10 +23,18 @@
         <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_opds.xml" value="0.33967391304347827" />
         <entry key="..\:/android projects/FlibustaBookLoaderKotlin/app/src/main/res/menu/odps_menu.xml" value="0.43385416666666665" />
         <entry key="..\:/android_sdk/platforms/android-28/data/res/drawable/progress_horizontal.xml" value="0.38425925925925924" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/drawable/ic_test_black_24.xml" value="0.35885416666666664" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_blacklist.xml" value="0.3374358974358974" />
         <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_browser.xml" value="0.34322916666666664" />
         <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_download_schedule.xml" value="0.16691995947315097" />
         <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/founded_item.xml" value="0.34322916666666664" />
-        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_web_view.xml" value="0.34322916666666664" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_opds.xml" value="0.34270833333333334" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_web_view.xml" value="0.18857142857142858" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/menu/navigation_menu.xml" value="0.3374358974358974" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_download.xml" value="0.34270833333333334" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_filter.xml" value="0.34270833333333334" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_root.xml" value="0.34270833333333334" />
+        <entry key="..\:/delevope/projects/android/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_view.xml" value="0.34270833333333334" />
         <entry key="app/src/main/res/drawable/cursor.xml" value="0.21041666666666667" />
         <entry key="app/src/main/res/drawable/ic_search_white_24dp.xml" value="0.21041666666666667" />
         <entry key="app/src/main/res/layout/activity_browser.xml" value="0.2015625" />

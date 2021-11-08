@@ -17,6 +17,30 @@ class PreferencesHandler private constructor() {
         androidx.preference.PreferenceManager.getDefaultSharedPreferences(App.instance)
 
 
+    var isTogglePanels: Boolean
+        get() = preferences.getBoolean(PREF_TOGGLE_PANELS, true)
+        set(state) {
+            preferences.edit().putBoolean(PREF_TOGGLE_PANELS, state).apply()
+        }
+
+
+    var isAuthorInBookName: Boolean
+        get() = preferences.getBoolean(PREF_AUTHOR_IN_BOOK_NAME, true)
+        set(state) {
+            preferences.edit().putBoolean(PREF_AUTHOR_IN_BOOK_NAME, state).apply()
+        }
+
+    var isSequenceInBookName: Boolean
+        get() = preferences.getBoolean(PREF_SEQUENCE_IN_BOOK_NAME, true)
+        set(state) {
+            preferences.edit().putBoolean(PREF_SEQUENCE_IN_BOOK_NAME, state).apply()
+        }
+
+    fun isHideButtons(): Boolean {
+        return preferences.getBoolean(PREF_HIDE_BUTTONS, false)
+    }
+
+
     var isLinearLayout: Boolean
         get() = preferences.getBoolean(PREF_LINEAR_LAYOUT, true)
         set(state) {
@@ -171,6 +195,16 @@ class PreferencesHandler private constructor() {
         set(state) {
             preferences.edit().putBoolean(PREF_ONLY_RUSSIAN, state).apply()
         }
+    var bookNameStrictFilter: Boolean = preferences.getBoolean(PREF_BOOK_NAME_STRICT_FILTER, false)
+    var bookAuthorStrictFilter: Boolean =
+        preferences.getBoolean(PREF_BOOK_AUTHOR_STRICT_FILTER, false)
+    var bookGenreStrictFilter: Boolean =
+        preferences.getBoolean(PREF_BOOK_GENRE_STRICT_FILTER, false)
+    var bookSequenceStrictFilter: Boolean =
+        preferences.getBoolean(PREF_BOOK_SEQUENCE_STRICT_FILTER, false)
+    var sequenceStrictFilter: Boolean = preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)
+    var authorStrictFilter: Boolean = preferences.getBoolean(PREF_AUTHOR_STRICT_FILTER, false)
+    var genreStrictFilter: Boolean = preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)
 
     var isUseFilter: Boolean
         get() = preferences.getBoolean(PREF_USE_FILTER, false)
@@ -233,28 +267,24 @@ class PreferencesHandler private constructor() {
         return false
     }
 
-    // возвращу папку для закачек
-    var downloadDir: DocumentFile?
-        get() {
-            // возвращу папку для закачек
-            val downloadLocation =
-                preferences.getString(PREF_DOWNLOAD_LOCATION, null)
-            if (downloadLocation != null) {
-                try {
-                    val dl = DocumentFile.fromTreeUri(App.instance, Uri.parse(downloadLocation))
-                    if (dl != null && dl.isDirectory) {
-                        return dl
-                    }
-                } catch (e: Exception) {
-                    return null
-                }
+    fun getDownloadDir(): DocumentFile? {
+        var dl: DocumentFile? = null
+        // возвращу папку для закачек
+        val downloadLocation =
+            preferences.getString(PREF_DOWNLOAD_LOCATION, null)
+        if (downloadLocation != null) {
+            try {
+                dl = DocumentFile.fromTreeUri(App.instance, Uri.parse(downloadLocation))
+            } catch (e: Exception) {
             }
-            // верну путь к папке загрузок
-            return null
         }
-        set(file) {
-            preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file?.uri.toString()).apply()
-        }
+        // верну путь к папке загрузок
+        return dl
+    }
+
+    fun setDownloadDir(file: DocumentFile?) {
+        preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file?.uri.toString()).apply()
+    }
 
 
     var compatDownloadDir: File?
@@ -275,14 +305,14 @@ class PreferencesHandler private constructor() {
     val downloadDirAssigned: Boolean
         get() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                return downloadDir != null
+                return getDownloadDir() != null
             }
             return compatDownloadDir != null
         }
 
 
     fun getDownloadDirLocation(): String? {
-        val dir = downloadDir
+        val dir = getDownloadDir()
         if (dir != null && dir.isDirectory) {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 UriConverter.getPath(App.instance, dir.uri)
@@ -309,15 +339,24 @@ class PreferencesHandler private constructor() {
         )
     }
 
+
+    fun isLoadSequencesInAuthorDir(): Boolean {
+        return preferences.getBoolean(
+            App.instance.getString(R.string.pref_load_series_to_author_dir),
+            true
+        )
+    }
+
     fun isCreateSequencesDir(): Boolean {
         return preferences.getBoolean(
             App.instance.getString(R.string.pref_create_sequence_folder), false
         )
     }
 
-    fun isCreateAdditionalDir(): Boolean {
+    fun isDifferentDirForAuthorAndSequence(): Boolean {
         return preferences.getBoolean(
-            App.instance.getString(R.string.pref_create_additional_folders), false
+            App.instance.getString(R.string.pref_create_additional_folders),
+            false
         )
     }
 
@@ -378,6 +417,12 @@ class PreferencesHandler private constructor() {
 
 
     companion object {
+        private const val PREF_HIDE_BUTTONS = "no item buttons"
+        private const val PREF_DIFFERENT_DIRS = "create additional folders"
+        private const val PREF_SEQUENCES_IN_AUTHOR_DIRS = "load series to author dir"
+        private const val PREF_TOGGLE_PANELS = "toggle panels"
+        private const val PREF_AUTHOR_IN_BOOK_NAME = "pref author in book name"
+        private const val PREF_SEQUENCE_IN_BOOK_NAME = "pref sequence in book name"
         private const val PREF_LINEAR_LAYOUT = "linear layout"
         const val PREF_DOWNLOAD_LOCATION = "download_location"
         private const val PREF_VIEW = "view"
@@ -402,13 +447,20 @@ class PreferencesHandler private constructor() {
         private const val PREF_USE_FILTER = "use filter"
         private const val PREF_CHECK_AVAILABILITY = "check availability"
         private const val PREF_ONLY_RUSSIAN = "only russian"
+        private const val PREF_BOOK_NAME_STRICT_FILTER = "strict name in books"
+        private const val PREF_BOOK_AUTHOR_STRICT_FILTER = "strict author in books"
+        private const val PREF_BOOK_GENRE_STRICT_FILTER = "strict genre in books"
+        private const val PREF_BOOK_SEQUENCE_STRICT_FILTER = "strict sequence in books"
+        private const val PREF_SEQUENCE_STRICT_FILTER = "strict sequence filter"
+        private const val PREF_GENRE_STRICT_FILTER = "strict genre filter"
+        private const val PREF_AUTHOR_STRICT_FILTER = "strict author filter"
         private const val AUTH_COOKIE_VALUE = "auth cookie value"
         private const val PREF_BEG_DONATION = "beg donation"
         private const val PREF_SKIP_MAIN_SCREEN = "skip load screen"
         private const val PREF_SHOW_LOAD_MORE_BTN = "show more btn"
         private const val PREF_HIDE_PICS = "clear view"
 
-        const val BASE_URL = "http://flibustahezeous3.onion"
+        const val BASE_URL = "http://flibusta.is"
         const val BASE_PIC_URL = "http://flibusta.is"
         const val MIRROR_URL = "http://flibusta.site"
 

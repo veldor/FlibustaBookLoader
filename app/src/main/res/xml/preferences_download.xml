@@ -45,10 +45,17 @@
 
         <SwitchPreferenceCompat
             android:defaultValue="false"
-            android:summaryOff="Серии скачиваются в папку автора (если папка автора создаётся)"
-            android:summaryOn="Серии не добавляются в папку автора а скачиваются в отдельную папку в корне"
+            android:summaryOff="Папки авторов и серий загружаются непосредственно в папку загрузок"
+            android:summaryOn="Создать отдельные папки для авторов и серий в корне папки загрузок"
             android:title="Доп. папки"
             app:key="@string/pref_create_additional_folders" />
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:summaryOn="Серии скачиваются в папку автора (если папка автора создаётся)"
+            android:summaryOff="Серии не добавляются в папку автора а скачиваются в отдельную папку в корне"
+            android:title="Серии в авторах"
+            app:key="@string/pref_load_series_to_author_dir" />
 
         <DropDownPreference
             android:entries="@array/favorite_mime_names"
@@ -57,6 +64,21 @@
             android:title="@string/title_favorite_format_preference"
             app:key="favorite format"
             app:useSimpleSummaryProvider="true" />
+
+        <PreferenceCategory android:title="@string/book_names">
+            <SwitchPreferenceCompat
+                android:defaultValue="true"
+                android:summaryOff="Имя автора не добавляется в название книги"
+                android:summaryOn="Имя автора добавляется в название книги"
+                android:title="Имя автора"
+                app:key="@string/pref_author_in_book_name" />
+            <SwitchPreferenceCompat
+                android:defaultValue="true"
+                android:summaryOff="Серия не добавляется в название книги"
+                android:summaryOn="Серия добавляется в название книги"
+                android:title="Серия"
+                app:key="@string/pref_sequence_in_book_name" />
+        </PreferenceCategory>
 
     </PreferenceCategory>
 </PreferenceScreen>

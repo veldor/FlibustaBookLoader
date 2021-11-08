@@ -287,7 +287,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                         // сохраняю книгу в памяти устройства
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             val downloadsDir: DocumentFile =
-                                PreferencesHandler.instance.downloadDir!!
+                                PreferencesHandler.instance.getDownloadDir()!!
                             // проверю, не сохдан ли уже файл, если создан- удалю
                             val existentFile = downloadsDir.findFile(name)
                             existentFile?.delete()

@@ -60,7 +60,7 @@
     <string name="remember_format">Запомнить выбранный формат для дальнейших загрузок</string>
     <string name="download_only_this_format">Загружать только в выбранном формате</string>
     <string name="do_not_re_download">Загружать ранее сохранённые файлы</string>
-    <string name="go_to_test_message">Бета-версии</string>
+    <string name="go_to_test_message">Тестировать</string>
     <string name="enter_value_message">Введите значение</string>
     <string name="backward">Назад</string>
     <string name="begin_tor_init_msg">Начинаю инициализацию</string>
@@ -294,4 +294,8 @@
     <string name="wrong_format_ignored">Книги, недоступные в выбранном формате не будут загружены</string>
     <string name="wrong_format_accepted">Книги, недоступные в выбранном формате, будут загружены в доступном</string>
     <string name="wallet_copied_message">Номер кошелька скопирован в буфер обмена</string>
+    <string name="toggle_panels">Панели</string>
+    <string name="book_names">Названия скачанных книг</string>
+    <string name="title_strict_filter">Строгое совпадение</string>
+    <string name="filter_preferences">Настройки фильтрации</string>
 </resources>

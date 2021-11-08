@@ -45,7 +45,6 @@
                 android:text="@string/title_only_russian"
                 app:layout_constraintTop_toTopOf="parent"/>
 
-
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/blacklistInputLayout"
                 android:layout_width="match_parent"

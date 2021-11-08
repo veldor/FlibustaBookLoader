@@ -18,6 +18,7 @@ import net.veldor.flibustaloader.MyWebView
 import net.veldor.flibustaloader.database.entity.Bookmark
 import net.veldor.flibustaloader.database.entity.DownloadedBooks
 import net.veldor.flibustaloader.database.entity.ReadedBooks
+import net.veldor.flibustaloader.delegates.BooksAddedToQueueDelegate
 import net.veldor.flibustaloader.handlers.DownloadLinkHandler
 import net.veldor.flibustaloader.http.TorWebClient
 import net.veldor.flibustaloader.http.UniversalWebClient
@@ -30,16 +31,19 @@ import net.veldor.flibustaloader.selections.SearchResult
 import net.veldor.flibustaloader.updater.Updater
 import net.veldor.flibustaloader.utils.BookSharer.shareLink
 import net.veldor.flibustaloader.utils.History
+import net.veldor.flibustaloader.utils.MimeTypes
 import net.veldor.flibustaloader.utils.MyFileReader.clearAutocomplete
 import net.veldor.flibustaloader.utils.MyFileReader.getSearchAutocomplete
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.URLHelper
 import net.veldor.flibustaloader.utils.XMLHandler.getSearchAutocomplete
+import java.lang.Exception
 import java.util.*
 
 open class OPDSViewModel(application: Application) : GlobalViewModel(application),
     MyViewModelInterface {
 
+    private var savedList: ArrayList<FoundedEntity>? = null
     private var currentWork: Job? = null
 
     private var currentPageUrl: String? = null
@@ -112,42 +116,65 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         clearAutocomplete()
     }
 
-    fun downloadAll(books: ArrayList<FoundedEntity>, format: String, unloaded: Boolean, strictFormat: Boolean) {
+    fun downloadAll(
+        books: ArrayList<FoundedEntity>,
+        format: String,
+        onlyUnloaded: Boolean,
+        strictFormat: Boolean,
+         delegate: BooksAddedToQueueDelegate
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
+            var counter = 0
+            val longFormat = MimeTypes.getFullMime(format)
             // проверю, нужно ли загружать книги только в выбранном формате
             if (books.isNotEmpty()) {
+                Log.d("surprise", "downloadAll: books for add: ${books.size}")
                 books.forEach { foundedEntity ->
                     var linkFound = false
                     // ищу книгу в выбранном формате
                     if (foundedEntity.downloadLinks.isNotEmpty()) {
                         foundedEntity.downloadLinks.forEach {
-                            if (it.mime == format) {
+                            if (it.mime == longFormat) {
                                 // найдена ссылка на формат
-                                if (!unloaded || !foundedEntity.downloaded) {
+                                if (onlyUnloaded) {
+                                    if (!foundedEntity.downloaded) {
+                                        DownloadLinkHandler().addLink(it)
+                                        counter++
+                                        linkFound = true
+                                    }
+                                } else {
                                     DownloadLinkHandler().addLink(it)
+                                    counter++
                                     linkFound = true
                                 }
                             }
                         }
-                        if(!linkFound && !strictFormat){
+                        if (!linkFound && !strictFormat) {
                             DownloadLinkHandler().addLink(foundedEntity.downloadLinks[0])
+                            counter++
                         }
+                    }
+                    else{
+                        Log.d("surprise", "downloadAll: ============== NO LINKS ================= ${foundedEntity.name}")
                     }
                 }
                 App.instance.requestDownloadBooksStart()
+                delegate.booksAdded(counter)
             }
         }
     }
 
 
-    fun addToDownloadQueue(downloadLink: DownloadLink) {
+    fun addToDownloadQueue(downloadLink: DownloadLink, delegate: BooksAddedToQueueDelegate) {
         viewModelScope.launch(Dispatchers.IO) {
             DownloadLinkHandler().addLink(downloadLink)
             App.instance.requestDownloadBooksStart()
+            delegate.booksAdded(1)
         }
     }
 
     fun request(s: String, append: Boolean, addToHistory: Boolean, clickedElementIndex: Int) {
+        Log.d("surprise", "request: request $s")
         if (currentWork != null) {
             currentWork!!.cancel()
         }
@@ -164,10 +191,11 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         // запрошу данные
         currentWork = viewModelScope.launch(Dispatchers.IO) {
             var nextPageLink: String? = s
-            nextPageLink = makeRequest(nextPageLink!!, append, if(addToHistory) -1 else clickedElementIndex)
+            nextPageLink =
+                makeRequest(nextPageLink!!, append, if (addToHistory) -1 else clickedElementIndex)
             while (true) {
                 if (isActive) {
-                    if(nextPageLink != null && _searchResults.value != null) {
+                    if (nextPageLink != null && _searchResults.value != null) {
                         // если найдены книги- проверю, нужно ли загружать все результаты сразу
                         if ((!PreferencesHandler.instance.opdsPagedResultsLoad && _searchResults.value!!.type == TYPE_BOOK) || _searchResults.value!!.type != TYPE_BOOK) {
                             nextPageLink = makeRequest(
@@ -176,12 +204,10 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                                 if (addToHistory) -1 else clickedElementIndex
                             ) ?: break
                         }
-                    }
-                    else{
+                    } else {
                         break
                     }
-                }
-                else{
+                } else {
                     break
                 }
             }
@@ -190,29 +216,32 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
     }
 
     private fun makeRequest(s: String, append: Boolean, lastClicked: Int): String? {
-        val response = UniversalWebClient().rawRequest(s)
-        if (response != null) {
-            val answer = UniversalWebClient().responseToString(response)
-            if (answer != null) {
-                // попробую с помощью нового парсера разобрать ответ
-                val parser = TestParser(answer)
-                val results = parser.parse()
-                val searchResult = SearchResult()
-                searchResult.appended = append
-                searchResult.size = results.size
-                if (results.isNotEmpty()) {
-                    searchResult.type = results[0].type
+        try {
+            val response = UniversalWebClient().rawRequest(s)
+            if (response != null) {
+                val answer = UniversalWebClient().responseToString(response)
+                if (answer != null) {
+                    // попробую с помощью нового парсера разобрать ответ
+                    val parser = TestParser(answer)
+                    val results = parser.parse()
+                    val searchResult = SearchResult()
+                    searchResult.appended = append
+                    searchResult.size = results.size
+                    if (results.isNotEmpty()) {
+                        searchResult.type = results[0].type
+                    }
+                    searchResult.results = results
+                    searchResult.nextPageLink = parser.nextPageLink
+                    searchResult.filtered = parser.filtered
+                    if (lastClicked >= 0) {
+                        searchResult.clickedElementIndex = lastClicked
+                        searchResult.isBackSearch = true
+                    }
+                    _searchResults.postValue(searchResult)
+                    return parser.nextPageLink
                 }
-                searchResult.results = results
-                searchResult.nextPageLink = parser.nextPageLink
-                searchResult.filtered = parser.filtered
-                if(lastClicked >= 0){
-                    searchResult.clickedElementIndex = lastClicked
-                    searchResult.isBackSearch = true
-                }
-                _searchResults.postValue(searchResult)
-                return parser.nextPageLink
             }
+        } catch (_: Exception) {
         }
         _isLoadError.postValue(true)
         return null
@@ -221,13 +250,27 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
     fun loadImage(imageContainer: ImageView?, item: FoundedEntity) {
         if (imageContainer != null) {
             viewModelScope.launch(Dispatchers.IO) {
-                // load image
-                val response =
-                    TorWebClient().simpleGetRequest(PreferencesHandler.instance.picMirror + item.coverUrl)
-                Log.d("surprise", "loadImage: cover loaded")
-                val decoded = BitmapFactory.decodeStream(response.entity.content)
-                imageContainer.setImageBitmap(decoded)
-                item.cover = decoded
+                try {
+                    // load image
+                    val response =
+                        TorWebClient().simpleGetRequest(PreferencesHandler.instance.picMirror + item.coverUrl)
+                    val status = response.statusLine.statusCode
+                    if (status < 400) {
+                        val contentTypeHeader = response.getLastHeader("Content-Type")
+                        if (contentTypeHeader.value == "image/jpeg") {
+                            val decoded = BitmapFactory.decodeStream(response.entity.content)
+                            if (decoded.byteCount > 0) {
+                                Log.d("surprise", "loadImage: pic size is ${decoded.byteCount}")
+                                item.cover = decoded
+                                Log.d("surprise", "loadImage: cover loaded")
+                                imageContainer.setImageBitmap(decoded)
+                            }
+                        } else if (contentTypeHeader.value == "image/png") {
+                            Log.d("surprise", "loadImage: loaded PNG image!!!")
+                        }
+                    }
+                } catch (_: Exception) {
+                }
             }
         }
     }
@@ -254,6 +297,20 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
 
     fun getCurrentPage(): String? {
         return currentPageUrl
+    }
+
+    fun saveLoaded(list: ArrayList<FoundedEntity>) {
+        Log.d("surprise", "saveLoaded: saved ${list.size} elements")
+        savedList = list
+    }
+
+    fun getPreviouslyLoaded(): ArrayList<FoundedEntity> {
+        if (savedList == null) {
+            Log.d("surprise", "getPreviouslyLoaded: load empty list")
+            return arrayListOf()
+        }
+        Log.d("surprise", "getPreviouslyLoaded: load ${savedList!!.size} elements")
+        return savedList!!
     }
 
     val height: Int

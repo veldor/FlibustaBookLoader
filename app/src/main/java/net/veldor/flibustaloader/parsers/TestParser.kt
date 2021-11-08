@@ -7,6 +7,7 @@ import net.veldor.flibustaloader.handlers.PicHandler
 import net.veldor.flibustaloader.selections.DownloadLink
 import net.veldor.flibustaloader.selections.FoundedEntity
 import net.veldor.flibustaloader.utils.Grammar
+import net.veldor.flibustaloader.utils.PreferencesHandler
 import org.xml.sax.Attributes
 import org.xml.sax.SAXException
 import org.xml.sax.helpers.DefaultHandler
@@ -105,6 +106,15 @@ class TestParser(private val text: String) {
                                     attributeIndex = attributes.getIndex("type")
                                     downloadLink.mime = attributes.getValue(attributeIndex)
                                     foundedEntity!!.downloadLinks.add(downloadLink)
+                                }
+                                else if (attributeValue == "http://opds-spec.org/acquisition/disabled") {
+                                    // link found, append it
+                                    attributeIndex = attributes.getIndex("href")
+                                    downloadLink = DownloadLink()
+                                    downloadLink.url = attributes.getValue(attributeIndex)
+                                    attributeIndex = attributes.getIndex("type")
+                                    downloadLink.mime = attributes.getValue(attributeIndex)
+                                    foundedEntity!!.downloadLinks.add(downloadLink)
                                 } else if (attributeValue == "http://opds-spec.org/image") {
                                     // найдена обложка
                                     foundedEntity!!.coverUrl =
@@ -164,13 +174,13 @@ class TestParser(private val text: String) {
                                 "Антологии"
                             }
                         }
-                        authorDirName = Grammar.clearDirName(authorDirName)
+                        authorDirName = Grammar.clearDirName(authorDirName).trim()
 
                         foundedEntity?.downloadLinks?.forEach { link ->
                             link.author = foundedEntity!!.author
                             link.id = foundedEntity!!.id
                             link.name = foundedEntity!!.name
-                            link.size = foundedEntity!!.size
+                            link.size = foundedEntity!!.size ?: "0"
                             link.authorDirName = authorDirName
                             // так, как книга может входить в несколько серий- совмещу назначения
                             if (foundedEntity!!.sequences.size > 0) {
@@ -188,8 +198,8 @@ class TestParser(private val text: String) {
                                         )
                                     )
                                 }
-                                link.sequenceDirName = simpleStringBuilder.toString()
-                                link.reservedSequenceName = foundedEntity!!.sequencesComplex
+                                link.sequenceDirName = simpleStringBuilder.toString().trim()
+                                link.reservedSequenceName = foundedEntity!!.sequencesComplex.trim()
                             } else {
                                 link.sequenceDirName = ""
                                 link.reservedSequenceName = ""
@@ -198,7 +208,7 @@ class TestParser(private val text: String) {
                         if (Filter.check(foundedEntity!!)) {
                             parsed.add(foundedEntity!!)
                             // загружу картинку
-                            if (foundedEntity!!.coverUrl != null && foundedEntity!!.coverUrl!!.isNotEmpty()) {
+                            if (foundedEntity!!.coverUrl != null && foundedEntity!!.coverUrl!!.isNotEmpty() && PreferencesHandler.instance.isPreviews) {
                                 // load pic in new Thread
                                 PicHandler().loadPic(parsed.last())
                             }
@@ -221,6 +231,9 @@ class TestParser(private val text: String) {
                             textValue!!.contains(TYPE_BOOK) -> {
                                 contentType = TYPE_BOOK
                             }
+                            textValue!!.contains(TYPE_SEQUENCE) -> {
+                                contentType = TYPE_SEQUENCE
+                            }
                             textValue!!.contains(TYPE_AUTHORS) -> {
                                 contentType = TYPE_AUTHORS
                             }
@@ -229,9 +242,6 @@ class TestParser(private val text: String) {
                             }
                             textValue!!.contains(TYPE_GENRE) -> {
                                 contentType = TYPE_GENRE
-                            }
-                            textValue!!.contains(TYPE_SEQUENCE) -> {
-                                contentType = TYPE_SEQUENCE
                             }
                         }
                         foundedEntity!!.type = contentType!!

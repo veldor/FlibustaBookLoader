@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader
 
 import android.net.Uri
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.MutableLiveData
 import androidx.multidex.MultiDexApplication
@@ -11,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.veldor.flibustaloader.database.AppDatabase
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
+import net.veldor.flibustaloader.delegates.DownloadWorkSwitchStateDelegate
 import net.veldor.flibustaloader.http.TorStarter
 import net.veldor.flibustaloader.notificatons.NotificationHandler
 import net.veldor.flibustaloader.utils.LogHandler
@@ -195,7 +197,8 @@ class App : MultiDexApplication() {
         }
     }
 
-    fun switchDownloadState() {
+    fun switchDownloadState(delegate: DownloadWorkSwitchStateDelegate) {
+        Log.d("surprise", "switchDownloadState: switching download state")
         var workStopped = false
         val workManager = WorkManager.getInstance(this)
         val statuses =
@@ -204,6 +207,7 @@ class App : MultiDexApplication() {
         workInfoList.forEach {
             // если найдены рабочие экземпляры- остановлю их
             if (it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED) {
+                Log.d("surprise", "switchDownloadState: found download work, cancelling it")
                 val work = workManager.getWorkInfoById(it.id)
                 work.cancel(true)
                 if (!workStopped) {
@@ -211,14 +215,19 @@ class App : MultiDexApplication() {
                 }
             }
         }
+        Log.d("surprise", "switchDownloadState: work stop state is $workStopped")
         if (workStopped) {
+            WorkManager.getInstance(App.instance)
+                .cancelAllWorkByTag(OPDSViewModel.MULTIPLY_DOWNLOAD)
             // если работы приостановлены- удалю сообщение о загрузке
             // оповещу о смене статуса
             DownloadScheduleViewModel.downloadState.postValue(false)
+            delegate.stateSwitched(1)
         } else {
             // запущу загрузку
             startDownloadBooksWorker()
             DownloadScheduleViewModel.downloadState.postValue(true)
+            delegate.stateSwitched(2)
 
         }
     }

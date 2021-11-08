@@ -31,11 +31,35 @@ class BlacklistActivity : BaseActivity() {
 
     private fun setupUi() {
         setupInterface()
-        if(PreferencesHandler.instance.isEInk){
-            binding.blacklistBook.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
-            binding.blacklistAuthor.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
-            binding.blacklistSequence.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
-            binding.blacklistGenre.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+        if (PreferencesHandler.instance.isEInk) {
+            binding.blacklistBook.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.blacklistAuthor.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.blacklistSequence.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
+            binding.blacklistGenre.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.black,
+                    null
+                )
+            )
         }
         paintToolbar(binding.toolbar)
         showHints()

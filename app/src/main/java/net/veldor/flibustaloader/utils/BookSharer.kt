@@ -20,99 +20,16 @@ object BookSharer {
     fun shareBook(name: String) {
         // find the book
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val downloadsDir = PreferencesHandler.instance.downloadDir!!
-            val targetFile = FilesHandler.find(downloadsDir.listFiles(), name)
-            if(targetFile != null){
-                // найден файл, делюсь им
-                val docId: String = DocumentsContract.getDocumentId(targetFile.uri)
-                val split = docId.split(":").toTypedArray()
-                val storage = split[0]
-                val path = "///storage/" + storage + "/" + split[1]
-                var file = File(path)
-                // костыли, проверю существование файла с условием, что он находится на основной флешке
-                if (!file.exists()) {
-                    file = File(
-                        Environment.getExternalStorageDirectory().toString() + "/" + split[1]
-                    )
-                }
-                if (file.exists()) {
-                    //todo По возможности- разобраться и заменить на валидное решение
-                    val builder = VmPolicy.Builder()
-                    StrictMode.setVmPolicy(builder.build())
-                    // отправлю запрос на открытие файла
-                    val shareIntent = Intent(Intent.ACTION_SEND)
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file))
-                    shareIntent.type = MimeTypes.getFullMime(Grammar.getExtension(name))
-                    shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    App.instance.startActivity(
-                        Intent.createChooser(
-                            shareIntent,
-                            App.instance.getString(R.string.send_book_title)
-                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-                } else {
-                    Toast.makeText(
-                        App.instance,
-                        App.instance.getString(R.string.file_not_found_message),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-        else{
-            val dd: File = PreferencesHandler.instance.compatDownloadDir!!
-            dd.walk().filter { it.name == name }
-        }
-    }
-
-    fun shareBook(
-        name: String?,
-        type: String?,
-        authorDir: String?,
-        sequenceDir: String?,
-        reservedSequenceFolder: String?
-    ) {
-        var file: File
-        // ========================================================================================
-        val context: Context = App.instance
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            var downloadsDir = PreferencesHandler.instance.downloadDir
-            if (PreferencesHandler.instance
-                    .isCreateSequencesDir() && reservedSequenceFolder != null
-            ) {
-                if (PreferencesHandler.instance.isCreateAdditionalDir()) {
-                    val sequencesDir = downloadsDir!!.findFile("Серии")
-                    if (sequencesDir != null && sequencesDir.exists()) {
-                        downloadsDir = sequencesDir
-                    }
-                }
-                downloadsDir = downloadsDir!!.findFile(reservedSequenceFolder)
-            } else {
-                if (PreferencesHandler.instance
-                        .isCreateAuthorsDir() && authorDir != null && authorDir.isNotEmpty()
-                ) {
-                    val sequencesDir = downloadsDir!!.findFile("Авторы")
-                    if (sequencesDir != null && sequencesDir.exists()) {
-                        downloadsDir = sequencesDir
-                    }
-                    downloadsDir = downloadsDir.findFile(authorDir)
-                }
-                if (PreferencesHandler.instance
-                        .isCreateSequencesDir() && downloadsDir != null && sequenceDir != null && sequenceDir.isNotEmpty()
-                ) {
-                    downloadsDir = downloadsDir.findFile(sequenceDir)
-                }
-            }
-            if (downloadsDir != null) {
-                val downloadFile = downloadsDir.findFile(name!!)
-                if (downloadFile != null) {
-                    val docId: String = DocumentsContract.getDocumentId(downloadFile.uri)
-                    Log.d("surprise", "BookSharer shareBook $docId")
+            val downloadsDir = PreferencesHandler.instance.getDownloadDir()
+            if(downloadsDir != null){
+                val targetFile = FilesHandler.find(downloadsDir.listFiles(), name)
+                if(targetFile != null){
+                    // найден файл, делюсь им
+                    val docId: String = DocumentsContract.getDocumentId(targetFile.uri)
                     val split = docId.split(":").toTypedArray()
                     val storage = split[0]
                     val path = "///storage/" + storage + "/" + split[1]
-                    file = File(path)
-                    Log.d("surprise", "BookSharer shareBook $file")
+                    var file = File(path)
                     // костыли, проверю существование файла с условием, что он находится на основной флешке
                     if (!file.exists()) {
                         file = File(
@@ -126,7 +43,7 @@ object BookSharer {
                         // отправлю запрос на открытие файла
                         val shareIntent = Intent(Intent.ACTION_SEND)
                         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file))
-                        shareIntent.type = MimeTypes.getFullMime(type)
+                        shareIntent.type = MimeTypes.getFullMime(Grammar.getExtension(name))
                         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                         App.instance.startActivity(
                             Intent.createChooser(
@@ -136,60 +53,24 @@ object BookSharer {
                         )
                     } else {
                         Toast.makeText(
-                            context,
-                            context.getString(R.string.file_not_found_message),
+                            App.instance,
+                            App.instance.getString(R.string.file_not_found_message),
                             Toast.LENGTH_LONG
                         ).show()
                     }
-                } else {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.file_not_found_message),
-                        Toast.LENGTH_LONG
-                    ).show()
                 }
             }
-        } else {
-            var dd: File? = PreferencesHandler.instance.compatDownloadDir
-            if (PreferencesHandler.instance
-                    .isCreateSequencesDir() && reservedSequenceFolder != null
-            ) {
-                dd = File(dd, reservedSequenceFolder)
-            } else {
-                if (PreferencesHandler.instance
-                        .isCreateAuthorsDir() && authorDir != null && authorDir.isNotEmpty()
-                ) {
-                    dd = File(dd, authorDir)
-                }
-                if (PreferencesHandler.instance
-                        .isCreateSequencesDir() && sequenceDir != null && sequenceDir.isNotEmpty()
-                ) {
-                    dd = File(dd, sequenceDir)
-                }
-            }
-            val bookFile = File(dd, name)
-            if (bookFile.isFile) {
-                //todo По возможности- разобраться и заменить на валидное решение
-                val builder = VmPolicy.Builder()
-                StrictMode.setVmPolicy(builder.build())
-                // отправлю запрос на открытие файла
-                val shareIntent = Intent(Intent.ACTION_SEND)
-                shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(bookFile))
-                shareIntent.type = MimeTypes.getFullMime(type)
-                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-                App.instance.startActivity(
-                    Intent.createChooser(
-                        shareIntent,
-                        App.instance.getString(R.string.send_book_title)
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            } else {
+            else{
                 Toast.makeText(
-                    context,
-                    context.getString(R.string.file_not_found_message),
-                    Toast.LENGTH_LONG
+                    App.instance,
+                    "Не распознана папка загрузок, выберите ещё ещё раз в настройках",
+                    Toast.LENGTH_SHORT
                 ).show()
             }
+        }
+        else{
+            val dd: File = PreferencesHandler.instance.compatDownloadDir!!
+            dd.walk().filter { it.name == name }
         }
     }
 

@@ -21,6 +21,12 @@
         app:title="@string/view_preferences"
         app:icon="@drawable/ic_baseline_eye_24"
         app:fragment="net.veldor.flibustaloader.ui.SettingsActivity$ViewPreferencesFragment"/>
+
+    <Preference
+        app:title="@string/filter_preferences"
+        app:icon="@drawable/ic_baseline_filter__alt_24"
+        app:fragment="net.veldor.flibustaloader.ui.SettingsActivity$FilterPreferencesFragment"/>
+
     <Preference
         app:title="@string/download_preferences"
         app:icon="@drawable/ic_cloud_download_black_24dp"

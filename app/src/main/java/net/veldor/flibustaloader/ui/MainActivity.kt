@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader.ui
 
 import android.Manifest
-import android.app.ActionBar
 import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
@@ -21,7 +20,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.marginBottom
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
@@ -99,7 +97,7 @@ class MainActivity : BaseActivity() {
                                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                                     )
                                 }
-                                PreferencesHandler.instance.downloadDir = dl
+                                PreferencesHandler.instance.setDownloadDir(dl)
                             } catch (e: Exception) {
                                 Toast.makeText(
                                     this,
@@ -602,9 +600,9 @@ class MainActivity : BaseActivity() {
         mProgressCounter = 0
         val waitingTime = TOR_LOAD_MAX_TIME * 1000 // 3 minute in milli seconds
         val checkAvailabilityLimit: Int = if (PreferencesHandler.instance.isEInk) {
-            60
+            90
         } else {
-            30
+            60
         }
         if (mProgressCounter == 0) {
             mProgressCounter = 1
@@ -763,6 +761,6 @@ class MainActivity : BaseActivity() {
 
     companion object {
         private const val REQUEST_WRITE_READ = 22
-        private const val TOR_LOAD_MAX_TIME = 180
+        private const val TOR_LOAD_MAX_TIME = 260
     }
 }

@@ -31,4 +31,10 @@
         android:summary="Фон и GIF не отображаются"
         android:summaryOff="Фон и GIF отображаются"
         android:title="Скрыть картинки" />
+    <SwitchPreferenceCompat
+        app:key="no item buttons"
+        android:defaultValue="false"
+        android:summary="Кнопки 'показать' в найденных результатах скрыты"
+        android:summaryOff="Кнопки 'показать' в найденных результатах отображаются"
+        android:title="Скрыть кнопки в результатах" />
 </PreferenceScreen>

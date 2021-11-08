@@ -14,10 +14,11 @@ import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.DownloadScheduleAdapter
 import net.veldor.flibustaloader.databinding.ActivityDownloadScheduleBinding
+import net.veldor.flibustaloader.delegates.DownloadWorkSwitchStateDelegate
 import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import net.veldor.flibustaloader.workers.DownloadBooksWorker
 
-class DownloadScheduleActivity : BaseActivity() {
+class DownloadScheduleActivity : BaseActivity(), DownloadWorkSwitchStateDelegate {
     private lateinit var binding: ActivityDownloadScheduleBinding
     private lateinit var viewModel: DownloadScheduleViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +39,6 @@ class DownloadScheduleActivity : BaseActivity() {
         })
 
         DownloadScheduleViewModel.liveCurrentBookDownloadProgress.observe(this, {
-            Log.d("surprise", "setupObservers: have download progress")
             (binding.resultsList.adapter as DownloadScheduleAdapter).setDownloadProgressChanged(it)
         })
 
@@ -73,7 +73,8 @@ class DownloadScheduleActivity : BaseActivity() {
         binding.resultsList.adapter = DownloadScheduleAdapter(arrayListOf())
         binding.resultsList.layoutManager = LinearLayoutManager(this)
         binding.actionButton.setOnClickListener {
-            App.instance.switchDownloadState()
+            Log.d("surprise", "setupInterface: button clicked!")
+            App.instance.switchDownloadState(this)
         }
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu
@@ -122,6 +123,16 @@ class DownloadScheduleActivity : BaseActivity() {
             drawer.closeDrawer(GravityCompat.START)
         } else {
             super.onBackPressed()
+        }
+    }
+
+    override fun stateSwitched(state: Int) {
+        viewModel.loadDownloadQueue()
+        (binding.resultsList.adapter as DownloadScheduleAdapter).notifyDataSetChanged()
+        if (state == 1) {
+            binding.actionButton.text = getString(R.string.start_download)
+        } else {
+            binding.actionButton.text = getString(R.string.stop_download_message)
         }
     }
 }

@@ -420,6 +420,12 @@ class SettingsActivity : BaseActivity(),
             setPreferencesFromResource(R.xml.preferences_update, rootKey)
         }
     }
+    @Suppress("unused")
+    class FilterPreferencesFragment : PreferenceFragmentCompat() {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(R.xml.preferences_filter, rootKey)
+        }
+    }
 
     @Suppress("unused")
     class DownloadPreferencesFragment : PreferenceFragmentCompat() {
@@ -470,7 +476,7 @@ class SettingsActivity : BaseActivity(),
                                             Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                                         )
                                     }
-                                    PreferencesHandler.instance.downloadDir = dl
+                                    PreferencesHandler.instance.setDownloadDir(dl)
                                 } catch (e: Exception) {
                                     Toast.makeText(
                                         requireContext(),

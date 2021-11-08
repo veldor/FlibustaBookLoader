@@ -66,7 +66,7 @@ class DirContentAdapter(private val mItems: ArrayList<Book>) :
             mBinding.executePendingBindings()
         }
 
-        override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenuInfo) {
+        override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenuInfo?) {
             menu.setHeaderTitle(App.instance.getString(R.string.books_options_message))
             menu.add(0, v.id, 0, App.instance.getString(R.string.share_link_message))
             menu.add(0, v.id, 0, App.instance.getString(R.string.open_with_menu_item))

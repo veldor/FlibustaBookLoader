@@ -6,6 +6,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Point
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.text.InputType
@@ -24,7 +25,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
-import net.veldor.flibustaloader.databinding.FragmentWebViewBinding
 import net.veldor.flibustaloader.dialogs.ChangelogDialog
 import net.veldor.flibustaloader.ui.BaseActivity
 import net.veldor.flibustaloader.ui.LoginActivity
@@ -33,8 +33,13 @@ import net.veldor.flibustaloader.utils.URLHelper
 import net.veldor.flibustaloader.utils.XMLHandler
 import net.veldor.flibustaloader.view_models.WebViewViewModel
 import java.util.*
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import net.veldor.flibustaloader.databinding.FragmentWebViewBinding
+import net.veldor.flibustaloader.ui.BrowserActivity
+
 
 open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
+    private var isFullscreen: Boolean = false
     lateinit var binding: FragmentWebViewBinding
     lateinit var viewModel: WebViewViewModel
     private lateinit var autocompleteStrings: ArrayList<String>
@@ -129,6 +134,41 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
             // select type for download
             binding.floatingMenu.close(true)
             showSelectBookDownloadTypeDialog()
+        }
+
+        binding.togglePanelsButton.setOnClickListener {
+            if (isFullscreen) {
+                val decorView: View = requireActivity().window.decorView
+                decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+                requireActivity().window.clearFlags(
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN
+                )
+                (requireActivity() as BrowserActivity).supportActionBar?.show()
+                val navBar: BottomNavigationView =
+                    requireActivity().findViewById(R.id.bottom_nav_view)
+                navBar.visibility = View.VISIBLE
+                isFullscreen = false
+            } else {
+                val decorView: View = requireActivity().window.decorView
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    val uiOptions =
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    decorView.systemUiVisibility = uiOptions
+                } else {
+                    decorView.systemUiVisibility = View.GONE
+                }
+                (requireActivity() as BrowserActivity).supportActionBar?.hide()
+                requireActivity().window.setFlags(
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN
+                )
+                // hide toolbar and bottom menu bar
+                requireActivity().actionBar?.hide()
+                val navBar: BottomNavigationView =
+                    requireActivity().findViewById(R.id.bottom_nav_view)
+                navBar.visibility = View.GONE
+                isFullscreen = true
+            }
         }
 
         // буду отслеживать событие логина

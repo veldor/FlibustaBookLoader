@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
@@ -17,13 +18,13 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:background="@color/colorPrimary"
+        android:foreground="?android:attr/selectableItemBackground"
         android:padding="10dp">
 
         <ImageView
             android:id="@+id/previewImage"
             android:layout_width="100dp"
             android:layout_height="143dp"
-            android:background="@drawable/image_border"
             android:contentDescription="@string/book_cover_hint"
             android:foreground="?android:attr/selectableItemBackground"
             android:visibility="gone"
@@ -157,8 +158,8 @@
             android:id="@+id/thirdBlockLeftElement"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/textColor"
             android:layout_marginTop="10dp"
+            android:textColor="@color/textColor"
             android:visibility="visible"
             app:layout_constraintEnd_toStartOf="@+id/thirdBlockCenterElement"
             app:layout_constraintHorizontal_bias="0.5"
@@ -183,8 +184,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:textColor="@color/textColor"
             android:gravity="center"
+            android:textColor="@color/textColor"
             android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -197,6 +198,17 @@
             android:layout_height="wrap_content"
             app:barrierDirection="bottom"
             app:constraint_referenced_ids="thirdBlockLeftElement,thirdBlockCenterElement,thirdBlocRightElement" />
+
+        <TextView
+            android:id="@+id/availableLinkFormats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintTop_toBottomOf="@id/fourthBarrier" />
 
 
         <ImageButton
@@ -212,7 +224,7 @@
             app:layout_constraintEnd_toStartOf="@+id/centerActionBtn"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/fourthBarrier" />
+            app:layout_constraintTop_toBottomOf="@+id/availableLinkFormats" />
 
         <Button
             android:id="@+id/centerActionBtn"
@@ -227,7 +239,7 @@
             app:layout_constraintEnd_toStartOf="@+id/rightActionBtn"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/leftActionBtn"
-            app:layout_constraintTop_toBottomOf="@+id/fourthBarrier" />
+            app:layout_constraintTop_toBottomOf="@+id/availableLinkFormats" />
 
         <ImageButton
             android:id="@+id/rightActionBtn"
@@ -242,7 +254,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/centerActionBtn"
-            app:layout_constraintTop_toBottomOf="@+id/fourthBarrier" />
+            app:layout_constraintTop_toBottomOf="@+id/availableLinkFormats" />
 
         <androidx.constraintlayout.widget.Barrier
             android:id="@+id/imageBarrier"
@@ -269,6 +281,16 @@
             android:layout_height="wrap_content"
             app:constraint_referenced_ids="thirdBlockLeftElement,thirdBlockCenterElement, thirdBlocRightElement" />
 
+        <ProgressBar
+            android:visibility="gone"
+            android:id="@+id/loadingMoreBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/centerActionBtn" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

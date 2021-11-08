@@ -9,6 +9,7 @@ import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.database.entity.DownloadedBooks
 import net.veldor.flibustaloader.ecxeptions.BookNotFoundException
+import net.veldor.flibustaloader.ecxeptions.DownloadsDirNotFoundException
 import net.veldor.flibustaloader.ecxeptions.TorNotLoadedException
 import net.veldor.flibustaloader.handlers.LoadedBookHandler
 import net.veldor.flibustaloader.http.ExternalVpnVewClient
@@ -165,11 +166,16 @@ class DownloadBooksWorker(
     }
 
 
-    @Throws(BookNotFoundException::class, TorNotLoadedException::class)
+    @Throws(BookNotFoundException::class, TorNotLoadedException::class, DownloadsDirNotFoundException::class)
     private fun downloadBook(book: BooksDownloadSchedule): Boolean {
+        val base = URLHelper.getBaseUrl()
+        var link = book.link
+        if(base.endsWith("/") && link.startsWith("/")){
+            link = link.substring(1)
+        }
         val startTime = System.currentTimeMillis()
-        val bookUrl = URLHelper.getBaseUrl() + book.link
-        Log.d("surprise", "downloadBook: download $bookUrl")
+        val bookUrl = base + link
+        Log.d("surprise", "downloadBook: load $bookUrl")
         // получу response доступным способом
         val response =
             if (PreferencesHandler.instance.isExternalVpn) ExternalVpnVewClient.rawRequest(bookUrl) else TorWebClient().rawRequest(
@@ -196,6 +202,7 @@ class DownloadBooksWorker(
                 val contentLength = response.entity.contentLength
                 if (content != null && response.entity.contentLength > 0) {
                     val tempFile = File.createTempFile(RandomString().nextString(), null)
+                    tempFile.deleteOnExit()
                     val out: OutputStream = FileOutputStream(tempFile)
                     var read: Int
                     val buffer = ByteArray(1024)
