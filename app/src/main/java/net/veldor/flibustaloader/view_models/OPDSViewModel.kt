@@ -1,6 +1,8 @@
 package net.veldor.flibustaloader.view_models
 
+import android.app.Activity
 import android.app.Application
+import android.content.res.Configuration.*
 import android.graphics.BitmapFactory
 import android.util.Log
 import android.widget.ImageView
@@ -37,7 +39,6 @@ import net.veldor.flibustaloader.utils.MyFileReader.getSearchAutocomplete
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.URLHelper
 import net.veldor.flibustaloader.utils.XMLHandler.getSearchAutocomplete
-import java.lang.Exception
 import java.util.*
 
 open class OPDSViewModel(application: Application) : GlobalViewModel(application),
@@ -83,8 +84,14 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         PreferencesHandler.instance.nightMode = !PreferencesHandler.instance.nightMode
     }
 
-    val nightModeEnabled: Boolean
-        get() = PreferencesHandler.instance.nightMode
+    fun isDarkTheme(activity: Activity): Boolean {
+        when (activity.resources.configuration.uiMode and UI_MODE_NIGHT_MASK) {
+            UI_MODE_NIGHT_NO -> {return PreferencesHandler.instance.nightMode} // Night mode is not active, we're using the light theme
+            UI_MODE_NIGHT_YES -> {return true} // Night mode is active, we're using dark theme
+        }
+        return PreferencesHandler.instance.nightMode
+    }
+
     val searchAutocomplete: ArrayList<String>
         get() {
             val content = getSearchAutocomplete()
@@ -121,7 +128,8 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         format: String,
         onlyUnloaded: Boolean,
         strictFormat: Boolean,
-         delegate: BooksAddedToQueueDelegate
+        delegate: BooksAddedToQueueDelegate,
+        userSequenceName: String?
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             var counter = 0
@@ -138,11 +146,19 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                                 // найдена ссылка на формат
                                 if (onlyUnloaded) {
                                     if (!foundedEntity.downloaded) {
+                                        if (userSequenceName != null) {
+                                            it.sequenceDirName = userSequenceName
+                                            it.reservedSequenceName = userSequenceName
+                                        }
                                         DownloadLinkHandler().addLink(it)
                                         counter++
                                         linkFound = true
                                     }
                                 } else {
+                                    if (userSequenceName != null) {
+                                        it.sequenceDirName = userSequenceName
+                                        it.reservedSequenceName = userSequenceName
+                                    }
                                     DownloadLinkHandler().addLink(it)
                                     counter++
                                     linkFound = true
@@ -150,12 +166,19 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                             }
                         }
                         if (!linkFound && !strictFormat) {
+                            if (userSequenceName != null) {
+                                foundedEntity.downloadLinks[0].sequenceDirName = userSequenceName
+                                foundedEntity.downloadLinks[0].reservedSequenceName =
+                                    userSequenceName
+                            }
                             DownloadLinkHandler().addLink(foundedEntity.downloadLinks[0])
                             counter++
                         }
-                    }
-                    else{
-                        Log.d("surprise", "downloadAll: ============== NO LINKS ================= ${foundedEntity.name}")
+                    } else {
+                        Log.d(
+                            "surprise",
+                            "downloadAll: ============== NO LINKS ================= ${foundedEntity.name}"
+                        )
                     }
                 }
                 App.instance.requestDownloadBooksStart()
@@ -231,6 +254,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                         searchResult.type = results[0].type
                     }
                     searchResult.results = results
+                    searchResult.filteredList = parser.filteredList
                     searchResult.nextPageLink = parser.nextPageLink
                     searchResult.filtered = parser.filtered
                     if (lastClicked >= 0) {
@@ -311,6 +335,12 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         }
         Log.d("surprise", "getPreviouslyLoaded: load ${savedList!!.size} elements")
         return savedList!!
+    }
+
+    fun cancelLoad() {
+        if (currentWork != null) {
+            currentWork!!.cancel()
+        }
     }
 
     val height: Int

@@ -41,7 +41,7 @@
                     android:id="@+id/actionButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="10dp"
                     android:background="@drawable/transparent_bg_bordered_button"
                     android:foreground="?android:attr/selectableItemBackground"
                     android:padding="10dp"
@@ -54,7 +54,7 @@
                     android:id="@+id/resultsList"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="10dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/actionButton" />
 

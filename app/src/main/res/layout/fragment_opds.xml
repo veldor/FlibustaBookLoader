@@ -213,5 +213,25 @@
             android:src="@drawable/ic_cloud_download_white_24dp"
             fab:fab_label="@string/download_unloaded_button"
             fab:fab_size="mini" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fabDownloadAsSequence"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_cloud_download_white_24dp"
+            fab:fab_label="@string/download_as_sequence_button"
+            fab:fab_size="mini" />
     </com.github.clans.fab.FloatingActionMenu>
+
+    <com.github.clans.fab.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_marginEnd="8dp"
+        android:visibility="gone"
+        android:layout_marginBottom="8dp"
+        android:src="@drawable/fp_ic_action_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/resultsList"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginRight="8dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

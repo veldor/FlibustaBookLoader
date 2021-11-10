@@ -2,7 +2,6 @@ package net.veldor.flibustaloader.adapters
 
 import android.os.Handler
 import android.os.Looper.getMainLooper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +13,7 @@ import net.veldor.flibustaloader.BR
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.databinding.DownloadScheduleBookItemBinding
+import net.veldor.flibustaloader.handlers.LoadedBookHandler
 import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.DOWNLOAD_IN_PROGRESS
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.removeFromQueue
@@ -53,14 +53,14 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
             links[index] = book
             notifyItemChanged(index)
             Handler(getMainLooper()).postDelayed({
-                if(links.isNotEmpty()){
+                if (links.isNotEmpty()) {
                     var position = -1
                     links.forEach {
-                        if(it.bookId == book.bookId){
+                        if (it.bookId == book.bookId) {
                             position = links.indexOf(it)
                         }
                     }
-                    if(position >= 0 && links.size > position){
+                    if (position >= 0 && links.size > position) {
                         links.removeAt(position)
                         notifyItemRemoved(position)
                     }
@@ -142,6 +142,7 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
             item = scheduleItem
             mBinding.setVariable(BR.book, scheduleItem)
             mBinding.executePendingBindings()
+            mBinding.pathToFile.text = LoadedBookHandler().getPath(item!!)
             if (scheduleItem!!.name.isEmpty()) {
                 mBinding.name.text = "Имя не найдено"
             }
@@ -180,12 +181,11 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                         )
                     )
                     mBinding.bookLoadProgress.visibility = View.VISIBLE
-                    if(scheduleItem.progress != null){
+                    if (scheduleItem.progress != null) {
                         mBinding.bookLoadProgress.isIndeterminate = false
                         val progress = scheduleItem.progress!!.percentDone.toInt()
                         mBinding.bookLoadProgress.progress = progress
-                    }
-                    else{
+                    } else {
                         mBinding.bookLoadProgress.isIndeterminate = false
                         mBinding.bookLoadProgress.progress = 0
                     }

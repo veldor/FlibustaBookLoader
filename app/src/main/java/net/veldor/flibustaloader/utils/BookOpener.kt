@@ -47,7 +47,7 @@ object BookOpener {
                 ).show()
             }
         } else {
-            val dd: File = PreferencesHandler.instance.compatDownloadDir!!
+            val dd: File = PreferencesHandler.instance.getCompatDownloadDir()!!
             dd.walk().filter { it.name == name }
         }
     }

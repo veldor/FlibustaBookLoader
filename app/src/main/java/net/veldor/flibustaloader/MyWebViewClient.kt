@@ -16,6 +16,7 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.http.UniversalWebClient
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver
 import net.veldor.flibustaloader.ui.BaseActivity
+import net.veldor.flibustaloader.ui.BrowserActivity
 import net.veldor.flibustaloader.ui.fragments.WebViewFragment
 import net.veldor.flibustaloader.utils.MimeTypes.isBookFormat
 import net.veldor.flibustaloader.utils.PreferencesHandler
@@ -115,7 +116,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
     private fun handleRequest(view: WebView, incomingUrl: String): WebResourceResponse? {
         return try {
             mViewMode = PreferencesHandler.instance.viewMode
-            mNightMode = PreferencesHandler.instance.nightMode
+            mNightMode = (view.context as BrowserActivity).viewModel.isDarkTheme((view.context as BrowserActivity))
             // обрубаю загрузку картинок в упрощённом виде
             if (mViewMode > 1) {
                 val extensionArr = incomingUrl.split("\\.").toTypedArray()
@@ -305,7 +306,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                                 out.close()
                             }
                         } else {
-                            val file = PreferencesHandler.instance.compatDownloadDir
+                            val file = PreferencesHandler.instance.getCompatDownloadDir()
                             if (file != null) {
                                 val newFile = File(file, name)
                                 val status = httpResponse.statusLine.statusCode

@@ -60,8 +60,8 @@ class BlacklistActivity : BaseActivity() {
                     null
                 )
             )
+            paintToolbar(binding.toolbar)
         }
-        paintToolbar(binding.toolbar)
         showHints()
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu

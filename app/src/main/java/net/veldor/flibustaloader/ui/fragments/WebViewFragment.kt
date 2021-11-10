@@ -230,7 +230,7 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
             VIEW_MODE_FAST_FAT -> menu.findItem(R.id.menuUseFatFastStyle).isChecked = true
         }
         var menuItem = menu.findItem(R.id.menuUseDarkMode)
-        menuItem.isChecked = viewModel.nightModeEnabled
+        menuItem.isChecked = PreferencesHandler.instance.nightMode
         menuItem = menu.findItem(R.id.logOut)
         menuItem.isVisible = PreferencesHandler.instance.authCookie != null
         menuItem = menu.findItem(R.id.login)
@@ -332,7 +332,7 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
     }
 
     private fun setWebViewBackground() {
-        if (viewModel.nightModeEnabled) {
+        if (viewModel.isDarkTheme(requireActivity())) {
             binding.myWebView.setBackgroundColor(
                 ResourcesCompat.getColor(
                     resources,

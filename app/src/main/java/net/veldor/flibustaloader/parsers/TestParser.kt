@@ -15,6 +15,7 @@ import javax.xml.parsers.SAXParser
 import javax.xml.parsers.SAXParserFactory
 
 class TestParser(private val text: String) {
+    val filteredList: ArrayList<FoundedEntity> = arrayListOf()
     var filtered: Int = 0
     var nextPageLink: String? = null
 
@@ -205,7 +206,8 @@ class TestParser(private val text: String) {
                                 link.reservedSequenceName = ""
                             }
                         }
-                        if (Filter.check(foundedEntity!!)) {
+                       val filterResult = Filter.check(foundedEntity!!)
+                        if (filterResult.result) {
                             parsed.add(foundedEntity!!)
                             // загружу картинку
                             if (foundedEntity!!.coverUrl != null && foundedEntity!!.coverUrl!!.isNotEmpty() && PreferencesHandler.instance.isPreviews) {
@@ -213,6 +215,8 @@ class TestParser(private val text: String) {
                                 PicHandler().loadPic(parsed.last())
                             }
                         } else {
+                            foundedEntity!!.filterResult = filterResult
+                            filteredList.add(foundedEntity!!)
                             filtered++
                         }
                     } else if (qName.equals("content")) {

@@ -67,8 +67,7 @@ class FoundedItemAdapter(
         } else {
             if (hasNext) {
                 viewHolder.bindButton()
-            }
-            else{
+            } else {
                 viewHolder.bindInvisible()
             }
         }
@@ -297,7 +296,9 @@ class FoundedItemAdapter(
                     binding.thirdBlocRightElement.text = item.size
                     binding.thirdBlocRightElement.visibility = View.VISIBLE
                     if (PreferencesHandler.instance.isPreviews) {
-                        if(item.coverUrl == null){
+                        // гружу обложку
+                        binding.previewImage.visibility = View.VISIBLE
+                        if (item.coverUrl == null) {
                             binding.previewImage.setImageDrawable(
                                 ResourcesCompat.getDrawable(
                                     App.instance.resources,
@@ -305,35 +306,32 @@ class FoundedItemAdapter(
                                     null
                                 )
                             )
-                        }
-                        else{
-                        // гружу обложку
-                        binding.previewImage.visibility = View.VISIBLE
-                        if (item.cover != null) {
-                            binding.previewImage.setImageBitmap(item.cover)
                         } else {
-                            binding.previewImage.setImageDrawable(
-                                ResourcesCompat.getDrawable(
-                                    App.instance.resources,
-                                    R.drawable.image_wait_load,
-                                    null
+                            if (item.cover != null) {
+                                binding.previewImage.setImageBitmap(item.cover)
+                            } else {
+                                binding.previewImage.setImageDrawable(
+                                    ResourcesCompat.getDrawable(
+                                        App.instance.resources,
+                                        R.drawable.image_wait_load,
+                                        null
+                                    )
                                 )
-                            )
-                            // periodic check cover loaded
-                            timer =
-                                object : CountDownTimer(30000.toLong(), 1000) {
-                                    override fun onTick(millisUntilFinished: Long) {
-                                        if (item.cover != null) {
-                                            binding.previewImage.setImageBitmap(item.cover)
-                                            timer?.cancel()
+                                // periodic check cover loaded
+                                timer =
+                                    object : CountDownTimer(30000.toLong(), 1000) {
+                                        override fun onTick(millisUntilFinished: Long) {
+                                            if (item.cover != null) {
+                                                binding.previewImage.setImageBitmap(item.cover)
+                                                timer?.cancel()
+                                            }
+                                        }
+
+                                        override fun onFinish() {
                                         }
                                     }
-
-                                    override fun onFinish() {
-                                    }
-                                }
-                            timer?.start()
-                        }
+                                timer?.start()
+                            }
                         }
                     } else {
                         // скрою окно иконки
@@ -600,7 +598,7 @@ class FoundedItemAdapter(
             }
         }
 
-        fun bindInvisible(){
+        fun bindInvisible() {
             binding.rootView.visibility = View.GONE
         }
     }

@@ -298,4 +298,11 @@
     <string name="book_names">Названия скачанных книг</string>
     <string name="title_strict_filter">Строгое совпадение</string>
     <string name="filter_preferences">Настройки фильтрации</string>
+    <string name="no_filtered_items_message">Ничего не отфильтровано</string>
+    <string name="download_as_sequence_button">Скачать как серию</string>
+    <string name="sequence_name_select_title">Имя серии</string>
+    <string name="hint_sequence">Введите желаемое имя серии</string>
+    <string name="sequence_name_required_message">Необходимо ввести имя для серии!</string>
+    <string name="sequences_in_author_dirs_message">Серии в папках авторов</string>
+    <string name="sequences_and_author_dirs_title">Доп. папки авторов и серий</string>
 </resources>

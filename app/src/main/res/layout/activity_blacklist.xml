@@ -52,7 +52,7 @@
                 android:layout_margin="10dp"
                 android:padding="10dp"
                 app:counterEnabled="true"
-                app:counterMaxLength="50"
+                app:counterMaxLength="150"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
@@ -68,7 +68,7 @@
                     android:hint="@string/add_to_blacklist_msg"
                     android:imeOptions="actionDone"
                     android:inputType="text"
-                    android:maxLength="50"
+                    android:maxLength="150"
                     app:boxBackgroundColor="@android:color/transparent" />
             </com.google.android.material.textfield.TextInputLayout>
 

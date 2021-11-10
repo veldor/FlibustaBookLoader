@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import java.util.ArrayList
 
 class FoundedEntity {
+    var filterResult: FilteringResult? = null
     var content: String = ""
     var selected: Boolean = false
     var buttonPressed: Boolean = false

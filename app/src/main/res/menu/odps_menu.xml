@@ -59,6 +59,14 @@
                 android:checkable="true"
                 android:title="@string/message_create_sequence_folder"/>
             <item
+                android:id="@+id/loadSequencesToAuthorDir"
+                android:checkable="true"
+                android:title="@string/sequences_in_author_dirs_message"/>
+            <item
+                android:id="@+id/menuCreateAdditionalDirs"
+                android:checkable="true"
+                android:title="@string/sequences_and_author_dirs_title"/>
+            <item
                 android:id="@+id/discardFavoriteType"
                 android:title="@string/discard_favorite_type" />
         </menu>

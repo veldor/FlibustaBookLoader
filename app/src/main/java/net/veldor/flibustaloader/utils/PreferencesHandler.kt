@@ -286,28 +286,25 @@ class PreferencesHandler private constructor() {
         preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file?.uri.toString()).apply()
     }
 
+    fun getCompatDownloadDir(): File? {
+        var dd: File? = null
+        val downloadLocation = preferences.getString(PREF_DOWNLOAD_LOCATION, null)
+        if (downloadLocation != null) {
+            dd = File(downloadLocation)
+        }
+        return dd
+    }
 
-    var compatDownloadDir: File?
-        get() {
-            val downloadLocation = preferences.getString(PREF_DOWNLOAD_LOCATION, null)
-            if (downloadLocation != null) {
-                val file = File(downloadLocation)
-                if (file.isDirectory) {
-                    return file
-                }
-            }
-            return null
-        }
-        set(file) {
-            preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file?.toUri().toString()).apply()
-        }
+    fun setDownloadDir(file: File?) {
+        preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file?.toUri().toString()).apply()
+    }
 
     val downloadDirAssigned: Boolean
         get() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 return getDownloadDir() != null
             }
-            return compatDownloadDir != null
+            return getCompatDownloadDir() != null
         }
 
 
@@ -320,7 +317,7 @@ class PreferencesHandler private constructor() {
                 dir.uri.path
             }
         }
-        val compatDir = compatDownloadDir
+        val compatDir = getCompatDownloadDir()
         return if (compatDir != null && compatDir.isDirectory) {
             compatDir.absolutePath
         } else "Не распознал папку загрузок"
@@ -347,6 +344,14 @@ class PreferencesHandler private constructor() {
         )
     }
 
+    fun setLoadSequencesInAuthorDir(value: Boolean) {
+        preferences.edit()
+            .putBoolean(
+                App.instance.getString(R.string.pref_load_series_to_author_dir),
+                value
+            ).apply()
+    }
+
     fun isCreateSequencesDir(): Boolean {
         return preferences.getBoolean(
             App.instance.getString(R.string.pref_create_sequence_folder), false
@@ -358,6 +363,14 @@ class PreferencesHandler private constructor() {
             App.instance.getString(R.string.pref_create_additional_folders),
             false
         )
+    }
+
+    fun setDifferentDirForAuthorAndSequence(value: Boolean) {
+        preferences.edit()
+            .putBoolean(
+                App.instance.getString(R.string.pref_create_additional_folders),
+                value
+            ).apply()
     }
 
 

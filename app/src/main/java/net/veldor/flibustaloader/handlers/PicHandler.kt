@@ -20,7 +20,8 @@ class PicHandler {
                             foundedEntity.cover = BitmapFactory.decodeStream(response.entity.content)
                         }
                         else if(contentTypeHeader.value == "image/png"){
-                            Log.d("surprise", "loadPic: found png pic, handle it ${foundedEntity.coverUrl}")
+                            Log.d("surprise", "loadPic: try load png")
+                            foundedEntity.cover = BitmapFactory.decodeStream(response.entity.content)
                         }
                         else{
                             Log.d("surprise", "loadPic: pic ${foundedEntity.coverUrl} is ${contentTypeHeader.value}")

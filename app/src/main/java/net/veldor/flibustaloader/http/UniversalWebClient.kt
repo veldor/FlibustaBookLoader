@@ -33,6 +33,13 @@ class UniversalWebClient {
             return read.readText()
         }
     }
+    fun responseFullToString(response: HttpResponse?): String? {
+        if(response == null) return null
+        val reader = BufferedReader(response.entity.content.reader())
+        reader.use { read ->
+            return read.readText()
+        }
+    }
 
 
     fun loginRequest(login: String, password: String): Boolean {

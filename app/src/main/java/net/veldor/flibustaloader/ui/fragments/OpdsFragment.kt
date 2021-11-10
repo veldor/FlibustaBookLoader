@@ -53,13 +53,22 @@ import net.veldor.flibustaloader.view_models.OPDSViewModel
 import net.veldor.flibustaloader.workers.SendLogWorker
 import java.lang.reflect.Field
 import java.net.URLEncoder
-import java.util.*
+import kotlin.collections.ArrayList
+import android.widget.EditText
+
+import android.view.ViewGroup
+
+import android.view.LayoutInflater
+
+
+
 
 
 class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActionDelegate,
     BooksAddedToQueueDelegate,
     View.OnCreateContextMenuListener {
 
+    private var filteredItems: ArrayList<FoundedEntity>? = arrayListOf()
     private lateinit var binding: FragmentOpdsBinding
     lateinit var viewModel: OPDSViewModel
 
@@ -131,16 +140,20 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             lastScrolled = 0
             if (it.nextPageLink == null || (PreferencesHandler.instance.opdsPagedResultsLoad && it.type == TestParser.TYPE_BOOK)) {
                 binding.progressBar.visibility = View.INVISIBLE
+                binding.fab.visibility = View.GONE
             }
             if (it.appended) {
-                if(binding.filteredCount.text.isDigitsOnly()){
-                    if(it.filtered > 0){
-                        binding.filteredCount.text = (binding.filteredCount.text.toString().toInt() + it.filtered).toString()
+                filteredItems?.addAll(it.filteredList)
+                if (binding.filteredCount.text.isDigitsOnly()) {
+                    if (it.filtered > 0) {
+                        binding.filteredCount.text =
+                            (binding.filteredCount.text.toString().toInt() + it.filtered).toString()
                     }
                 }
-                if(binding.resultsCount.text.isDigitsOnly()){
-                    if(it.size > 0){
-                        binding.resultsCount.text = (binding.resultsCount.text.toString().toInt() + it.size).toString()
+                if (binding.resultsCount.text.isDigitsOnly()) {
+                    if (it.size > 0) {
+                        binding.resultsCount.text =
+                            (binding.resultsCount.text.toString().toInt() + it.size).toString()
                     }
                 }
                 (binding.resultsList.adapter as FoundedItemAdapter).appendContent(it.results)
@@ -149,11 +162,11 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 binding.resultsCount.visibility = View.VISIBLE
                 binding.filteredCount.text = "0"
                 binding.resultsCount.text = "0"
-
+                filteredItems = it.filteredList
                 if (it.filtered > 0) {
                     binding.filteredCount.text = it.filtered.toString()
                 }
-                if(it.size > 0){
+                if (it.size > 0) {
                     binding.resultsCount.text = it.size.toString()
                 }
                 (binding.resultsList.adapter as FoundedItemAdapter).setContent(it.results)
@@ -168,8 +181,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     (binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast = true
                     binding.resultsList.scrollToPosition(it.clickedElementIndex)
                     (binding.resultsList.adapter as FoundedItemAdapter).markClickedElement(it.clickedElementIndex)
-                }
-                else if(sNextPage != null){
+                } else if (sNextPage != null) {
                     Log.d("surprise", "setupObservers: load next page while not search element")
                     load(sNextPage!!, append = true, addToHistory = false, it.clickedElementIndex)
                 }
@@ -184,6 +196,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         viewModel.isLoadError.observe(viewLifecycleOwner, { hasError: Boolean ->
             if (hasError) {
                 binding.progressBar.visibility = View.INVISIBLE
+                binding.fab.visibility = View.GONE
                 // покажу окошко и сообщу, что загрузка не удалась
                 Toast.makeText(
                     requireContext(),
@@ -201,6 +214,17 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
 
     fun setupInterface() {
+        binding.fab.setOnClickListener {
+            Toast.makeText(requireContext(), "Content load cancelling", Toast.LENGTH_SHORT).show()
+            viewModel.cancelLoad()
+            binding.fab.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
+        }
+
+        binding.filteredCount.setOnClickListener {
+            showFilteredList()
+        }
+
         binding.mirrorUsed.setOnClickListener {
             Toast.makeText(
                 requireContext(),
@@ -347,13 +371,17 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     favoriteFormat,
                     false,
                     strictFormat = true,
-                    this
+                    delegate = this,
+                    userSequenceName = null
                 )
             } else {
-                // покажу диалог выбора предпочтительнго типа скачивания
-                // сброшу отслеживание удачного выбора типа книги
-                selectBookTypeDialog(false)
+                selectBookTypeDialog(false, null)
             }
+            binding.floatingMenu.close(true)
+        }
+        binding.fabDownloadAsSequence.setOnClickListener {
+            // покажу диалог с предложением выбрать название серии
+            showSaveAsSequenceDialog()
             binding.floatingMenu.close(true)
         }
         binding.fabDownloadUnloaded.setOnClickListener {
@@ -364,16 +392,80 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     favoriteFormat,
                     true,
                     strictFormat = true,
-                    this
+                    delegate = this,
+                    userSequenceName = null
                 )
             } else {
                 // покажу диалог выбора предпочтительнго типа скачивания
-                selectBookTypeDialog(true)
+                selectBookTypeDialog(true, null)
             }
             binding.floatingMenu.close(true)
         }
         binding.fabDownloadSelected.setOnClickListener {
             Toast.makeText(requireContext(), "В разработке", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showSaveAsSequenceDialog() {
+        val builder = AlertDialog.Builder(
+            requireContext()
+        )
+        builder.setTitle(getString(R.string.sequence_name_select_title))
+        val viewInflated: View = LayoutInflater.from(context)
+            .inflate(R.layout.sequence_name_dialog, view as ViewGroup?, false)
+        val input = viewInflated.findViewById(R.id.input) as EditText
+        builder.setView(viewInflated)
+
+// Set up the buttons
+
+// Set up the buttons
+        builder.setPositiveButton(
+            android.R.string.ok
+        ) { dialog, _ ->
+            dialog.dismiss()
+            val text = input.text.toString()
+            if(text.isNotEmpty()){
+                val favoriteFormat = PreferencesHandler.instance.favoriteMime
+                if (favoriteFormat != null && favoriteFormat.isNotEmpty()) {
+                    viewModel.downloadAll(
+                        (binding.resultsList.adapter as FoundedItemAdapter).getList(),
+                        favoriteFormat,
+                        false,
+                        strictFormat = true,
+                        this,
+                        text
+                    )
+                } else {
+                    selectBookTypeDialog(false, text)
+                }
+            }
+            else{
+                Toast.makeText(requireContext(), getString(R.string.sequence_name_required_message), Toast.LENGTH_SHORT).show()
+            }
+        }
+        builder.setNegativeButton(
+            android.R.string.cancel
+        ) { dialog, _ -> dialog.cancel() }
+
+        builder.show()
+    }
+
+    private fun showFilteredList() {
+        if (filteredItems?.isNotEmpty() == true) {
+            val dialogBuilder = AlertDialog.Builder(requireContext())
+            val items: ArrayList<String> = arrayListOf()
+            filteredItems!!.forEach {
+                items.add("${it.name}\n==> ${it.filterResult.toString()}\n")
+            }
+            val cs: Array<CharSequence> = items.toArray(arrayOfNulls<CharSequence>(items.size))
+            dialogBuilder.setItems(cs, null)
+            dialogBuilder.show()
+        } else {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.no_filtered_items_message),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -504,7 +596,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             mSearchAutoComplete.setAdapter(mSearchAdapter)
         }
         var myItem = menu.findItem(R.id.menuUseDarkMode)
-        myItem.isChecked = viewModel.nightModeEnabled
+        myItem.isChecked = PreferencesHandler.instance.nightMode
 
 
         // обработаю переключатель быстрой загрузки
@@ -536,6 +628,10 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         myItem.isChecked = PreferencesHandler.instance.isCreateSequencesDir()
         myItem = menu.findItem(R.id.useFilter)
         myItem.isChecked = PreferencesHandler.instance.isUseFilter
+        myItem = menu.findItem(R.id.menuCreateAdditionalDirs)
+        myItem.isChecked = PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()
+        myItem = menu.findItem(R.id.loadSequencesToAuthorDir)
+        myItem.isChecked = PreferencesHandler.instance.isLoadSequencesInAuthorDir()
     }
 
     private fun selectSorting() {
@@ -651,6 +747,16 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             requireActivity().invalidateOptionsMenu()
             return false
         }
+        if (id == R.id.menuCreateAdditionalDirs) {
+            PreferencesHandler.instance.setDifferentDirForAuthorAndSequence(!PreferencesHandler.instance.isDifferentDirForAuthorAndSequence())
+            requireActivity().invalidateOptionsMenu()
+            return false
+        }
+        if (id == R.id.loadSequencesToAuthorDir) {
+            PreferencesHandler.instance.setLoadSequencesInAuthorDir(!PreferencesHandler.instance.isLoadSequencesInAuthorDir())
+            requireActivity().invalidateOptionsMenu()
+            return false
+        }
         if (id == R.id.switchLayout) {
             PreferencesHandler.instance.isLinearLayout = !PreferencesHandler.instance.isLinearLayout
             requireActivity().recreate()
@@ -751,7 +857,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
 
-    private fun selectBookTypeDialog(onlyNotLoaded: Boolean) {
+    private fun selectBookTypeDialog(onlyNotLoaded: Boolean, userSequenceName: String?) {
         Log.d("surprise", "selectBookTypeDialog: showing dialog")
         val inflate = layoutInflater
         @SuppressLint("InflateParams") val view =
@@ -782,7 +888,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     MimeTypes.getFullMime(MimeTypes.MIMES_LIST[i])!!,
                     onlyNotLoaded,
                     dialog.findViewById<SwitchCompat>(R.id.onlyThisType).isChecked,
-                    this
+                    this,
+                    userSequenceName
                 )
                 requireActivity().invalidateOptionsMenu()
             }
@@ -881,6 +988,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
     private fun showLoadWaiter() {
         binding.progressBar.visibility = View.VISIBLE
+        binding.fab.visibility = View.VISIBLE
     }
 
     private fun showAuthorViewSelect(author: FoundedEntity) {
@@ -1113,7 +1221,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     override fun imageClicked(item: FoundedEntity) {
-        if(item.coverUrl != null){
+        if (item.coverUrl != null) {
             // покажу картинку
             val dialogBuilder = AlertDialog.Builder(requireContext(), R.style.MyDialogStyle)
             val inflater = layoutInflater
@@ -1138,8 +1246,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 .setPositiveButton("Ок", null)
                 .create()
                 .show()
-        }
-        else{
+        } else {
             Toast.makeText(requireContext(), "У этой книги нет обложки", Toast.LENGTH_SHORT).show()
         }
     }
@@ -1294,6 +1401,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             (binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast = false
         }
         binding.progressBar.visibility = View.VISIBLE
+        binding.fab.visibility = View.VISIBLE
         viewModel.request(link, append, addToHistory, clickedElementIndex = clickedElementIndex)
     }
 
@@ -1308,7 +1416,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     override fun booksAdded(count: Int) {
         val snackbar = Snackbar.make(
             binding.root,
-            "Скачиваю книг " + count,
+            "Скачиваю книг $count",
             Snackbar.LENGTH_LONG
         )
         snackbar.setAction(getString(R.string.title_activity_download_schedule)) {

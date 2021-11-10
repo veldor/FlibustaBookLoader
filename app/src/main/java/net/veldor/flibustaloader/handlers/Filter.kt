@@ -6,18 +6,19 @@ import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_BOOK
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_GENRE
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_SEQUENCE
 import net.veldor.flibustaloader.selections.BlacklistItem
+import net.veldor.flibustaloader.selections.FilteringResult
 import net.veldor.flibustaloader.selections.FoundedEntity
 import net.veldor.flibustaloader.utils.*
 
 object Filter {
-    fun check(foundedEntity: FoundedEntity): Boolean {
+    fun check(foundedEntity: FoundedEntity): FilteringResult {
         if (PreferencesHandler.instance.isUseFilter) {
             var list: ArrayList<BlacklistItem>
             var lowerName: String
             if (foundedEntity.type == TYPE_BOOK) {
                 // check for all of blacklists
                 if (PreferencesHandler.instance.isOnlyRussian && !foundedEntity.language.contains("ru")) {
-                    return false
+                    return FilteringResult(true, null, null, "hideNonRussian")
                 }
                 list = BlacklistBooks.instance.getBlacklist()
                 if (list.isNotEmpty() && !foundedEntity.name.isNullOrEmpty()) {
@@ -25,11 +26,21 @@ object Filter {
                     list.forEach {
                         if (PreferencesHandler.instance.bookNameStrictFilter) {
                             if (lowerName == it.name.lowercase()) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "book name strict"
+                                )
                             }
                         } else {
                             if (lowerName.contains(it.name.lowercase())) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "book name"
+                                )
                             }
                         }
                     }
@@ -40,11 +51,21 @@ object Filter {
                     list.forEach {
                         if (PreferencesHandler.instance.bookAuthorStrictFilter) {
                             if (lowerName == it.name.lowercase()) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "book author strict"
+                                )
                             }
                         } else {
                             if (lowerName.contains(it.name.lowercase())) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "book author"
+                                )
                             }
                         }
                     }
@@ -55,11 +76,21 @@ object Filter {
                     list.forEach {
                         if (PreferencesHandler.instance.bookGenreStrictFilter) {
                             if (lowerName == it.name.lowercase()) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "book genre strict"
+                                )
                             }
                         } else {
                             if (lowerName.contains(it.name.lowercase())) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "book genre"
+                                )
                             }
                         }
                     }
@@ -70,11 +101,21 @@ object Filter {
                     list.forEach {
                         if (PreferencesHandler.instance.bookSequenceStrictFilter) {
                             if (lowerName == it.name.lowercase()) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "book sequence strict"
+                                )
                             }
                         } else {
                             if (lowerName.contains(it.name.lowercase())) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "book sequence"
+                                )
                             }
                         }
                     }
@@ -86,11 +127,21 @@ object Filter {
                     list.forEach {
                         if (PreferencesHandler.instance.genreStrictFilter) {
                             if (lowerName == it.name.lowercase()) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "genre strict"
+                                )
                             }
                         } else {
                             if (lowerName.contains(it.name.lowercase())) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "genre"
+                                )
                             }
                         }
                     }
@@ -102,11 +153,21 @@ object Filter {
                     list.forEach {
                         if (PreferencesHandler.instance.sequenceStrictFilter) {
                             if (lowerName == it.name.lowercase()) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "sequence strict"
+                                )
                             }
                         } else {
                             if (lowerName.contains(it.name.lowercase())) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "sequence"
+                                )
                             }
                         }
                     }
@@ -118,11 +179,21 @@ object Filter {
                     list.forEach {
                         if (PreferencesHandler.instance.authorStrictFilter) {
                             if (lowerName == it.name.lowercase()) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "authors strict"
+                                )
                             }
                         } else {
                             if (lowerName.contains(it.name.lowercase())) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "authors"
+                                )
                             }
                         }
                     }
@@ -134,11 +205,21 @@ object Filter {
                     list.forEach {
                         if (PreferencesHandler.instance.authorStrictFilter) {
                             if (lowerName == it.name.lowercase()) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "authors strict"
+                                )
                             }
                         } else {
                             if (lowerName.contains(it.name.lowercase())) {
-                                return false
+                                return FilteringResult(
+                                    false,
+                                    lowerName,
+                                    it.name.lowercase(),
+                                    "authors"
+                                )
                             }
                         }
                     }
@@ -147,19 +228,19 @@ object Filter {
         }
         if (PreferencesHandler.instance.isHideRead) {
             if (foundedEntity.read) {
-                return false
+                return FilteringResult(false, null, null, "hideReaded")
             }
         }
         if (PreferencesHandler.instance.isHideDownloaded) {
             if (foundedEntity.downloaded) {
-                return false
+                return FilteringResult(false, null, null, "hideDownloaded")
             }
         }
         if (PreferencesHandler.instance.isHideDigests) {
             if (foundedEntity.authors.size > 2) {
-                return false
+                return FilteringResult(false, foundedEntity.author, null, "hideDigests")
             }
         }
-        return true
+        return FilteringResult(true, null, null, null)
     }
 }

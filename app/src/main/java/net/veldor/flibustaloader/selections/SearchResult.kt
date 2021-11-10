@@ -7,6 +7,7 @@ class SearchResult {
     var type: String? = null
     var nextPageLink: String? = null
     lateinit var results: ArrayList<FoundedEntity>
+    lateinit var filteredList: ArrayList<FoundedEntity>
     var clickedElementIndex = -1
     var isBackSearch = false
 

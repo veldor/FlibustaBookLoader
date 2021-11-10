@@ -328,4 +328,11 @@
     <string name="title_strict_filter">Strict equal</string>
     <string name="filter_preferences">Filter preferences</string>
     <string name="pref_load_series_to_author_dir" translatable="false">load series to author dir</string>
+    <string name="no_filtered_items_message">No filtered items</string>
+    <string name="download_as_sequence_button">Download as sequence</string>
+    <string name="hint_sequence">Input your own sequence name</string>
+    <string name="sequence_name_select_title">Select a name for downloadable sequence</string>
+    <string name="sequence_name_required_message">Sequence name required!</string>
+    <string name="sequences_in_author_dirs_message">Sequences in author dir</string>
+    <string name="sequences_and_author_dirs_title">Sequences and author dirs</string>
 </resources>

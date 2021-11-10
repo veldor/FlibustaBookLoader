@@ -166,11 +166,15 @@ class DownloadBooksWorker(
     }
 
 
-    @Throws(BookNotFoundException::class, TorNotLoadedException::class, DownloadsDirNotFoundException::class)
+    @Throws(
+        BookNotFoundException::class,
+        TorNotLoadedException::class,
+        DownloadsDirNotFoundException::class
+    )
     private fun downloadBook(book: BooksDownloadSchedule): Boolean {
         val base = URLHelper.getBaseUrl()
         var link = book.link
-        if(base.endsWith("/") && link.startsWith("/")){
+        if (base.endsWith("/") && link.startsWith("/")) {
             link = link.substring(1)
         }
         val startTime = System.currentTimeMillis()
@@ -208,12 +212,14 @@ class DownloadBooksWorker(
                     val buffer = ByteArray(1024)
                     while (content.read(buffer).also { read = it } > 0) {
                         out.write(buffer, 0, read)
-                        NotificationHandler.instance.createBookLoadingProgressNotification(
-                            contentLength.toInt(),
-                            tempFile.length().toInt(),
-                            book.name,
-                            startTime
-                        )
+                        if (PreferencesHandler.instance.showDownloadProgress) {
+                            NotificationHandler.instance.createBookLoadingProgressNotification(
+                                contentLength.toInt(),
+                                tempFile.length().toInt(),
+                                book.name,
+                                startTime
+                            )
+                        }
                     }
                     out.close()
                     content.close()

@@ -3,31 +3,40 @@ package net.veldor.flibustaloader.ui
 import android.content.DialogInterface
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.ViewModelProvider
+import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.adapters.DirContentAdapter
+import net.veldor.flibustaloader.adapters.DownloadDirContentAdapter
 import net.veldor.flibustaloader.databinding.ActivityShowDownloadFolderContentBinding
 import net.veldor.flibustaloader.selections.*
+import net.veldor.flibustaloader.utils.BooksDataSource
+import net.veldor.flibustaloader.utils.BooksDiffUtilCallback
 import net.veldor.flibustaloader.utils.FilesHandler.openFile
 import net.veldor.flibustaloader.utils.FilesHandler.shareFile
-import net.veldor.flibustaloader.utils.Grammar.getExtension
-import net.veldor.flibustaloader.utils.Grammar.getLiteralSize
 import net.veldor.flibustaloader.utils.PreferencesHandler
-import java.io.File
+import net.veldor.flibustaloader.view_models.DirContentViewModel
 import java.util.*
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 class DirContentActivity : BaseActivity() {
+    private lateinit var viewModel: DirContentViewModel
+
     private lateinit var binding: ActivityShowDownloadFolderContentBinding
     private lateinit var recycler: RecyclerView
     private var adapter: DirContentAdapter? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(this).get(DirContentViewModel::class.java)
         binding = ActivityShowDownloadFolderContentBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupInterface()
@@ -35,80 +44,37 @@ class DirContentActivity : BaseActivity() {
         recycler = findViewById(R.id.showDirContent)
         recycler.layoutManager = LinearLayoutManager(this)
         // получу список файлов из папки
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val downloadsDir = PreferencesHandler.instance.getDownloadDir()
-            if (downloadsDir != null && downloadsDir.isDirectory) {
-                val files = downloadsDir.listFiles()
-                val books = recursiveScan(files, "")
-                Log.d(
-                    "surprise",
-                    "ShowDownloadFolderContentActivity onCreate 37: books size is " + books.size
-                )
-                if (books.size > 0) {
-                    adapter = DirContentAdapter(books)
-                    recycler.adapter = adapter
-                }
-            }
-        } else {
-            val downloadDir = PreferencesHandler.instance.getDownloadDir()
-            if (downloadDir != null && downloadDir.isDirectory) {
-                val files = downloadDir.listFiles()
-                val books = recursiveScan(files, "")
-                Log.d(
-                    "surprise",
-                    "ShowDownloadFolderContentActivity onCreate 57: len is " + books.size
-                )
-                if (books.size > 0) {
-                    adapter = DirContentAdapter(books)
-                    recycler.adapter = adapter
-                }
-            }
-        }
+        viewModel.loadDirContent()
     }
 
     override fun setupInterface() {
         super.setupInterface()
-        paintToolbar(binding.toolbar)
+        if (PreferencesHandler.instance.isEInk) {
+            paintToolbar(binding.toolbar)
+        }
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToFileList)
         item.isEnabled = false
         item.isChecked = true
+
+        viewModel.liveFilesLoaded.observe(this, {
+            binding.waiter.visibility = View.GONE
+            val dataSource = BooksDataSource(it)
+            val config = PagedList.Config.Builder()
+                .setEnablePlaceholders(true)
+                .setPageSize(20)
+                .build()
+            val pageList: PagedList<Book?> = PagedList.Builder(dataSource, config)
+                .setFetchExecutor(Executors.newSingleThreadExecutor())
+                .setNotifyExecutor(MainThreadExecutor())
+                .build()
+            val adapter = DownloadDirContentAdapter(BooksDiffUtilCallback())
+            adapter.submitList(pageList)
+            binding.showDirContent.adapter = adapter
+        })
     }
 
-    private fun recursiveScan(files: Array<DocumentFile>, prefix: String): ArrayList<Book> {
-        val answer = ArrayList<Book>()
-        if (files.isNotEmpty()) {
-            var bookItem: Book
-            var value: String
-            var value1: String
-            for (df in files) {
-                if (df.isFile) {
-                    value = df.name!!
-                    bookItem = Book()
-                    // получу имя автора- это значение до первого слеша
-                    val index = value.indexOf("_")
-                    val lastIndex = value.lastIndexOf("_")
-                    if (index > 0 && lastIndex > 0 && index != lastIndex) {
-                        value1 = value.substring(0, index)
-                        bookItem.author = prefix + value1
-                        value1 = value.substring(index + 1, lastIndex)
-                        bookItem.name = value1
-                    } else {
-                        bookItem.author = prefix + "Неизвестно"
-                        bookItem.name = value
-                    }
-                    bookItem.size = getLiteralSize(df.length())
-                    bookItem.file = df
-                    bookItem.extension = getExtension(value)
-                    answer.add(bookItem)
-                } else if (df.isDirectory) {
-                    answer.addAll(recursiveScan(df.listFiles(), prefix + df.name + "/"))
-                }
-            }
-        }
-        return answer
-    }
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
         Log.d(
@@ -117,27 +83,22 @@ class DirContentActivity : BaseActivity() {
         )
         val position: Int
         try {
-            val adapter = recycler.adapter as DirContentAdapter?
+            val adapter = recycler.adapter as DownloadDirContentAdapter?
             if (adapter != null) {
-                position = adapter.position
-                val book = adapter.getItem(position)
-                if (item.title == getString(R.string.share_link_message)) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        shareFile(book.file!!)
+                position = adapter.contexItemPosition
+                val book = adapter.requireItem(position)
+                if (book != null) {
+                    if (item.title == getString(R.string.share_link_message)) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            shareFile(book.file!!)
+                        }
+                    } else if (item.title == getString(R.string.open_with_menu_item)) {
+                        Log.d(
+                            "surprise",
+                            "ShowDownloadFolderContentActivity onContextItemSelected 105: open file"
+                        )
+                        openFile(book.file!!)
                     }
-                } else if (item.title == getString(R.string.delete_item_message)) {
-                    adapter.delete(book)
-                    Toast.makeText(
-                        this@DirContentActivity,
-                        getString(R.string.item_deleted_message),
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else if (item.title == getString(R.string.open_with_menu_item)) {
-                    Log.d(
-                        "surprise",
-                        "ShowDownloadFolderContentActivity onContextItemSelected 105: open file"
-                    )
-                    openFile(book.file!!)
                 }
             }
         } catch (e: Exception) {
@@ -163,9 +124,8 @@ class DirContentActivity : BaseActivity() {
         val dialog = AlertDialog.Builder(this, R.style.MyDialogStyle)
         dialog.setTitle("Выберите тип сортировки")
             .setItems(bookSortOptions) { _: DialogInterface?, which: Int ->
-                if (adapter != null) adapter!!.sort(
-                    which
-                )
+                binding.waiter.visibility = View.VISIBLE
+                viewModel.loadDirContent(which)
             }
         // покажу список типов сортировки
         if (!this@DirContentActivity.isFinishing) {
@@ -181,5 +141,12 @@ class DirContentActivity : BaseActivity() {
             "По формату",
             "По дате загрузки"
         )
+    }
+
+    internal class MainThreadExecutor : Executor {
+        private val handler: Handler = Handler(Looper.getMainLooper())
+        override fun execute(command: Runnable) {
+            handler.post(command)
+        }
     }
 }
