@@ -5,6 +5,7 @@ import android.os.Environment
 import androidx.work.OneTimeWorkRequest
 import net.veldor.flibustaloader.workers.SendLogWorker
 import androidx.work.WorkManager
+import net.veldor.flibustaloader.workers.SendLogToMailWorker
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -52,6 +53,11 @@ class LogHandler private constructor() {
     fun sendLogs() {
         // запущу рабочего, который подготовит лог и отправит его
         val work = OneTimeWorkRequest.Builder(SendLogWorker::class.java).build()
+        WorkManager.getInstance(App.instance).enqueue(work)
+    }
+    fun sendLogsToMail() {
+        // запущу рабочего, который подготовит лог и отправит его
+        val work = OneTimeWorkRequest.Builder(SendLogToMailWorker::class.java).build()
         WorkManager.getInstance(App.instance).enqueue(work)
     }
 

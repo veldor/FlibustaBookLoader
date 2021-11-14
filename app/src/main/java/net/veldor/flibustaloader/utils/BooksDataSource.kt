@@ -15,7 +15,7 @@ internal class BooksDataSource(val list: ArrayList<Book>) :
     ) {
         GlobalScope.launch {
             if (list.isNotEmpty()) {
-                if (list.size + params.requestedStartPosition < list.size) {
+                if (params.requestedLoadSize + params.requestedStartPosition < list.size) {
                     callback.onResult(
                         list, 0, list.size
                     )

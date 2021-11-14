@@ -86,8 +86,12 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
 
     fun isDarkTheme(activity: Activity): Boolean {
         when (activity.resources.configuration.uiMode and UI_MODE_NIGHT_MASK) {
-            UI_MODE_NIGHT_NO -> {return PreferencesHandler.instance.nightMode} // Night mode is not active, we're using the light theme
-            UI_MODE_NIGHT_YES -> {return true} // Night mode is active, we're using dark theme
+            UI_MODE_NIGHT_NO -> {
+                return PreferencesHandler.instance.nightMode
+            } // Night mode is not active, we're using the light theme
+            UI_MODE_NIGHT_YES -> {
+                return true
+            } // Night mode is active, we're using dark theme
         }
         return PreferencesHandler.instance.nightMode
     }
@@ -213,24 +217,35 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         }
         // запрошу данные
         currentWork = viewModelScope.launch(Dispatchers.IO) {
-            var nextPageLink: String? = s
-            nextPageLink =
-                makeRequest(nextPageLink!!, append, if (addToHistory) -1 else clickedElementIndex)
+            var previousSearchRequestResult: SearchResult? = null
+            previousSearchRequestResult =
+                makeRequest(s, append, if (addToHistory) -1 else clickedElementIndex)
             while (true) {
                 if (isActive) {
-                    if (nextPageLink != null && _searchResults.value != null) {
+                    Log.d("surprise", "request: $previousSearchRequestResult")
+                    Log.d("surprise", "request: ${_searchResults.value}")
+                    if (previousSearchRequestResult?.nextPageLink != null) {
+                        Log.d("surprise", "request: found next page")
                         // если найдены книги- проверю, нужно ли загружать все результаты сразу
-                        if ((!PreferencesHandler.instance.opdsPagedResultsLoad && _searchResults.value!!.type == TYPE_BOOK) || _searchResults.value!!.type != TYPE_BOOK) {
-                            nextPageLink = makeRequest(
-                                nextPageLink,
+                        if ((!PreferencesHandler.instance.opdsPagedResultsLoad && previousSearchRequestResult.type == TYPE_BOOK) ||
+                            _searchResults.value!!.type != TYPE_BOOK) {
+                            Log.d("surprise", "request type: ${_searchResults.value!!.type}")
+                            previousSearchRequestResult = makeRequest(
+                                previousSearchRequestResult.nextPageLink!!,
                                 true,
                                 if (addToHistory) -1 else clickedElementIndex
                             ) ?: break
                         }
+                        else{
+                            Log.d("surprise", "request: can't load next")
+                            break
+                        }
                     } else {
+                        Log.d("surprise", "request: no next page")
                         break
                     }
                 } else {
+                    Log.d("surprise", "request: work not active")
                     break
                 }
             }
@@ -238,7 +253,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         }
     }
 
-    private fun makeRequest(s: String, append: Boolean, lastClicked: Int): String? {
+    private fun makeRequest(s: String, append: Boolean, lastClicked: Int): SearchResult? {
         try {
             val response = UniversalWebClient().rawRequest(s)
             if (response != null) {
@@ -262,7 +277,8 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                         searchResult.isBackSearch = true
                     }
                     _searchResults.postValue(searchResult)
-                    return parser.nextPageLink
+                    Log.d("surprise", "makeRequest: search results pushed")
+                    return searchResult
                 }
             }
         } catch (_: Exception) {
@@ -341,6 +357,10 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         if (currentWork != null) {
             currentWork!!.cancel()
         }
+    }
+
+    fun loadInProgress(): Boolean {
+        return currentWork?.isActive == true
     }
 
     val height: Int

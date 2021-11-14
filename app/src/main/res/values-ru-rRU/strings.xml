@@ -209,7 +209,7 @@
     <string name="navigation_close_app">Закрыть приложение</string>
     <string name="lockscreen_skipped_message">Экран загрузки пропущен. Вы можете включить его заново в настройках соединения</string>
     <string name="test_version_message">Тестовая версия приложения</string>
-    <string name="send_log_message">Отправить лог</string>
+    <string name="send_log_message">Файл лога</string>
     <string name="navigation_go_file_list">Список скачанного</string>
     <string name="connection_lost_message">Соединение потеряно</string>
     <string name="reload_page_message">Перезагрузить</string>
@@ -305,4 +305,5 @@
     <string name="sequence_name_required_message">Необходимо ввести имя для серии!</string>
     <string name="sequences_in_author_dirs_message">Серии в папках авторов</string>
     <string name="sequences_and_author_dirs_title">Доп. папки авторов и серий</string>
+    <string name="send_log_to_mail_message">Лог на почту</string>
 </resources>

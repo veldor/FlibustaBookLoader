@@ -224,7 +224,8 @@ class BrowserActivity : BaseActivity() {
                     if (lastPage != null) {
                         Log.d("surprise", "onKeyDown: go back to history $lastPage")
                         fragment.load(
-                            lastPage, false,
+                            lastPage,
+                            false,
                             addToHistory = false,
                             clickedElementIndex = clickedElement
                         )

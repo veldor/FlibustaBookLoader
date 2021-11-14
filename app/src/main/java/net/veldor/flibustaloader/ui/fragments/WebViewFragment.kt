@@ -173,7 +173,7 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
 
         // буду отслеживать событие логина
         val cookieObserver: LiveData<Boolean> = App.sResetLoginCookie
-        cookieObserver.observe(requireActivity(), { aBoolean: Boolean ->
+        cookieObserver.observe(viewLifecycleOwner, { aBoolean: Boolean ->
             if (aBoolean) {
                 Toast.makeText(
                     requireContext(),

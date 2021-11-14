@@ -628,6 +628,18 @@ class NotificationHandler private constructor(private var context: Context) {
 
     fun showTestVersionNotification() {
         // интент отправки логов
+        val sendLogsToMailIntent = Intent(context, MiscActionsReceiver::class.java)
+        sendLogsToMailIntent.putExtra(
+            MiscActionsReceiver.EXTRA_ACTION_TYPE,
+            MiscActionsReceiver.ACTION_SEND_LOGS_TO_MAIL
+        )
+        val sendLogsToMailPendingIntent = PendingIntent.getBroadcast(
+            context,
+            SEND_LOG_TO_MAIL_CODE,
+            sendLogsToMailIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        // интент отправки логов
         val sendLogsIntent = Intent(context, MiscActionsReceiver::class.java)
         sendLogsIntent.putExtra(
             MiscActionsReceiver.EXTRA_ACTION_TYPE,
@@ -650,6 +662,11 @@ class NotificationHandler private constructor(private var context: Context) {
                 R.drawable.ic_baseline_bookmark_24,
                 App.instance.getString(R.string.send_log_message),
                 sendLogsPendingIntent
+            )
+            .addAction(
+                R.drawable.ic_baseline_bookmark_24,
+                App.instance.getString(R.string.send_log_to_mail_message),
+                sendLogsToMailPendingIntent
             )
         mNotificationManager.notify(IS_TEST_VERSION_NOTIFICATION, notificationBuilder.build())
     }
@@ -690,6 +707,7 @@ class NotificationHandler private constructor(private var context: Context) {
         const val IS_TEST_VERSION_NOTIFICATION = 16
         const val RESUME_DOWNLOAD_CODE = 17
         private const val SEND_LOG_CODE = 5
+        private const val SEND_LOG_TO_MAIL_CODE = 18
 
         @JvmStatic
         var instance: NotificationHandler = NotificationHandler(App.instance)

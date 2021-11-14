@@ -29,6 +29,7 @@ import com.google.android.material.navigation.NavigationView
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.dialogs.ChangelogDialog
+import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.MyFileReader.SUBSCRIPTIONS_FILE
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import java.io.File
@@ -44,15 +45,14 @@ open class BaseActivity : AppCompatActivity() {
 
     protected open fun setupInterface() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if(PreferencesHandler.instance.isEInk){
+            if (PreferencesHandler.instance.isEInk) {
                 // change status bar color
                 window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
                 window.statusBarColor =
                     ResourcesCompat.getColor(resources, R.color.white, null)
                 window.navigationBarColor =
                     ResourcesCompat.getColor(resources, R.color.white, null)
-            }
-            else {
+            } else {
                 // change status bar color
                 window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
                 window.statusBarColor =
@@ -93,6 +93,11 @@ open class BaseActivity : AppCompatActivity() {
                 mNavigationView.menu.findItem(R.id.goToDownloadsList).actionView as TextView
             mSubscriptionsListTextView =
                 mNavigationView.menu.findItem(R.id.goToSubscriptions).actionView as TextView
+            mNavigationView.menu.findItem(R.id.appVersion).title = String.format(
+                Locale.ENGLISH,
+                getString(R.string.application_version_message),
+                Grammar.appVersion
+            )
             // метод для счетчиков
             initializeCountDrawer()
         }
@@ -146,7 +151,13 @@ open class BaseActivity : AppCompatActivity() {
                 if (listLength > 0) {
                     mSubscriptionsListTextView.gravity = Gravity.CENTER_VERTICAL
                     mSubscriptionsListTextView.setTypeface(null, Typeface.BOLD)
-                    mSubscriptionsListTextView.setTextColor(ResourcesCompat.getColor(resources, R.color.book_name_color, null))
+                    mSubscriptionsListTextView.setTextColor(
+                        ResourcesCompat.getColor(
+                            resources,
+                            R.color.book_name_color,
+                            null
+                        )
+                    )
                     mSubscriptionsListTextView.text = listLength.toString()
                 }
             }
@@ -161,7 +172,13 @@ open class BaseActivity : AppCompatActivity() {
             mDownloadsListTextView.visibility = View.VISIBLE
             mDownloadsListTextView.gravity = Gravity.CENTER_VERTICAL
             mDownloadsListTextView.setTypeface(null, Typeface.BOLD)
-            mDownloadsListTextView.setTextColor(ResourcesCompat.getColor(resources, R.color.book_name_color, null))
+            mDownloadsListTextView.setTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.book_name_color,
+                    null
+                )
+            )
             mDownloadsListTextView.text = queueSize.toString()
         } else {
             mDownloadsListTextView.visibility = View.INVISIBLE
@@ -194,11 +211,14 @@ open class BaseActivity : AppCompatActivity() {
         }
     }
 
-    protected fun paintToolbar(toolbar: Toolbar){
+    protected fun paintToolbar(toolbar: Toolbar) {
         toolbar.setBackgroundColor(ResourcesCompat.getColor(resources, R.color.white, null))
         toolbar.setTitleTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
         toolbar.setSubtitleTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
-        val colorFilter = PorterDuffColorFilter(ResourcesCompat.getColor(resources, R.color.black, null), PorterDuff.Mode.MULTIPLY)
+        val colorFilter = PorterDuffColorFilter(
+            ResourcesCompat.getColor(resources, R.color.black, null),
+            PorterDuff.Mode.MULTIPLY
+        )
 
         for (i in 0 until toolbar.childCount) {
             val view: View = toolbar.getChildAt(i)

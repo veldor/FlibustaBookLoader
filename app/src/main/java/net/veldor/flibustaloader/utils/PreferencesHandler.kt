@@ -195,16 +195,13 @@ class PreferencesHandler private constructor() {
         set(state) {
             preferences.edit().putBoolean(PREF_ONLY_RUSSIAN, state).apply()
         }
-    var bookNameStrictFilter: Boolean = preferences.getBoolean(PREF_BOOK_NAME_STRICT_FILTER, false)
-    var bookAuthorStrictFilter: Boolean =
-        preferences.getBoolean(PREF_BOOK_AUTHOR_STRICT_FILTER, false)
-    var bookGenreStrictFilter: Boolean =
-        preferences.getBoolean(PREF_BOOK_GENRE_STRICT_FILTER, false)
-    var bookSequenceStrictFilter: Boolean =
-        preferences.getBoolean(PREF_BOOK_SEQUENCE_STRICT_FILTER, false)
-    var sequenceStrictFilter: Boolean = preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)
-    var authorStrictFilter: Boolean = preferences.getBoolean(PREF_AUTHOR_STRICT_FILTER, false)
-    var genreStrictFilter: Boolean = preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)
+    fun bookNameStrictFilter(): Boolean {return preferences.getBoolean(PREF_BOOK_NAME_STRICT_FILTER, false)}
+    fun bookAuthorStrictFilter(): Boolean {return preferences.getBoolean(PREF_BOOK_AUTHOR_STRICT_FILTER, false)}
+    fun bookGenreStrictFilter(): Boolean {return preferences.getBoolean(PREF_BOOK_GENRE_STRICT_FILTER, false)}
+    fun bookSequenceStrictFilter(): Boolean {return preferences.getBoolean(PREF_BOOK_SEQUENCE_STRICT_FILTER, false)}
+    fun sequenceStrictFilter(): Boolean {return preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)}
+    fun authorStrictFilter(): Boolean {return preferences.getBoolean(PREF_AUTHOR_STRICT_FILTER, false)}
+    fun genreStrictFilter(): Boolean {return preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)}
 
     var isUseFilter: Boolean
         get() = preferences.getBoolean(PREF_USE_FILTER, false)

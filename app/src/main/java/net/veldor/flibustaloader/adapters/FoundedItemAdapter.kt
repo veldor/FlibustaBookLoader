@@ -126,6 +126,7 @@ class FoundedItemAdapter(
         }
 
         fun bind(item: FoundedEntity) {
+            binding.name.visibility = View.VISIBLE
             binding.rootView.visibility = View.VISIBLE
             this.item = item
             binding.setVariable(BR.item, item)

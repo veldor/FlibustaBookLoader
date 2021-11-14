@@ -69,6 +69,12 @@ class MiscActionsReceiver : BroadcastReceiver() {
                     NotificationHandler.instance.hideMassDownloadInQueueMessage()
                     App.instance.startTor()
                 }
+                ACTION_SEND_LOGS_TO_MAIL -> {
+                    NotificationHandler.instance.mNotificationManager.cancel(NotificationHandler.IS_TEST_VERSION_NOTIFICATION)
+                    val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+                    context.sendBroadcast(it)
+                    getInstance()!!.sendLogsToMail()
+                }
                 ACTION_SEND_LOGS -> {
                     NotificationHandler.instance.mNotificationManager.cancel(NotificationHandler.IS_TEST_VERSION_NOTIFICATION)
                     val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
@@ -102,6 +108,7 @@ class MiscActionsReceiver : BroadcastReceiver() {
         const val ACTION_SKIP_BOOK = "skip book"
         const val ACTION_RESTART_TOR = "restart tor"
         const val ACTION_SEND_LOGS = "send logs"
+        const val ACTION_SEND_LOGS_TO_MAIL = "send logs to mail"
         const val ACTION_ENABLE_VPN_MODE = "enable vpn"
     }
 }

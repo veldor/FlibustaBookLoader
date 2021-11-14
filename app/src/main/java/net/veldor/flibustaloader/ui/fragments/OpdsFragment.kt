@@ -181,7 +181,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     (binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast = true
                     binding.resultsList.scrollToPosition(it.clickedElementIndex)
                     (binding.resultsList.adapter as FoundedItemAdapter).markClickedElement(it.clickedElementIndex)
-                } else if (sNextPage != null) {
+                } else if (sNextPage != null && it.type == TestParser.TYPE_BOOK) {
                     Log.d("surprise", "setupObservers: load next page while not search element")
                     load(sNextPage!!, append = true, addToHistory = false, it.clickedElementIndex)
                 }
@@ -291,11 +291,12 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         if (adapter != null) {
                             val position = manager.findLastCompletelyVisibleItemPosition()
                             if (
+                                !viewModel.loadInProgress() &&
                                 position == adapter.itemCount - 1 &&
                                 position > lastScrolled &&
                                 !PreferencesHandler.instance.isShowLoadMoreBtn() &&
                                 PreferencesHandler.instance.opdsPagedResultsLoad && sNextPage != null
-                            ) {
+                                && (binding.resultsList.adapter as FoundedItemAdapter).hasBooks()) {
                                 // подгружу результаты
                                 load(sNextPage!!, append = true, addToHistory = false, -1)
                             }
@@ -1393,12 +1394,14 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     fun load(link: String, append: Boolean, addToHistory: Boolean, clickedElementIndex: Int) {
+        Log.d("surprise", "load: $link $append")
         if (!append) {
             binding.resultsCount.visibility = View.GONE
             binding.resultsCount.text = "0"
             binding.filteredCount.visibility = View.GONE
             binding.filteredCount.text = "0"
             (binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast = false
+            (binding.resultsList.adapter as FoundedItemAdapter).clearList()
         }
         binding.progressBar.visibility = View.VISIBLE
         binding.fab.visibility = View.VISIBLE

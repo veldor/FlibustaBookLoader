@@ -24,7 +24,7 @@ object Filter {
                 if (list.isNotEmpty() && !foundedEntity.name.isNullOrEmpty()) {
                     lowerName = foundedEntity.name!!.lowercase()
                     list.forEach {
-                        if (PreferencesHandler.instance.bookNameStrictFilter) {
+                        if (PreferencesHandler.instance.bookNameStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
@@ -49,7 +49,7 @@ object Filter {
                 if (list.isNotEmpty() && !foundedEntity.author.isNullOrEmpty()) {
                     lowerName = foundedEntity.author!!.lowercase()
                     list.forEach {
-                        if (PreferencesHandler.instance.bookAuthorStrictFilter) {
+                        if (PreferencesHandler.instance.bookAuthorStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
@@ -74,7 +74,7 @@ object Filter {
                 if (list.isNotEmpty() && !foundedEntity.genreComplex.isNullOrEmpty()) {
                     lowerName = foundedEntity.genreComplex!!.lowercase()
                     list.forEach {
-                        if (PreferencesHandler.instance.bookGenreStrictFilter) {
+                        if (PreferencesHandler.instance.bookGenreStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
@@ -99,7 +99,7 @@ object Filter {
                 if (list.isNotEmpty() && foundedEntity.sequencesComplex.isNotEmpty()) {
                     lowerName = foundedEntity.sequencesComplex.lowercase()
                     list.forEach {
-                        if (PreferencesHandler.instance.bookSequenceStrictFilter) {
+                        if (PreferencesHandler.instance.bookSequenceStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
@@ -125,7 +125,7 @@ object Filter {
                 if (list.isNotEmpty()) {
                     lowerName = foundedEntity.name!!.lowercase()
                     list.forEach {
-                        if (PreferencesHandler.instance.genreStrictFilter) {
+                        if (PreferencesHandler.instance.genreStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
@@ -151,7 +151,7 @@ object Filter {
                 if (list.isNotEmpty()) {
                     lowerName = foundedEntity.name!!.lowercase()
                     list.forEach {
-                        if (PreferencesHandler.instance.sequenceStrictFilter) {
+                        if (PreferencesHandler.instance.sequenceStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
@@ -177,7 +177,7 @@ object Filter {
                 if (list.isNotEmpty()) {
                     lowerName = foundedEntity.name!!.lowercase()
                     list.forEach {
-                        if (PreferencesHandler.instance.authorStrictFilter) {
+                        if (PreferencesHandler.instance.authorStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
@@ -203,7 +203,7 @@ object Filter {
                 if (list.isNotEmpty()) {
                     lowerName = foundedEntity.name!!.lowercase()
                     list.forEach {
-                        if (PreferencesHandler.instance.authorStrictFilter) {
+                        if (PreferencesHandler.instance.authorStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
