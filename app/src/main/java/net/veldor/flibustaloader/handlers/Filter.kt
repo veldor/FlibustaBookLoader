@@ -18,7 +18,7 @@ object Filter {
             if (foundedEntity.type == TYPE_BOOK) {
                 // check for all of blacklists
                 if (PreferencesHandler.instance.isOnlyRussian && !foundedEntity.language.contains("ru")) {
-                    return FilteringResult(true, null, null, "hideNonRussian")
+                    return FilteringResult(false, null, null, "hideNonRussian")
                 }
                 list = BlacklistBooks.instance.getBlacklist()
                 if (list.isNotEmpty() && !foundedEntity.name.isNullOrEmpty()) {
@@ -47,75 +47,82 @@ object Filter {
                 }
                 list = BlacklistAuthors.instance.getBlacklist()
                 if (list.isNotEmpty() && !foundedEntity.author.isNullOrEmpty()) {
-                    lowerName = foundedEntity.author!!.lowercase()
-                    list.forEach {
-                        if (PreferencesHandler.instance.bookAuthorStrictFilter()) {
-                            if (lowerName == it.name.lowercase()) {
-                                return FilteringResult(
-                                    false,
-                                    lowerName,
-                                    it.name.lowercase(),
-                                    "book author strict"
-                                )
-                            }
-                        } else {
-                            if (lowerName.contains(it.name.lowercase())) {
-                                return FilteringResult(
-                                    false,
-                                    lowerName,
-                                    it.name.lowercase(),
-                                    "book author"
-                                )
+                    foundedEntity.authors.forEach { author ->
+                        lowerName = author.name!!.lowercase().trim()
+                        list.forEach {
+                            if (PreferencesHandler.instance.bookAuthorStrictFilter()) {
+                                if (lowerName == it.name.lowercase()) {
+                                    return FilteringResult(
+                                        false,
+                                        lowerName,
+                                        it.name.lowercase(),
+                                        "book author strict"
+                                    )
+                                }
+                            } else {
+                                if (lowerName.contains(it.name.lowercase())) {
+                                    return FilteringResult(
+                                        false,
+                                        lowerName,
+                                        it.name.lowercase(),
+                                        "book author"
+                                    )
+                                }
                             }
                         }
                     }
                 }
                 list = BlacklistGenres.instance.getBlacklist()
                 if (list.isNotEmpty() && !foundedEntity.genreComplex.isNullOrEmpty()) {
-                    lowerName = foundedEntity.genreComplex!!.lowercase()
-                    list.forEach {
-                        if (PreferencesHandler.instance.bookGenreStrictFilter()) {
-                            if (lowerName == it.name.lowercase()) {
-                                return FilteringResult(
-                                    false,
-                                    lowerName,
-                                    it.name.lowercase(),
-                                    "book genre strict"
-                                )
-                            }
-                        } else {
-                            if (lowerName.contains(it.name.lowercase())) {
-                                return FilteringResult(
-                                    false,
-                                    lowerName,
-                                    it.name.lowercase(),
-                                    "book genre"
-                                )
+                    foundedEntity.genres.forEach { genre ->
+                        lowerName = genre.name!!.trim().lowercase()
+                        list.forEach {
+                            if (PreferencesHandler.instance.bookGenreStrictFilter()) {
+                                if (lowerName == it.name.lowercase()) {
+                                    return FilteringResult(
+                                        false,
+                                        lowerName,
+                                        it.name.lowercase(),
+                                        "book genre strict"
+                                    )
+                                }
+                            } else {
+                                if (lowerName.contains(it.name.lowercase())) {
+                                    return FilteringResult(
+                                        false,
+                                        lowerName,
+                                        it.name.lowercase(),
+                                        "book genre"
+                                    )
+                                }
                             }
                         }
                     }
                 }
                 list = BlacklistSequences.instance.getBlacklist()
-                if (list.isNotEmpty() && foundedEntity.sequencesComplex.isNotEmpty()) {
-                    lowerName = foundedEntity.sequencesComplex.lowercase()
-                    list.forEach {
-                        if (PreferencesHandler.instance.bookSequenceStrictFilter()) {
-                            if (lowerName == it.name.lowercase()) {
-                                return FilteringResult(
-                                    false,
-                                    lowerName,
-                                    it.name.lowercase(),
-                                    "book sequence strict"
-                                )
-                            }
-                        } else {
-                            if (lowerName.contains(it.name.lowercase())) {
-                                return FilteringResult(
-                                    false,
-                                    lowerName,
-                                    it.name.lowercase(),
-                                    "book sequence"
-                                )
+                if (list.isNotEmpty() && foundedEntity.sequences.isNotEmpty()) {
+                    foundedEntity.sequences.forEach { sequence ->
+                        val sequenceLowerName = sequence.name!!.trim().lowercase()
+                            .substring(17, sequence.name!!.trim().length - 1)
+                        list.forEach {
+                            if (PreferencesHandler.instance.bookSequenceStrictFilter()) {
+                                if (sequenceLowerName == it.name.lowercase()) {
+                                    return FilteringResult(
+                                        false,
+                                        sequenceLowerName,
+                                        it.name.lowercase(),
+                                        "book sequence strict"
+                                    )
+                                }
+                            } else {
+                                if (sequenceLowerName.contains(it.name.lowercase())) {
+                                    return FilteringResult(
+                                        false,
+                                        sequenceLowerName,
+                                        it.name.lowercase(),
+                                        "book sequence"
+                                    )
+                                }
                             }
                         }
                     }

@@ -43,4 +43,10 @@
         android:summary="Результаты поиска серий фильтруются строго по шаблону"
         android:summaryOff="Результаты поиска серий фильтруются по наличию паттерна"
         android:title="Фильтр серий" />
+    <SwitchPreferenceCompat
+        app:key="add to filter on long click"
+        android:defaultValue="false"
+        android:summary="Долгий клик на авторе, жанре или серии добавит её в чёрный список. Если значений несколько- будут добавлены все"
+        android:summaryOff="Выкл."
+        android:title="Фильтр по долгому клику" />
 </PreferenceScreen>

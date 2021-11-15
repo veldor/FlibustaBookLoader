@@ -36,6 +36,14 @@ object Grammar {
             val r = Random()
             return r.nextInt(max - min + 1) + min
         }
+    @kotlin.jvm.JvmStatic
+    val longRandom: Int
+        get() {
+            val min = 100000000
+            val max = 999999999
+            val r = Random()
+            return r.nextInt(max - min + 1) + min
+        }
 
     @kotlin.jvm.JvmStatic
     val appVersion: String

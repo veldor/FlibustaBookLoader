@@ -43,7 +43,7 @@ class BrowserActivity : BaseActivity() {
     lateinit var mBottomNavView: BottomNavigationView
 
     override fun getTheme(): Resources.Theme {
-        if(PreferencesHandler.instance.isEInk){
+        if (PreferencesHandler.instance.isEInk) {
             val theme = super.getTheme()
             theme.applyStyle(R.style.EInkAppTheme, true)
             return theme
@@ -74,7 +74,7 @@ class BrowserActivity : BaseActivity() {
     override fun setupObservers() {
         super.setupObservers()
         viewModel.isUpdateAvailable.observe(this, {
-            if(it){
+            if (it) {
                 makeUpdateSnackbar()
             }
         })
@@ -90,7 +90,7 @@ class BrowserActivity : BaseActivity() {
         item.isEnabled = false
         item.isChecked = true
 
-        if(PreferencesHandler.instance.isEInk){
+        if (PreferencesHandler.instance.isEInk) {
             val colors = intArrayOf(
                 Color.LTGRAY,
                 Color.BLACK
@@ -103,7 +103,13 @@ class BrowserActivity : BaseActivity() {
             binding.bottomNavView.itemTextColor = ColorStateList(states, colors)
             binding.bottomNavView.itemIconTintList = ColorStateList(states, colors)
 
-            binding.bottomNavView.setBackgroundColor(ResourcesCompat.getColor(resources, R.color.white, null))
+            binding.bottomNavView.setBackgroundColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.white,
+                    null
+                )
+            )
             binding.bottomNavView.itemTextColor
             paintToolbar(binding.toolbar)
         }
@@ -119,8 +125,9 @@ class BrowserActivity : BaseActivity() {
         val navController = Navigation.findNavController(this, R.id.nav_host_fragment)
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
         NavigationUI.setupWithNavController(mBottomNavView, navController)
-        mBottomNavView.selectedItemId =
-            if (PreferencesHandler.instance.view == VIEW_WEB) R.id.navigation_web_view else R.id.navigation_opds
+        if (PreferencesHandler.instance.view == VIEW_WEB) {
+            mBottomNavView.selectedItemId = R.id.navigation_web_view
+        }
         navController.addOnDestinationChangedListener { _: NavController, _: NavDestination, _: Bundle? ->
             val selectedFragment = mBottomNavView.selectedItemId
             if (selectedFragment == R.id.navigation_web_view) {
@@ -168,9 +175,14 @@ class BrowserActivity : BaseActivity() {
         val fragment = getCurrentFragment()
         if (fragment is WebViewFragment) {
             if (event.action == KeyEvent.ACTION_DOWN) {
-                if (keyCode == KeyEvent.KEYCODE_BACK) { // возвращаюсь на страницу назад в браузере
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    // возвращаюсь на страницу назад в браузере
                     if (fragment.binding.myWebView.canGoBack()) {
                         fragment.binding.myWebView.goBack()
+                    } else if (PreferencesHandler.instance.openedFromOpds) {
+                        PreferencesHandler.instance.openedFromOpds = false
+                        mBottomNavView.selectedItemId =
+                            R.id.navigation_opds
                     } else {
 //                        if (mIsActivityCalled) {
 //                            finish()
@@ -224,6 +236,7 @@ class BrowserActivity : BaseActivity() {
                     if (lastPage != null) {
                         Log.d("surprise", "onKeyDown: go back to history $lastPage")
                         fragment.load(
+                            "on back pressed",
                             lastPage,
                             false,
                             addToHistory = false,

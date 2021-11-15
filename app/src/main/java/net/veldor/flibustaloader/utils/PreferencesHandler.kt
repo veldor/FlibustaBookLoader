@@ -12,6 +12,7 @@ import java.io.File
 
 class PreferencesHandler private constructor() {
 
+    var openedFromOpds = false
 
     private var preferences: SharedPreferences =
         androidx.preference.PreferenceManager.getDefaultSharedPreferences(App.instance)
@@ -38,6 +39,9 @@ class PreferencesHandler private constructor() {
 
     fun isHideButtons(): Boolean {
         return preferences.getBoolean(PREF_HIDE_BUTTONS, false)
+    }
+    fun isFilterByLongClick(): Boolean {
+        return preferences.getBoolean("add to filter on long click", false)
     }
 
 
@@ -195,13 +199,34 @@ class PreferencesHandler private constructor() {
         set(state) {
             preferences.edit().putBoolean(PREF_ONLY_RUSSIAN, state).apply()
         }
-    fun bookNameStrictFilter(): Boolean {return preferences.getBoolean(PREF_BOOK_NAME_STRICT_FILTER, false)}
-    fun bookAuthorStrictFilter(): Boolean {return preferences.getBoolean(PREF_BOOK_AUTHOR_STRICT_FILTER, false)}
-    fun bookGenreStrictFilter(): Boolean {return preferences.getBoolean(PREF_BOOK_GENRE_STRICT_FILTER, false)}
-    fun bookSequenceStrictFilter(): Boolean {return preferences.getBoolean(PREF_BOOK_SEQUENCE_STRICT_FILTER, false)}
-    fun sequenceStrictFilter(): Boolean {return preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)}
-    fun authorStrictFilter(): Boolean {return preferences.getBoolean(PREF_AUTHOR_STRICT_FILTER, false)}
-    fun genreStrictFilter(): Boolean {return preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)}
+
+    fun bookNameStrictFilter(): Boolean {
+        return preferences.getBoolean(PREF_BOOK_NAME_STRICT_FILTER, false)
+    }
+
+    fun bookAuthorStrictFilter(): Boolean {
+        return preferences.getBoolean(PREF_BOOK_AUTHOR_STRICT_FILTER, false)
+    }
+
+    fun bookGenreStrictFilter(): Boolean {
+        return preferences.getBoolean(PREF_BOOK_GENRE_STRICT_FILTER, false)
+    }
+
+    fun bookSequenceStrictFilter(): Boolean {
+        return preferences.getBoolean(PREF_BOOK_SEQUENCE_STRICT_FILTER, false)
+    }
+
+    fun sequenceStrictFilter(): Boolean {
+        return preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)
+    }
+
+    fun authorStrictFilter(): Boolean {
+        return preferences.getBoolean(PREF_AUTHOR_STRICT_FILTER, false)
+    }
+
+    fun genreStrictFilter(): Boolean {
+        return preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)
+    }
 
     var isUseFilter: Boolean
         get() = preferences.getBoolean(PREF_USE_FILTER, false)

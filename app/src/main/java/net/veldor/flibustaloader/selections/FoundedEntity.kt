@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.selections
 
 import android.graphics.Bitmap
+import java.io.File
 import java.util.ArrayList
 
 class FoundedEntity {
@@ -26,7 +27,7 @@ class FoundedEntity {
     val sequences = ArrayList<FoundedEntity>()
     val authors = ArrayList<FoundedEntity>()
     var sequencesComplex: String = ""
-    var cover: Bitmap? = null
+    var cover: File? = null
 
     var read = false
     var downloaded = false

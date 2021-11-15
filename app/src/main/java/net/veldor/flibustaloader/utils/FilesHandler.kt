@@ -7,7 +7,9 @@ import android.os.Environment
 import android.os.StrictMode
 import android.os.StrictMode.VmPolicy
 import android.provider.DocumentsContract
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
@@ -44,6 +46,7 @@ object FilesHandler {
                         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } else {
+                Log.d("surprise", "shareFile: try share mobi as file")
                 val docId = DocumentsContract.getDocumentId(file.uri)
                 val split = docId.split(":").toTypedArray()
                 // получу файл из documentFile и отправлю его
@@ -55,12 +58,22 @@ object FilesHandler {
                         )
                     }
                     if (file1.exists()) {
+                        Log.d("surprise", "shareFile: mobi file exists with length ${file1.length()}")
                         //todo По возможности- разобраться и заменить на валидное решение
-                        val builder = VmPolicy.Builder()
-                        StrictMode.setVmPolicy(builder.build())
+                        val fileUri: Uri? = try {
+                            FileProvider.getUriForFile(
+                                App.instance,
+                                "net.veldor.flibustaloader.provider",
+                                file1)
+                        } catch (e: IllegalArgumentException) {
+                            Log.e("File Selector",
+                                "The selected file can't be shared: $file1")
+                            null
+                        }
+                        Log.d("surprise", "shareFile: uri is $fileUri")
                         // отправлю запрос на открытие файла
                         val shareIntent = Intent(Intent.ACTION_SEND)
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file1))
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
                         shareIntent.type = mime
                         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                         App.instance.startActivity(
@@ -131,6 +144,7 @@ object FilesHandler {
 
     fun find(files: Array<DocumentFile>, name: String): DocumentFile? {
         for (df in files) {
+            Log.d("surprise", "find: ${df.name}")
             if (df.isFile && df.name == name) {
                 return df
             } else if (df.isDirectory) {

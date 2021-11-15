@@ -39,6 +39,7 @@ class NotificationHandler private constructor(private var context: Context) {
     private var mDownloadScheduleBuilder: NotificationCompat.Builder? = null
 
     private var bookLoadedId = 100
+    private var pendingRequestId = 100
 
     fun sendLoadedBookNotification(name: String, type: String?) {
 
@@ -461,10 +462,11 @@ class NotificationHandler private constructor(private var context: Context) {
         )
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, bookName)
         shareIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
-
+        var pendingRequestId = this.pendingRequestId++;
+        Log.d("surprise", "sendLoadedBookNotification: create pending request with id $pendingRequestId")
         val sharePendingIntent = PendingIntent.getBroadcast(
             context,
-            START_SHARING_REQUEST_CODE,
+            pendingRequestId,
             shareIntent,
             PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -474,11 +476,13 @@ class NotificationHandler private constructor(private var context: Context) {
             BookLoadedReceiver.EXTRA_ACTION_TYPE,
             BookLoadedReceiver.ACTION_TYPE_OPEN
         )
+        pendingRequestId = this.pendingRequestId++;
+        Log.d("surprise", "sendLoadedBookNotification: create pending request with id $pendingRequestId")
         openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, bookName)
         openIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
         val openPendingIntent = PendingIntent.getBroadcast(
             context,
-            START_OPEN_REQUEST_CODE,
+            pendingRequestId,
             openIntent,
             PendingIntent.FLAG_UPDATE_CURRENT
         )

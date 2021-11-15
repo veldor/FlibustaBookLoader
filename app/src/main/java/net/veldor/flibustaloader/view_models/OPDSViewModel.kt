@@ -21,8 +21,9 @@ import net.veldor.flibustaloader.database.entity.Bookmark
 import net.veldor.flibustaloader.database.entity.DownloadedBooks
 import net.veldor.flibustaloader.database.entity.ReadedBooks
 import net.veldor.flibustaloader.delegates.BooksAddedToQueueDelegate
+import net.veldor.flibustaloader.delegates.ResultsReceivedDelegate
 import net.veldor.flibustaloader.handlers.DownloadLinkHandler
-import net.veldor.flibustaloader.http.TorWebClient
+import net.veldor.flibustaloader.handlers.PicHandler
 import net.veldor.flibustaloader.http.UniversalWebClient
 import net.veldor.flibustaloader.interfaces.MyViewModelInterface
 import net.veldor.flibustaloader.parsers.TestParser
@@ -44,7 +45,6 @@ import java.util.*
 open class OPDSViewModel(application: Application) : GlobalViewModel(application),
     MyViewModelInterface {
 
-    private var savedList: ArrayList<FoundedEntity>? = null
     private var currentWork: Job? = null
 
     private var currentPageUrl: String? = null
@@ -59,10 +59,6 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
     // наличие обновления ПО
     private val _isUpdateAvailable = MutableLiveData<Boolean>()
     val isUpdateAvailable: LiveData<Boolean> = _isUpdateAvailable
-
-    // результаты поиска
-    private val _searchResults = MutableLiveData<SearchResult>()
-    val searchResults: LiveData<SearchResult> = _searchResults
 
     fun switchViewMode(type: Int) {
         PreferencesHandler.instance.viewMode = type
@@ -200,7 +196,14 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         }
     }
 
-    fun request(s: String, append: Boolean, addToHistory: Boolean, clickedElementIndex: Int) {
+    fun request(
+        s: String,
+        append: Boolean,
+        addToHistory: Boolean,
+        clickedElementIndex: Int,
+        delegate: ResultsReceivedDelegate
+    ) {
+        currentRequestState.postValue("Формирую запрос")
         Log.d("surprise", "request: request $s")
         if (currentWork != null) {
             currentWork!!.cancel()
@@ -220,23 +223,22 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
             var previousSearchRequestResult: SearchResult? = null
             previousSearchRequestResult =
                 makeRequest(s, append, if (addToHistory) -1 else clickedElementIndex)
+            previousSearchRequestResult?.let { delegate.resultsReceived(it) }
             while (true) {
                 if (isActive) {
-                    Log.d("surprise", "request: $previousSearchRequestResult")
-                    Log.d("surprise", "request: ${_searchResults.value}")
                     if (previousSearchRequestResult?.nextPageLink != null) {
                         Log.d("surprise", "request: found next page")
                         // если найдены книги- проверю, нужно ли загружать все результаты сразу
                         if ((!PreferencesHandler.instance.opdsPagedResultsLoad && previousSearchRequestResult.type == TYPE_BOOK) ||
-                            _searchResults.value!!.type != TYPE_BOOK) {
-                            Log.d("surprise", "request type: ${_searchResults.value!!.type}")
+                            previousSearchRequestResult.type != TYPE_BOOK
+                        ) {
                             previousSearchRequestResult = makeRequest(
                                 previousSearchRequestResult.nextPageLink!!,
                                 true,
                                 if (addToHistory) -1 else clickedElementIndex
                             ) ?: break
-                        }
-                        else{
+                            previousSearchRequestResult.let { delegate.resultsReceived(it) }
+                        } else {
                             Log.d("surprise", "request: can't load next")
                             break
                         }
@@ -256,12 +258,14 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
     private fun makeRequest(s: String, append: Boolean, lastClicked: Int): SearchResult? {
         try {
             val response = UniversalWebClient().rawRequest(s)
+            currentRequestState.postValue("Получен ответ")
             if (response != null) {
                 val answer = UniversalWebClient().responseToString(response)
                 if (answer != null) {
                     // попробую с помощью нового парсера разобрать ответ
                     val parser = TestParser(answer)
                     val results = parser.parse()
+                    currentRequestState.postValue("Ответ обработан")
                     val searchResult = SearchResult()
                     searchResult.appended = append
                     searchResult.size = results.size
@@ -276,8 +280,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                         searchResult.clickedElementIndex = lastClicked
                         searchResult.isBackSearch = true
                     }
-                    _searchResults.postValue(searchResult)
-                    Log.d("surprise", "makeRequest: search results pushed")
+                    currentRequestState.postValue("Отображаю данные")
                     return searchResult
                 }
             }
@@ -291,23 +294,9 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         if (imageContainer != null) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    // load image
-                    val response =
-                        TorWebClient().simpleGetRequest(PreferencesHandler.instance.picMirror + item.coverUrl)
-                    val status = response.statusLine.statusCode
-                    if (status < 400) {
-                        val contentTypeHeader = response.getLastHeader("Content-Type")
-                        if (contentTypeHeader.value == "image/jpeg") {
-                            val decoded = BitmapFactory.decodeStream(response.entity.content)
-                            if (decoded.byteCount > 0) {
-                                Log.d("surprise", "loadImage: pic size is ${decoded.byteCount}")
-                                item.cover = decoded
-                                Log.d("surprise", "loadImage: cover loaded")
-                                imageContainer.setImageBitmap(decoded)
-                            }
-                        } else if (contentTypeHeader.value == "image/png") {
-                            Log.d("surprise", "loadImage: loaded PNG image!!!")
-                        }
+                    PicHandler().downloadPic(item)
+                    if (item.cover != null && item.cover!!.isFile && item.cover!!.exists() && item.cover!!.canRead()) {
+                        imageContainer.setImageBitmap(BitmapFactory.decodeFile(item.cover!!.path))
                     }
                 } catch (_: Exception) {
                 }
@@ -340,17 +329,13 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
     }
 
     fun saveLoaded(list: ArrayList<FoundedEntity>) {
-        Log.d("surprise", "saveLoaded: saved ${list.size} elements")
+        Log.d("surprise", "saveLoaded: save ${list.size} elements")
         savedList = list
     }
 
     fun getPreviouslyLoaded(): ArrayList<FoundedEntity> {
-        if (savedList == null) {
-            Log.d("surprise", "getPreviouslyLoaded: load empty list")
-            return arrayListOf()
-        }
-        Log.d("surprise", "getPreviouslyLoaded: load ${savedList!!.size} elements")
-        return savedList!!
+        Log.d("surprise", "getPreviouslyLoaded: load ${savedList.size} elements")
+        return savedList
     }
 
     fun cancelLoad() {
@@ -361,6 +346,13 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
 
     fun loadInProgress(): Boolean {
         return currentWork?.isActive == true
+    }
+
+    fun saveScrolledPosition(s: Int) {
+         lastScrolled = s
+    }
+    fun getScrolledPosition(): Int {
+         return lastScrolled
     }
 
     val height: Int
@@ -374,5 +366,8 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         const val MULTIPLY_DOWNLOAD = "multiply download"
         const val BASE_BOOK_URL = "/b/"
         const val MAX_BOOK_NUMBER = 548398
+        private var savedList: ArrayList<FoundedEntity> = arrayListOf()
+        private var lastScrolled = -1
+        val currentRequestState = MutableLiveData<String>()
     }
 }

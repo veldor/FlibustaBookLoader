@@ -22,6 +22,7 @@ import net.veldor.flibustaloader.MyWebViewClient.FakeDnsResolver
 import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.URLHelper
+import net.veldor.flibustaloader.view_models.OPDSViewModel
 import java.io.*
 import java.net.InetSocketAddress
 import java.util.*
@@ -213,6 +214,7 @@ class TorWebClient {
     }
 
     fun rawRequest(link: String): HttpResponse? {
+        OPDSViewModel.currentRequestState.postValue("Отправляю запрос")
         val httpGet = HttpGet(link)
         httpGet.setHeader(
             "User-Agent",

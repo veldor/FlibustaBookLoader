@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.adapters
 
 import android.annotation.SuppressLint
+import android.graphics.BitmapFactory
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.LayoutInflater
@@ -20,6 +21,7 @@ import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.databinding.FoundedItemBinding
 import net.veldor.flibustaloader.delegates.FoundedItemActionDelegate
+import net.veldor.flibustaloader.handlers.Filter
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_AUTHOR
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_AUTHORS
@@ -27,9 +29,7 @@ import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_BOOK
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_GENRE
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_SEQUENCE
 import net.veldor.flibustaloader.selections.FoundedEntity
-import net.veldor.flibustaloader.utils.Grammar
-import net.veldor.flibustaloader.utils.PreferencesHandler
-import net.veldor.flibustaloader.utils.SortHandler
+import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.workers.SendLogWorker
 import java.lang.IllegalArgumentException
 import java.util.*
@@ -83,6 +83,7 @@ class FoundedItemAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     fun setContent(newData: ArrayList<FoundedEntity>) {
+        Log.d("surprise", "setContent: set content length by ${newData.size}")
         lastSortOption = -1
         values = newData
         notifyDataSetChanged()
@@ -125,6 +126,7 @@ class FoundedItemAdapter(
             }
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         fun bind(item: FoundedEntity) {
             binding.name.visibility = View.VISIBLE
             binding.rootView.visibility = View.VISIBLE
@@ -187,6 +189,67 @@ class FoundedItemAdapter(
 //                )
             when (item.type) {
                 TYPE_BOOK -> {
+
+
+                    if (PreferencesHandler.instance.isFilterByLongClick()) {
+                        binding.name.setOnLongClickListener {
+                            Toast.makeText(
+                                App.instance,
+                                "Добавляю книгу в ЧС: ${item.name}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            BlacklistBooks.instance.addValue(item.name!!.trim().lowercase())
+                            applyFilters()
+                            return@setOnLongClickListener true
+                        }
+                        binding.firstInfoBlockLeftParam.setOnLongClickListener {
+                            // add authors to blacklist
+                            if (item.authors.isNotEmpty()) {
+                                item.authors.forEach {
+                                    BlacklistAuthors.instance.addValue(it.name!!.trim().lowercase())
+                                    Toast.makeText(
+                                        App.instance,
+                                        "Добавляю автора в ЧС: ${it.name}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                applyFilters()
+                            }
+                            return@setOnLongClickListener true
+                        }
+                        binding.secondInfoBlockLeftParam.setOnLongClickListener {
+                            // add genres to blacklist
+                            if (item.genres.isNotEmpty()) {
+                                item.genres.forEach {
+                                    BlacklistGenres.instance.addValue(it.name!!.trim().lowercase())
+                                    Toast.makeText(
+                                        App.instance,
+                                        "Добавляю жанр в ЧС: ${it.name}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                applyFilters()
+                            }
+                            return@setOnLongClickListener true
+                        }
+                        binding.secondInfoBlockRightParam.setOnLongClickListener {
+                            // add sequences to blacklist
+                            if (item.sequences.isNotEmpty()) {
+                                item.sequences.forEach {
+                                    val sequenceName = it.name!!.trim().lowercase().substring(17,it.name!!.trim().length - 1)
+                                        BlacklistSequences.instance.addValue(sequenceName)
+                                    Toast.makeText(
+                                        App.instance,
+                                        "Добавляю серию в ЧС: $sequenceName",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                applyFilters()
+                            }
+                            return@setOnLongClickListener true
+                        }
+                    }
+
                     Grammar.getAvailableDownloadFormats(item, binding.availableLinkFormats)
                     binding.availableLinkFormats.visibility = View.VISIBLE
                     binding.availableLinkFormats.setOnClickListener {
@@ -308,8 +371,8 @@ class FoundedItemAdapter(
                                 )
                             )
                         } else {
-                            if (item.cover != null) {
-                                binding.previewImage.setImageBitmap(item.cover)
+                            if (item.cover != null && item.cover!!.isFile && item.cover!!.exists() && item.cover!!.canRead()) {
+                                binding.previewImage.setImageBitmap(BitmapFactory.decodeFile(item.cover!!.path))
                             } else {
                                 binding.previewImage.setImageDrawable(
                                     ResourcesCompat.getDrawable(
@@ -322,8 +385,12 @@ class FoundedItemAdapter(
                                 timer =
                                     object : CountDownTimer(30000.toLong(), 1000) {
                                         override fun onTick(millisUntilFinished: Long) {
-                                            if (item.cover != null) {
-                                                binding.previewImage.setImageBitmap(item.cover)
+                                            if (item.cover != null && item.cover!!.isFile && item.cover!!.exists() && item.cover!!.canRead()) {
+                                                binding.previewImage.setImageBitmap(
+                                                    BitmapFactory.decodeFile(
+                                                        item.cover!!.path
+                                                    )
+                                                )
                                                 timer?.cancel()
                                             }
                                         }
@@ -340,6 +407,18 @@ class FoundedItemAdapter(
                     }
                 }
                 TYPE_AUTHOR -> {
+                    if (PreferencesHandler.instance.isFilterByLongClick()) {
+                        binding.name.setOnLongClickListener {
+                            Toast.makeText(
+                                App.instance,
+                                "Добавляю автора в ЧС: ${item.name}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            BlacklistAuthors.instance.addValue(item.name!!.trim().lowercase())
+                            applyFilters()
+                            return@setOnLongClickListener true
+                        }
+                    }
                     binding.availableLinkFormats.visibility = View.GONE
                     if (PreferencesHandler.instance.isHideButtons()) {
                         binding.centerActionBtn.visibility = View.GONE
@@ -397,6 +476,18 @@ class FoundedItemAdapter(
                     binding.centerActionBtn.text = App.instance.getString(R.string.show_message)
                 }
                 TYPE_SEQUENCE -> {
+                    if (PreferencesHandler.instance.isFilterByLongClick()) {
+                        binding.name.setOnLongClickListener {
+                            Toast.makeText(
+                                App.instance,
+                                "Добавляю серию в ЧС: ${item.name}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            BlacklistSequences.instance.addValue(item.name!!.trim().lowercase())
+                            applyFilters()
+                            return@setOnLongClickListener true
+                        }
+                    }
                     binding.availableLinkFormats.visibility = View.GONE
                     if (PreferencesHandler.instance.isHideButtons()) {
                         binding.centerActionBtn.visibility = View.GONE
@@ -457,6 +548,18 @@ class FoundedItemAdapter(
                     binding.thirdBlockCenterElement.visibility = View.VISIBLE
                 }
                 TYPE_GENRE -> {
+                    if (PreferencesHandler.instance.isFilterByLongClick()) {
+                        binding.name.setOnLongClickListener {
+                            Toast.makeText(
+                                App.instance,
+                                "Добавляю жанр в ЧС: ${item.name}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            BlacklistGenres.instance.addValue(item.name!!.trim().lowercase())
+                            applyFilters()
+                            return@setOnLongClickListener true
+                        }
+                    }
                     binding.availableLinkFormats.visibility = View.GONE
                     if (PreferencesHandler.instance.isHideButtons()) {
                         binding.centerActionBtn.visibility = View.GONE
@@ -737,6 +840,25 @@ class FoundedItemAdapter(
             }
         }
         return false
+    }
+
+    fun dropSelected() {
+        values.forEach {
+            it.selected = false
+        }
+    }
+
+    private fun applyFilters() {
+        val iterator = values.iterator()
+        while (iterator.hasNext()) {
+            val item = iterator.next()
+            if (!Filter.check(item).result) {
+                // remove item from list
+                val itemIndex = values.indexOf(item)
+                iterator.remove()
+                notifyItemRemoved(itemIndex)
+            }
+        }
     }
 
     var isScrolledToLast: Boolean = false
