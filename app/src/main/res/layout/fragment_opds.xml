@@ -18,28 +18,28 @@
         app:constraint_referenced_ids="connectionType,search_type,showAllSwitcher" />
 
     <TextSwitcher
-        android:visibility="gone"
         android:id="@+id/statusWrapper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:gravity="center_horizontal"
         android:textAlignment="center"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:textSize="10sp"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textSize="10sp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="10sp"
             android:gravity="center_horizontal"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textSize="10sp" />
     </TextSwitcher>
 
     <ProgressBar
@@ -58,6 +58,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
         android:background="@color/white"
+        android:text="@string/zero"
         android:textColor="@color/black"
         android:visibility="gone"
         app:drawableLeftCompat="@drawable/ic_book_mini_24dp"
@@ -72,6 +73,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
         android:background="@color/white"
+        android:text="@string/zero"
         android:textColor="@color/black"
         android:visibility="gone"
         app:drawableLeftCompat="@drawable/ic_baseline_filter_alt_24"
@@ -250,13 +252,13 @@
 
     <com.github.clans.fab.FloatingActionButton
         android:id="@+id/fab"
-        android:layout_marginEnd="8dp"
-        android:visibility="gone"
-        android:layout_marginBottom="8dp"
-        android:src="@drawable/fp_ic_action_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginBottom="8dp"
+        android:src="@drawable/fp_ic_action_cancel"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/resultsList"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginRight="8dp" />
+        app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

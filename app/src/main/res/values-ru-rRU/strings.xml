@@ -36,7 +36,7 @@
     <string name="select_authors_choose_message">Выберите автора</string>
     <string name="search_genre_message">Жанры</string>
     <string name="search_sequence_message">Серии</string>
-    <string name="load_more_button">Загрузить ещё</string>
+    <string name="load_more_button">Следующая страница</string>
     <string name="select_sequences_choose_message">Выберите серию</string>
     <string name="book_menu">book menu</string>
     <string name="hide_read">Скрывать прочитанные</string>
@@ -306,4 +306,5 @@
     <string name="sequences_in_author_dirs_message">Серии в папках авторов</string>
     <string name="sequences_and_author_dirs_title">Доп. папки авторов и серий</string>
     <string name="send_log_to_mail_message">Лог на почту</string>
+    <string name="load_cancelled_message">Загрузка отменена</string>
 </resources>

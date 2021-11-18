@@ -336,4 +336,6 @@
     <string name="sequences_in_author_dirs_message">Sequences in author dir</string>
     <string name="sequences_and_author_dirs_title">Sequences and author dirs</string>
     <string name="send_log_to_mail_message">log to mail</string>
+    <string name="zero" translatable="false">0</string>
+    <string name="load_cancelled_message">Content load cancelling</string>
 </resources>

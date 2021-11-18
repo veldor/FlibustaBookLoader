@@ -2,7 +2,6 @@ package net.veldor.flibustaloader.view_models
 
 import android.app.Activity
 import android.app.Application
-import android.content.Context
 import android.content.res.Configuration.*
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -14,7 +13,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.MyWebView
@@ -31,6 +29,7 @@ import net.veldor.flibustaloader.parsers.TestParser
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_BOOK
 import net.veldor.flibustaloader.selections.DownloadLink
 import net.veldor.flibustaloader.selections.FoundedEntity
+import net.veldor.flibustaloader.selections.HistoryItem
 import net.veldor.flibustaloader.selections.SearchResult
 import net.veldor.flibustaloader.updater.Updater
 import net.veldor.flibustaloader.utils.*
@@ -38,7 +37,6 @@ import net.veldor.flibustaloader.utils.BookSharer.shareLink
 import net.veldor.flibustaloader.utils.MyFileReader.clearAutocomplete
 import net.veldor.flibustaloader.utils.MyFileReader.getSearchAutocomplete
 import net.veldor.flibustaloader.utils.XMLHandler.getSearchAutocomplete
-import java.io.File
 import java.util.*
 
 open class OPDSViewModel(application: Application) : GlobalViewModel(application),
@@ -203,15 +201,8 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         delegate: ResultsReceivedDelegate
     ) {
         currentRequestState.postValue("Формирую запрос")
-        Log.d("surprise", "request: request $s")
         if (currentWork != null) {
             currentWork!!.cancel()
-        }
-        if (addToHistory && currentPageUrl != null) {
-            Log.d("surprise", "request: add to history $currentPageUrl")
-            History.instance!!.addToHistory(currentPageUrl!!)
-            History.instance!!.addToClickHistory(clickedElementIndex)
-            Log.d("surprise", "request: save click on $clickedElementIndex")
         }
 
         if (!append) {
@@ -222,14 +213,15 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
             // clear previously loaded images
             FilesHandler.clearCache()
 
-            var previousSearchRequestResult: SearchResult? = null
+            var previousSearchRequestResult: SearchResult?
             previousSearchRequestResult =
                 makeRequest(s, append, if (addToHistory) -1 else clickedElementIndex)
-            previousSearchRequestResult?.let { delegate.resultsReceived(it) }
+            if(currentWork?.isActive == true) {
+                previousSearchRequestResult?.let { delegate.resultsReceived(it) }
+            }
             while (true) {
-                if (isActive) {
+                if (currentWork?.isActive == true) {
                     if (previousSearchRequestResult?.nextPageLink != null) {
-                        Log.d("surprise", "request: found next page")
                         // если найдены книги- проверю, нужно ли загружать все результаты сразу
                         if ((!PreferencesHandler.instance.opdsPagedResultsLoad && previousSearchRequestResult.type == TYPE_BOOK) ||
                             previousSearchRequestResult.type != TYPE_BOOK
@@ -239,17 +231,18 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                                 true,
                                 if (addToHistory) -1 else clickedElementIndex
                             ) ?: break
-                            previousSearchRequestResult.let { delegate.resultsReceived(it) }
+                            Log.d("surprise", "request: active ${currentWork?.isActive}")
+                            Log.d("surprise", "request: cancelled ${currentWork?.isCancelled}")
+                            if (currentWork?.isActive == true) {
+                                previousSearchRequestResult.let { delegate.resultsReceived(it) }
+                            }
                         } else {
-                            Log.d("surprise", "request: can't load next")
                             break
                         }
                     } else {
-                        Log.d("surprise", "request: no next page")
                         break
                     }
                 } else {
-                    Log.d("surprise", "request: work not active")
                     break
                 }
             }
@@ -326,24 +319,16 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         }
     }
 
-    fun getCurrentPage(): String? {
-        return currentPageUrl
+    fun saveLoaded(item: HistoryItem) {
+        savedItem = item
     }
 
-    fun saveLoaded(list: ArrayList<FoundedEntity>) {
-        Log.d("surprise", "saveLoaded: save ${list.size} elements")
-        savedList = list
-    }
-
-    fun getPreviouslyLoaded(): ArrayList<FoundedEntity> {
-        Log.d("surprise", "getPreviouslyLoaded: load ${savedList.size} elements")
-        return savedList
+    fun getPreviouslyLoaded(): HistoryItem? {
+        return savedItem
     }
 
     fun cancelLoad() {
-        if (currentWork != null) {
-            currentWork!!.cancel()
-        }
+            currentWork?.cancel()
     }
 
     fun loadInProgress(): Boolean {
@@ -369,7 +354,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         const val MULTIPLY_DOWNLOAD = "multiply download"
         const val BASE_BOOK_URL = "/b/"
         const val MAX_BOOK_NUMBER = 548398
-        private var savedList: ArrayList<FoundedEntity> = arrayListOf()
+        private var savedItem: HistoryItem? = null
         private var lastScrolled = -1
         val currentRequestState = MutableLiveData<String>()
     }

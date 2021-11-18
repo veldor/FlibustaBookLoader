@@ -232,16 +232,9 @@ class BrowserActivity : BaseActivity() {
                 // если доступен возврат назад- возвращаюсь, если нет- закрываю приложение
                 if (!History.instance!!.isEmpty) {
                     val lastPage = History.instance!!.lastPage
-                    val clickedElement = History.instance!!.lastClickedElementIndex
                     if (lastPage != null) {
-                        Log.d("surprise", "onKeyDown: go back to history $lastPage")
-                        fragment.load(
-                            "on back pressed",
-                            lastPage,
-                            false,
-                            addToHistory = false,
-                            clickedElementIndex = clickedElement
-                        )
+                        Log.d("surprise", "onKeyDown: go back to history ${lastPage.loadedValues}")
+                        fragment.loadFromHistory(lastPage)
                         return true
                     }
                 }

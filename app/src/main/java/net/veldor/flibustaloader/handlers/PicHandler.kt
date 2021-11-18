@@ -60,7 +60,6 @@ class PicHandler {
                 when (contentTypeHeader.value) {
                     "image/jpeg" -> {
                         val tempFile = File.createTempFile(Grammar.longRandom.toString(), "jpg")
-                        Log.d("surprise", "downloadPic: ${tempFile.absolutePath}")
                         tempFile.deleteOnExit()
                         val out: OutputStream = FileOutputStream(tempFile)
                         var read: Int

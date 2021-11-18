@@ -671,12 +671,21 @@ class FoundedItemAdapter(
 
         fun bindButton() {
             binding.rootView.visibility = View.VISIBLE
+            binding.centerActionBtn.visibility = View.VISIBLE
+            binding.centerActionBtn.setTextColor(
+                ResourcesCompat.getColor(
+                    App.instance.resources,
+                    R.color.genre_text_color,
+                    null
+                )
+            )
             binding.root.background =
                 ResourcesCompat.getDrawable(
                     App.instance.resources,
-                    R.drawable.genre_layout,
+                    R.drawable.transparent,
                     null
                 )
+            binding.availableLinkFormats.visibility = View.GONE
             binding.firstGroup.visibility = View.GONE
             binding.secondGroup.visibility = View.GONE
             binding.thirdGroup.visibility = View.GONE
@@ -687,6 +696,8 @@ class FoundedItemAdapter(
                 binding.centerActionBtn.text = App.instance.getString(R.string.load_more_button)
                 binding.centerActionBtn.setOnClickListener {
                     it.isEnabled = false
+                    it.visibility = View.GONE
+                    binding.loadingMoreBar.visibility = View.VISIBLE
                     binding.centerActionBtn.setTextColor(
                         ResourcesCompat.getColor(
                             App.instance.resources,
@@ -806,7 +817,7 @@ class FoundedItemAdapter(
         if (centerItemPressed != null) {
             return values.indexOf(centerItemPressed)
         }
-        return 0
+        return -1
     }
 
 

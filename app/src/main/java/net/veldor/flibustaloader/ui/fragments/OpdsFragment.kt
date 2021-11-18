@@ -58,6 +58,7 @@ import android.view.ViewGroup
 import android.view.LayoutInflater
 import net.veldor.flibustaloader.delegates.ResultsReceivedDelegate
 import net.veldor.flibustaloader.handlers.PicHandler
+import net.veldor.flibustaloader.selections.HistoryItem
 import net.veldor.flibustaloader.selections.SearchResult
 
 
@@ -89,7 +90,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         val intent = requireActivity().intent
         val link = intent.getStringExtra(TARGET_LINK)
         if (link != null) {
-            load("received link",link, append = false, addToHistory = true, -1)
+            load("received link", link, append = false, addToHistory = true, -1)
         }
         /*else if (viewModel.getCurrentPage() != null) {
             load(
@@ -129,7 +130,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         // получена прямая ссылка для поиска
         sLiveSearchLink.observe(viewLifecycleOwner, { s: String? ->
             if (s != null && s.isNotEmpty()) {
-                load("1",s, append = false, addToHistory = true, -1)
+                load("1", s, append = false, addToHistory = true, -1)
             }
         })
 
@@ -160,7 +161,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         binding.statusWrapper.setOutAnimation(requireContext(), android.R.anim.slide_out_right)
 
         binding.fab.setOnClickListener {
-            Toast.makeText(requireContext(), "Content load cancelling", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.load_cancelled_message), Toast.LENGTH_SHORT).show()
             viewModel.cancelLoad()
             binding.fab.visibility = View.GONE
             binding.progressBar.visibility = View.GONE
@@ -181,7 +182,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         // обработаю клик на кнопку отображения списка авторов
 
         binding.showAuthorsListButton.setOnClickListener {
-            load("5","/opds/authorsindex", append = false, addToHistory = true, -1)
+            load("5", "/opds/authorsindex", append = false, addToHistory = true, -1)
             showLoadWaiter()
         }
 
@@ -204,17 +205,19 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         mSearchView?.requestFocus()
                     }
                 }
-                R.id.searchGenre -> {
-                    mSearchView?.isIconified = true
-                    load("2","/opds/genres", false, addToHistory = true, -1)
-                    showLoadWaiter()
-                }
-                R.id.searchSequence -> {
-                    mSearchView?.isIconified = true
-                    load("3","/opds/sequencesindex", false, addToHistory = true, -1)
-                    showLoadWaiter()
-                }
             }
+        }
+        binding.searchGenre.setOnClickListener {
+            mSearchView?.isIconified = true
+            (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
+            load("2", "/opds/genres", false, addToHistory = true, -1)
+            showLoadWaiter()
+        }
+        binding.searchSequence.setOnClickListener {
+            mSearchView?.isIconified = true
+            (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
+            load("3", "/opds/sequencesindex", false, addToHistory = true, -1)
+            showLoadWaiter()
         }
         binding.resultsList.adapter = FoundedItemAdapter(arrayListOf(), this)
 //        binding.resultsList.recycledViewPool.setMaxRecycledViews(0, 0);
@@ -226,18 +229,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             binding.resultsList.layoutManager = GridLayoutManager(requireContext(), 2)
         }
         val previousResults = viewModel.getPreviouslyLoaded()
-        if(previousResults.isNotEmpty()){
-            Log.d("surprise", "setupInterface: scroll to ${viewModel.getScrolledPosition()}")
-            (binding.resultsList.adapter as FoundedItemAdapter).setContent(previousResults)
-            binding.resultsList.layoutManager!!.scrollToPosition(viewModel.getScrolledPosition())
-            binding.resultsCount.visibility = View.VISIBLE
-            binding.resultsCount.text = previousResults.size.toString()
-            binding.filteredCount.visibility = View.VISIBLE
-            binding.filteredCount.text = "0"
-            if((binding.resultsList.adapter as FoundedItemAdapter).hasBooks()){
-                binding.floatingMenu.visibility = View.VISIBLE
-            }
-
+        if (previousResults != null) {
+            loadFromHistory(previousResults)
         }
         binding.resultsList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -260,8 +253,11 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                                 && (binding.resultsList.adapter as FoundedItemAdapter).hasBooks()
                             ) {
                                 // подгружу результаты
-                                Log.d("surprise", "onScrollStateChanged: load activated by scroll listener")
-                                load("4",sNextPage!!, append = true, addToHistory = false, -1)
+                                Log.d(
+                                    "surprise",
+                                    "onScrollStateChanged: load activated by scroll listener"
+                                )
+                                load("4", sNextPage!!, append = true, addToHistory = false, -1)
                             }
                             lastScrolled = position
                         }
@@ -483,11 +479,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         }
 
         binding.mirrorUsed.visibility = if (App.instance.useMirror) View.VISIBLE else View.GONE
-        if (App.instance.useMirror) {
-            Log.d("surprise", "onResume: using mirror")
-        } else {
-            Log.d("surprise", "onResume: no using mirror")
-        }
     }
 
     @SuppressLint("RestrictedApi", "DiscouragedPrivateApi")
@@ -572,10 +563,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
         // обработаю переключатель загрузки всех результатов поиска книг
         myItem = menu.findItem(R.id.menuLoadAllBooks)
-        Log.d(
-            "surprise",
-            "onCreateOptionsMenu: is checked? " + PreferencesHandler.instance.opdsPagedResultsLoad
-        )
         myItem.isChecked = PreferencesHandler.instance.opdsPagedResultsLoad
 
         // переключатель превью обложек
@@ -874,9 +861,11 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         val dialogBuilder = AlertDialog.Builder(requireContext(), R.style.MyDialogStyle)
         dialogBuilder.setTitle(R.string.showNewDialogTitle)
             .setItems(newCategory) { _: DialogInterface?, which: Int ->
+                (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
                 when (which) {
                     0 -> {
-                        load("7",
+                        load(
+                            "7",
                             "/opds/new/0/new",
                             append = false,
                             addToHistory = true,
@@ -884,7 +873,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         )
                     }
                     1 -> {
-                        load("8",
+                        load(
+                            "8",
                             "/opds/newgenres",
                             append = false,
                             addToHistory = true,
@@ -892,7 +882,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         )
                     }
                     2 -> {
-                        load("9",
+                        load(
+                            "9",
                             "/opds/newauthors",
                             append = false,
                             addToHistory = true,
@@ -900,7 +891,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         )
                     }
                     3 -> {
-                        load("10",
+                        load(
+                            "10",
                             "/opds/newsequences",
                             append = false,
                             addToHistory = true,
@@ -930,7 +922,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             // ищу введённое значение
             scrollToTop()
             val searchString = URLEncoder.encode(s, "utf-8").replace("+", "%20")
-            load("13",
+            load(
+                "13",
                 URLHelper.getSearchRequest(
                     binding.searchType.checkedRadioButtonId == R.id.searchBook,
                     searchString
@@ -1004,7 +997,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         // покажу список выбора автора
         dialogBuilder.setItems(list.toTypedArray()) { _: DialogInterface?, i: Int ->
             Log.d("surprise", "showSelectSequenceFromList: load selected author")
-            load("14",
+            load(
+                "14",
                 sequences[i].link!!,
                 append = false,
                 addToHistory = true,
@@ -1038,12 +1032,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         }
         if (url != null) {
             scrollToTop()
-            History.instance!!.addToClickHistory((binding.resultsList.adapter as FoundedItemAdapter).getClickedItem())
             Log.d("surprise", "loadAuthor: load some of author")
-            load("15",url,
+            load(
+                "15", url,
                 append = false,
                 addToHistory = true,
-                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem())
+                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem()
+            )
             showLoadWaiter()
         }
     }
@@ -1182,7 +1177,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             else -> {
                 Log.d("surprise", "buttonPressed: load on button pressed")
                 // перейду по ссылке
-                load("17",
+                load(
+                    "17",
                     item.link!!,
                     append = false,
                     addToHistory = true,
@@ -1285,7 +1281,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             else -> {
                 Log.d("surprise", "itemPressed: load on ite pressed")
                 // перейду по ссылке
-                load("16",
+                load(
+                    "16",
                     item.link!!,
                     append = false,
                     addToHistory = true,
@@ -1317,7 +1314,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     override fun loadMoreBtnClicked() {
         if (sNextPage != null) {
             Log.d("surprise", "loadMoreBtnClicked: load on more button clicked")
-            load("21",sNextPage!!, append = true, addToHistory = false, -1)
+            load("21", sNextPage!!, append = true, addToHistory = false, -1)
         }
     }
 
@@ -1333,7 +1330,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         Log.d("surprise", "sequenceClicked: sequences len is ${item.sequences.size}")
         if (item.sequences.size == 1) {
             Log.d("surprise", "sequenceClicked: load on sequence clicked")
-            load("18",
+            load(
+                "18",
                 item.sequences[0].link!!,
                 append = false,
                 addToHistory = true,
@@ -1371,9 +1369,23 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    fun load(reason: String, link: String, append: Boolean, addToHistory: Boolean, clickedElementIndex: Int) {
-        Log.d("surprise", "load: $link $append $reason")
+    fun load(
+        reason: String,
+        link: String,
+        append: Boolean,
+        addToHistory: Boolean,
+        clickedElementIndex: Int
+    ) {
         if (!append) {
+            // save results to history
+            val historyItem = HistoryItem(
+                nextPageLink = sNextPage,
+                clickedElementIndex,
+                binding.resultsCount.text.toString().toInt(),
+                binding.filteredCount.text.toString().toInt(),
+                (binding.resultsList.adapter as FoundedItemAdapter).getList()
+            )
+            History.instance!!.addToHistory(historyItem)
             PicHandler.dropPreviousLoading()
             binding.resultsCount.visibility = View.GONE
             binding.resultsCount.text = "0"
@@ -1385,7 +1397,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         binding.progressBar.visibility = View.VISIBLE
         binding.statusWrapper.visibility = View.VISIBLE
         binding.fab.visibility = View.VISIBLE
-        viewModel.request(link, append, addToHistory, clickedElementIndex = clickedElementIndex, this)
+        viewModel.request(
+            link,
+            append,
+            addToHistory,
+            clickedElementIndex = clickedElementIndex,
+            this
+        )
     }
 
     override fun onDestroy() {
@@ -1449,7 +1467,15 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     }
                 }
                 (binding.resultsList.adapter as FoundedItemAdapter).appendContent(results.results)
-                viewModel.saveLoaded((binding.resultsList.adapter as FoundedItemAdapter).getList())
+                viewModel.saveLoaded(
+                    HistoryItem(
+                        sNextPage,
+                        (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem(),
+                        binding.resultsCount.text.toString().toInt(),
+                        binding.filteredCount.text.toString().toInt(),
+                        (binding.resultsList.adapter as FoundedItemAdapter).getList()
+                    )
+                )
             } else {
                 binding.filteredCount.visibility = View.VISIBLE
                 binding.resultsCount.visibility = View.VISIBLE
@@ -1463,28 +1489,16 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     binding.resultsCount.text = results.size.toString()
                 }
                 (binding.resultsList.adapter as FoundedItemAdapter).setContent(results.results)
-
-                viewModel.saveLoaded((binding.resultsList.adapter as FoundedItemAdapter).getList())
-                binding.resultsList.scrollToPosition(0)
-            }
-            if (results.isBackSearch && results.clickedElementIndex >= 0) {
-                // проверю, что элемент входит в выборку
-                if ((binding.resultsList.adapter as FoundedItemAdapter).getSize() >= results.clickedElementIndex &&
-                    !(binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast
-                ) {
-                    Log.d("surprise", "setupObservers: FOUND CLICKED ELEMENT!!")
-                    (binding.resultsList.adapter as FoundedItemAdapter).isScrolledToLast = true
-                    binding.resultsList.scrollToPosition(results.clickedElementIndex)
-                    (binding.resultsList.adapter as FoundedItemAdapter).markClickedElement(results.clickedElementIndex)
-                } else if (sNextPage != null && results.type == TestParser.TYPE_BOOK) {
-                    Log.d("surprise", "setupObservers: load next page while not search element")
-                    load("19",
-                        sNextPage!!,
-                        append = true,
-                        addToHistory = false,
-                        results.clickedElementIndex
+                viewModel.saveLoaded(
+                    HistoryItem(
+                        sNextPage,
+                        (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem(),
+                        binding.resultsCount.text.toString().toInt(),
+                        binding.filteredCount.text.toString().toInt(),
+                        (binding.resultsList.adapter as FoundedItemAdapter).getList()
                     )
-                }
+                )
+                binding.resultsList.scrollToPosition(0)
             }
             if ((binding.resultsList.adapter as FoundedItemAdapter).hasBooks()) {
                 binding.floatingMenu.visibility = View.VISIBLE
@@ -1492,5 +1506,34 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 binding.floatingMenu.visibility = View.GONE
             }
         }
+    }
+
+    fun loadFromHistory(lastPage: HistoryItem) {
+        binding.resultsCount.visibility = View.VISIBLE
+        binding.filteredCount.visibility = View.VISIBLE
+        PicHandler.dropPreviousLoading()
+        sNextPage = lastPage.nextPageLink
+        // set next page
+        if (lastPage.nextPageLink.isNullOrEmpty()) {
+            (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
+        } else {
+            (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(true)
+        }
+        (binding.resultsList.adapter as FoundedItemAdapter).setContent(lastPage.results)
+        if (lastPage.clickedItem >= 0) {
+            binding.resultsList.scrollToPosition(lastPage.clickedItem)
+            (binding.resultsList.adapter as FoundedItemAdapter).markClickedElement(lastPage.clickedItem)
+        }
+        else{
+            binding.resultsList.layoutManager!!.scrollToPosition(viewModel.getScrolledPosition())
+        }
+        binding.resultsCount.text = lastPage.loadedValues.toString()
+        binding.filteredCount.text = lastPage.filteredValues.toString()
+        if ((binding.resultsList.adapter as FoundedItemAdapter).hasBooks()) {
+            binding.floatingMenu.visibility = View.VISIBLE
+        } else {
+            binding.floatingMenu.visibility = View.GONE
+        }
+        viewModel.saveLoaded(lastPage)
     }
 }
