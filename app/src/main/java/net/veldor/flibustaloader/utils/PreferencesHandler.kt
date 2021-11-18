@@ -225,7 +225,7 @@ class PreferencesHandler private constructor() {
     }
 
     fun genreStrictFilter(): Boolean {
-        return preferences.getBoolean(PREF_SEQUENCE_STRICT_FILTER, false)
+        return preferences.getBoolean(PREF_GENRE_STRICT_FILTER, false)
     }
 
     var isUseFilter: Boolean

@@ -1040,7 +1040,10 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             scrollToTop()
             History.instance!!.addToClickHistory((binding.resultsList.adapter as FoundedItemAdapter).getClickedItem())
             Log.d("surprise", "loadAuthor: load some of author")
-            load("15",url, append = false, addToHistory = true, -1)
+            load("15",url,
+                append = false,
+                addToHistory = true,
+                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem())
             showLoadWaiter()
         }
     }

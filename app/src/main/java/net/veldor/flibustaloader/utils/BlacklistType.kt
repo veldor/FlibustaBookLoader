@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.utils
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import net.veldor.flibustaloader.selections.BlacklistItem
 import net.veldor.flibustaloader.selections.FoundedEntity
@@ -62,6 +63,7 @@ abstract class BlacklistType {
     }
 
     fun addValue(value: String) {
+        Log.d("surprise", "addValue: add ${value.lowercase()}")
         if (!mExistentValues.contains(value.lowercase())) {
             val elem = mDom!!.createElement(blacklistName)
             val text = mDom!!.createTextNode(value.lowercase())
@@ -69,6 +71,9 @@ abstract class BlacklistType {
             mDom!!.documentElement.insertBefore(elem, mDom!!.documentElement.firstChild)
             MyFileReader.saveBlacklist(blacklistFileName, getStringFromDocument(mDom))
             liveBlacklistAdd.postValue(BlacklistItem(value.lowercase(), blacklistName))
+        }
+        else{
+            Log.d("surprise", "addValue: already in blacklist")
         }
     }
 

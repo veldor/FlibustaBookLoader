@@ -555,6 +555,7 @@ class FoundedItemAdapter(
                                 "Добавляю жанр в ЧС: ${item.name}",
                                 Toast.LENGTH_SHORT
                             ).show()
+                            Log.d("surprise", "bind: add to blacklist '${item.name!!.trim().lowercase()}'")
                             BlacklistGenres.instance.addValue(item.name!!.trim().lowercase())
                             applyFilters()
                             return@setOnLongClickListener true

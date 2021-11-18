@@ -13,6 +13,7 @@ import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
+import net.veldor.flibustaloader.handlers.Filter
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
@@ -177,6 +178,18 @@ object FilesHandler {
                         chooserPromise
                 ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
+    }
+
+    fun clearCache() {
+        val dir: File = App.instance.cacheDir
+        val children = dir.listFiles()
+        val iterator = children.iterator()
+        while (iterator.hasNext()) {
+            val item = iterator.next()
+            if(item.isFile){
+                item.delete()
+            }
+        }
     }
 
 

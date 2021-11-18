@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.handlers
 
+import android.util.Log
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_AUTHOR
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_AUTHORS
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_BOOK
@@ -22,7 +23,7 @@ object Filter {
                 }
                 list = BlacklistBooks.instance.getBlacklist()
                 if (list.isNotEmpty() && !foundedEntity.name.isNullOrEmpty()) {
-                    lowerName = foundedEntity.name!!.lowercase()
+                    lowerName = foundedEntity.name!!.lowercase().trim()
                     list.forEach {
                         if (PreferencesHandler.instance.bookNameStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
@@ -130,7 +131,7 @@ object Filter {
             } else if (foundedEntity.type == TYPE_GENRE) {
                 list = BlacklistGenres.instance.getBlacklist()
                 if (list.isNotEmpty()) {
-                    lowerName = foundedEntity.name!!.lowercase()
+                    lowerName = foundedEntity.name!!.lowercase().trim()
                     list.forEach {
                         if (PreferencesHandler.instance.genreStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
@@ -156,9 +157,10 @@ object Filter {
             } else if (foundedEntity.type == TYPE_SEQUENCE) {
                 list = BlacklistSequences.instance.getBlacklist()
                 if (list.isNotEmpty()) {
-                    lowerName = foundedEntity.name!!.lowercase()
+                    lowerName = foundedEntity.name!!.lowercase().trim()
                     list.forEach {
                         if (PreferencesHandler.instance.sequenceStrictFilter()) {
+                            Log.d("surprise", "check: filter '${it.name.lowercase()}'")
                             if (lowerName == it.name.lowercase()) {
                                 return FilteringResult(
                                     false,
@@ -182,7 +184,7 @@ object Filter {
             } else if (foundedEntity.type == TYPE_AUTHOR) {
                 list = BlacklistAuthors.instance.getBlacklist()
                 if (list.isNotEmpty()) {
-                    lowerName = foundedEntity.name!!.lowercase()
+                    lowerName = foundedEntity.name!!.lowercase().trim()
                     list.forEach {
                         if (PreferencesHandler.instance.authorStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {
@@ -208,7 +210,7 @@ object Filter {
             } else if (foundedEntity.type == TYPE_AUTHORS) {
                 list = BlacklistAuthors.instance.getBlacklist()
                 if (list.isNotEmpty()) {
-                    lowerName = foundedEntity.name!!.lowercase()
+                    lowerName = foundedEntity.name!!.lowercase().trim()
                     list.forEach {
                         if (PreferencesHandler.instance.authorStrictFilter()) {
                             if (lowerName == it.name.lowercase()) {

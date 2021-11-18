@@ -44,7 +44,6 @@ class App : MultiDexApplication() {
     val liveDownloadState = MutableLiveData(DownloadBooksWorker.DOWNLOAD_FINISHED)
     lateinit var mDatabase: AppDatabase
 
-
     override fun onCreate() {
         super.onCreate()
         // got instance

@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.view_models
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.content.res.Configuration.*
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -32,14 +33,12 @@ import net.veldor.flibustaloader.selections.DownloadLink
 import net.veldor.flibustaloader.selections.FoundedEntity
 import net.veldor.flibustaloader.selections.SearchResult
 import net.veldor.flibustaloader.updater.Updater
+import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.utils.BookSharer.shareLink
-import net.veldor.flibustaloader.utils.History
-import net.veldor.flibustaloader.utils.MimeTypes
 import net.veldor.flibustaloader.utils.MyFileReader.clearAutocomplete
 import net.veldor.flibustaloader.utils.MyFileReader.getSearchAutocomplete
-import net.veldor.flibustaloader.utils.PreferencesHandler
-import net.veldor.flibustaloader.utils.URLHelper
 import net.veldor.flibustaloader.utils.XMLHandler.getSearchAutocomplete
+import java.io.File
 import java.util.*
 
 open class OPDSViewModel(application: Application) : GlobalViewModel(application),
@@ -220,6 +219,9 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         }
         // запрошу данные
         currentWork = viewModelScope.launch(Dispatchers.IO) {
+            // clear previously loaded images
+            FilesHandler.clearCache()
+
             var previousSearchRequestResult: SearchResult? = null
             previousSearchRequestResult =
                 makeRequest(s, append, if (addToHistory) -1 else clickedElementIndex)
@@ -349,10 +351,11 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
     }
 
     fun saveScrolledPosition(s: Int) {
-         lastScrolled = s
+        lastScrolled = s
     }
+
     fun getScrolledPosition(): Int {
-         return lastScrolled
+        return lastScrolled
     }
 
     val height: Int

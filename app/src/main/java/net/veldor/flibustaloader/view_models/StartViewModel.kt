@@ -106,4 +106,8 @@ class StartViewModel : ViewModel() {
         }
         return writeResult == PackageManager.PERMISSION_GRANTED && readResult == PackageManager.PERMISSION_GRANTED
     }
+
+    fun clearCache() {
+        App.instance.cacheDir.deleteRecursively()
+    }
 }
