@@ -123,6 +123,20 @@ object SortHandler {
                     }
                     return@sort if (lhs.read) 1 else -1
                 }
+                8 -> {
+                    if (lhs.format == rhs.format) return@sort 0
+                    if (lhs.format.isNullOrEmpty()) {
+                        return@sort 1
+                    }
+                    if (rhs.format.isNullOrEmpty()) {
+                        return@sort -1
+                    }
+                    if (lastSortOption == sortOption) {
+                        // invert
+                        return@sort if (lhs.format!! < rhs.format!!) 1 else -1
+                    }
+                    return@sort if (lhs.format!! > rhs.format!!) 1 else -1
+                }
                 else -> {
                     if (lhs.name == rhs.name) return@sort 0
                     if (lastSortOption == sortOption) {

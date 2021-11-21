@@ -16,6 +16,8 @@ import android.text.style.ForegroundColorSpan
 import android.text.SpannableString
 import android.text.style.BackgroundColorSpan
 import android.widget.TextView
+import java.text.CharacterIterator
+import java.text.StringCharacterIterator
 
 
 object Grammar {
@@ -36,6 +38,7 @@ object Grammar {
             val r = Random()
             return r.nextInt(max - min + 1) + min
         }
+
     @kotlin.jvm.JvmStatic
     val longRandom: Int
         get() {
@@ -160,6 +163,23 @@ object Grammar {
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         return spannable
+    }
+
+    fun humanReadableByteCountBin(bytes: Int): String? {
+        val absB = if (bytes == Int.MIN_VALUE) Int.MAX_VALUE else Math.abs(bytes)
+        if (absB < 1024) {
+            return "$bytes B"
+        }
+        var value = absB
+        val ci: CharacterIterator = StringCharacterIterator("KMГTПE")
+        var i = 40
+        while (i >= 0 && absB > 0xfffccccccccccccL shr i) {
+            value = value shr 10
+            ci.next()
+            i -= 10
+        }
+        value *= Integer.signum(bytes)
+        return java.lang.String.format(Locale.ENGLISH, "%.1f %cб", value / 1024.0, ci.current())
     }
 }
 

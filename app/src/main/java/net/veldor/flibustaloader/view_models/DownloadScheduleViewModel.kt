@@ -9,6 +9,7 @@ import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.interfaces.MyViewModelInterface
 import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
+import net.veldor.flibustaloader.selections.TotalBookDownloadProgress
 
 class DownloadScheduleViewModel(application: Application) : OPDSViewModel(application),
     MyViewModelInterface {
@@ -22,6 +23,8 @@ class DownloadScheduleViewModel(application: Application) : OPDSViewModel(applic
         val schedule: MutableLiveData<ArrayList<BooksDownloadSchedule>> = MutableLiveData()
         val downloadState: MutableLiveData<Boolean> = MutableLiveData(false)
         val liveCurrentBookDownloadProgress: MutableLiveData<CurrentBookDownloadProgress> =
+            MutableLiveData()
+        val liveFullBookDownloadProgress: MutableLiveData<TotalBookDownloadProgress> =
             MutableLiveData()
     }
 }

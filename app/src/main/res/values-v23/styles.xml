@@ -51,4 +51,9 @@
         <!-- loader -->
         <item name="android:windowBackground">@drawable/loader_background_splash</item>
     </style>
+
+    <style name="MyProgressBar" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:progressBackgroundTint">@color/book_name_color</item>
+        <item name="android:progressTint">@color/textColor</item>
+    </style>
 </resources>

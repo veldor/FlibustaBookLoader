@@ -78,4 +78,7 @@
     <style name="preferencesStyle"  parent="Theme.AppCompat.DayNight">
         <item name="android:tint">@color/icon_text_color</item>
     </style>
+
+    <style name="MyProgressBar" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
+    </style>
 </resources>

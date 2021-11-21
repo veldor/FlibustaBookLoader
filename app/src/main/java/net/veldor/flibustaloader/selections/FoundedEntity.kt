@@ -2,9 +2,12 @@ package net.veldor.flibustaloader.selections
 
 import android.graphics.Bitmap
 import java.io.File
-import java.util.ArrayList
+import java.util.*
+import kotlin.random.Random
 
 class FoundedEntity {
+    var selectedForDonwload: Boolean = false
+    val itemId: Long = Random.nextLong(1, Long.MAX_VALUE)
     var filterResult: FilteringResult? = null
     var content: String = ""
     var selected: Boolean = false

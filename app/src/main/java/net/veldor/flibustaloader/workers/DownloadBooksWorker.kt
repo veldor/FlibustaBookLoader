@@ -41,7 +41,6 @@ class DownloadBooksWorker(
         val dao = db.booksDownloadScheduleDao()
         val downloadBooksDao = db.downloadedBooksDao()
         val reDownload = PreferencesHandler.instance.isReDownload
-
         try {
             // получу количество книг на начало скачивания
             var booksCount = dao.queueSize
@@ -71,6 +70,12 @@ class DownloadBooksWorker(
                     downloadStartTime
                 )
                 while (true) {
+                    if (isStopped) {
+                        // немедленно прекращаю работу
+                        NotificationHandler.instance.cancelBookLoadNotification()
+                        App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
+                        return Result.success()
+                    }
                     // получу первый элемент из очереди
                     queuedElement = dao.firstQueuedBook
                     if (queuedElement == null || isStopped) {
@@ -211,6 +216,13 @@ class DownloadBooksWorker(
                     var read: Int
                     val buffer = ByteArray(1024)
                     while (content.read(buffer).also { read = it } > 0) {
+                        if (isStopped) {
+                            NotificationHandler.instance.cancelBookLoadingProgressNotification()
+                            // немедленно прекращаю работу
+                            NotificationHandler.instance.cancelBookLoadNotification()
+                            App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
+                            return false
+                        }
                         out.write(buffer, 0, read)
                         if (PreferencesHandler.instance.showDownloadProgress) {
                             NotificationHandler.instance.createBookLoadingProgressNotification(
@@ -230,6 +242,12 @@ class DownloadBooksWorker(
                             "downloadBook: loaded something with content length ${tempFile.length()} and status ${response.statusLine.statusCode}"
                         )
                         // книга загружена, помещу её в нужную папку и правильно назову
+                        if (isStopped) {
+                            // немедленно прекращаю работу
+                            NotificationHandler.instance.cancelBookLoadNotification()
+                            App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
+                            return false
+                        }
                         LoadedBookHandler().saveBook(book, response, tempFile)
                         book.loaded = true
                         return true

@@ -1,9 +1,13 @@
 package net.veldor.flibustaloader.adapters
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.App
@@ -51,14 +55,14 @@ class BlacklistAdapter(private var mItems: ArrayList<BlacklistItem>) :
     }
 
     fun itemRemoved(item: BlacklistItem?) {
-        if(item != null){
+        if (item != null) {
             var foundedItem: BlacklistItem? = null
             mItems.forEach {
-                if(it.name == item.name && it.type == item.type){
+                if (it.name == item.name && it.type == item.type) {
                     foundedItem = it
                 }
             }
-            if(foundedItem != null){
+            if (foundedItem != null) {
                 notifyItemRemoved(mItems.indexOf(foundedItem))
                 mItems.remove(foundedItem)
             }
@@ -69,6 +73,16 @@ class BlacklistAdapter(private var mItems: ArrayList<BlacklistItem>) :
         mBinding.root
     ) {
         fun bind(item: BlacklistItem) {
+
+            mBinding.root.setOnLongClickListener {
+                val clipboard =
+                    App.instance.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("copied", item.name)
+                clipboard.primaryClip = clip
+                Toast.makeText(App.instance, App.instance.getString(R.string.copied_to_clipboard_message), Toast.LENGTH_SHORT).show()
+                true
+            }
+
             mBinding.setVariable(BR.blacklists, item)
             mBinding.executePendingBindings()
             val container = mBinding.root

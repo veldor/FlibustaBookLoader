@@ -62,6 +62,7 @@ class TestParser(private val text: String) {
                         idFound = true
                     } else if (qName == "title" && foundedEntity != null) {
                         nameFound = true
+                        foundedEntity!!.name = ""
                     } else if (qName == "author" && foundedEntity != null) {
                         authorContainerFound = true
                     } else if (qName == "category" && foundedEntity != null) {
@@ -75,6 +76,9 @@ class TestParser(private val text: String) {
                         genreStringBuilder.append("\n")
                     } else if (qName == "name" && foundedEntity != null && authorContainerFound) {
                         authorFound = true
+                        author = FoundedEntity()
+                        author!!.name = ""
+                        author!!.type = TYPE_AUTHOR
                     } else if (qName == "uri" && foundedEntity != null && authorContainerFound) {
                         authorUriFound = true
                         authorContainerFound = false
@@ -221,6 +225,12 @@ class TestParser(private val text: String) {
                         }
                     } else if (qName.equals("content")) {
                         contentFound = false
+                    }else if (qName.equals("name")) {
+                        authorStringBuilder.append(author!!.name)
+                        authorStringBuilder.append("\n")
+                        authorFound = false
+                    }else if (qName.equals("title")) {
+                        nameFound = false
                     }
                 }
 
@@ -252,19 +262,17 @@ class TestParser(private val text: String) {
                         foundedEntity!!.id = textValue!!
                     }
                     if (nameFound) {
-                        foundedEntity!!.name = String(ch!!, start, length)
-                        nameFound = false
+                        if(ch != null) {
+                            foundedEntity!!.name += String(ch, start, length)
+                        }
                     }
                     if (contentFound) {
                         parseContent(foundedEntity, String(ch!!, start, length))
                     }
                     if (authorFound) {
-                        author = FoundedEntity()
-                        author!!.type = TYPE_AUTHOR
-                        author!!.name = String(ch!!, start, length)
-                        authorStringBuilder.append(author!!.name)
-                        authorStringBuilder.append("\n")
-                        authorFound = false
+                        if(ch != null) {
+                            author!!.name += String(ch, start, length)
+                        }
                     }
                     if (authorUriFound) {
                         author!!.link = String(ch!!, start, length)

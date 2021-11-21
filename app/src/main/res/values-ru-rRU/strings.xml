@@ -55,7 +55,7 @@
     <string name="subscribe_description">Уведомления о подписках</string>
     <string name="subscribes_channel">Подписки</string>
     <string name="discard_favorite_type">Сбросить формат загрузок</string>
-    <string name="book_readed_message">Книга прочитана</string>
+    <string name="book_readed_message">Прочитано</string>
     <string name="book_downloaded_message">Книга скачана</string>
     <string name="remember_format">Запомнить выбранный формат для дальнейших загрузок</string>
     <string name="download_only_this_format">Загружать только в выбранном формате</string>
@@ -277,8 +277,8 @@
     <string name="wait_for_download">В очереди</string>
     <string name="start_download">Начать загрузку</string>
     <string name="details_in_browser_menu">Подробнее в браузере</string>
-    <string name="mark_read">Отметить прочитанной</string>
-    <string name="mark_downloaded">Отметить загруженной</string>
+    <string name="mark_read">Прочитано</string>
+    <string name="mark_downloaded">Загружено</string>
     <string name="share_book">Поделиться ссылкой</string>
     <string name="this_search_not_accepted_message">Поиск по значению возможен только для книг и авторов. Переключите тип поиска</string>
     <string name="share_settings_message">Отправить резервную копию</string>
@@ -307,4 +307,11 @@
     <string name="sequences_and_author_dirs_title">Доп. папки авторов и серий</string>
     <string name="send_log_to_mail_message">Лог на почту</string>
     <string name="load_cancelled_message">Загрузка отменена</string>
+    <string name="copied_to_clipboard_message">Скопировано в буфер обмена</string>
+    <string name="drop_download_queue_title">Отменить и удалить</string>
+    <string name="no_books_for_load">Не выбраны книги для загрузки</string>
+    <string name="select_all_books_title">Выбрать все книги</string>
+    <string name="select_no_books_title">Сбросить выделение</string>
+    <string name="invert_selection_title">Инвертировать выделение</string>
+    <string name="cancel_selection_title">Отменить операцию</string>
 </resources>

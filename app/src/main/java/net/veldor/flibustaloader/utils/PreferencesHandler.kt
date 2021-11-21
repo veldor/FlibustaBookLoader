@@ -37,9 +37,17 @@ class PreferencesHandler private constructor() {
             preferences.edit().putBoolean(PREF_SEQUENCE_IN_BOOK_NAME, state).apply()
         }
 
+    fun isStrictDownloadFormat(): Boolean {
+        return preferences.getBoolean("strict download format", false)
+    }
+    fun setStrictDownloadFormat(value: Boolean){
+        preferences.edit().putBoolean("strict download format", value).apply()
+    }
+
     fun isHideButtons(): Boolean {
         return preferences.getBoolean(PREF_HIDE_BUTTONS, false)
     }
+
     fun isFilterByLongClick(): Boolean {
         return preferences.getBoolean("add to filter on long click", false)
     }

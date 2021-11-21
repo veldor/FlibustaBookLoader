@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -33,6 +34,7 @@ import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.workers.SendLogWorker
 import java.lang.IllegalArgumentException
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
 
 class FoundedItemAdapter(
@@ -47,6 +49,7 @@ class FoundedItemAdapter(
     private var job: Job = Job()
     private var menuClicked: FoundedEntity? = null
     private var centerItemPressed: FoundedEntity? = null
+    private var showCheckboxes = false
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
     private var values: ArrayList<FoundedEntity> = arrayListOf()
@@ -61,11 +64,29 @@ class FoundedItemAdapter(
         return ViewHolder(binding)
     }
 
+    override fun getItemId(position: Int): Long {
+        if (values.size > position) {
+            return values[position].itemId
+        }
+        return -1
+    }
+
+    fun getItemById(id: Long): FoundedEntity? {
+        if (values.isNotEmpty()) {
+            values.forEach {
+                if (it.itemId == id) {
+                    return it
+                }
+            }
+        }
+        return null
+    }
+
     override fun onBindViewHolder(viewHolder: ViewHolder, i: Int) {
         if (i < values.size) {
             viewHolder.bind(values[i])
         } else {
-            if (hasNext) {
+            if (hasNext && !showCheckboxes) {
                 viewHolder.bindButton()
             } else {
                 viewHolder.bindInvisible()
@@ -83,6 +104,7 @@ class FoundedItemAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     fun setContent(newData: ArrayList<FoundedEntity>) {
+        showCheckboxes = false
         Log.d("surprise", "setContent: set content length by ${newData.size}")
         lastSortOption = -1
         values = newData
@@ -100,6 +122,7 @@ class FoundedItemAdapter(
     }
 
     fun appendContent(results: ArrayList<FoundedEntity>) {
+        showCheckboxes = false
         lastSortOption = -1
         val oldLength = values.size
         values.addAll(results)
@@ -128,6 +151,18 @@ class FoundedItemAdapter(
 
         @SuppressLint("NotifyDataSetChanged")
         fun bind(item: FoundedEntity) {
+            if(showCheckboxes && item.type == TYPE_BOOK){
+                binding.selectedForDownload.visibility = View.VISIBLE
+                binding.selectedForDownload.isChecked = item.selectedForDonwload
+                binding.selectedForDownload.setOnClickListener {
+                    Log.d("surprise", "bind: state changed!")
+                    item.selectedForDonwload = (it as CheckBox).isChecked
+                    delegate.itemSelectedForDownload()
+                }
+            }
+            else{
+                binding.selectedForDownload.visibility = View.GONE
+            }
             binding.name.visibility = View.VISIBLE
             binding.rootView.visibility = View.VISIBLE
             this.item = item
@@ -189,8 +224,6 @@ class FoundedItemAdapter(
 //                )
             when (item.type) {
                 TYPE_BOOK -> {
-
-
                     if (PreferencesHandler.instance.isFilterByLongClick()) {
                         binding.name.setOnLongClickListener {
                             Toast.makeText(
@@ -236,8 +269,9 @@ class FoundedItemAdapter(
                             // add sequences to blacklist
                             if (item.sequences.isNotEmpty()) {
                                 item.sequences.forEach {
-                                    val sequenceName = it.name!!.trim().lowercase().substring(17,it.name!!.trim().length - 1)
-                                        BlacklistSequences.instance.addValue(sequenceName)
+                                    val sequenceName = it.name!!.trim().lowercase()
+                                        .substring(17, it.name!!.trim().length - 1)
+                                    BlacklistSequences.instance.addValue(sequenceName)
                                     Toast.makeText(
                                         App.instance,
                                         "Добавляю серию в ЧС: $sequenceName",
@@ -555,7 +589,10 @@ class FoundedItemAdapter(
                                 "Добавляю жанр в ЧС: ${item.name}",
                                 Toast.LENGTH_SHORT
                             ).show()
-                            Log.d("surprise", "bind: add to blacklist '${item.name!!.trim().lowercase()}'")
+                            Log.d(
+                                "surprise",
+                                "bind: add to blacklist '${item.name!!.trim().lowercase()}'"
+                            )
                             BlacklistGenres.instance.addValue(item.name!!.trim().lowercase())
                             applyFilters()
                             return@setOnLongClickListener true
@@ -670,6 +707,8 @@ class FoundedItemAdapter(
         }
 
         fun bindButton() {
+            binding.rightActionBtn.visibility = View.GONE
+            binding.leftActionBtn.visibility = View.GONE
             binding.rootView.visibility = View.VISIBLE
             binding.centerActionBtn.visibility = View.VISIBLE
             binding.centerActionBtn.setTextColor(
@@ -752,11 +791,11 @@ class FoundedItemAdapter(
             }
         }
         if (position >= 0 && values.size > position) {
-            if (PreferencesHandler.instance.isHideRead) {
+            if (PreferencesHandler.instance.isHideRead && book.read) {
                 values.removeAt(position)
                 notifyItemRemoved(position)
             } else {
-                values[position].read = true
+                values[position].read = book.read
                 notifyItemChanged(position)
             }
         }
@@ -770,11 +809,11 @@ class FoundedItemAdapter(
             }
         }
         if (position >= 0 && values.size > position) {
-            if (PreferencesHandler.instance.isHideDownloaded) {
+            if (PreferencesHandler.instance.isHideDownloaded && book.downloaded) {
                 values.removeAt(position)
                 notifyItemRemoved(position)
             } else {
-                values[position].downloaded = true
+                values[position].downloaded = book.downloaded
                 notifyItemChanged(position)
             }
         }
@@ -813,9 +852,9 @@ class FoundedItemAdapter(
         return menuClicked
     }
 
-    fun getClickedItem(): Int {
+    fun getClickedItemId(): Long {
         if (centerItemPressed != null) {
-            return values.indexOf(centerItemPressed)
+            return centerItemPressed!!.itemId
         }
         return -1
     }
@@ -832,10 +871,19 @@ class FoundedItemAdapter(
         hasNext = isNext
     }
 
-    fun markClickedElement(clickedElementIndex: Int) {
-        if (clickedElementIndex < values.size) {
-            values[clickedElementIndex].selected = true
-            notifyItemChanged(clickedElementIndex)
+    fun markClickedElement(clickedElementIndex: Long) {
+        if(values.isNotEmpty()){
+            values.forEach {
+                if(it.selected){
+                    it.selected = false
+                    notifyItemChanged(getItemPositionById(it.itemId))
+                }
+            }
+            val position = getItemPositionById(clickedElementIndex)
+            if(position >= 0){
+                values[position].selected = true
+                notifyItemChanged(position)
+            }
         }
     }
 
@@ -860,16 +908,99 @@ class FoundedItemAdapter(
         }
     }
 
-    private fun applyFilters() {
+    fun applyFilters(): IntArray {
+        var appended = 0
+        var filtered = 0
+        val result = IntArray(2)
         val iterator = values.iterator()
+        val db = App.instance.mDatabase
         while (iterator.hasNext()) {
             val item = iterator.next()
+            item.read =
+                db.readBooksDao().getBookById(item.id) != null
+            item.downloaded =
+                db.downloadedBooksDao().getBookById(item.id) != null
             if (!Filter.check(item).result) {
                 // remove item from list
                 val itemIndex = values.indexOf(item)
                 iterator.remove()
                 notifyItemRemoved(itemIndex)
+                ++filtered
+            } else {
+                ++appended
             }
+        }
+        result[0] = appended
+        result[1] = filtered
+        return result
+    }
+
+    fun getItemPositionById(clickedItemId: Long): Int {
+        if (values.isNotEmpty()) {
+            values.forEach {
+                if (it.itemId == clickedItemId) {
+                    return values.indexOf(it)
+                }
+            }
+        }
+        return -1
+    }
+
+    fun showCheckboxes() {
+        showCheckboxes = true
+        if(values.isNotEmpty()){
+            values.forEach {
+                it.selectedForDonwload = false
+            }
+        }
+        notifyItemRangeChanged(0, values.size)
+    }
+
+    fun getSelectedForDownload(): ArrayList<FoundedEntity> {
+        val result = ArrayList<FoundedEntity>()
+        if(values.isNotEmpty()){
+            values.forEach {
+                if(it.selectedForDonwload){
+                    result.add(it)
+                }
+            }
+        }
+        return result
+    }
+
+    fun selectAllForDownload() {
+        if(values.isNotEmpty()){
+            values.forEach {
+                it.selectedForDonwload = true
+            }
+            notifyItemRangeChanged(0, values.size)
+            delegate.itemSelectedForDownload()
+        }
+    }
+
+    fun selectNothingForDownload() {
+        if(values.isNotEmpty()){
+            values.forEach {
+                it.selectedForDonwload = false
+            }
+            notifyItemRangeChanged(0, values.size)
+            delegate.itemSelectedForDownload()
+        }
+    }
+    fun invertSelectionForDownload() {
+        if(values.isNotEmpty()){
+            values.forEach {
+                it.selectedForDonwload = !it.selectedForDonwload
+            }
+            notifyItemRangeChanged(0, values.size)
+            delegate.itemSelectedForDownload()
+        }
+    }
+
+    fun cancelDownloadSelection() {
+        if(showCheckboxes){
+            showCheckboxes = false
+            notifyItemRangeChanged(0, values.size)
         }
     }
 

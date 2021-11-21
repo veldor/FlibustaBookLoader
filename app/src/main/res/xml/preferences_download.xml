@@ -18,6 +18,12 @@
             app:key="download auto start" />
         <SwitchPreferenceCompat
             android:defaultValue="false"
+            android:summaryOff="При недоступности книги в выбранном формате- она будет загружена в доступном"
+            android:summaryOn="Книги загружаются строго в выбранном формате"
+            android:title="Только выбранный формат"
+            app:key="strict download format" />
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
             android:summaryOff="Уведомление прогресса загрузки книги не отображается"
             android:summaryOn="Будет показано уведомление с деталями загрузки книги"
             android:title="Прогресс загрузки книги"

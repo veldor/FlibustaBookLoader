@@ -1,6 +1,7 @@
 package net.veldor.flibustaloader.database.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import net.veldor.flibustaloader.database.entity.ReadedBooks
@@ -15,4 +16,6 @@ interface ReadedBooksDao {
 
     @Insert
     fun insert(book: ReadedBooks?)
+    @Delete
+    fun delete(book: ReadedBooks?)
 }

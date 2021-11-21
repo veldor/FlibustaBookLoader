@@ -338,4 +338,11 @@
     <string name="send_log_to_mail_message">log to mail</string>
     <string name="zero" translatable="false">0</string>
     <string name="load_cancelled_message">Content load cancelling</string>
+    <string name="copied_to_clipboard_message">Copied to clipboard</string>
+    <string name="drop_download_queue_title">Drop download queue</string>
+    <string name="select_all_books_title">Select all</string>
+    <string name="select_no_books_title">Select no one book</string>
+    <string name="invert_selection_title">Invert book selection</string>
+    <string name="cancel_selection_title">Cancel selection</string>
+    <string name="no_books_for_load">No books selected for load</string>
 </resources>

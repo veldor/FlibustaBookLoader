@@ -67,6 +67,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     View.OnCreateContextMenuListener,
     ResultsReceivedDelegate {
 
+    private var showDownloadSelectedMenu: Boolean = false
+    private var downloadSelectedSnackbar: Snackbar? = null
     private var filteredItems: ArrayList<FoundedEntity>? = arrayListOf()
     private lateinit var binding: FragmentOpdsBinding
     lateinit var viewModel: OPDSViewModel
@@ -161,7 +163,11 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         binding.statusWrapper.setOutAnimation(requireContext(), android.R.anim.slide_out_right)
 
         binding.fab.setOnClickListener {
-            Toast.makeText(requireContext(), getString(R.string.load_cancelled_message), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.load_cancelled_message),
+                Toast.LENGTH_SHORT
+            ).show()
             viewModel.cancelLoad()
             binding.fab.visibility = View.GONE
             binding.progressBar.visibility = View.GONE
@@ -219,7 +225,9 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             load("3", "/opds/sequencesindex", false, addToHistory = true, -1)
             showLoadWaiter()
         }
-        binding.resultsList.adapter = FoundedItemAdapter(arrayListOf(), this)
+        val a = FoundedItemAdapter(arrayListOf(), this)
+        a.setHasStableIds(true)
+        binding.resultsList.adapter = a
 //        binding.resultsList.recycledViewPool.setMaxRecycledViews(0, 0);
 //        binding.resultsList.setItemViewCacheSize(50);
 //        binding.resultsList.setDrawingCacheEnabled(true);
@@ -244,22 +252,19 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         if (adapter != null) {
                             val position = manager.findLastCompletelyVisibleItemPosition()
                             viewModel.saveScrolledPosition(position)
-                            if (
-                                !viewModel.loadInProgress() &&
-                                position == adapter.itemCount - 1 &&
-                                position > lastScrolled &&
-                                !PreferencesHandler.instance.isShowLoadMoreBtn() &&
-                                PreferencesHandler.instance.opdsPagedResultsLoad && sNextPage != null
-                                && (binding.resultsList.adapter as FoundedItemAdapter).hasBooks()
-                            ) {
-                                // подгружу результаты
-                                Log.d(
-                                    "surprise",
-                                    "onScrollStateChanged: load activated by scroll listener"
-                                )
-                                load("4", sNextPage!!, append = true, addToHistory = false, -1)
+                            if (!showDownloadSelectedMenu) {
+                                if (
+                                    !viewModel.loadInProgress() &&
+                                    position == adapter.itemCount - 1 &&
+                                    position > lastScrolled &&
+                                    !PreferencesHandler.instance.isShowLoadMoreBtn() &&
+                                    PreferencesHandler.instance.opdsPagedResultsLoad && sNextPage != null
+                                    && (binding.resultsList.adapter as FoundedItemAdapter).hasBooks()
+                                ) {
+                                    load("4", sNextPage!!, append = true, addToHistory = false, -1)
+                                }
+                                lastScrolled = position
                             }
-                            lastScrolled = position
                         }
                     }
                 }
@@ -316,6 +321,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 }
             }
         }
+
         binding.showAllSwitcher.isChecked = PreferencesHandler.instance.opdsPagedResultsLoad
         binding.showAllSwitcher.setOnCheckedChangeListener { _: CompoundButton?, _: Boolean ->
             PreferencesHandler.instance.opdsPagedResultsLoad =
@@ -329,13 +335,17 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 viewModel.downloadAll(
                     (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                     favoriteFormat,
-                    false,
-                    strictFormat = true,
+                    PreferencesHandler.instance.isReDownload,
+                    strictFormat = PreferencesHandler.instance.isStrictDownloadFormat(),
                     delegate = this,
                     userSequenceName = null
                 )
             } else {
-                selectBookTypeDialog(false, null)
+                selectBookTypeDialog(
+                    (binding.resultsList.adapter as FoundedItemAdapter).getList(),
+                    false,
+                    null
+                )
             }
             binding.floatingMenu.close(true)
         }
@@ -351,18 +361,48 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                     favoriteFormat,
                     true,
-                    strictFormat = true,
+                    strictFormat = PreferencesHandler.instance.isStrictDownloadFormat(),
                     delegate = this,
                     userSequenceName = null
                 )
             } else {
                 // покажу диалог выбора предпочтительнго типа скачивания
-                selectBookTypeDialog(true, null)
+                selectBookTypeDialog(
+                    (binding.resultsList.adapter as FoundedItemAdapter).getList(),
+                    true,
+                    null
+                )
             }
             binding.floatingMenu.close(true)
         }
         binding.fabDownloadSelected.setOnClickListener {
-            Toast.makeText(requireContext(), "В разработке", Toast.LENGTH_LONG).show()
+            binding.floatingMenu.close(true)
+            (binding.resultsList.adapter as FoundedItemAdapter).showCheckboxes()
+            downloadSelectedSnackbar =
+                Snackbar.make(binding.rootView, "Выбрано книг: 0", Snackbar.LENGTH_INDEFINITE)
+            downloadSelectedSnackbar?.setAction("Скачать") {
+                val booksForDownload =
+                    (binding.resultsList.adapter as FoundedItemAdapter).getSelectedForDownload()
+                val favoriteFormat = PreferencesHandler.instance.favoriteMime
+                if (favoriteFormat != null && favoriteFormat.isNotEmpty()) {
+                    viewModel.downloadAll(
+                        booksForDownload,
+                        favoriteFormat,
+                        PreferencesHandler.instance.isReDownload,
+                        strictFormat = PreferencesHandler.instance.isStrictDownloadFormat(),
+                        delegate = this,
+                        userSequenceName = null
+                    )
+                } else {
+                    selectBookTypeDialog(booksForDownload, false, null)
+                }
+                (binding.resultsList.adapter as FoundedItemAdapter).cancelDownloadSelection()
+                showDownloadSelectedMenu = false
+                requireActivity().invalidateOptionsMenu()
+            }
+            downloadSelectedSnackbar?.show()
+            showDownloadSelectedMenu = true
+            requireActivity().invalidateOptionsMenu()
         }
     }
 
@@ -390,13 +430,17 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     viewModel.downloadAll(
                         (binding.resultsList.adapter as FoundedItemAdapter).getList(),
                         favoriteFormat,
-                        false,
-                        strictFormat = true,
+                        PreferencesHandler.instance.isReDownload,
+                        strictFormat = PreferencesHandler.instance.isStrictDownloadFormat(),
                         this,
                         text
                     )
                 } else {
-                    selectBookTypeDialog(false, text)
+                    selectBookTypeDialog(
+                        (binding.resultsList.adapter as FoundedItemAdapter).getList(),
+                        false,
+                        text
+                    )
                 }
             } else {
                 Toast.makeText(
@@ -483,109 +527,114 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
     @SuppressLint("RestrictedApi", "DiscouragedPrivateApi")
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        requireActivity().menuInflater.inflate(R.menu.odps_menu, menu)
 
-        // добавлю обработку поиска
-        val searchMenuItem = menu.findItem(R.id.action_search)
-        mSearchView = searchMenuItem.actionView as SearchView
-        if (mSearchView != null) {
-            if (PreferencesHandler.instance.isEInk) {
-                val colorFilter = PorterDuffColorFilter(
-                    ResourcesCompat.getColor(resources, R.color.black, null),
-                    PorterDuff.Mode.MULTIPLY
-                )
-                mSearchView!!.queryHint = ""
-                mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
-                    ?.setTextColor(Color.BLACK)
-                mSearchView!!.findViewById<ImageView>(androidx.appcompat.R.id.search_button)
-                    ?.colorFilter = colorFilter
-                mSearchView!!.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
-                    ?.colorFilter = colorFilter
+        if (showDownloadSelectedMenu) {
+            requireActivity().menuInflater.inflate(R.menu.download_selected_menu, menu)
+        } else {
+            requireActivity().menuInflater.inflate(R.menu.odps_menu, menu)
 
-                val mCursorDrawableRes: Field =
-                    TextView::class.java.getDeclaredField("mCursorDrawableRes")
-                mCursorDrawableRes.isAccessible = true
-                mCursorDrawableRes.set(
-                    mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text),
-                    R.drawable.cursor
-                )
+            // добавлю обработку поиска
+            val searchMenuItem = menu.findItem(R.id.action_search)
+            mSearchView = searchMenuItem.actionView as SearchView
+            if (mSearchView != null) {
+                if (PreferencesHandler.instance.isEInk) {
+                    val colorFilter = PorterDuffColorFilter(
+                        ResourcesCompat.getColor(resources, R.color.black, null),
+                        PorterDuff.Mode.MULTIPLY
+                    )
+                    mSearchView!!.queryHint = ""
+                    mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
+                        ?.setTextColor(Color.BLACK)
+                    mSearchView!!.findViewById<ImageView>(androidx.appcompat.R.id.search_button)
+                        ?.colorFilter = colorFilter
+                    mSearchView!!.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
+                        ?.colorFilter = colorFilter
 
-                val myItem = menu.findItem(R.id.action_sort_by)
-                myItem?.icon?.colorFilter = colorFilter
+                    val mCursorDrawableRes: Field =
+                        TextView::class.java.getDeclaredField("mCursorDrawableRes")
+                    mCursorDrawableRes.isAccessible = true
+                    mCursorDrawableRes.set(
+                        mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text),
+                        R.drawable.cursor
+                    )
 
-                mSearchView?.setOnQueryTextFocusChangeListener { _, hasFocus ->
-                    if (hasFocus) {
-                        Log.d("surprise", "onCreateOptionsMenu: have focus")
-                        binding.preferencesGroup.visibility = View.VISIBLE
-                    } else {
-                        binding.preferencesGroup.visibility = View.GONE
+                    val myItem = menu.findItem(R.id.action_sort_by)
+                    myItem?.icon?.colorFilter = colorFilter
+
+                    mSearchView?.setOnQueryTextFocusChangeListener { _, hasFocus ->
+                        if (hasFocus) {
+                            Log.d("surprise", "onCreateOptionsMenu: have focus")
+                            binding.preferencesGroup.visibility = View.VISIBLE
+                        } else {
+                            binding.preferencesGroup.visibility = View.GONE
+                        }
                     }
+                } else {
+                    mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
+                        ?.setTextColor(Color.WHITE)
                 }
-            } else {
-                mSearchView!!.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
-                    ?.setTextColor(Color.WHITE)
+                mSearchView!!.inputType = InputType.TYPE_CLASS_TEXT
+                val size = Point()
+                requireActivity().windowManager.defaultDisplay.getSize(size)
+                mSearchView!!.maxWidth = size.x - 340
+                mSearchView!!.setOnQueryTextListener(this)
+                mSearchView!!.setOnSuggestionListener(object : SearchView.OnSuggestionListener {
+                    override fun onSuggestionSelect(i: Int): Boolean {
+                        return true
+                    }
+
+                    override fun onSuggestionClick(i: Int): Boolean {
+                        val value = autocompleteStrings[i]
+                        mSearchView!!.setQuery(value, false)
+                        return true
+                    }
+                })
+                mSearchAutoComplete = mSearchView!!.findViewById(R.id.search_src_text)!!
+                mSearchAutoComplete.setDropDownBackgroundResource(R.color.background_color)
+                mSearchAutoComplete.threshold = 0
+                mSearchAutoComplete.dropDownHeight = ViewGroup.LayoutParams.WRAP_CONTENT
+                mSearchAdapter =
+                    ArrayAdapter(
+                        requireContext(),
+                        android.R.layout.simple_list_item_1,
+                        autocompleteStrings
+                    )
+                mSearchAutoComplete.setAdapter(mSearchAdapter)
             }
-            mSearchView!!.inputType = InputType.TYPE_CLASS_TEXT
-            val size = Point()
-            requireActivity().windowManager.defaultDisplay.getSize(size)
-            mSearchView!!.maxWidth = size.x - 340
-            mSearchView!!.setOnQueryTextListener(this)
-            mSearchView!!.setOnSuggestionListener(object : SearchView.OnSuggestionListener {
-                override fun onSuggestionSelect(i: Int): Boolean {
-                    return true
-                }
+            var myItem = menu.findItem(R.id.menuUseDarkMode)
+            myItem.isChecked = PreferencesHandler.instance.nightMode
 
-                override fun onSuggestionClick(i: Int): Boolean {
-                    val value = autocompleteStrings[i]
-                    mSearchView!!.setQuery(value, false)
-                    return true
-                }
-            })
-            mSearchAutoComplete = mSearchView!!.findViewById(R.id.search_src_text)!!
-            mSearchAutoComplete.setDropDownBackgroundResource(R.color.background_color)
-            mSearchAutoComplete.threshold = 0
-            mSearchAutoComplete.dropDownHeight = ViewGroup.LayoutParams.WRAP_CONTENT
-            mSearchAdapter =
-                ArrayAdapter(
-                    requireContext(),
-                    android.R.layout.simple_list_item_1,
-                    autocompleteStrings
-                )
-            mSearchAutoComplete.setAdapter(mSearchAdapter)
+
+            // обработаю переключатель быстрой загрузки
+            myItem = menu.findItem(R.id.discardFavoriteType)
+            myItem.isEnabled = PreferencesHandler.instance.favoriteMime != null
+
+            // обработаю переключатель загрузки всех результатов поиска книг
+            myItem = menu.findItem(R.id.menuLoadAllBooks)
+            myItem.isChecked = PreferencesHandler.instance.opdsPagedResultsLoad
+
+            // переключатель превью обложек
+            myItem = menu.findItem(R.id.showPreviews)
+            myItem.isChecked = PreferencesHandler.instance.isPreviews
+
+            // обработаю переключатель скрытия прочтённых книг
+            val hideReadSwitcher = menu.findItem(R.id.hideReadSwitcher)
+            hideReadSwitcher.isChecked = PreferencesHandler.instance.isHideRead
+            myItem = menu.findItem(R.id.hideDigests)
+            myItem.isChecked = PreferencesHandler.instance.isHideDigests
+            myItem = menu.findItem(R.id.hideDownloadedSwitcher)
+            myItem.isChecked = PreferencesHandler.instance.isHideDownloaded
+            myItem = menu.findItem(R.id.menuCreateAuthorDir)
+            myItem.isChecked = PreferencesHandler.instance.isCreateAuthorsDir()
+            myItem = menu.findItem(R.id.menuCreateSequenceDir)
+            myItem.isChecked = PreferencesHandler.instance.isCreateSequencesDir()
+            myItem = menu.findItem(R.id.useFilter)
+            myItem.isChecked = PreferencesHandler.instance.isUseFilter
+            myItem = menu.findItem(R.id.menuCreateAdditionalDirs)
+            myItem.isChecked = PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()
+            myItem = menu.findItem(R.id.loadSequencesToAuthorDir)
+            myItem.isChecked = PreferencesHandler.instance.isLoadSequencesInAuthorDir()
         }
-        var myItem = menu.findItem(R.id.menuUseDarkMode)
-        myItem.isChecked = PreferencesHandler.instance.nightMode
-
-
-        // обработаю переключатель быстрой загрузки
-        myItem = menu.findItem(R.id.discardFavoriteType)
-        myItem.isEnabled = PreferencesHandler.instance.favoriteMime != null
-
-        // обработаю переключатель загрузки всех результатов поиска книг
-        myItem = menu.findItem(R.id.menuLoadAllBooks)
-        myItem.isChecked = PreferencesHandler.instance.opdsPagedResultsLoad
-
-        // переключатель превью обложек
-        myItem = menu.findItem(R.id.showPreviews)
-        myItem.isChecked = PreferencesHandler.instance.isPreviews
-
-        // обработаю переключатель скрытия прочтённых книг
-        val hideReadSwitcher = menu.findItem(R.id.hideReadSwitcher)
-        hideReadSwitcher.isChecked = PreferencesHandler.instance.isHideRead
-        myItem = menu.findItem(R.id.hideDigests)
-        myItem.isChecked = PreferencesHandler.instance.isHideDigests
-        myItem = menu.findItem(R.id.hideDownloadedSwitcher)
-        myItem.isChecked = PreferencesHandler.instance.isHideDownloaded
-        myItem = menu.findItem(R.id.menuCreateAuthorDir)
-        myItem.isChecked = PreferencesHandler.instance.isCreateAuthorsDir()
-        myItem = menu.findItem(R.id.menuCreateSequenceDir)
-        myItem.isChecked = PreferencesHandler.instance.isCreateSequencesDir()
-        myItem = menu.findItem(R.id.useFilter)
-        myItem.isChecked = PreferencesHandler.instance.isUseFilter
-        myItem = menu.findItem(R.id.menuCreateAdditionalDirs)
-        myItem.isChecked = PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()
-        myItem = menu.findItem(R.id.loadSequencesToAuthorDir)
-        myItem.isChecked = PreferencesHandler.instance.isLoadSequencesInAuthorDir()
     }
 
     private fun selectSorting() {
@@ -766,6 +815,25 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             }
             return true
         }
+        if (id == R.id.actionSelectAll) {
+            (binding.resultsList.adapter as FoundedItemAdapter).selectAllForDownload()
+            return true
+        }
+        if (id == R.id.actionSelectNothing) {
+            (binding.resultsList.adapter as FoundedItemAdapter).selectNothingForDownload()
+            return true
+        }
+        if (id == R.id.actionInvert) {
+            (binding.resultsList.adapter as FoundedItemAdapter).invertSelectionForDownload()
+            return true
+        }
+        if (id == R.id.actionCancel) {
+            (binding.resultsList.adapter as FoundedItemAdapter).cancelDownloadSelection()
+            downloadSelectedSnackbar?.dismiss()
+            showDownloadSelectedMenu = false
+            requireActivity().invalidateOptionsMenu()
+            return true
+        }
         return super.onOptionsItemSelected(item)
     }
 
@@ -811,13 +879,18 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
 
-    private fun selectBookTypeDialog(onlyNotLoaded: Boolean, userSequenceName: String?) {
-        Log.d("surprise", "selectBookTypeDialog: showing dialog")
+    private fun selectBookTypeDialog(
+        booksList: ArrayList<FoundedEntity>,
+        onlyNotLoaded: Boolean,
+        userSequenceName: String?
+    ) {
         val inflate = layoutInflater
         @SuppressLint("InflateParams") val view =
             inflate.inflate(R.layout.confirm_book_type_select, null)
-        val checker: SwitchCompat = view.findViewById(R.id.reDownload)
+        var checker: SwitchCompat = view.findViewById(R.id.reDownload)
         checker.isChecked = PreferencesHandler.instance.isReDownload
+        checker = view.findViewById(R.id.onlyThisType)
+        checker.isChecked = PreferencesHandler.instance.isStrictDownloadFormat()
         val dialogBuilder = AlertDialog.Builder(requireContext())
         dialogBuilder.setTitle("Выберите формат скачивания")
             .setItems(MimeTypes.MIMES_LIST) { dialogInterface: DialogInterface, i: Int ->
@@ -837,11 +910,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 }
                 switcher = dialog.findViewById(R.id.reDownload)
                 PreferencesHandler.instance.isReDownload = switcher.isChecked
+                switcher = dialog.findViewById(R.id.onlyThisType)
+                PreferencesHandler.instance.setStrictDownloadFormat(switcher.isChecked)
                 viewModel.downloadAll(
-                    (binding.resultsList.adapter as FoundedItemAdapter).getList(),
+                    booksList,
                     MimeTypes.getFullMime(MimeTypes.MIMES_LIST[i])!!,
                     onlyNotLoaded,
-                    dialog.findViewById<SwitchCompat>(R.id.onlyThisType).isChecked,
+                    strictFormat = PreferencesHandler.instance.isStrictDownloadFormat(),
                     this,
                     userSequenceName
                 )
@@ -1002,7 +1077,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 sequences[i].link!!,
                 append = false,
                 addToHistory = true,
-                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem()
+                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
             )
         }
         dialogBuilder.show()
@@ -1037,7 +1112,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 "15", url,
                 append = false,
                 addToHistory = true,
-                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem()
+                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
             )
             showLoadWaiter()
         }
@@ -1127,7 +1202,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             "По жанру",
             "По автору",
             "Скачано",
-            "Прочитано"
+            "Прочитано",
+            "По формату"
         )
         private val authorSortOptions = arrayOf(
             "По имени автора от А",
@@ -1182,7 +1258,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     item.link!!,
                     append = false,
                     addToHistory = true,
-                    (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem()
+                    (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
                 )
                 showLoadWaiter()
             }
@@ -1239,16 +1315,15 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             R.id.markRead -> {
                 val entity = (binding.resultsList.adapter as FoundedItemAdapter).getContentItem()
                 if (entity != null) {
-                    viewModel.setBookRead(entity)
-                    entity.read = true
+                    entity.read = viewModel.setBookRead(entity)
                     (binding.resultsList.adapter as FoundedItemAdapter).bookRead(entity)
                 }
             }
             R.id.markDownloaded -> {
                 val entity = (binding.resultsList.adapter as FoundedItemAdapter).getContentItem()
                 if (entity != null) {
-                    viewModel.setBookDownloaded(entity)
-                    entity.downloaded = true
+
+                    entity.downloaded = viewModel.setBookDownloaded(entity)
                     (binding.resultsList.adapter as FoundedItemAdapter).bookDownloaded(entity)
                 }
             }
@@ -1286,7 +1361,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     item.link!!,
                     append = false,
                     addToHistory = true,
-                    (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem()
+                    (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
                 )
                 showLoadWaiter()
             }
@@ -1335,7 +1410,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 item.sequences[0].link!!,
                 append = false,
                 addToHistory = true,
-                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem()
+                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
             )
         } else {
             showSelectSequenceFromList(item.sequences)
@@ -1363,6 +1438,12 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         }
     }
 
+    override fun itemSelectedForDownload() {
+        val readyForDownload =
+            (binding.resultsList.adapter as FoundedItemAdapter).getSelectedForDownload()
+        downloadSelectedSnackbar?.setText("Выбрано для загрузки: ${readyForDownload.size}")
+    }
+
     private fun hideKeyboard(view: View) {
         val inputMethodManager =
             requireActivity().getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -1374,8 +1455,14 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         link: String,
         append: Boolean,
         addToHistory: Boolean,
-        clickedElementIndex: Int
+        clickedElementIndex: Long
     ) {
+        if (showDownloadSelectedMenu) {
+            (binding.resultsList.adapter as FoundedItemAdapter).cancelDownloadSelection()
+            downloadSelectedSnackbar?.dismiss()
+            showDownloadSelectedMenu = false
+            requireActivity().invalidateOptionsMenu()
+        }
         if (!append) {
             // save results to history
             val historyItem = HistoryItem(
@@ -1415,23 +1502,29 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     override fun booksAdded(count: Int) {
-        val snackbar = Snackbar.make(
-            binding.root,
-            "Скачиваю книг $count",
-            Snackbar.LENGTH_LONG
-        )
-        snackbar.setAction(getString(R.string.title_activity_download_schedule)) {
-            val intent = Intent(requireContext(), DownloadScheduleActivity::class.java)
-            requireActivity().startActivity(intent)
-        }
-        snackbar.setActionTextColor(
-            ResourcesCompat.getColor(
-                resources,
-                android.R.color.white,
-                null
+        Log.d("surprise", "booksAdded: books added $count")
+        if(count > 0){
+            val snackbar = Snackbar.make(
+                binding.root,
+                "Скачиваю книг $count",
+                Snackbar.LENGTH_LONG
             )
-        )
-        snackbar.show()
+            snackbar.setAction(getString(R.string.title_activity_download_schedule)) {
+                val intent = Intent(requireContext(), DownloadScheduleActivity::class.java)
+                requireActivity().startActivity(intent)
+            }
+            snackbar.setActionTextColor(
+                ResourcesCompat.getColor(
+                    resources,
+                    android.R.color.white,
+                    null
+                )
+            )
+            snackbar.show()
+        }
+        else{
+            Toast.makeText(requireContext(), getString(R.string.no_books_for_load), Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun resultsReceived(results: SearchResult) {
@@ -1470,7 +1563,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 viewModel.saveLoaded(
                     HistoryItem(
                         sNextPage,
-                        (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem(),
+                        (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId(),
                         binding.resultsCount.text.toString().toInt(),
                         binding.filteredCount.text.toString().toInt(),
                         (binding.resultsList.adapter as FoundedItemAdapter).getList()
@@ -1492,7 +1585,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 viewModel.saveLoaded(
                     HistoryItem(
                         sNextPage,
-                        (binding.resultsList.adapter as FoundedItemAdapter).getClickedItem(),
+                        (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId(),
                         binding.resultsCount.text.toString().toInt(),
                         binding.filteredCount.text.toString().toInt(),
                         (binding.resultsList.adapter as FoundedItemAdapter).getList()
@@ -1509,6 +1602,12 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     fun loadFromHistory(lastPage: HistoryItem) {
+        if (showDownloadSelectedMenu) {
+            (binding.resultsList.adapter as FoundedItemAdapter).cancelDownloadSelection()
+            downloadSelectedSnackbar?.dismiss()
+            showDownloadSelectedMenu = false
+            requireActivity().invalidateOptionsMenu()
+        }
         binding.resultsCount.visibility = View.VISIBLE
         binding.filteredCount.visibility = View.VISIBLE
         PicHandler.dropPreviousLoading()
@@ -1520,15 +1619,23 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(true)
         }
         (binding.resultsList.adapter as FoundedItemAdapter).setContent(lastPage.results)
+        val appendResult = (binding.resultsList.adapter as FoundedItemAdapter).applyFilters()
         if (lastPage.clickedItem >= 0) {
-            binding.resultsList.scrollToPosition(lastPage.clickedItem)
-            (binding.resultsList.adapter as FoundedItemAdapter).markClickedElement(lastPage.clickedItem)
-        }
-        else{
+            Log.d("surprise", "loadFromHistory: clicked item id is ${lastPage.clickedItem}")
+            val position =
+                (binding.resultsList.adapter as FoundedItemAdapter).getItemPositionById(lastPage.clickedItem)
+            if (position >= 0) {
+                Log.d("surprise", "loadFromHistory: founded position is $position")
+                binding.resultsList.scrollToPosition(position)
+                (binding.resultsList.adapter as FoundedItemAdapter).markClickedElement(lastPage.clickedItem)
+            } else {
+                binding.resultsList.layoutManager!!.scrollToPosition(viewModel.getScrolledPosition())
+            }
+        } else {
             binding.resultsList.layoutManager!!.scrollToPosition(viewModel.getScrolledPosition())
         }
-        binding.resultsCount.text = lastPage.loadedValues.toString()
-        binding.filteredCount.text = lastPage.filteredValues.toString()
+        binding.resultsCount.text = appendResult[0].toString()
+        binding.filteredCount.text = (lastPage.filteredValues + appendResult[1]).toString()
         if ((binding.resultsList.adapter as FoundedItemAdapter).hasBooks()) {
             binding.floatingMenu.visibility = View.VISIBLE
         } else {

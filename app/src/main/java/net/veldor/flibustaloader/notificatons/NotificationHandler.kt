@@ -19,6 +19,7 @@ import net.veldor.flibustaloader.receivers.BookActionReceiver
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver
 import net.veldor.flibustaloader.receivers.MiscActionsReceiver
 import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
+import net.veldor.flibustaloader.selections.TotalBookDownloadProgress
 import net.veldor.flibustaloader.ui.DownloadScheduleActivity
 import net.veldor.flibustaloader.ui.MainActivity
 import net.veldor.flibustaloader.ui.SubscriptionsActivity
@@ -397,6 +398,10 @@ class NotificationHandler private constructor(private var context: Context) {
         }
 
     fun updateDownloadProgress(mBooksCount: Int, currentDownload: Int, beginningTime: Long) {
+        val progress = TotalBookDownloadProgress()
+        progress.total = mBooksCount
+        progress.loaded = currentDownload
+        DownloadScheduleViewModel.liveFullBookDownloadProgress.postValue(progress)
         val left = System.currentTimeMillis() - beginningTime
         val forBook = left / currentDownload
         (mBooksCount - currentDownload) * forBook / 1000
@@ -559,6 +564,8 @@ class NotificationHandler private constructor(private var context: Context) {
             (timeLeftInSeconds % 60).toString() + " сек."
         }
         val progress = CurrentBookDownloadProgress()
+        progress.fullSize = contentLength
+        progress.loadedSize = loaded
         progress.timeLeft = textLeft
         progress.percentDone = percentDone
         DownloadScheduleViewModel.liveCurrentBookDownloadProgress.postValue(progress)

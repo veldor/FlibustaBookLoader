@@ -121,6 +121,9 @@ class SubscriptionsResultFragment : Fragment(), FoundedItemActionDelegate {
 
     }
 
+    override fun itemSelectedForDownload() {
+    }
+
     private fun showDownloadsDialog(downloadLinks: ArrayList<DownloadLink>) {
         val inflate = layoutInflater
         @SuppressLint("InflateParams") val view =

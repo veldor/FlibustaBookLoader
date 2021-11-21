@@ -104,16 +104,28 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         shareLink(mWebView.url)
     }
 
-    fun setBookRead(book: FoundedEntity) {
+    fun setBookRead(book: FoundedEntity): Boolean {
         val readedBook = ReadedBooks()
         readedBook.bookId = book.id!!
-        App.instance.mDatabase.readBooksDao().insert(readedBook)
+        return if (book.read) {
+            App.instance.mDatabase.readBooksDao().delete(readedBook)
+            false
+        } else {
+            App.instance.mDatabase.readBooksDao().insert(readedBook)
+            true
+        }
     }
 
-    fun setBookDownloaded(book: FoundedEntity) {
+    fun setBookDownloaded(book: FoundedEntity): Boolean {
         val downloadedBook = DownloadedBooks()
         downloadedBook.bookId = book.id!!
-        App.instance.mDatabase.downloadedBooksDao().insert(downloadedBook)
+        return if (book.downloaded) {
+            App.instance.mDatabase.downloadedBooksDao().delete(downloadedBook)
+            false
+        } else {
+            App.instance.mDatabase.downloadedBooksDao().insert(downloadedBook)
+            true
+        }
     }
 
     fun clearHistory() {
@@ -133,7 +145,6 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
             val longFormat = MimeTypes.getFullMime(format)
             // проверю, нужно ли загружать книги только в выбранном формате
             if (books.isNotEmpty()) {
-                Log.d("surprise", "downloadAll: books for add: ${books.size}")
                 books.forEach { foundedEntity ->
                     var linkFound = false
                     // ищу книгу в выбранном формате
@@ -141,7 +152,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                         foundedEntity.downloadLinks.forEach {
                             if (it.mime == longFormat) {
                                 // найдена ссылка на формат
-                                if (onlyUnloaded) {
+                                if (onlyUnloaded || !PreferencesHandler.instance.isReDownload) {
                                     if (!foundedEntity.downloaded) {
                                         if (userSequenceName != null) {
                                             it.sequenceDirName = userSequenceName
@@ -150,6 +161,8 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                                         DownloadLinkHandler().addLink(it)
                                         counter++
                                         linkFound = true
+                                    } else {
+                                        Log.d("surprise", "downloadAll: skip downloaded")
                                     }
                                 } else {
                                     if (userSequenceName != null) {
@@ -178,8 +191,13 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                         )
                     }
                 }
-                App.instance.requestDownloadBooksStart()
+                if (counter > 0) {
+                    App.instance.requestDownloadBooksStart()
+                }
                 delegate.booksAdded(counter)
+            }
+            else{
+                delegate.booksAdded(0)
             }
         }
     }
@@ -197,7 +215,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         s: String,
         append: Boolean,
         addToHistory: Boolean,
-        clickedElementIndex: Int,
+        clickedElementIndex: Long,
         delegate: ResultsReceivedDelegate
     ) {
         currentRequestState.postValue("Формирую запрос")
@@ -210,13 +228,10 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         }
         // запрошу данные
         currentWork = viewModelScope.launch(Dispatchers.IO) {
-            // clear previously loaded images
-            FilesHandler.clearCache()
-
             var previousSearchRequestResult: SearchResult?
             previousSearchRequestResult =
                 makeRequest(s, append, if (addToHistory) -1 else clickedElementIndex)
-            if(currentWork?.isActive == true) {
+            if (currentWork?.isActive == true) {
                 previousSearchRequestResult?.let { delegate.resultsReceived(it) }
             }
             while (true) {
@@ -250,7 +265,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         }
     }
 
-    private fun makeRequest(s: String, append: Boolean, lastClicked: Int): SearchResult? {
+    private fun makeRequest(s: String, append: Boolean, lastClicked: Long): SearchResult? {
         try {
             val response = UniversalWebClient().rawRequest(s)
             currentRequestState.postValue("Получен ответ")
@@ -328,7 +343,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
     }
 
     fun cancelLoad() {
-            currentWork?.cancel()
+        currentWork?.cancel()
     }
 
     fun loadInProgress(): Boolean {

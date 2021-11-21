@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -256,6 +256,18 @@
             app:layout_constraintStart_toEndOf="@+id/centerActionBtn"
             app:layout_constraintTop_toBottomOf="@+id/availableLinkFormats" />
 
+        <CheckBox
+            android:buttonTint="@color/book_name_color"
+            android:drawableTint="@color/book_name_color"
+            android:id="@+id/selectedForDownload"
+            android:layout_width="wrap_content"
+            android:visibility="gone"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/centerActionBtn" />
+
         <androidx.constraintlayout.widget.Barrier
             android:id="@+id/imageBarrier"
             android:layout_width="wrap_content"
@@ -282,11 +294,11 @@
             app:constraint_referenced_ids="thirdBlockLeftElement,thirdBlockCenterElement, thirdBlocRightElement" />
 
         <ProgressBar
-            android:visibility="gone"
             android:id="@+id/loadingMoreBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:indeterminate="true"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"

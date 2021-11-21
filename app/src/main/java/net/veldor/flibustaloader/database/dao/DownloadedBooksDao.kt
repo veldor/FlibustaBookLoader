@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.database.dao
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import net.veldor.flibustaloader.database.entity.DownloadedBooks
@@ -19,4 +20,6 @@ interface DownloadedBooksDao {
 
     @Insert
     fun insert(book: DownloadedBooks?)
+    @Delete
+    fun delete(book: DownloadedBooks?)
 }

@@ -15,6 +15,7 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.delegates.DownloadWorkSwitchStateDelegate
 import net.veldor.flibustaloader.http.TorStarter
 import net.veldor.flibustaloader.notificatons.NotificationHandler
+import net.veldor.flibustaloader.utils.FilesHandler
 import net.veldor.flibustaloader.utils.LogHandler
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
@@ -48,7 +49,8 @@ class App : MultiDexApplication() {
         super.onCreate()
         // got instance
         instance = this
-
+        // clear previously loaded images
+        FilesHandler.clearCache()
         // получаю базу данных
         mDatabase = Room.databaseBuilder(
             applicationContext,
@@ -229,6 +231,12 @@ class App : MultiDexApplication() {
             delegate.stateSwitched(2)
 
         }
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        // clear previously loaded images
+        FilesHandler.clearCache()
     }
 
     companion object {

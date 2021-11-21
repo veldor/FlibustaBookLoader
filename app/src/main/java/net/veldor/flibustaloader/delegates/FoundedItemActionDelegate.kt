@@ -14,4 +14,5 @@ interface FoundedItemActionDelegate {
     fun authorClicked(item: FoundedEntity)
     fun sequenceClicked(item: FoundedEntity)
     fun nameClicked(item: FoundedEntity)
+    fun itemSelectedForDownload()
 }
