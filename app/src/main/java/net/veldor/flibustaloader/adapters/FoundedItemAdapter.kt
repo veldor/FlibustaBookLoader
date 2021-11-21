@@ -23,6 +23,7 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.databinding.FoundedItemBinding
 import net.veldor.flibustaloader.delegates.FoundedItemActionDelegate
 import net.veldor.flibustaloader.handlers.Filter
+import net.veldor.flibustaloader.handlers.PicHandler
 import net.veldor.flibustaloader.interfaces.MyAdapterInterface
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_AUTHOR
 import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_AUTHORS
@@ -151,7 +152,7 @@ class FoundedItemAdapter(
 
         @SuppressLint("NotifyDataSetChanged")
         fun bind(item: FoundedEntity) {
-            if(showCheckboxes && item.type == TYPE_BOOK){
+            if (showCheckboxes && item.type == TYPE_BOOK) {
                 binding.selectedForDownload.visibility = View.VISIBLE
                 binding.selectedForDownload.isChecked = item.selectedForDonwload
                 binding.selectedForDownload.setOnClickListener {
@@ -159,8 +160,7 @@ class FoundedItemAdapter(
                     item.selectedForDonwload = (it as CheckBox).isChecked
                     delegate.itemSelectedForDownload()
                 }
-            }
-            else{
+            } else {
                 binding.selectedForDownload.visibility = View.GONE
             }
             binding.name.visibility = View.VISIBLE
@@ -872,15 +872,15 @@ class FoundedItemAdapter(
     }
 
     fun markClickedElement(clickedElementIndex: Long) {
-        if(values.isNotEmpty()){
+        if (values.isNotEmpty()) {
             values.forEach {
-                if(it.selected){
+                if (it.selected) {
                     it.selected = false
                     notifyItemChanged(getItemPositionById(it.itemId))
                 }
             }
             val position = getItemPositionById(clickedElementIndex)
-            if(position >= 0){
+            if (position >= 0) {
                 values[position].selected = true
                 notifyItemChanged(position)
             }
@@ -927,6 +927,10 @@ class FoundedItemAdapter(
                 notifyItemRemoved(itemIndex)
                 ++filtered
             } else {
+                if (item.coverUrl != null && item.coverUrl!!.isNotEmpty() && PreferencesHandler.instance.isPreviews && item.cover == null) {
+                    // load pic in new Thread
+                    PicHandler().loadPic(item)
+                }
                 ++appended
             }
         }
@@ -948,7 +952,7 @@ class FoundedItemAdapter(
 
     fun showCheckboxes() {
         showCheckboxes = true
-        if(values.isNotEmpty()){
+        if (values.isNotEmpty()) {
             values.forEach {
                 it.selectedForDonwload = false
             }
@@ -958,9 +962,9 @@ class FoundedItemAdapter(
 
     fun getSelectedForDownload(): ArrayList<FoundedEntity> {
         val result = ArrayList<FoundedEntity>()
-        if(values.isNotEmpty()){
+        if (values.isNotEmpty()) {
             values.forEach {
-                if(it.selectedForDonwload){
+                if (it.selectedForDonwload) {
                     result.add(it)
                 }
             }
@@ -969,7 +973,7 @@ class FoundedItemAdapter(
     }
 
     fun selectAllForDownload() {
-        if(values.isNotEmpty()){
+        if (values.isNotEmpty()) {
             values.forEach {
                 it.selectedForDonwload = true
             }
@@ -979,7 +983,7 @@ class FoundedItemAdapter(
     }
 
     fun selectNothingForDownload() {
-        if(values.isNotEmpty()){
+        if (values.isNotEmpty()) {
             values.forEach {
                 it.selectedForDonwload = false
             }
@@ -987,8 +991,9 @@ class FoundedItemAdapter(
             delegate.itemSelectedForDownload()
         }
     }
+
     fun invertSelectionForDownload() {
-        if(values.isNotEmpty()){
+        if (values.isNotEmpty()) {
             values.forEach {
                 it.selectedForDonwload = !it.selectedForDonwload
             }
@@ -998,7 +1003,7 @@ class FoundedItemAdapter(
     }
 
     fun cancelDownloadSelection() {
-        if(showCheckboxes){
+        if (showCheckboxes) {
             showCheckboxes = false
             notifyItemRangeChanged(0, values.size)
         }

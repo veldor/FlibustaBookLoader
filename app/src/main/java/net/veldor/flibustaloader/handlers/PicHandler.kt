@@ -52,6 +52,9 @@ class PicHandler {
     fun downloadPic(
         foundedEntity: FoundedEntity
     ) {
+        if(foundedEntity.cover != null){
+            return
+        }
         val response = UniversalWebClient().picRequest(foundedEntity.coverUrl!!)
         if (response != null) {
             val status = response.statusLine.statusCode
