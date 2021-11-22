@@ -15,11 +15,14 @@ import net.veldor.flibustaloader.handlers.LoadedBookHandler
 import net.veldor.flibustaloader.http.ExternalVpnVewClient
 import net.veldor.flibustaloader.http.TorWebClient
 import net.veldor.flibustaloader.notificatons.NotificationHandler
+import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
+import net.veldor.flibustaloader.selections.TotalBookDownloadProgress
 import net.veldor.flibustaloader.ui.BaseActivity
 import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.RandomString
 import net.veldor.flibustaloader.utils.URLHelper
+import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -64,6 +67,11 @@ class DownloadBooksWorker(
                 // получу оставшееся количество книг для загрузки
                 totalBooksCount = booksDownloadedYet + dao.queueSize
 
+                var progress = TotalBookDownloadProgress()
+                progress.total = totalBooksCount
+                progress.loaded = downloadCounter
+                progress.failed = bookDownloadsWithErrors
+                DownloadScheduleViewModel.liveFullBookDownloadProgress.postValue(progress)
                 NotificationHandler.instance.updateDownloadProgress(
                     totalBooksCount,
                     downloadCounter,
@@ -85,6 +93,12 @@ class DownloadBooksWorker(
                     totalBooksCount = booksDownloadedYet + dao.queueSize
 
                     queuedElement.name = queuedElement.name.replace("\\p{C}".toRegex(), "")
+
+                    progress = TotalBookDownloadProgress()
+                    progress.total = totalBooksCount
+                    progress.loaded = downloadCounter
+                    progress.failed = bookDownloadsWithErrors
+                    DownloadScheduleViewModel.liveFullBookDownloadProgress.postValue(progress)
                     NotificationHandler.instance.updateDownloadProgress(
                         totalBooksCount,
                         downloadCounter,
@@ -224,6 +238,12 @@ class DownloadBooksWorker(
                             return false
                         }
                         out.write(buffer, 0, read)
+
+
+                        val progress = CurrentBookDownloadProgress()
+                        progress.fullSize = contentLength
+                        progress.loadedSize = tempFile.length()
+                        DownloadScheduleViewModel.liveCurrentBookDownloadProgress.postValue(progress)
                         if (PreferencesHandler.instance.showDownloadProgress) {
                             NotificationHandler.instance.createBookLoadingProgressNotification(
                                 contentLength.toInt(),
@@ -300,5 +320,10 @@ class DownloadBooksWorker(
 
         const val DOWNLOAD_IN_PROGRESS = "download in progress"
         const val DOWNLOAD_FINISHED = "download finished"
+    }
+
+    override fun onStopped() {
+        super.onStopped()
+        Log.d("surprise", "onStopped: download interrupted")
     }
 }

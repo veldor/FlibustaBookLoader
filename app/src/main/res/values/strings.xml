@@ -345,4 +345,5 @@
     <string name="invert_selection_title">Invert book selection</string>
     <string name="cancel_selection_title">Cancel selection</string>
     <string name="no_books_for_load">No books selected for load</string>
+    <string name="format_title">Format</string>
 </resources>

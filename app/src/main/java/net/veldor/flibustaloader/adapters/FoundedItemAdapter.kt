@@ -254,7 +254,7 @@ class FoundedItemAdapter(
                             // add genres to blacklist
                             if (item.genres.isNotEmpty()) {
                                 item.genres.forEach {
-                                    BlacklistGenres.instance.addValue(it.name!!.trim().lowercase())
+                                    BlacklistGenre.instance.addValue(it.name!!.trim().lowercase())
                                     Toast.makeText(
                                         App.instance,
                                         "Добавляю жанр в ЧС: ${it.name}",
@@ -593,7 +593,7 @@ class FoundedItemAdapter(
                                 "surprise",
                                 "bind: add to blacklist '${item.name!!.trim().lowercase()}'"
                             )
-                            BlacklistGenres.instance.addValue(item.name!!.trim().lowercase())
+                            BlacklistGenre.instance.addValue(item.name!!.trim().lowercase())
                             applyFilters()
                             return@setOnLongClickListener true
                         }

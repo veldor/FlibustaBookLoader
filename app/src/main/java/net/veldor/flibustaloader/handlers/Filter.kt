@@ -73,7 +73,7 @@ object Filter {
                         }
                     }
                 }
-                list = BlacklistGenres.instance.getBlacklist()
+                list = BlacklistGenre.instance.getBlacklist()
                 if (list.isNotEmpty() && !foundedEntity.genreComplex.isNullOrEmpty()) {
                     foundedEntity.genres.forEach { genre ->
                         lowerName = genre.name!!.trim().lowercase()
@@ -128,8 +128,21 @@ object Filter {
                         }
                     }
                 }
+                list = BlacklistFormat.instance.getBlacklist()
+                if (list.isNotEmpty() && foundedEntity.format != null) {
+                    list.forEach {
+                        if (foundedEntity.format!!.endsWith(it.name)) {
+                            return FilteringResult(
+                                false,
+                                foundedEntity.format,
+                                it.name.lowercase(),
+                                "format"
+                            )
+                        }
+                    }
+                }
             } else if (foundedEntity.type == TYPE_GENRE) {
-                list = BlacklistGenres.instance.getBlacklist()
+                list = BlacklistGenre.instance.getBlacklist()
                 if (list.isNotEmpty()) {
                     lowerName = foundedEntity.name!!.lowercase().trim()
                     list.forEach {

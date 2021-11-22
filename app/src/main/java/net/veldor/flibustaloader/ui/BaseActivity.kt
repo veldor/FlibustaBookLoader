@@ -1,6 +1,8 @@
 package net.veldor.flibustaloader.ui
 
+import android.app.Activity
 import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
@@ -13,29 +15,36 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.ActionMenuItemView
 import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
+import androidx.documentfile.provider.DocumentFile
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.OnLifecycleEvent
 import com.google.android.material.navigation.NavigationView
+import lib.folderpicker.FolderPicker
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.dialogs.ChangelogDialog
 import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.MyFileReader.SUBSCRIPTIONS_FILE
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.TransportUtils
 import java.io.File
 import java.io.FileInputStream
 import java.io.ObjectInputStream
 import java.util.*
+import kotlin.system.exitProcess
 
 open class BaseActivity : AppCompatActivity() {
     private lateinit var mDownloadsListTextView: TextView
@@ -259,6 +268,149 @@ open class BaseActivity : AppCompatActivity() {
             toolbar.overflowIcon = overflowIcon
         }
     }
+
+
+    fun showSelectDownloadFolderDialog() {
+        val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
+        dialogBuilder.setTitle(getString(R.string.select_download_folder_title))
+            .setMessage(getString(R.string.select_download_folder_message))
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.download_folder_select_accept)) { _: DialogInterface?, _: Int ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    var intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    intent.addFlags(
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+                    )
+                    if (TransportUtils.intentCanBeHandled(intent)) {
+                        dirSelectResultLauncher.launch(intent)
+                    } else {
+                        intent = Intent(this, FolderPicker::class.java)
+                        intent.addFlags(
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                    or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                        )
+                        compatDirSelectResultLauncher.launch(intent)
+                    }
+                } else {
+                    val intent = Intent(this, FolderPicker::class.java)
+                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+                        intent.addFlags(
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                    or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                        )
+                    }
+                    compatDirSelectResultLauncher.launch(intent)
+                }
+            }
+            .setNegativeButton(getString(R.string.dismiss_permissions_button)) { _: DialogInterface?, _: Int ->
+                exitProcess(
+                    0
+                )
+            }
+            .setNeutralButton(getString(R.string.alternate_dir_select_button)) { _: DialogInterface?, _: Int -> showAlterDirSelectDialog() }
+        if (!this.isFinishing) {
+            val dialog = dialogBuilder.create()
+            lifecycle.addObserver(DialogDismissLifecycleObserver(dialog))
+            dialog.show()
+        }
+    }
+
+
+    private fun showAlterDirSelectDialog() {
+        val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
+            .setTitle(getString(R.string.alter_dir_selection_title))
+            .setMessage(getString(R.string.alter_dir_selection_body))
+            .setCancelable(true)
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
+                val intent = Intent(this, FolderPicker::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    intent.addFlags(
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                    )
+                }
+                compatDirSelectResultLauncher.launch(intent)
+            }
+        val dialog = dialogBuilder.create()
+        lifecycle.addObserver(DialogDismissLifecycleObserver(dialog))
+        dialog.show()
+    }
+
+    var compatDirSelectResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                if (data != null && data.extras != null && data.extras!!.containsKey("data")) {
+                    val folderLocation = data.extras!!.getString("data")
+                    val file = File(folderLocation)
+                    if (file.isDirectory && PreferencesHandler.instance.saveDownloadFolder(
+                            folderLocation
+                        )
+                    ) {
+                        Toast.makeText(this, "Папка сохранена!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "Не удалось сохранить папку, попробуйте ещё раз!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        showSelectDownloadFolderDialog()
+                    }
+                }
+            }
+        }
+
+    var dirSelectResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                // There are no request codes
+                val data: Intent? = result.data
+                if (data != null) {
+                    val treeUri = data.data
+                    if (treeUri != null) {
+                        // проверю наличие файла
+                        val dl = DocumentFile.fromTreeUri(App.instance, treeUri)
+                        if (dl != null && dl.isDirectory) {
+                            try {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                    App.instance.contentResolver.takePersistableUriPermission(
+                                        treeUri,
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    )
+                                    App.instance.contentResolver.takePersistableUriPermission(
+                                        treeUri,
+                                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                    )
+                                }
+                                PreferencesHandler.instance.setDownloadDir(dl)
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    this,
+                                    "Не удалось выдать разрешения на доступ, попробуем другой метод",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                val intent = Intent(this, FolderPicker::class.java)
+                                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT) {
+                                    intent.addFlags(
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                                or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                                    )
+                                }
+                                compatDirSelectResultLauncher.launch(intent)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
 
 
     companion object {

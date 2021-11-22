@@ -1,12 +1,12 @@
 package net.veldor.flibustaloader.utils
 
-class BlacklistGenres private constructor() : BlacklistType(){
+class BlacklistGenre private constructor() : BlacklistType(){
 
     override val blacklistName = "genre"
 
     companion object {
         @JvmStatic
-        var instance: BlacklistGenres = BlacklistGenres()
+        var instance: BlacklistGenre = BlacklistGenre()
             private set
     }
     init {

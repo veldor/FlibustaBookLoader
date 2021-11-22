@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:yourapp="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/actionSelectAll"
+        android:icon="@drawable/ic_baseline_select_all_24"
+        android:title="@string/select_all_books_title"
+        yourapp:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/actionSelectNothing"
+        android:icon="@drawable/ic_baseline_crop_square_24"
+        android:title="@string/select_no_books_title"
+        yourapp:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/actionInvert"
+        android:icon="@drawable/ic_baseline_invert_colors_24"
+        android:title="@string/invert_selection_title"
+        yourapp:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/actionCancel"
+        android:icon="@drawable/ic_baseline_cancel_24"
+        android:title="@string/cancel_selection_title"
+        yourapp:showAsAction="ifRoom" />
+</menu>

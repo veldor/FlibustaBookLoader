@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.ui
 
 import android.app.Activity
 import android.content.DialogInterface
+import android.content.DialogInterface.OnMultiChoiceClickListener
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -29,6 +30,7 @@ import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.TransportUtils
 import net.veldor.flibustaloader.view_models.SettingsViewModel
 import java.io.File
+import java.util.*
 
 class SettingsActivity : BaseActivity(),
     PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
@@ -175,26 +177,77 @@ class SettingsActivity : BaseActivity(),
                             // проверю наличие файла
                             val dl = DocumentFile.fromTreeUri(App.instance, treeUri)
                             if (dl != null && dl.isDirectory) {
-                                (requireActivity() as SettingsActivity).viewModel.backup(dl)
-                                (requireActivity() as SettingsActivity).viewModel.liveBackupData.observe(
-                                    viewLifecycleOwner,
-                                    {
-                                        if (it != null) {
-                                            // send file
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                                FilesHandler.shareFile(it, "Share settings")
+                                val builder = AlertDialog.Builder(requireContext())
+                                // покажу список с выбором того, что нужно резервировать
+                                val backupOptions = arrayOf(
+                                    "Базовые настройки", // 0
+                                    "Загруженные книги", // 1
+                                    "Прочитанные книги", // 2
+                                    "Автозаполнение поиска", // 3
+                                    "Список закладок", // 4
+                                    "Подписки на книги", // 5
+                                    "Подписки на авторов", // 6
+                                    "Подписки на жанры", // 7
+                                    "Подписки на серии", // 8
+                                    "Фильтры книг",  // 9
+                                    "Фильтры авторов",  // 10
+                                    "Фильтры жанров", // 11
+                                    "Фильтры серий", // 12
+                                    "Фильтры форматов", // 13
+                                    "Список книг для загрузки", // 14
+                                )
+                                val checkedOptions = booleanArrayOf(
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true,
+                                    true
+                                )
+                                builder.setMultiChoiceItems(
+                                    backupOptions, checkedOptions
+                                ) { _, which, isChecked ->
+                                    checkedOptions[which] = isChecked
+                                }
+                                    .setTitle("Выберите элементы для резервирования")
+                                // Set the positive/yes button click listener
+
+                                // Set the positive/yes button click listener
+                                builder.setPositiveButton("OK") { _, _ ->
+                                    (requireActivity() as SettingsActivity).viewModel.backup(
+                                        dl,
+                                        checkedOptions
+                                    )
+                                    (requireActivity() as SettingsActivity).viewModel.liveBackupData.observe(
+                                        viewLifecycleOwner,
+                                        {
+                                            if (it != null) {
+                                                // send file
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                                    FilesHandler.shareFile(it, "Share settings")
+                                                }
+                                                (requireActivity() as SettingsActivity).viewModel.liveBackupData.removeObservers(
+                                                    viewLifecycleOwner
+                                                )
+                                            } else {
+                                                Toast.makeText(
+                                                    requireContext(),
+                                                    "Can't create backup file, try again!",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
                                             }
-                                            (requireActivity() as SettingsActivity).viewModel.liveBackupData.removeObservers(
-                                                viewLifecycleOwner
-                                            )
-                                        } else {
-                                            Toast.makeText(
-                                                requireContext(),
-                                                "Can't create backup file, try again!",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    })
+                                        })
+                                }
+                                builder.show()
                             }
                         }
                     }
@@ -210,32 +263,86 @@ class SettingsActivity : BaseActivity(),
                             val folderLocation = data.extras!!.getString("data")
                             val file = File(folderLocation)
                             if (file.isDirectory) {
-                                (requireActivity() as SettingsActivity).viewModel.backup(file)
+                                val builder = AlertDialog.Builder(requireContext())
+                                // покажу список с выбором того, что нужно резервировать
+                                val backupOptions = arrayOf(
+                                    "Базовые настройки", // 0
+                                    "Загруженные книги", // 1
+                                    "Прочитанные книги", // 2
+                                    "Автозаполнение поиска", // 3
+                                    "Список закладок", // 4
+                                    "Подписки на книги", // 5
+                                    "Подписки на авторов", // 6
+                                    "Подписки на жанры", // 7
+                                    "Подписки на серии", // 8
+                                    "Фильтры книг",  // 9
+                                    "Фильтры авторов",  // 10
+                                    "Фильтры жанров", // 11
+                                    "Фильтры серий", // 12
+                                    "Фильтры форматов", // 13
+                                    "Список книг для загрузки" // 14
+                                )
 
-                                (requireActivity() as SettingsActivity).viewModel.liveCompatBackupData.observe(
+                                val checkedOptions = booleanArrayOf(
+                                    true, // 0
+                                    true, // 1
+                                    true, // 2
+                                    true, // 3
+                                    true, // 4
+                                    true, // 5
+                                    true, // 6
+                                    true, // 7
+                                    true, // 8
+                                    true, // 9
+                                    true, // 10
+                                    true, // 11
+                                    true, // 12
+                                    true, // 13
+                                    true // 14
+                                )
+                                builder.setMultiChoiceItems(
+                                    backupOptions, checkedOptions
+                                ) { _, which, isChecked ->
+                                    checkedOptions[which] = isChecked
+                                }
+                                    .setTitle("Выберите элементы для резервирования")
+                                // Set the positive/yes button click listener
+
+                                // Set the positive/yes button click listener
+                                builder.setPositiveButton("OK") { _, _ ->
+                                    (requireActivity() as SettingsActivity).viewModel.backup(
+                                        file,
+                                        options = checkedOptions
+                                    )
+                                    (requireActivity() as SettingsActivity).viewModel.liveCompatBackupData.observe(
                                         viewLifecycleOwner,
                                         {
                                             if (it != null) {
                                                 // send file
                                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                                    FilesHandler.shareFile(it, getString(R.string.share_settings_message))
+                                                    FilesHandler.shareFile(
+                                                        it,
+                                                        getString(R.string.share_settings_message)
+                                                    )
                                                 }
                                                 (requireActivity() as SettingsActivity).viewModel.liveCompatBackupData.removeObservers(
-                                                        viewLifecycleOwner
+                                                    viewLifecycleOwner
                                                 )
                                             } else {
                                                 Toast.makeText(
-                                                        requireContext(),
-                                                        "Can't create backup file, try again!",
-                                                        Toast.LENGTH_LONG
+                                                    requireContext(),
+                                                    "Can't create backup file, try again!",
+                                                    Toast.LENGTH_LONG
                                                 ).show()
                                             }
                                         })
+                                }
+                                builder.show()
                             } else {
                                 Toast.makeText(
-                                        requireContext(),
-                                        "Не удалось сохранить папку, попробуйте ещё раз!",
-                                        Toast.LENGTH_SHORT
+                                    requireContext(),
+                                    "Не удалось сохранить папку, попробуйте ещё раз!",
+                                    Toast.LENGTH_SHORT
                                 ).show()
                             }
                         }
@@ -253,32 +360,115 @@ class SettingsActivity : BaseActivity(),
                             if (uri != null) {
                                 val dl = DocumentFile.fromSingleUri(App.instance, uri)
                                 if (dl != null) {
-                                    Log.d("surprise", "${dl.name}: ")
-                                    (requireActivity() as SettingsActivity).viewModel.restore(dl)
-                                    (requireActivity() as SettingsActivity).viewModel.livePrefsRestored.observe(
-                                            viewLifecycleOwner,
-                                            {
-                                                if (it) {
-                                                    Toast.makeText(
+                                    // буду восстанавливать настройки
+                                    // попробую получить список файлов в архиве
+                                    val builder = AlertDialog.Builder(requireContext())
+                                    val checkResults =
+                                        (requireActivity() as SettingsActivity).viewModel.checkReserve(
+                                            dl
+                                        )
+                                    // покажу список с выбором того, что нужно резервировать
+                                    val backupOptions = arrayOf(
+                                        "Базовые настройки", // 0
+                                        "Загруженные книги", // 1
+                                        "Прочитанные книги", // 2
+                                        "Автозаполнение поиска", // 3
+                                        "Список закладок", // 4
+                                        "Подписки на книги", // 5
+                                        "Подписки на авторов", // 6
+                                        "Подписки на жанры", // 7
+                                        "Подписки на серии", // 8
+                                        "Фильтры книг",  // 9
+                                        "Фильтры авторов",  // 10
+                                        "Фильтры жанров", // 11
+                                        "Фильтры серий", // 12
+                                        "Фильтры форматов", // 13
+                                        "Список книг для загрузки" // 14
+                                    )
+                                    builder.setMultiChoiceItems(
+                                        backupOptions, checkResults
+                                    ) { _, which, isChecked ->
+                                        checkResults[which] = isChecked
+                                    }
+                                        .setTitle("Выберите элементы для резервирования")
+                                        .setPositiveButton("OK") { _, _ ->
+                                            (requireActivity() as SettingsActivity).viewModel.restore(
+                                                dl, checkResults
+                                            )
+                                            (requireActivity() as SettingsActivity).viewModel.livePrefsRestored.observe(
+                                                viewLifecycleOwner,
+                                                {
+                                                    if (it) {
+                                                        Toast.makeText(
                                                             requireContext(),
                                                             "Preferences restored, reboot app",
                                                             Toast.LENGTH_LONG
-                                                    ).show()
-                                                    Handler().postDelayed(ResetApp(), 3000)
-                                                }
-                                            })
+                                                        ).show()
+                                                        Handler().postDelayed(ResetApp(), 3000)
+                                                    }
+                                                })
+                                        }
+                                        .show()
+
                                 }
                             }
                         }
-                    }
-                    else{
+                    } else {
                         if (result != null) {
                             val data: Intent? = result.data
                             if (data != null && data.extras != null && data.extras!!.containsKey("data")) {
                                 val folderLocation = data.extras!!.getString("data")
                                 val file = File(folderLocation)
                                 if (file.isFile) {
-                                    Log.d("surprise", "SettingsActivity.kt 278  restore...: ")
+                                    // буду восстанавливать настройки
+                                    // попробую получить список файлов в архиве
+                                    val builder = AlertDialog.Builder(requireContext())
+                                    val checkResults =
+                                        (requireActivity() as SettingsActivity).viewModel.checkReserve(
+                                            file
+                                        )
+                                    // покажу список с выбором того, что нужно резервировать
+                                    val backupOptions = arrayOf(
+                                        "Базовые настройки", // 0
+                                        "Загруженные книги", // 1
+                                        "Прочитанные книги", // 2
+                                        "Автозаполнение поиска", // 3
+                                        "Список закладок", // 4
+                                        "Подписки на книги", // 5
+                                        "Подписки на авторов", // 6
+                                        "Подписки на жанры", // 7
+                                        "Подписки на серии", // 8
+                                        "Фильтры книг",  // 9
+                                        "Фильтры авторов",  // 10
+                                        "Фильтры жанров", // 11
+                                        "Фильтры серий", // 12
+                                        "Фильтры форматов", // 13
+                                        "Список книг для загрузки" // 14
+                                    )
+                                    builder.setMultiChoiceItems(
+                                        backupOptions, checkResults
+                                    ) { _, which, isChecked ->
+                                        checkResults[which] = isChecked
+                                    }
+                                        .setTitle("Выберите элементы для резервирования")
+                                        .setPositiveButton("OK") { _, _ ->
+                                            (requireActivity() as SettingsActivity).viewModel.restore(
+                                                file, checkResults
+                                            )
+                                            (requireActivity() as SettingsActivity).viewModel.livePrefsRestored.observe(
+                                                viewLifecycleOwner,
+                                                {
+                                                    if (it) {
+                                                        Toast.makeText(
+                                                            requireContext(),
+                                                            "Preferences restored, reboot app",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                        Handler().postDelayed(ResetApp(), 3000)
+                                                    }
+                                                })
+                                        }
+                                        .show()
                                 }
                             }
                         }
@@ -422,6 +612,7 @@ class SettingsActivity : BaseActivity(),
             setPreferencesFromResource(R.xml.preferences_update, rootKey)
         }
     }
+
     @Suppress("unused")
     class FilterPreferencesFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

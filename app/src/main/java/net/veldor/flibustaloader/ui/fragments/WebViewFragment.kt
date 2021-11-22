@@ -304,7 +304,7 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
     }
 
     private fun makeSearch(s: String) {
-        val searchString = URLHelper.getFlibustaUrl() + SEARCH_URL + s.trim { it <= ' ' }
+        val searchString = SEARCH_URL + s.trim { it <= ' ' }
         binding.myWebView.loadUrl(searchString)
         // занесу значение в список автозаполнения
         if (XMLHandler.putSearchValue(s)) {

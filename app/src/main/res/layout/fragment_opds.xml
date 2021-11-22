@@ -110,6 +110,13 @@
         app:layout_constraintEnd_toStartOf="@id/connectionType"
         app:layout_constraintTop_toBottomOf="@+id/search_type" />
 
+    <ProgressBar
+        android:id="@+id/downloadInProgressIndicator"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        app:layout_constraintEnd_toStartOf="@id/mirrorUsed"
+        app:layout_constraintTop_toBottomOf="@+id/search_type" />
+
     <RadioGroup
         android:id="@+id/search_type"
         android:layout_width="match_parent"

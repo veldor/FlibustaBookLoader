@@ -69,14 +69,21 @@ class App : MultiDexApplication() {
             .build()
 
         // определю ночной режим
-        if (PreferencesHandler.instance.nightMode) {
+        if(PreferencesHandler.instance.isEInk){
             AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_YES
+                AppCompatDelegate.MODE_NIGHT_NO
             )
-        } else {
-            AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            )
+        }
+        else{
+            if (PreferencesHandler.instance.nightMode) {
+                AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_YES
+                )
+            } else {
+                AppCompatDelegate.setDefaultNightMode(
+                    AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                )
+            }
         }
         // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
         handleMassDownload()
@@ -199,7 +206,6 @@ class App : MultiDexApplication() {
     }
 
     fun switchDownloadState(delegate: DownloadWorkSwitchStateDelegate) {
-        Log.d("surprise", "switchDownloadState: switching download state")
         var workStopped = false
         val workManager = WorkManager.getInstance(this)
         val statuses =
@@ -208,7 +214,6 @@ class App : MultiDexApplication() {
         workInfoList.forEach {
             // если найдены рабочие экземпляры- остановлю их
             if (it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED) {
-                Log.d("surprise", "switchDownloadState: found download work, cancelling it")
                 val work = workManager.getWorkInfoById(it.id)
                 work.cancel(true)
                 if (!workStopped) {
@@ -216,9 +221,8 @@ class App : MultiDexApplication() {
                 }
             }
         }
-        Log.d("surprise", "switchDownloadState: work stop state is $workStopped")
         if (workStopped) {
-            WorkManager.getInstance(App.instance)
+            WorkManager.getInstance(instance)
                 .cancelAllWorkByTag(OPDSViewModel.MULTIPLY_DOWNLOAD)
             // если работы приостановлены- удалю сообщение о загрузке
             // оповещу о смене статуса

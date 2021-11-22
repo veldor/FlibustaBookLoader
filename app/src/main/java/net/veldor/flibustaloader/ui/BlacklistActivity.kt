@@ -83,7 +83,10 @@ class BlacklistActivity : BaseActivity() {
                     (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistSequences.instance.getBlacklist())
                 }
                 R.id.blacklistGenre -> {
-                    (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistGenres.instance.getBlacklist())
+                    (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistGenre.instance.getBlacklist())
+                }
+                R.id.blacklistFormat -> {
+                    (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistFormat.instance.getBlacklist())
                 }
             }
         }
@@ -121,7 +124,10 @@ class BlacklistActivity : BaseActivity() {
                     BlacklistSequences.instance.addValue(value)
                 }
                 R.id.blacklistGenre -> {
-                    BlacklistGenres.instance.addValue(value)
+                    BlacklistGenre.instance.addValue(value)
+                }
+                R.id.blacklistFormat -> {
+                    BlacklistFormat.instance.addValue(value)
                 }
             }
             binding.blacklistItemInput.setText("")
@@ -157,12 +163,12 @@ class BlacklistActivity : BaseActivity() {
             }
         })
         // буду отслеживать изменения списка книг
-        BlacklistGenres.instance.liveBlacklistAdd.observe(this, {
+        BlacklistGenre.instance.liveBlacklistAdd.observe(this, {
             if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistGenre) {
                 (binding.resultsList.adapter as BlacklistAdapter).itemAdded(it)
             }
         })
-        BlacklistGenres.instance.liveBlacklistRemove.observe(this, {
+        BlacklistGenre.instance.liveBlacklistRemove.observe(this, {
             if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistGenre) {
                 (binding.resultsList.adapter as BlacklistAdapter).itemRemoved(it)
             }
@@ -175,6 +181,16 @@ class BlacklistActivity : BaseActivity() {
         })
         BlacklistSequences.instance.liveBlacklistRemove.observe(this, {
             if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistSequence) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemRemoved(it)
+            }
+        })
+        BlacklistFormat.instance.liveBlacklistAdd.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistFormat) {
+                (binding.resultsList.adapter as BlacklistAdapter).itemAdded(it)
+            }
+        })
+        BlacklistFormat.instance.liveBlacklistRemove.observe(this, {
+            if (binding.blacklistType.checkedRadioButtonId == R.id.blacklistFormat) {
                 (binding.resultsList.adapter as BlacklistAdapter).itemRemoved(it)
             }
         })

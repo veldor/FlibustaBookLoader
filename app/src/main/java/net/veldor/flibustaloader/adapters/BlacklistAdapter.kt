@@ -17,7 +17,7 @@ import net.veldor.flibustaloader.databinding.BlacklistItemBinding
 import net.veldor.flibustaloader.selections.BlacklistItem
 import net.veldor.flibustaloader.utils.BlacklistAuthors
 import net.veldor.flibustaloader.utils.BlacklistBooks
-import net.veldor.flibustaloader.utils.BlacklistGenres
+import net.veldor.flibustaloader.utils.BlacklistGenre
 import net.veldor.flibustaloader.utils.BlacklistSequences
 import java.util.*
 
@@ -123,7 +123,7 @@ class BlacklistAdapter(private var mItems: ArrayList<BlacklistItem>) :
                     "book" -> BlacklistBooks.instance.deleteValue(item.name)
                     "author" -> BlacklistAuthors.instance.deleteValue(item.name)
                     "sequence" -> BlacklistSequences.instance.deleteValue(item.name)
-                    "genre" -> BlacklistGenres.instance.deleteValue(item.name)
+                    "genre" -> BlacklistGenre.instance.deleteValue(item.name)
                 }
             }
         }

@@ -25,6 +25,7 @@ class FilteringResult(val result: Boolean,val value: String?, val rule: String?,
             "book genre strict" -> sb.append("Жанр книги \"$value\" по строгому соответствию: \"$rule\"")
             "book name" -> sb.append("Книга по названию: \"$value\" по шаблону: \"$rule\"")
             "book name strict" -> sb.append("Книга по названию: \"$value\" по строгому соответствию: \"$rule\"")
+            "format" -> sb.append("Книга по формату: \"$value\" по шаблону: \"$rule\"")
         }
         return sb.toString()
     }

@@ -3,7 +3,6 @@ package net.veldor.flibustaloader.adapters
 import android.os.Handler
 import android.os.Looper.getMainLooper
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
@@ -15,7 +14,6 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.databinding.DownloadScheduleBookItemBinding
 import net.veldor.flibustaloader.handlers.LoadedBookHandler
 import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
-import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.DOWNLOAD_IN_PROGRESS
 import net.veldor.flibustaloader.workers.DownloadBooksWorker.Companion.removeFromQueue
 
 class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule>) :
@@ -156,7 +154,6 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                             null
                         )
                     )
-                    mBinding.bookLoadProgress.visibility = View.GONE
                 }
                 scheduleItem.failed -> {
                     mBinding.bookStateText.text =
@@ -168,7 +165,6 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                             null
                         )
                     )
-                    mBinding.bookLoadProgress.visibility = View.GONE
                 }
                 scheduleItem.inProgress -> {
                     mBinding.bookStateText.text =
@@ -180,15 +176,6 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                             null
                         )
                     )
-                    mBinding.bookLoadProgress.visibility = View.VISIBLE
-                    if (scheduleItem.progress != null) {
-                        mBinding.bookLoadProgress.isIndeterminate = false
-                        val progress = scheduleItem.progress!!.percentDone.toInt()
-                        mBinding.bookLoadProgress.progress = progress
-                    } else {
-                        mBinding.bookLoadProgress.isIndeterminate = false
-                        mBinding.bookLoadProgress.progress = 0
-                    }
                 }
                 else -> {
                     mBinding.bookStateText.text =
@@ -200,12 +187,6 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                             null
                         )
                     )
-                    if (App.instance.liveDownloadState.value == DOWNLOAD_IN_PROGRESS) {
-                        mBinding.bookLoadProgress.visibility = View.VISIBLE
-                        mBinding.bookLoadProgress.isIndeterminate = true
-                    } else {
-                        mBinding.bookLoadProgress.visibility = View.GONE
-                    }
                 }
             }
             // добавлю действие при клике на кнопку скачивания

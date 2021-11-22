@@ -314,4 +314,5 @@
     <string name="select_no_books_title">Сбросить выделение</string>
     <string name="invert_selection_title">Инвертировать выделение</string>
     <string name="cancel_selection_title">Отменить операцию</string>
+    <string name="format_title">Формат</string>
 </resources>

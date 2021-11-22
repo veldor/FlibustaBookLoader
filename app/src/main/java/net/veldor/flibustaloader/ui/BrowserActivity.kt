@@ -54,6 +54,16 @@ class BrowserActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this).get(WebViewViewModel::class.java)
+
+        // проверю папку загрузок
+        val dd = PreferencesHandler.instance.getDownloadDir()
+        if (dd == null || !dd.exists() || !dd.isDirectory) {
+            val cdd = PreferencesHandler.instance.getCompatDownloadDir()
+            if(cdd == null || !cdd.exists() || !cdd.isDirectory){
+                showSelectDownloadFolderDialog()
+            }
+        }
+
         binding = ActivityBrowserBinding.inflate(layoutInflater)
         setContentView(binding.drawerLayout)
         setupInterface()

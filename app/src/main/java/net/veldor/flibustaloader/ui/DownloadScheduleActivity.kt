@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
@@ -48,18 +47,24 @@ class DownloadScheduleActivity : BaseActivity(), DownloadWorkSwitchStateDelegate
 
         DownloadScheduleViewModel.liveCurrentBookDownloadProgress.observe(this, {
             (binding.resultsList.adapter as DownloadScheduleAdapter).setDownloadProgressChanged(it)
+            binding.bookLoadProgressBar.max = it.fullSize.toInt()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                binding.bookLoadProgressBar.setProgress(it.percentDone.toInt(), true)
+                binding.bookLoadProgressBar.setProgress(it.loadedSize.toInt(), true)
+            } else {
+                binding.bookLoadProgressBar.progress = it.loadedSize.toInt()
             }
-            else{
-                binding.bookLoadProgressBar.setProgress(it.percentDone.toInt())
-            }
-            binding.bookLoadProgressText.text = String.format(Locale.ENGLISH, "%s/%s", Grammar.humanReadableByteCountBin(it.loadedSize), Grammar.humanReadableByteCountBin(it.fullSize))
+            binding.bookLoadProgressText.text = String.format(
+                Locale.ENGLISH,
+                "%s/%s",
+                Grammar.humanReadableByteCountBin(it.loadedSize),
+                Grammar.humanReadableByteCountBin(it.fullSize)
+            )
             binding.bookLoadProgressBar.visibility = View.VISIBLE
             binding.bookLoadProgressText.visibility = View.VISIBLE
         })
         DownloadScheduleViewModel.liveFullBookDownloadProgress.observe(this, {
-            binding.bookTotalProgressText.text = String.format(Locale.ENGLISH, "%d/%d", it.loaded, it.total)
+            binding.bookTotalProgressText.text =
+                String.format(Locale.ENGLISH, "%d/%d", it.loaded, it.total)
             binding.fullLoadProgressBar.max = it.total
             binding.fullLoadProgressBar.progress = it.loaded
             binding.fullLoadProgressBar.visibility = View.VISIBLE
@@ -67,6 +72,7 @@ class DownloadScheduleActivity : BaseActivity(), DownloadWorkSwitchStateDelegate
         })
 
         App.instance.liveDownloadState.observe(this, {
+            binding.actionButton.isEnabled = true
             if (it == DownloadBooksWorker.DOWNLOAD_FINISHED) {
                 binding.fullLoadProgressBar.visibility = View.GONE
                 binding.bookLoadProgressBar.visibility = View.GONE
@@ -134,7 +140,8 @@ class DownloadScheduleActivity : BaseActivity(), DownloadWorkSwitchStateDelegate
         binding.resultsList.adapter = DownloadScheduleAdapter(arrayListOf())
         binding.resultsList.layoutManager = LinearLayoutManager(this)
         binding.actionButton.setOnClickListener {
-            Log.d("surprise", "setupInterface: button clicked!")
+            it.isEnabled = false
+            binding.bookLoadProgressBar.progress = 0
             App.instance.switchDownloadState(this)
         }
         // скрою переход на данное активити

@@ -398,10 +398,6 @@ class NotificationHandler private constructor(private var context: Context) {
         }
 
     fun updateDownloadProgress(mBooksCount: Int, currentDownload: Int, beginningTime: Long) {
-        val progress = TotalBookDownloadProgress()
-        progress.total = mBooksCount
-        progress.loaded = currentDownload
-        DownloadScheduleViewModel.liveFullBookDownloadProgress.postValue(progress)
         val left = System.currentTimeMillis() - beginningTime
         val forBook = left / currentDownload
         (mBooksCount - currentDownload) * forBook / 1000
@@ -563,12 +559,6 @@ class NotificationHandler private constructor(private var context: Context) {
         } else {
             (timeLeftInSeconds % 60).toString() + " сек."
         }
-        val progress = CurrentBookDownloadProgress()
-        progress.fullSize = contentLength
-        progress.loadedSize = loaded
-        progress.timeLeft = textLeft
-        progress.percentDone = percentDone
-        DownloadScheduleViewModel.liveCurrentBookDownloadProgress.postValue(progress)
         val notification = NotificationCompat.Builder(context, BOOK_DOWNLOAD_PROGRESS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
             .setContentTitle("Качаю $name")

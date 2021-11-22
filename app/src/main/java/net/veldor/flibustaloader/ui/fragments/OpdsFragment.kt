@@ -14,6 +14,8 @@ import android.text.InputType
 import android.text.TextUtils
 import android.util.Log
 import android.view.*
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.TextView
@@ -38,28 +40,26 @@ import net.veldor.flibustaloader.adapters.FoundedItemAdapter
 import net.veldor.flibustaloader.databinding.FragmentOpdsBinding
 import net.veldor.flibustaloader.delegates.BooksAddedToQueueDelegate
 import net.veldor.flibustaloader.delegates.FoundedItemActionDelegate
+import net.veldor.flibustaloader.delegates.ResultsReceivedDelegate
+import net.veldor.flibustaloader.handlers.PicHandler
 import net.veldor.flibustaloader.parsers.TestParser
 import net.veldor.flibustaloader.selections.DownloadLink
 import net.veldor.flibustaloader.selections.FoundedEntity
+import net.veldor.flibustaloader.selections.HistoryItem
+import net.veldor.flibustaloader.selections.SearchResult
 import net.veldor.flibustaloader.ui.BaseActivity
 import net.veldor.flibustaloader.ui.BlacklistActivity
 import net.veldor.flibustaloader.ui.BrowserActivity
 import net.veldor.flibustaloader.ui.DownloadScheduleActivity
 import net.veldor.flibustaloader.utils.*
+import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import net.veldor.flibustaloader.view_models.OPDSViewModel
+import net.veldor.flibustaloader.workers.DownloadBooksWorker
 import net.veldor.flibustaloader.workers.SendLogWorker
 import java.lang.reflect.Field
 import java.net.URLEncoder
+import java.util.*
 import kotlin.collections.ArrayList
-import android.widget.EditText
-
-import android.view.ViewGroup
-
-import android.view.LayoutInflater
-import net.veldor.flibustaloader.delegates.ResultsReceivedDelegate
-import net.veldor.flibustaloader.handlers.PicHandler
-import net.veldor.flibustaloader.selections.HistoryItem
-import net.veldor.flibustaloader.selections.SearchResult
 
 
 class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActionDelegate,
@@ -125,6 +125,15 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
 
     private fun setupObservers() {
+
+        App.instance.liveDownloadState.observe(viewLifecycleOwner, {
+            if (it == DownloadBooksWorker.DOWNLOAD_FINISHED) {
+                binding.downloadInProgressIndicator.visibility = View.GONE
+            } else if (it == DownloadBooksWorker.DOWNLOAD_IN_PROGRESS) {
+                binding.downloadInProgressIndicator.visibility = View.VISIBLE
+            }
+        })
+
         OPDSViewModel.currentRequestState.observe(viewLifecycleOwner, {
             binding.statusWrapper.setText(it)
         })
@@ -158,6 +167,22 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
 
     fun setupInterface() {
+
+        binding.downloadInProgressIndicator.setOnClickListener {
+            val state = DownloadScheduleViewModel.liveFullBookDownloadProgress.value
+            if (state != null) {
+                Toast.makeText(
+                    requireContext(),
+                    String.format(
+                        Locale.ENGLISH,
+                        "Book load in progress.\nLoaded %d from %d, failed %d",
+                        state.loaded, state.total, state.failed
+                    ),
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+            }
+        }
 
         binding.statusWrapper.setInAnimation(requireContext(), android.R.anim.slide_in_left)
         binding.statusWrapper.setOutAnimation(requireContext(), android.R.anim.slide_out_right)
@@ -1503,7 +1528,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
     override fun booksAdded(count: Int) {
         Log.d("surprise", "booksAdded: books added $count")
-        if(count > 0){
+        if (count > 0) {
             val snackbar = Snackbar.make(
                 binding.root,
                 "Скачиваю книг $count",
@@ -1521,9 +1546,12 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 )
             )
             snackbar.show()
-        }
-        else{
-            Toast.makeText(requireContext(), getString(R.string.no_books_for_load), Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.no_books_for_load),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 

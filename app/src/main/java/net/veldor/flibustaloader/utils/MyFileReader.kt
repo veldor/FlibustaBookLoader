@@ -21,6 +21,7 @@ object MyFileReader {
     const val SEQUENCES_BLACKLIST_FILE = "sequencesBlacklist.xml"
     const val GENRES_SUBSCRIBE_FILE = "genresSubscribe.xml"
     const val GENRES_BLACKLIST_FILE = "genresBlacklist.xml"
+    const val FORMAT_BLACKLIST_FILE = "formatBlacklist.xml"
 
     @kotlin.jvm.JvmStatic
     fun getSearchAutocomplete(): String {
@@ -115,6 +116,23 @@ object MyFileReader {
 
     private fun getSequencesBlacklist(): String {
         val blacklistFile = File(App.instance.filesDir, SEQUENCES_BLACKLIST_FILE)
+        if (!blacklistFile.exists()) {
+            makeFile(blacklistFile, BLACKLIST_NEW)
+        }
+        val text = StringBuilder()
+        try {
+            val br = BufferedReader(FileReader(blacklistFile))
+            var line: String?
+            while (br.readLine().also { line = it } != null) {
+                text.append(line)
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return text.toString()
+    }
+    private fun getFormatBlacklist(): String {
+        val blacklistFile = File(App.instance.filesDir, FORMAT_BLACKLIST_FILE)
         if (!blacklistFile.exists()) {
             makeFile(blacklistFile, BLACKLIST_NEW)
         }
@@ -241,6 +259,10 @@ object MyFileReader {
         val blacklistFile = File(App.instance.filesDir, GENRES_BLACKLIST_FILE)
         makeFile(blacklistFile, value)
     }
+    private fun saveFormatBlacklist(value: String) {
+        val blacklistFile = File(App.instance.filesDir, FORMAT_BLACKLIST_FILE)
+        makeFile(blacklistFile, value)
+    }
     private fun saveGenresSubscription(value: String) {
         val blacklistFile = File(App.instance.filesDir, GENRES_SUBSCRIBE_FILE)
         makeFile(blacklistFile, value)
@@ -251,6 +273,7 @@ object MyFileReader {
             BOOKS_BLACKLIST_FILE -> getBooksBlacklist()
             AUTHORS_BLACKLIST_FILE -> getAuthorsBlacklist()
             SEQUENCES_BLACKLIST_FILE -> getSequencesBlacklist()
+            FORMAT_BLACKLIST_FILE -> getFormatBlacklist()
             else -> getGenresBlacklist()
         }
     }
@@ -270,6 +293,7 @@ object MyFileReader {
             AUTHORS_BLACKLIST_FILE -> saveAuthorsBlacklist(content)
             SEQUENCES_BLACKLIST_FILE -> saveSequencesBlacklist(content)
             GENRES_BLACKLIST_FILE -> saveGenresBlacklist(content)
+            FORMAT_BLACKLIST_FILE -> saveFormatBlacklist(content)
         }
     }
     fun saveSubscription(fileName: String, content: String) {

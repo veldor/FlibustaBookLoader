@@ -165,8 +165,8 @@ object Grammar {
         return spannable
     }
 
-    fun humanReadableByteCountBin(bytes: Int): String? {
-        val absB = if (bytes == Int.MIN_VALUE) Int.MAX_VALUE else Math.abs(bytes)
+    fun humanReadableByteCountBin(bytes: Long): String? {
+        val absB = if (bytes == Long.MIN_VALUE) Long.MAX_VALUE else Math.abs(bytes)
         if (absB < 1024) {
             return "$bytes B"
         }
@@ -178,7 +178,7 @@ object Grammar {
             ci.next()
             i -= 10
         }
-        value *= Integer.signum(bytes)
+        value *= java.lang.Long.signum(bytes).toLong()
         return java.lang.String.format(Locale.ENGLISH, "%.1f %cб", value / 1024.0, ci.current())
     }
 }
