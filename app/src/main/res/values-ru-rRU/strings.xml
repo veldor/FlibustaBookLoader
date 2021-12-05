@@ -315,4 +315,17 @@
     <string name="invert_selection_title">Инвертировать выделение</string>
     <string name="cancel_selection_title">Отменить операцию</string>
     <string name="format_title">Формат</string>
+    <string name="show_genres_list_button">Список жанров</string>
+    <string name="show_sequences_list_button">Список серий</string>
+    <string name="drop_queue_action">Очистить очередь</string>
+    <string name="requme_download_action">Повторить загрузку</string>
+    <string name="retry_download_message">Попробовать ещё раз</string>
+    <string name="loaded_books_title">Загружено: %s</string>
+    <string name="error_load_message">Не загружено: %s</string>
+    <string name="db_migration_error_title">Ошибка переноса базы данных</string>
+    <string name="db_migration_error_message">Похоже, при обновлении программы возникла ошибка базы данных. Прошу прощения за это, мой просчёт. Что можно с этим сделать? Во-первых, сделать резервную копию настроек(кнопка- ниже). Снимите выделение со списков загруженных\\прочитанных книг  и очереди загрузок- проблема в них, после восстановления настроек она может повториться. После этого можете сбросить настройки приложения или попробовать очистить базу данных программно. Прошу прощения за неудобства.</string>
+    <string name="open_settings_message">Резервировать настройки</string>
+    <string name="open_app_info_message">Настройки приложения</string>
+    <string name="clear_tables_message">Очистить базу данных</string>
+    <string name="download_errors_snackbar">Загрузка завершена, не удалось скачать %d книг</string>
 </resources>

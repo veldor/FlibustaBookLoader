@@ -37,6 +37,7 @@ class DownloadBooksWorker(
     private val downloadErrors: ArrayList<BooksDownloadSchedule> = arrayListOf()
 
     override fun doWork(): Result {
+        var successLoaded = 0
         App.instance.liveDownloadState.postValue(DOWNLOAD_IN_PROGRESS)
         val downloadStartTime = System.currentTimeMillis()
         // проверю, есть ли в очереди скачивания книги
@@ -61,6 +62,13 @@ class DownloadBooksWorker(
                     // немедленно прекращаю работу
                     NotificationHandler.instance.cancelBookLoadNotification()
                     App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
+                    if (!downloadErrors.isNullOrEmpty()) {
+                        downloadErrors.forEach {
+                            dao.insert(it)
+                        }
+                        BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
+                    }
+                    NotificationHandler.instance.showBooksLoadedNotification(downloadErrors, successLoaded)
                     return Result.success()
                 }
                 var downloadCounter = 1
@@ -82,6 +90,18 @@ class DownloadBooksWorker(
                         // немедленно прекращаю работу
                         NotificationHandler.instance.cancelBookLoadNotification()
                         App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
+                        if (!downloadErrors.isNullOrEmpty()) {
+                            BaseActivity.sLiveNotDownloaded.postValue(downloadErrors)
+                            downloadErrors.forEach {
+                                dao.insert(it)
+                            }
+                            BaseActivity.sLiveNotDownloaded.postValue(downloadErrors)
+                            BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
+                        }
+                        NotificationHandler.instance.showBooksLoadedNotification(
+                            downloadErrors,
+                            successLoaded
+                        )
                         return Result.success()
                     }
                     // получу первый элемент из очереди
@@ -118,6 +138,7 @@ class DownloadBooksWorker(
                         downloadBook(queuedElement)
                         if (!isStopped) {
                             if (queuedElement.loaded) {
+                                successLoaded++
                                 // отмечу книгу как скачанную
                                 val downloadedBook = DownloadedBooks()
                                 downloadedBook.bookId = queuedElement.bookId
@@ -166,21 +187,19 @@ class DownloadBooksWorker(
                 }
                 // цикл закончился, проверю, все ли книги загружены
                 booksCount = dao.queueSize
-                if (booksCount == 0 && !isStopped) {
-                    // ура, всё загружено, выведу сообщение об успешной загрузке
-                    NotificationHandler.instance.showBooksLoadedNotification(bookDownloadsWithErrors)
-                }
             }
         } finally {
             if (!downloadErrors.isNullOrEmpty()) {
                 downloadErrors.forEach {
                     dao.insert(it)
                 }
+                BaseActivity.sLiveNotDownloaded.postValue(downloadErrors)
                 BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
             }
         }
         NotificationHandler.instance.cancelBookLoadNotification()
         App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
+        NotificationHandler.instance.showBooksLoadedNotification(downloadErrors, successLoaded)
         return Result.success()
     }
 

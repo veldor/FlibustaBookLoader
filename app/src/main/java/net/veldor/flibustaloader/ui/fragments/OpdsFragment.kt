@@ -9,6 +9,7 @@ import android.graphics.*
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.text.Html
 import android.text.InputType
 import android.text.TextUtils
@@ -221,16 +222,44 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         binding.searchType.setOnCheckedChangeListener { _, which ->
             binding.showAllSwitcher.visibility = View.GONE
             binding.showAuthorsListButton.visibility = View.GONE
+            binding.showGenresListButton.visibility = View.GONE
+            binding.showSequencesListButton.visibility = View.GONE
             when (which) {
                 R.id.searchBook -> {
                     binding.showAllSwitcher.visibility = View.VISIBLE
+                    binding.showAuthorsListButton.visibility = View.GONE
+                    binding.showGenresListButton.visibility = View.GONE
+                    binding.showSequencesListButton.visibility = View.GONE
                     if (PreferencesHandler.instance.isAutofocusSearch()) {
                         mSearchView?.isIconified = false
                         mSearchView?.requestFocus()
                     }
                 }
                 R.id.searchAuthor -> {
+                    binding.showAllSwitcher.visibility = View.GONE
                     binding.showAuthorsListButton.visibility = View.VISIBLE
+                    binding.showGenresListButton.visibility = View.GONE
+                    binding.showSequencesListButton.visibility = View.GONE
+                    if (PreferencesHandler.instance.isAutofocusSearch()) {
+                        mSearchView?.isIconified = false
+                        mSearchView?.requestFocus()
+                    }
+                }
+                R.id.searchGenre -> {
+                    binding.showAllSwitcher.visibility = View.GONE
+                    binding.showAuthorsListButton.visibility = View.GONE
+                    binding.showGenresListButton.visibility = View.VISIBLE
+                    binding.showSequencesListButton.visibility = View.GONE
+                    if (PreferencesHandler.instance.isAutofocusSearch()) {
+                        mSearchView?.isIconified = false
+                        mSearchView?.requestFocus()
+                    }
+                }
+                R.id.searchSequence -> {
+                    binding.showAllSwitcher.visibility = View.GONE
+                    binding.showAuthorsListButton.visibility = View.GONE
+                    binding.showGenresListButton.visibility = View.GONE
+                    binding.showSequencesListButton.visibility = View.VISIBLE
                     if (PreferencesHandler.instance.isAutofocusSearch()) {
                         mSearchView?.isIconified = false
                         mSearchView?.requestFocus()
@@ -238,13 +267,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 }
             }
         }
-        binding.searchGenre.setOnClickListener {
+        binding.showGenresListButton.setOnClickListener {
             mSearchView?.isIconified = true
             (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
             load("2", "/opds/genres", false, addToHistory = true, -1)
             showLoadWaiter()
         }
-        binding.searchSequence.setOnClickListener {
+        binding.showSequencesListButton.setOnClickListener {
             mSearchView?.isIconified = true
             (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
             load("3", "/opds/sequencesindex", false, addToHistory = true, -1)
@@ -1006,14 +1035,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     override fun onQueryTextSubmit(s: String): Boolean {
-        if (binding.searchType.checkedRadioButtonId == R.id.searchSequence || binding.searchType.checkedRadioButtonId == R.id.searchSequence) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.this_search_not_accepted_message),
-                Toast.LENGTH_LONG
-            ).show()
-            return false
-        }
         hideKeyboard(binding.rootView)
         if (!TextUtils.isEmpty(s.trim { it <= ' ' })) {
             binding.floatingMenu.visibility = View.GONE
@@ -1025,7 +1046,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             load(
                 "13",
                 URLHelper.getSearchRequest(
-                    binding.searchType.checkedRadioButtonId == R.id.searchBook,
+                    binding.searchType.checkedRadioButtonId,
                     searchString
                 ), false, addToHistory = true, -1
             )
@@ -1228,7 +1249,9 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             "По автору",
             "Скачано",
             "Прочитано",
-            "По формату"
+            "По формату",
+            "По году публикации",
+            "По добавлению на сайт",
         )
         private val authorSortOptions = arrayOf(
             "По имени автора от А",
@@ -1246,29 +1269,33 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         when (item.type) {
             TestParser.TYPE_BOOK -> {
                 // обработаю загрузку
-                if (item.downloadLinks.size > 1) {
-                    val savedMime: String? = PreferencesHandler.instance.favoriteMime
-                    if (!savedMime.isNullOrEmpty()) {
-                        // проверю, нет ли в списке выбранного формата
-                        item.downloadLinks.forEach {
-                            if (it.mime!!.contains(savedMime)) {
-                                viewModel.addToDownloadQueue(it, this)
-                                return
+                when {
+                    item.downloadLinks.size > 1 -> {
+                        val savedMime: String? = PreferencesHandler.instance.favoriteMime
+                        if (!savedMime.isNullOrEmpty()) {
+                            // проверю, нет ли в списке выбранного формата
+                            item.downloadLinks.forEach {
+                                if (it.mime!!.contains(savedMime)) {
+                                    viewModel.addToDownloadQueue(it, this)
+                                    return
+                                }
                             }
                         }
-                    }
-                    showDownloadsDialog(item.downloadLinks)
+                        showDownloadsDialog(item.downloadLinks)
 
-                } else if (item.downloadLinks.size == 1) {
-                    viewModel.addToDownloadQueue(item.downloadLinks[0], this)
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Не удалось найти ссылки для скачивания книги. Отправьте мне отчёт, сообщив подробности действия",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    val work = OneTimeWorkRequest.Builder(SendLogWorker::class.java).build()
-                    WorkManager.getInstance(App.instance).enqueue(work)
+                    }
+                    item.downloadLinks.size == 1 -> {
+                        viewModel.addToDownloadQueue(item.downloadLinks[0], this)
+                    }
+                    else -> {
+                        Toast.makeText(
+                            requireContext(),
+                            "Не удалось найти ссылки для скачивания книги. Отправьте мне отчёт, сообщив подробности действия",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        val work = OneTimeWorkRequest.Builder(SendLogWorker::class.java).build()
+                        WorkManager.getInstance(App.instance).enqueue(work)
+                    }
                 }
             }
             TestParser.TYPE_AUTHOR -> {
@@ -1276,7 +1303,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 showAuthorViewSelect(item)
             }
             else -> {
-                Log.d("surprise", "buttonPressed: load on button pressed")
                 // перейду по ссылке
                 load(
                     "17",
@@ -1527,31 +1553,32 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     override fun booksAdded(count: Int) {
-        Log.d("surprise", "booksAdded: books added $count")
-        if (count > 0) {
-            val snackbar = Snackbar.make(
-                binding.root,
-                "Скачиваю книг $count",
-                Snackbar.LENGTH_LONG
-            )
-            snackbar.setAction(getString(R.string.title_activity_download_schedule)) {
-                val intent = Intent(requireContext(), DownloadScheduleActivity::class.java)
-                requireActivity().startActivity(intent)
-            }
-            snackbar.setActionTextColor(
-                ResourcesCompat.getColor(
-                    resources,
-                    android.R.color.white,
-                    null
+        Handler(Looper.getMainLooper()).post {
+            if (count > 0) {
+                val snackbar = Snackbar.make(
+                    binding.root,
+                    "Скачиваю книг $count",
+                    Snackbar.LENGTH_LONG
                 )
-            )
-            snackbar.show()
-        } else {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.no_books_for_load),
-                Toast.LENGTH_SHORT
-            ).show()
+                snackbar.setAction(getString(R.string.title_activity_download_schedule)) {
+                    val intent = Intent(requireContext(), DownloadScheduleActivity::class.java)
+                    requireActivity().startActivity(intent)
+                }
+                snackbar.setActionTextColor(
+                    ResourcesCompat.getColor(
+                        resources,
+                        android.R.color.white,
+                        null
+                    )
+                )
+                snackbar.show()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.no_books_for_load),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 

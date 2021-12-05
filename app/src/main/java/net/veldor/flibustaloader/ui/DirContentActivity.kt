@@ -7,14 +7,12 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import net.veldor.flibustaloader.R
-import net.veldor.flibustaloader.adapters.DirContentAdapter
 import net.veldor.flibustaloader.adapters.DownloadDirContentAdapter
 import net.veldor.flibustaloader.databinding.ActivityShowDownloadFolderContentBinding
 import net.veldor.flibustaloader.selections.*
@@ -33,12 +31,12 @@ class DirContentActivity : BaseActivity() {
 
     private lateinit var binding: ActivityShowDownloadFolderContentBinding
     private lateinit var recycler: RecyclerView
-    private var adapter: DirContentAdapter? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this).get(DirContentViewModel::class.java)
         binding = ActivityShowDownloadFolderContentBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        rootView = binding.root
         setupInterface()
         // получу recyclerView
         recycler = findViewById(R.id.showDirContent)

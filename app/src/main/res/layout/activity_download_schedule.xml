@@ -110,7 +110,6 @@
                     android:foreground="?android:attr/selectableItemBackground"
                     android:padding="10dp"
                     android:text="@string/drop_download_queue_title"
-                    android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"

@@ -1,7 +1,6 @@
 package net.veldor.flibustaloader
 
 import android.net.Uri
-import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.MutableLiveData
 import androidx.multidex.MultiDexApplication
@@ -29,6 +28,7 @@ import java.util.concurrent.TimeUnit
 
 
 class App : MultiDexApplication() {
+    var migrationError: Boolean = false
     val liveBookDownloadInProgress: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
     val liveBookJustLoaded: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
     val liveBookJustRemovedFromQueue: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
@@ -50,24 +50,31 @@ class App : MultiDexApplication() {
         // got instance
         instance = this
         // clear previously loaded images
-        FilesHandler.clearCache()
+        FilesHandler.clearCache(cacheDir)
         // получаю базу данных
-        mDatabase = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java, "database"
-        )
-            .addMigrations(
-                AppDatabase.MIGRATION_1_2,
-                AppDatabase.MIGRATION_2_3,
-                AppDatabase.MIGRATION_3_4,
-                AppDatabase.MIGRATION_4_5,
-                AppDatabase.MIGRATION_5_6,
-                AppDatabase.MIGRATION_6_7,
-                AppDatabase.MIGRATION_7_8
+        try {
+            mDatabase = Room.databaseBuilder(
+                applicationContext,
+                AppDatabase::class.java, "database"
             )
-            .allowMainThreadQueries()
-            .build()
-
+                .addMigrations(
+                    AppDatabase.MIGRATION_1_2,
+                    AppDatabase.MIGRATION_2_3,
+                    AppDatabase.MIGRATION_3_4,
+                    AppDatabase.MIGRATION_4_5,
+                    AppDatabase.MIGRATION_5_6,
+                    AppDatabase.MIGRATION_6_7,
+                    AppDatabase.MIGRATION_7_8
+                )
+                .allowMainThreadQueries()
+                .build()
+                // попробую найти ошибку при миграции. Если она есть- не стану грузить приложение и попрошу сбросить настройки
+            mDatabase.booksDownloadScheduleDao().queueSize
+        }
+        catch (e: Exception){
+            // ошибка при миграции, судя по всему
+            migrationError = true
+        }
         // определю ночной режим
         if(PreferencesHandler.instance.isEInk){
             AppCompatDelegate.setDefaultNightMode(
@@ -240,12 +247,12 @@ class App : MultiDexApplication() {
     override fun onTerminate() {
         super.onTerminate()
         // clear previously loaded images
-        FilesHandler.clearCache()
+        FilesHandler.clearCache(cacheDir)
     }
 
     companion object {
         //todo switch to false on release
-        const val isTestVersion = true
+        const val isTestVersion = false
         val sResetLoginCookie = MutableLiveData<Boolean>()
         const val BACKUP_DIR_NAME = "FlibustaDownloaderBackup"
         const val BACKUP_FILE_NAME = "settings_backup.zip"

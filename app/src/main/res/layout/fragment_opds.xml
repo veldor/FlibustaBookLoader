@@ -179,12 +179,35 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/search_type" />
+    <Button
+        android:id="@+id/showGenresListButton"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/show_genres_list_button"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/search_type" />
+    <Button
+        android:id="@+id/showSequencesListButton"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/show_sequences_list_button"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/search_type" />
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/showAllSwitcher"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/show_all_results_switcher_text"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -196,7 +219,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="showAuthorsListButton,showAllSwitcher,connectionType,mirrorUsed"
+        app:constraint_referenced_ids="showAuthorsListButton, showGenresListButton, showSequencesListButton,showAllSwitcher,connectionType,mirrorUsed"
         tools:layout_editor_absoluteY="64dp" />
 
     <androidx.recyclerview.widget.RecyclerView

@@ -18,6 +18,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
+import java.nio.file.Files
 
 object FilesHandler {
 
@@ -25,8 +26,8 @@ object FilesHandler {
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     fun shareFile(incomingDocumentFile: DocumentFile) {
         shareFile(
-                incomingDocumentFile,
-                App.instance.getString(R.string.send_book_title)
+            incomingDocumentFile,
+            App.instance.getString(R.string.send_book_title)
         )
     }
 
@@ -41,10 +42,10 @@ object FilesHandler {
                 shareIntent.type = getMimeType(file.name)
                 shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                 App.instance.startActivity(
-                        Intent.createChooser(
-                                shareIntent,
-                                chooserPromise
-                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    Intent.createChooser(
+                        shareIntent,
+                        chooserPromise
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             } else {
                 Log.d("surprise", "shareFile: try share mobi as file")
@@ -55,20 +56,21 @@ object FilesHandler {
                 if (file1 != null) {
                     if (!file1.exists()) {
                         file1 = File(
-                                Environment.getExternalStorageDirectory().toString() + "/" + split[1]
+                            Environment.getExternalStorageDirectory().toString() + "/" + split[1]
                         )
                     }
                     if (file1.exists()) {
-                        Log.d("surprise", "shareFile: mobi file exists with length ${file1.length()}")
-                        //todo По возможности- разобраться и заменить на валидное решение
                         val fileUri: Uri? = try {
                             FileProvider.getUriForFile(
                                 App.instance,
                                 "net.veldor.flibustaloader.provider",
-                                file1)
+                                file1
+                            )
                         } catch (e: IllegalArgumentException) {
-                            Log.e("File Selector",
-                                "The selected file can't be shared: $file1")
+                            Log.e(
+                                "File Selector",
+                                "The selected file can't be shared: $file1"
+                            )
                             null
                         }
                         Log.d("surprise", "shareFile: uri is $fileUri")
@@ -78,10 +80,10 @@ object FilesHandler {
                         shareIntent.type = mime
                         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                         App.instance.startActivity(
-                                Intent.createChooser(
-                                        shareIntent,
-                                        chooserPromise
-                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            Intent.createChooser(
+                                shareIntent,
+                                chooserPromise
+                            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         )
                     }
                 }
@@ -135,10 +137,10 @@ object FilesHandler {
             intent.setDataAndType(file.uri, mime)
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
             App.instance.startActivity(
-                    Intent.createChooser(
-                            intent,
-                            App.instance.getString(R.string.open_with_menu_item)
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                Intent.createChooser(
+                    intent,
+                    App.instance.getString(R.string.open_with_menu_item)
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         }
     }
@@ -173,21 +175,22 @@ object FilesHandler {
         shareIntent.type = getMimeType(file.name)
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         App.instance.startActivity(
-                Intent.createChooser(
-                        shareIntent,
-                        chooserPromise
-                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            Intent.createChooser(
+                shareIntent,
+                chooserPromise
+            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
     }
 
-    fun clearCache() {
-        val dir: File = App.instance.cacheDir
+    fun clearCache(dir: File) {
         val children = dir.listFiles()
         val iterator = children.iterator()
         while (iterator.hasNext()) {
             val item = iterator.next()
-            if(item.isFile){
+            if (item.isFile) {
                 item.delete()
+            } else if (item.isDirectory && item.name == "compressor") {
+                clearCache(item)
             }
         }
     }

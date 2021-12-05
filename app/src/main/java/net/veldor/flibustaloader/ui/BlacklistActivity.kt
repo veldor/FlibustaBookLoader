@@ -1,12 +1,17 @@
 package net.veldor.flibustaloader.ui
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.CompoundButton
 import android.widget.RadioGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import co.mobiwise.materialintro.shape.Focus
@@ -33,36 +38,38 @@ class BlacklistActivity : BaseActivity() {
         setupInterface()
         if (PreferencesHandler.instance.isEInk) {
             binding.blacklistBook.setTextColor(
-                ResourcesCompat.getColor(
-                    resources,
-                    R.color.black,
-                    null
-                )
+                    ResourcesCompat.getColor(
+                            resources,
+                            R.color.black,
+                            null
+                    )
             )
             binding.blacklistAuthor.setTextColor(
-                ResourcesCompat.getColor(
-                    resources,
-                    R.color.black,
-                    null
-                )
+                    ResourcesCompat.getColor(
+                            resources,
+                            R.color.black,
+                            null
+                    )
             )
             binding.blacklistSequence.setTextColor(
-                ResourcesCompat.getColor(
-                    resources,
-                    R.color.black,
-                    null
-                )
+                    ResourcesCompat.getColor(
+                            resources,
+                            R.color.black,
+                            null
+                    )
             )
             binding.blacklistGenre.setTextColor(
-                ResourcesCompat.getColor(
-                    resources,
-                    R.color.black,
-                    null
-                )
+                    ResourcesCompat.getColor(
+                            resources,
+                            R.color.black,
+                            null
+                    )
             )
             paintToolbar(binding.toolbar)
         }
-        showHints()
+        if (!PreferencesHandler.instance.isEInk) {
+            showHints()
+        }
         // скрою переход на данное активити
         val menuNav = mNavigationView.menu
         val item = menuNav.findItem(R.id.goToBlacklist)
@@ -195,27 +202,74 @@ class BlacklistActivity : BaseActivity() {
             }
         })
     }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.blacklist_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_sort_by) {
+            selectSorting()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun selectSorting() {
+        val dialog = AlertDialog.Builder(this, R.style.MyDialogStyle)
+        dialog.setTitle("Выберите тип сортировки")
+                .setItems(sortOptions) { _: DialogInterface?, which: Int ->
+                    when (binding.blacklistType.checkedRadioButtonId) {
+                        R.id.blacklistBook -> {
+                            (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistBooks.instance.getBlacklist(which))
+                        }
+                        R.id.blacklistAuthor -> {
+                            (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistAuthors.instance.getBlacklist(which))
+                        }
+                        R.id.blacklistSequence -> {
+                            (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistSequences.instance.getBlacklist(which))
+                        }
+                        R.id.blacklistGenre -> {
+                            (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistGenre.instance.getBlacklist(which))
+                        }
+                        R.id.blacklistFormat -> {
+                            (binding.resultsList.adapter as BlacklistAdapter).changeList(BlacklistFormat.instance.getBlacklist(which))
+                        }
+                    }
+                }
+        dialog.show()
+    }
+
+    companion object {
+        private val sortOptions = arrayOf(
+                "По порядку добавления",
+                "По порядку добавления (инверсия)",
+                "От а до я",
+                "От я до а",
+        )
+    }
 }
 
 private fun BlacklistActivity.showFirstHelp() {
     Handler(Looper.getMainLooper()).postDelayed({
         kotlin.run {
             MaterialIntroView.Builder(this)
-                .enableDotAnimation(true)
-                .enableIcon(false)
-                .setFocusGravity(FocusGravity.CENTER)
-                .setFocusType(Focus.MINIMUM)
-                .setDelayMillis(300)
-                .setUsageId("blacklist type select")
-                .enableFadeAnimation(true)
-                .performClick(true)
-                .setListener {
-                    showSecondHelp()
-                }
-                .setInfoText(getString(R.string.blacklist_first_help_text))
-                .setTarget(binding.blacklistBook)
-                .setShape(ShapeType.CIRCLE)
-                .show()
+                    .enableDotAnimation(true)
+                    .enableIcon(false)
+                    .setFocusGravity(FocusGravity.CENTER)
+                    .setFocusType(Focus.MINIMUM)
+                    .setDelayMillis(300)
+                    .setUsageId("blacklist type select")
+                    .enableFadeAnimation(true)
+                    .performClick(true)
+                    .setListener {
+                        showSecondHelp()
+                    }
+                    .setInfoText(getString(R.string.blacklist_first_help_text))
+                    .setTarget(binding.blacklistBook)
+                    .setShape(ShapeType.CIRCLE)
+                    .show()
         }
     }, 100)
 }
@@ -224,21 +278,21 @@ private fun BlacklistActivity.showSecondHelp() {
     Handler(Looper.getMainLooper()).postDelayed({
         kotlin.run {
             MaterialIntroView.Builder(this)
-                .enableDotAnimation(true)
-                .enableIcon(false)
-                .setFocusGravity(FocusGravity.CENTER)
-                .setFocusType(Focus.MINIMUM)
-                .setDelayMillis(700)
-                .setUsageId("blacklist value enter")
-                .enableFadeAnimation(true)
-                .performClick(true)
-                .setListener {
+                    .enableDotAnimation(true)
+                    .enableIcon(false)
+                    .setFocusGravity(FocusGravity.CENTER)
+                    .setFocusType(Focus.MINIMUM)
+                    .setDelayMillis(700)
+                    .setUsageId("blacklist value enter")
+                    .enableFadeAnimation(true)
+                    .performClick(true)
+                    .setListener {
 
-                }
-                .setInfoText(getString(R.string.blacklist_second_hint_text))
-                .setTarget(binding.blacklistItemInput)
-                .setShape(ShapeType.CIRCLE)
-                .show()
+                    }
+                    .setInfoText(getString(R.string.blacklist_second_hint_text))
+                    .setTarget(binding.blacklistItemInput)
+                    .setShape(ShapeType.CIRCLE)
+                    .show()
         }
     }, 100)
 }

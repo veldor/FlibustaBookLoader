@@ -29,6 +29,8 @@ class TestParser(private val text: String) {
         val simpleStringBuilder = StringBuilder()
         var idFound = false
         var nameFound = false
+        var issued = false
+        var updated = false
         var authorContainerFound = false
         var authorFound = false
         var authorUriFound = false
@@ -51,10 +53,10 @@ class TestParser(private val text: String) {
                 // Метод вызывается когда SAXParser "натыкается" на начало тэга
                 @Throws(SAXException::class)
                 override fun startElement(
-                    uri: String?,
-                    localName: String?,
-                    qName: String,
-                    attributes: Attributes?
+                        uri: String?,
+                        localName: String?,
+                        qName: String,
+                        attributes: Attributes?
                 ) {
                     if (qName.equals("entry", ignoreCase = true)) {
                         foundedEntity = FoundedEntity()
@@ -111,8 +113,7 @@ class TestParser(private val text: String) {
                                     attributeIndex = attributes.getIndex("type")
                                     downloadLink.mime = attributes.getValue(attributeIndex)
                                     foundedEntity!!.downloadLinks.add(downloadLink)
-                                }
-                                else if (attributeValue == "http://opds-spec.org/acquisition/disabled") {
+                                } else if (attributeValue == "http://opds-spec.org/acquisition/disabled") {
                                     // link found, append it
                                     attributeIndex = attributes.getIndex("href")
                                     downloadLink = DownloadLink()
@@ -123,7 +124,7 @@ class TestParser(private val text: String) {
                                 } else if (attributeValue == "http://opds-spec.org/image") {
                                     // найдена обложка
                                     foundedEntity!!.coverUrl =
-                                        attributes.getValue(attributes.getIndex("href"))
+                                            attributes.getValue(attributes.getIndex("href"))
                                 } else {
                                     attributeIndex = attributes.getIndex("href")
                                     attributeValue = attributes.getValue(attributeIndex)
@@ -146,6 +147,12 @@ class TestParser(private val text: String) {
                                 }
                             }
                         }
+                    } else if (qName == "dc:issued" && foundedEntity != null) {
+                        issued = true
+                        foundedEntity!!.publicationYear = ""
+                    }else if (qName == "updated" && foundedEntity != null) {
+                        updated = true
+                        foundedEntity!!.publicationYear = ""
                     }
                 }
 
@@ -153,14 +160,14 @@ class TestParser(private val text: String) {
                     if (qName.equals("entry", ignoreCase = true)) {
                         foundedEntity!!.author = authorStringBuilder.removeSuffix("\n").toString()
                         foundedEntity!!.genreComplex =
-                            genreStringBuilder.removeSuffix("\n").toString()
+                                genreStringBuilder.removeSuffix("\n").toString()
                         genreStringBuilder.clear()
                         authorStringBuilder.clear()
 
                         foundedEntity!!.read =
-                            db.readBooksDao().getBookById(foundedEntity!!.id) != null
+                                db.readBooksDao().getBookById(foundedEntity!!.id) != null
                         foundedEntity!!.downloaded =
-                            db.downloadedBooksDao().getBookById(foundedEntity!!.id) != null
+                                db.downloadedBooksDao().getBookById(foundedEntity!!.id) != null
 
                         var authorDirName: String = when (foundedEntity!!.authors.size) {
                             0 -> {
@@ -172,7 +179,7 @@ class TestParser(private val text: String) {
                             }
                             2 -> {
                                 Grammar.createAuthorDirName(foundedEntity!!.authors[0]) + " " + Grammar.createAuthorDirName(
-                                    foundedEntity!!.authors[1]
+                                        foundedEntity!!.authors[1]
                                 )
                             }
                             else -> {
@@ -195,12 +202,12 @@ class TestParser(private val text: String) {
                                     simpleStringBuilder.append(prefix)
                                     prefix = "$|$"
                                     simpleStringBuilder.append(
-                                        Regex("[^\\d\\w ]").replace(
-                                            it.name!!.replace(
-                                                "Все книги серии",
-                                                ""
-                                            ), ""
-                                        )
+                                            Regex("[^\\d\\w ]").replace(
+                                                    it.name!!.replace(
+                                                            "Все книги серии",
+                                                            ""
+                                                    ), ""
+                                            )
                                     )
                                 }
                                 link.sequenceDirName = simpleStringBuilder.toString().trim()
@@ -210,7 +217,7 @@ class TestParser(private val text: String) {
                                 link.reservedSequenceName = ""
                             }
                         }
-                       val filterResult = Filter.check(foundedEntity!!)
+                        val filterResult = Filter.check(foundedEntity!!)
                         if (filterResult.result) {
                             parsed.add(foundedEntity!!)
                             // загружу картинку
@@ -225,12 +232,17 @@ class TestParser(private val text: String) {
                         }
                     } else if (qName.equals("content")) {
                         contentFound = false
-                    }else if (qName.equals("name")) {
+                    } else if (qName.equals("name")) {
                         authorStringBuilder.append(author!!.name)
                         authorStringBuilder.append("\n")
                         authorFound = false
-                    }else if (qName.equals("title")) {
+                    } else if (qName.equals("title")) {
                         nameFound = false
+                    }else if (qName.equals("dc:issued")) {
+                        issued = false
+                    }
+                    else if (qName.equals("dc:updated")) {
+                        updated = false
                     }
                 }
 
@@ -262,7 +274,7 @@ class TestParser(private val text: String) {
                         foundedEntity!!.id = textValue!!
                     }
                     if (nameFound) {
-                        if(ch != null) {
+                        if (ch != null) {
                             foundedEntity!!.name += String(ch, start, length)
                         }
                     }
@@ -270,8 +282,18 @@ class TestParser(private val text: String) {
                         parseContent(foundedEntity, String(ch!!, start, length))
                     }
                     if (authorFound) {
-                        if(ch != null) {
+                        if (ch != null) {
                             author!!.name += String(ch, start, length)
+                        }
+                    }
+                    if (issued) {
+                        if (ch != null) {
+                            foundedEntity!!.publicationYear += String(ch, start, length)
+                        }
+                    }
+                    if (updated) {
+                        if (ch != null) {
+                            foundedEntity!!.publishTime += String(ch, start, length)
                         }
                     }
                     if (authorUriFound) {

@@ -24,8 +24,8 @@ class SubscriptionsFragment : Fragment() {
     lateinit var binding: FragmentSubscribeBinding
     private lateinit var mViewModel: SubscriptionsViewModel
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?, savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
         mViewModel = ViewModelProvider(this).get(SubscriptionsViewModel::class.java)
@@ -100,12 +100,13 @@ class SubscriptionsFragment : Fragment() {
 
 
     private fun setupUI() {
-        showHints()
-        if(PreferencesHandler.instance.isEInk){
+        if (PreferencesHandler.instance.isEInk) {
             binding.searchBook.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
             binding.searchAuthor.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
             binding.searchSequence.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
             binding.searchGenre.setTextColor(ResourcesCompat.getColor(resources, R.color.black, null))
+        } else {
+            showHints()
         }
         binding.subscribeItemInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -138,22 +139,22 @@ class SubscriptionsFragment : Fragment() {
 
         // назначу действие переключателю автоматической подписки
         binding.switchAutoCheckSubscribes.isChecked =
-            PreferencesHandler.instance.isSubscriptionsAutoCheck
+                PreferencesHandler.instance.isSubscriptionsAutoCheck
         binding.switchAutoCheckSubscribes.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
             PreferencesHandler.instance.isSubscriptionsAutoCheck =
-                !PreferencesHandler.instance.isSubscriptionsAutoCheck
+                    !PreferencesHandler.instance.isSubscriptionsAutoCheck
             mViewModel.switchSubscriptionsAutoCheck()
             if (isChecked) {
                 Toast.makeText(
-                    context,
-                    "Подписки будут автоматически проверяться раз в сутки",
-                    Toast.LENGTH_SHORT
+                        context,
+                        "Подписки будут автоматически проверяться раз в сутки",
+                        Toast.LENGTH_SHORT
                 ).show()
             } else {
                 Toast.makeText(
-                    context,
-                    "Автоматическая провека подписок отключена, чтобы проверить- нажмите на кнопки выше",
-                    Toast.LENGTH_SHORT
+                        context,
+                        "Автоматическая провека подписок отключена, чтобы проверить- нажмите на кнопки выше",
+                        Toast.LENGTH_SHORT
                 ).show()
             }
         }
@@ -195,21 +196,21 @@ private fun SubscriptionsFragment.showFirstHelp() {
     Handler(Looper.getMainLooper()).postDelayed({
         kotlin.run {
             MaterialIntroView.Builder(requireActivity())
-                .enableDotAnimation(true)
-                .enableIcon(false)
-                .setFocusGravity(FocusGravity.CENTER)
-                .setFocusType(Focus.MINIMUM)
-                .setDelayMillis(300)
-                .setUsageId("subscribe type select")
-                .enableFadeAnimation(true)
-                .performClick(true)
-                .setListener {
-                    showSecondHelp()
-                }
-                .setInfoText(getString(R.string.select_subscription_type_message))
-                .setTarget(binding.searchBook)
-                .setShape(ShapeType.CIRCLE)
-                .show()
+                    .enableDotAnimation(true)
+                    .enableIcon(false)
+                    .setFocusGravity(FocusGravity.CENTER)
+                    .setFocusType(Focus.MINIMUM)
+                    .setDelayMillis(300)
+                    .setUsageId("subscribe type select")
+                    .enableFadeAnimation(true)
+                    .performClick(true)
+                    .setListener {
+                        showSecondHelp()
+                    }
+                    .setInfoText(getString(R.string.select_subscription_type_message))
+                    .setTarget(binding.searchBook)
+                    .setShape(ShapeType.CIRCLE)
+                    .show()
         }
     }, 100)
 }
@@ -218,21 +219,21 @@ private fun SubscriptionsFragment.showSecondHelp() {
     Handler(Looper.getMainLooper()).postDelayed({
         kotlin.run {
             MaterialIntroView.Builder(requireActivity())
-                .enableDotAnimation(true)
-                .enableIcon(false)
-                .setFocusGravity(FocusGravity.CENTER)
-                .setFocusType(Focus.MINIMUM)
-                .setDelayMillis(700)
-                .setUsageId("subscribe value enter")
-                .enableFadeAnimation(true)
-                .performClick(true)
-                .setListener {
+                    .enableDotAnimation(true)
+                    .enableIcon(false)
+                    .setFocusGravity(FocusGravity.CENTER)
+                    .setFocusType(Focus.MINIMUM)
+                    .setDelayMillis(700)
+                    .setUsageId("subscribe value enter")
+                    .enableFadeAnimation(true)
+                    .performClick(true)
+                    .setListener {
 
-                }
-                .setInfoText(getString(R.string.subscription_second_hint_text))
-                .setTarget(binding.subscribeItemInput)
-                .setShape(ShapeType.CIRCLE)
-                .show()
+                    }
+                    .setInfoText(getString(R.string.subscription_second_hint_text))
+                    .setTarget(binding.subscribeItemInput)
+                    .setShape(ShapeType.CIRCLE)
+                    .show()
         }
     }, 100)
 }

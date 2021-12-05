@@ -41,6 +41,14 @@ class MiscActionsReceiver : BroadcastReceiver() {
                         Toast.LENGTH_LONG
                     ).show()
                 }
+                ACTION_CLEAN_DOWNLOAD_QUEUE -> {
+                    dropDownloadsQueue()
+                    Toast.makeText(
+                        App.instance,
+                        "Очередь скачивания очищена!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
                 ACTION_PAUSE_MASS_DOWNLOAD -> {
                     NotificationHandler.instance.hideMassDownloadInQueueMessage()
                     WorkManager.getInstance(App.instance)
@@ -100,6 +108,7 @@ class MiscActionsReceiver : BroadcastReceiver() {
     }
 
     companion object {
+        const val ACTION_CLEAN_DOWNLOAD_QUEUE = "clear download queue"
         const val EXTRA_ACTION_TYPE = "action type"
         const val ACTION_CANCEL_MASS_DOWNLOAD = "cancel download"
         const val ACTION_PAUSE_MASS_DOWNLOAD = "pause download"

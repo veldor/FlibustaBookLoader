@@ -81,7 +81,6 @@ class DownloadScheduleActivity : BaseActivity(), DownloadWorkSwitchStateDelegate
                 viewModel.loadDownloadQueue()
                 binding.actionButton.text = getString(R.string.start_download)
                 (binding.resultsList.adapter as DownloadScheduleAdapter).notifyDataSetChanged()
-                binding.dropDownloadQueueBtn.visibility = View.GONE
             } else if (it == DownloadBooksWorker.DOWNLOAD_IN_PROGRESS) {
                 binding.fullLoadProgressBar.visibility = View.VISIBLE
                 binding.bookLoadProgressBar.visibility = View.VISIBLE
@@ -89,7 +88,6 @@ class DownloadScheduleActivity : BaseActivity(), DownloadWorkSwitchStateDelegate
                 binding.bookTotalProgressText.visibility = View.VISIBLE
                 (binding.resultsList.adapter as DownloadScheduleAdapter).notifyDataSetChanged()
                 binding.actionButton.text = getString(R.string.stop_download_message)
-                binding.dropDownloadQueueBtn.visibility = View.VISIBLE
             }
         })
 
@@ -114,7 +112,6 @@ class DownloadScheduleActivity : BaseActivity(), DownloadWorkSwitchStateDelegate
 
     override fun setupInterface() {
         super.setupInterface()
-
         binding.dropDownloadQueueBtn.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Отмена очереди скачивания")
@@ -194,6 +191,7 @@ class DownloadScheduleActivity : BaseActivity(), DownloadWorkSwitchStateDelegate
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun stateSwitched(state: Int) {
         viewModel.loadDownloadQueue()
         (binding.resultsList.adapter as DownloadScheduleAdapter).notifyDataSetChanged()

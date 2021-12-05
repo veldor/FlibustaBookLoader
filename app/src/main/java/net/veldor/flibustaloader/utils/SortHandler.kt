@@ -137,6 +137,34 @@ object SortHandler {
                     }
                     return@sort if (lhs.format!! > rhs.format!!) 1 else -1
                 }
+                9 -> {
+                    if (lhs.publicationYear == rhs.publicationYear) return@sort 0
+                    if (lhs.publicationYear.isEmpty()) {
+                        return@sort 1
+                    }
+                    if (rhs.publicationYear.isEmpty()) {
+                        return@sort -1
+                    }
+                    if (lastSortOption == sortOption) {
+                        // invert
+                        return@sort if (lhs.publicationYear < rhs.publicationYear) 1 else -1
+                    }
+                    return@sort if (lhs.publicationYear > rhs.publicationYear) 1 else -1
+                }
+                10 -> {
+                    if (lhs.publishTime == rhs.publishTime) return@sort 0
+                    if (lhs.publishTime.isEmpty()) {
+                        return@sort 1
+                    }
+                    if (rhs.publishTime.isEmpty()) {
+                        return@sort -1
+                    }
+                    if (lastSortOption == sortOption) {
+                        // invert
+                        return@sort if (lhs.publishTime < rhs.publishTime) 1 else -1
+                    }
+                    return@sort if (lhs.publishTime > rhs.publishTime) 1 else -1
+                }
                 else -> {
                     if (lhs.name == rhs.name) return@sort 0
                     if (lastSortOption == sortOption) {

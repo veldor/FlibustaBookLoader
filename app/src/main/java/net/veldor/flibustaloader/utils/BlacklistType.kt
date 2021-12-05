@@ -3,7 +3,6 @@ package net.veldor.flibustaloader.utils
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import net.veldor.flibustaloader.selections.BlacklistItem
-import net.veldor.flibustaloader.selections.FoundedEntity
 import org.w3c.dom.Document
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
@@ -47,8 +46,8 @@ abstract class BlacklistType {
             var blacklistItem: BlacklistItem
             while (values.item(counter) != null) {
                 blacklistItem = BlacklistItem(
-                    values.item(counter).firstChild.nodeValue,
-                    blacklistName
+                        values.item(counter).firstChild.nodeValue,
+                        blacklistName
                 )
                 mExistentValues.add(blacklistItem.name)
                 mBlacklistValues.add(blacklistItem)
@@ -71,8 +70,7 @@ abstract class BlacklistType {
             mDom!!.documentElement.insertBefore(elem, mDom!!.documentElement.firstChild)
             MyFileReader.saveBlacklist(blacklistFileName, getStringFromDocument(mDom))
             liveBlacklistAdd.postValue(BlacklistItem(value.lowercase(), blacklistName))
-        }
-        else{
+        } else {
             Log.d("surprise", "addValue: already in blacklist")
         }
     }
@@ -94,6 +92,23 @@ abstract class BlacklistType {
             MyFileReader.saveBlacklist(blacklistFileName, getStringFromDocument(mDom))
             liveBlacklistRemove.postValue(BlacklistItem(name, blacklistName))
         }
+    }
+
+    fun getBlacklist(which: Int): ArrayList<BlacklistItem> {
+        val unsorted = getBlacklist()
+        when (which) {
+            1 -> {
+                unsorted.reverse()
+            }
+            2 -> {
+                unsorted.sortBy{it.name}
+            }
+            3 -> {
+                unsorted.sortBy{it.name}
+                unsorted.reverse()
+            }
+        }
+        return unsorted
     }
 
     companion object {

@@ -32,9 +32,11 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.OnLifecycleEvent
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
 import lib.folderpicker.FolderPicker
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
+import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.dialogs.ChangelogDialog
 import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.MyFileReader.SUBSCRIPTIONS_FILE
@@ -47,6 +49,7 @@ import java.util.*
 import kotlin.system.exitProcess
 
 open class BaseActivity : AppCompatActivity() {
+    var rootView: View? = null
     private lateinit var mDownloadsListTextView: TextView
     private lateinit var mSubscriptionsListTextView: TextView
     protected lateinit var mNavigationView: NavigationView
@@ -107,6 +110,9 @@ open class BaseActivity : AppCompatActivity() {
                 getString(R.string.application_version_message),
                 Grammar.appVersion
             )
+            if (!App.isTestVersion) {
+                mNavigationView.menu.findItem(R.id.sendLog).isVisible = false
+            }
             // метод для счетчиков
             initializeCountDrawer()
         }
@@ -141,7 +147,33 @@ open class BaseActivity : AppCompatActivity() {
             }
         })
 
+        sLiveNotDownloaded.observe(this, {
+            if (it.size > 0) {
+                showNotLoadFinishedSnackbar(it)
+                sLiveNotDownloaded.value = arrayListOf()
+            }
+        })
+    }
 
+    private fun showNotLoadFinishedSnackbar(it: ArrayList<BooksDownloadSchedule>) {
+        if (rootView != null) {
+            val snackbar =
+                Snackbar.make(
+                    rootView!!,
+                    String.format(
+                        Locale.ENGLISH,
+                        getString(R.string.download_errors_snackbar),
+                        it.size
+                    ),
+                    10000
+                )
+            snackbar.setAction(getString(R.string.retry_download_message)) {
+                App.instance.requestDownloadBooksStart()
+                val intent = Intent(this, DownloadScheduleActivity::class.java)
+                startActivity(intent)
+            }
+            snackbar.show()
+        }
     }
 
     private fun setSubscriptionsLength() {
@@ -248,10 +280,10 @@ open class BaseActivity : AppCompatActivity() {
                             if (drawable != null) {
                                 //Set the color filter in separate thread
                                 //by adding it to the message queue - won't work otherwise
-                                innerView.post({
+                                innerView.post {
                                     innerView.compoundDrawables[k].colorFilter =
                                         colorFilter
-                                })
+                                }
                             }
                         }
                     }
@@ -342,7 +374,7 @@ open class BaseActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    var compatDirSelectResultLauncher =
+    private var compatDirSelectResultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data: Intent? = result.data
@@ -366,7 +398,7 @@ open class BaseActivity : AppCompatActivity() {
             }
         }
 
-    var dirSelectResultLauncher =
+    private var dirSelectResultLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 // There are no request codes
@@ -412,8 +444,9 @@ open class BaseActivity : AppCompatActivity() {
         }
 
 
-
     companion object {
+        val sLiveNotDownloaded = MutableLiveData<ArrayList<BooksDownloadSchedule>>(arrayListOf())
+
         @JvmField
         val sLiveDownloadScheduleCountChanged = MutableLiveData<Boolean>()
         val sLiveFoundedSubscriptionsCount = MutableLiveData<Boolean>()

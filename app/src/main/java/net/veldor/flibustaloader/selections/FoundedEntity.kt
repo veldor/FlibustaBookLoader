@@ -34,4 +34,9 @@ class FoundedEntity {
 
     var read = false
     var downloaded = false
+
+    // год выпуска
+    var publicationYear = ""
+    // время выкладки на сайте
+    var publishTime = ""
 }

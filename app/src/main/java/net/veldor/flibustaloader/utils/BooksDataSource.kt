@@ -31,7 +31,7 @@ internal class BooksDataSource(val list: ArrayList<Book>) :
                     )
                 }
             } else {
-                callback.onResult(listOf(), 0)
+                callback.onResult(listOf(), 0, 0)
             }
         }
     }

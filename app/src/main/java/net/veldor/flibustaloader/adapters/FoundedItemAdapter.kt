@@ -33,7 +33,6 @@ import net.veldor.flibustaloader.parsers.TestParser.Companion.TYPE_SEQUENCE
 import net.veldor.flibustaloader.selections.FoundedEntity
 import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.workers.SendLogWorker
-import java.lang.IllegalArgumentException
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
@@ -72,17 +71,6 @@ class FoundedItemAdapter(
         return -1
     }
 
-    fun getItemById(id: Long): FoundedEntity? {
-        if (values.isNotEmpty()) {
-            values.forEach {
-                if (it.itemId == id) {
-                    return it
-                }
-            }
-        }
-        return null
-    }
-
     override fun onBindViewHolder(viewHolder: ViewHolder, i: Int) {
         if (i < values.size) {
             viewHolder.bind(values[i])
@@ -110,10 +98,6 @@ class FoundedItemAdapter(
         lastSortOption = -1
         values = newData
         notifyDataSetChanged()
-    }
-
-    fun sort() {
-        Toast.makeText(App.instance, "результаты отсортированы!", Toast.LENGTH_SHORT).show()
     }
 
     override fun clearList() {
@@ -887,10 +871,6 @@ class FoundedItemAdapter(
         }
     }
 
-    fun getSize(): Int {
-        return values.size
-    }
-
     fun hasBooks(): Boolean {
         if (values.isNotEmpty()) {
             values.forEach {
@@ -920,19 +900,22 @@ class FoundedItemAdapter(
                 db.readBooksDao().getBookById(item.id) != null
             item.downloaded =
                 db.downloadedBooksDao().getBookById(item.id) != null
-            if (!Filter.check(item).result) {
-                // remove item from list
-                val itemIndex = values.indexOf(item)
-                iterator.remove()
-                notifyItemRemoved(itemIndex)
-                ++filtered
-            } else {
-                if (item.coverUrl != null && item.coverUrl!!.isNotEmpty() && PreferencesHandler.instance.isPreviews && item.cover == null) {
-                    // load pic in new Thread
-                    PicHandler().loadPic(item)
+            try {
+                if (!Filter.check(item).result) {
+                    // remove item from list
+                    val itemIndex = values.indexOf(item)
+                    iterator.remove()
+                    notifyItemRemoved(itemIndex)
+                    ++filtered
+                } else {
+                    if (item.coverUrl != null && item.coverUrl!!.isNotEmpty() && PreferencesHandler.instance.isPreviews && item.cover == null) {
+                        // load pic in new Thread
+                        PicHandler().loadPic(item)
+                    }
+                    ++appended
                 }
-                ++appended
             }
+            catch (e: Exception){}
         }
         result[0] = appended
         result[1] = filtered
@@ -1009,5 +992,5 @@ class FoundedItemAdapter(
         }
     }
 
-    var isScrolledToLast: Boolean = false
+    var isScrolledToLast = false
 }

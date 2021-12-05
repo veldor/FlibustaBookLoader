@@ -29,12 +29,14 @@ object Updater {
     private const val GITHUB_APP_VERSION = "tag_name"
     const val GITHUB_DOWNLOAD_LINK = "browser_download_url"
     private const val GITHUB_APP_NAME = "name"
+
     @JvmField
     val newVersion = MutableLiveData<Boolean>()
 
     // место для хранения идентификатора загрузки обновления
     @JvmField
     val updateDownloadIdentification = MutableLiveData<Long>()
+
     @JvmStatic
     fun checkUpdate(): Boolean {
         var updateAvailable = false
@@ -56,8 +58,8 @@ object Updater {
                             val releaseInfo = JSONObject(body)
                             val lastVersion: String =
                                 releaseInfo.getString(GITHUB_APP_VERSION)
-                            val currentVersion: String = BuildConfig.VERSION_NAME
-                            if (lastVersion != currentVersion) {
+                            val currentVersion: Int = BuildConfig.VERSION_CODE
+                            if (lastVersion.toInt() > currentVersion) {
                                 updateAvailable = true
                             }
                         } catch (e: IOException) {

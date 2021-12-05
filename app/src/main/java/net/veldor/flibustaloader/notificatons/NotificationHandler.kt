@@ -18,13 +18,10 @@ import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.receivers.BookActionReceiver
 import net.veldor.flibustaloader.receivers.BookLoadedReceiver
 import net.veldor.flibustaloader.receivers.MiscActionsReceiver
-import net.veldor.flibustaloader.selections.CurrentBookDownloadProgress
-import net.veldor.flibustaloader.selections.TotalBookDownloadProgress
 import net.veldor.flibustaloader.ui.DownloadScheduleActivity
 import net.veldor.flibustaloader.ui.MainActivity
 import net.veldor.flibustaloader.ui.SubscriptionsActivity
 import net.veldor.flibustaloader.utils.MimeTypes.getDownloadMime
-import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import java.util.*
 
 @SuppressLint("UnspecifiedImmutableFlag")
@@ -92,7 +89,7 @@ class NotificationHandler private constructor(private var context: Context) {
         )
         val notificationBuilder = NotificationCompat.Builder(context, BOOKS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_book_black_24dp)
-            .setContentTitle(name)
+            .setContentTitle(String.format(context.getString(R.string.loaded_books_title), name))
             .setStyle(NotificationCompat.BigTextStyle().bigText("$name :успешно загружено"))
             .setContentIntent(startMainPending)
             .setDefaults(Notification.DEFAULT_ALL)
@@ -116,7 +113,7 @@ class NotificationHandler private constructor(private var context: Context) {
         mNotificationManager.notify(-101, mBuilder.build())
         val notificationBuilder = NotificationCompat.Builder(context, BOOKS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_warning_red_24dp)
-            .setContentTitle(context.getString(R.string.book_load_error_message))
+            .setContentTitle(String.format(Locale.ENGLISH, context.getString(R.string.error_load_message), book.name))
             .setStyle(
                 NotificationCompat.BigTextStyle().bigText(
                     String.format(
@@ -214,19 +211,49 @@ class NotificationHandler private constructor(private var context: Context) {
         mNotificationManager.cancel(DOWNLOAD_PROGRESS_NOTIFICATION)
     }
 
-    fun showBooksLoadedNotification(bookDownloadsWithErrors: Int) {
+    fun showBooksLoadedNotification(
+        bookDownloadsWithErrors: ArrayList<BooksDownloadSchedule>,
+        downloadCounter: Int
+    ) {
         val downloadCompleteBuilder =
             NotificationCompat.Builder(context, BOOK_DOWNLOADS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_cloud_download_white_24dp)
-                .setContentTitle("Скачивание книг")
-        if (bookDownloadsWithErrors == 0) {
-            downloadCompleteBuilder.setContentText("Все книги успешно скачаны!")
+                .setContentTitle("Скачивание книг завершено")
+        if (bookDownloadsWithErrors.size == 0) {
+            downloadCompleteBuilder.setContentText("Скачано книг: $downloadCounter")
         } else {
             downloadCompleteBuilder.setStyle(
                 NotificationCompat.BigTextStyle().bigText(
-                    "Книги скачаны, но $bookDownloadsWithErrors скачать не удалось. Они оставлены в очереди скачивания."
+                    "Скачано: $downloadCounter, ${bookDownloadsWithErrors.size} скачать не удалось. Они оставлены в очереди скачивания."
                 )
             )
+            // интент очистки очереди скачивания
+            val cancelIntent = Intent(context, MiscActionsReceiver::class.java)
+            cancelIntent.putExtra(
+                MiscActionsReceiver.EXTRA_ACTION_TYPE,
+                MiscActionsReceiver.ACTION_CLEAN_DOWNLOAD_QUEUE
+            )
+            val cancelMassDownloadPendingIntent = PendingIntent.getBroadcast(
+                context,
+                CLEAR_DOWNLOAD_QUEUE_CODE,
+                cancelIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            val resumeIntent = Intent(context, MiscActionsReceiver::class.java)
+            resumeIntent.putExtra(
+                MiscActionsReceiver.EXTRA_ACTION_TYPE,
+                MiscActionsReceiver.ACTION_RESUME_MASS_DOWNLOAD
+            )
+            val resumeMassDownloadPendingIntent = PendingIntent.getBroadcast(
+                context,
+                RESUME_DOWNLOAD_CODE,
+                resumeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            downloadCompleteBuilder.addAction(R.drawable.ic_close_grayscale_24dp, context.getString(
+                            R.string.drop_queue_action), cancelMassDownloadPendingIntent)
+            downloadCompleteBuilder.addAction(R.drawable.ic_baseline_restore_black_24, context.getString(
+                            R.string.requme_download_action), resumeMassDownloadPendingIntent)
         }
         mNotificationManager.notify(BOOKS_SUCCESS_NOTIFICATION, downloadCompleteBuilder.build())
     }
@@ -463,8 +490,7 @@ class NotificationHandler private constructor(private var context: Context) {
         )
         shareIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, bookName)
         shareIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
-        var pendingRequestId = this.pendingRequestId++;
-        Log.d("surprise", "sendLoadedBookNotification: create pending request with id $pendingRequestId")
+        var pendingRequestId = this.pendingRequestId++
         val sharePendingIntent = PendingIntent.getBroadcast(
             context,
             pendingRequestId,
@@ -478,7 +504,6 @@ class NotificationHandler private constructor(private var context: Context) {
             BookLoadedReceiver.ACTION_TYPE_OPEN
         )
         pendingRequestId = this.pendingRequestId++;
-        Log.d("surprise", "sendLoadedBookNotification: create pending request with id $pendingRequestId")
         openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, bookName)
         openIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
         val openPendingIntent = PendingIntent.getBroadcast(
@@ -490,7 +515,7 @@ class NotificationHandler private constructor(private var context: Context) {
 
         val notificationBuilder = NotificationCompat.Builder(context, BOOKS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_book_black_24dp)
-            .setContentTitle(bookName)
+            .setContentTitle(String.format(context.getString(R.string.loaded_books_title), bookName))
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText("$bookName :успешно загружено")
@@ -709,6 +734,7 @@ class NotificationHandler private constructor(private var context: Context) {
         const val RESUME_DOWNLOAD_CODE = 17
         private const val SEND_LOG_CODE = 5
         private const val SEND_LOG_TO_MAIL_CODE = 18
+        private const val CLEAR_DOWNLOAD_QUEUE_CODE = 18
 
         @JvmStatic
         var instance: NotificationHandler = NotificationHandler(App.instance)

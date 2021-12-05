@@ -12,9 +12,9 @@ android {
         applicationId "net.veldor.flibustaloader"
         minSdkVersion 16
         targetSdk 28
-        versionCode 126
-        versionName "3.1.7.3"
-        setProperty("archivesBaseName", "FD_$versionName beta")
+        versionCode 129
+        versionName "3.2.2"
+        setProperty("archivesBaseName", "FD_$versionName")
         multiDexEnabled true
     }
     buildTypes {
@@ -105,6 +105,8 @@ dependencies {
 
     //hints
     implementation 'com.github.iammert:MaterialIntroView:1.6.0'
+    // jpeg compression
+    implementation 'id.zelory:compressor:3.0.1'
 
 }
 

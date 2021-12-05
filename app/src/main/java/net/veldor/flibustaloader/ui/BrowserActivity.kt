@@ -70,7 +70,9 @@ class BrowserActivity : BaseActivity() {
         showChangesList()
         setupObservers()
         checkUpdates()
-        showTooltip()
+        if (!PreferencesHandler.instance.isEInk) {
+            showTooltip()
+        }
 
         val webViewTarget = intent.getStringExtra(EXTERNAL_LINK)
         if (webViewTarget != null) {
@@ -79,6 +81,7 @@ class BrowserActivity : BaseActivity() {
                 webViewTarget.replace("http://flibustahezeous3.onion", "")
                     .replace("http://flibusta.is", "")
         }
+        rootView = binding.root
     }
 
     override fun setupObservers() {

@@ -1,11 +1,13 @@
 package net.veldor.flibustaloader.utils
 
+import android.util.Log
 import net.veldor.flibustaloader.App
+import net.veldor.flibustaloader.R
 
 object URLHelper {
     @kotlin.jvm.JvmStatic
     fun getBaseUrl(): String {
-        if(PreferencesHandler.instance.isCustomMirror){
+        if (PreferencesHandler.instance.isCustomMirror) {
             return PreferencesHandler.instance.customMirror!!
         }
         if (App.instance.useMirror) {
@@ -15,15 +17,18 @@ object URLHelper {
     }
 
     @kotlin.jvm.JvmStatic
-    fun getSearchRequest(searchBook: Boolean, request: String?): String {
+    fun getSearchRequest(searchType: Int, request: String?): String {
         // базовый URL зависит от исползуемого соединения
         val urlConstructor = StringBuilder()
         urlConstructor.append("/opds/")
-        if (searchBook) {
-            urlConstructor.append("search?searchType=books&searchTerm=")
+        when (searchType) {
+            R.id.searchBook -> urlConstructor.append("search?searchType=books&searchTerm=")
                 .append(request)
-        } else {
-            urlConstructor.append("search?searchType=authors&searchTerm=")
+            R.id.searchAuthor -> urlConstructor.append("search?searchType=authors&searchTerm=")
+                .append(request)
+            R.id.searchSequence -> urlConstructor.append("sequences/")
+                .append(request)
+            R.id.searchGenre -> urlConstructor.append("genres/")
                 .append(request)
         }
         return urlConstructor.toString()

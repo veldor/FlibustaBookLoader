@@ -346,4 +346,17 @@
     <string name="cancel_selection_title">Cancel selection</string>
     <string name="no_books_for_load">No books selected for load</string>
     <string name="format_title">Format</string>
+    <string name="show_genres_list_button">Show genres list</string>
+    <string name="show_sequences_list_button">Show sequences list</string>
+    <string name="drop_queue_action">Drop queue</string>
+    <string name="requme_download_action">Try download again</string>
+    <string name="retry_download_message">Retry download</string>
+    <string name="loaded_books_title">Loaded: %s</string>
+    <string name="error_load_message">Error load: %s</string>
+    <string name="db_migration_error_message">Looks like DB migration error. Sorry for that. What can you do? Reinstall app or clear all data. Before it, you can backup you settings to restore it later. But don\'t backup downloaded books, read books and download queue prefs, it handled in DB, what cause error. After reset app you can restore you settings. Again sorry for that, it\'s my bad</string>
+    <string name="open_settings_message">Open settings</string>
+    <string name="open_app_info_message">Open app info</string>
+    <string name="clear_tables_message">Try clear tables</string>
+    <string name="db_migration_error_title">DB migration error!</string>
+    <string name="download_errors_snackbar">Download finished, can\'t load %d books</string>
 </resources>

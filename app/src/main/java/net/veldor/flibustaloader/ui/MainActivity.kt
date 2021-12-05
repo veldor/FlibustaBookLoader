@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -49,6 +50,30 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this).get(StartViewModel::class.java)
+        if(App.instance.migrationError){
+            // покажу диалог с ошибкой загрузки
+            val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
+            dialogBuilder
+                .setTitle(getString(R.string.db_migration_error_title))
+                .setMessage(getString(R.string.db_migration_error_message))
+                .setPositiveButton(getString(R.string.open_settings_message)) { _: DialogInterface?, _: Int ->
+                    startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                }
+                .setNegativeButton(getString(R.string.open_app_info_message)) { _: DialogInterface?, _: Int ->
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    intent.data = Uri.parse("package:$packageName")
+                    startActivity(intent)
+                }
+                .setNeutralButton(getString(R.string.clear_tables_message)) { _: DialogInterface?, _: Int ->
+                    App.instance.mDatabase.clearAllTables()
+                    Handler().postDelayed(ResetApp(), 100)
+                }
+                .setNegativeButton(getString(android.R.string.cancel)) { dialogInterface: DialogInterface, _: Int -> dialogInterface.dismiss() }
+            val dialog = dialogBuilder.create()
+            lifecycle.addObserver(DialogDismissLifecycleObserver(dialog))
+            dialog.show()
+            return
+        }
         if (intent.data != null) {
             Log.d("surprise", "onCreate: external link here")
             link = intent.data
