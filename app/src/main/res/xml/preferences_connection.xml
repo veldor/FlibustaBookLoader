@@ -33,4 +33,16 @@
         android:title="Изменить зеркало загрузки картинок"
         android:summary="@string/custom_mirror_hint"
         app:key="@string/pref_custom_pic_mirror"/>
+
+    <SwitchPreferenceCompat
+        app:key="@string/pref_use_custom_bridges"
+        android:summaryOff="Использовать мосты TOR по умолчанию"
+        android:summaryOn="Использовать свои мосты TOR"
+        android:title="@string/custom_bridges_title"
+        android:defaultValue="false"/>
+
+    <net.veldor.flibustaloader.ui.views.MultilineEditTextPreference
+        android:dependency="@string/pref_use_custom_bridges"
+        android:key="custom bridges"
+        android:title="@string/custom_bridges"/>
 </PreferenceScreen>

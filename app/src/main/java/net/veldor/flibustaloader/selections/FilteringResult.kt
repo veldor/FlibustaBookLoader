@@ -5,7 +5,6 @@ import android.util.Log
 class FilteringResult(val result: Boolean,val value: String?, val rule: String?, val type: String?){
     override fun toString(): String {
         val sb = StringBuffer()
-        Log.d("surprise", "toString: type is $type")
         when(type){
             "hideDigests" -> sb.append("Скрываю сборник, авторы: $value")
             "hideDownloaded" -> sb.append("Скачано ранее")

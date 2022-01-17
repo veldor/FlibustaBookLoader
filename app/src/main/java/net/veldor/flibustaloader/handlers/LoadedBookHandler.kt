@@ -3,10 +3,10 @@ package net.veldor.flibustaloader.handlers
 import android.os.Build
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
-import cz.msebera.android.httpclient.HttpResponse
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.database.entity.BooksDownloadSchedule
 import net.veldor.flibustaloader.ecxeptions.DownloadsDirNotFoundException
+import net.veldor.flibustaloader.http.WebResponse
 import net.veldor.flibustaloader.notificatons.NotificationHandler
 import net.veldor.flibustaloader.utils.Grammar
 import net.veldor.flibustaloader.utils.MimeTypes
@@ -15,27 +15,23 @@ import java.io.File
 import java.nio.file.Files
 
 class LoadedBookHandler {
-    fun saveBook(book: BooksDownloadSchedule, response: HttpResponse, tempFile: File) {
+    fun saveBook(book: BooksDownloadSchedule, response: WebResponse, tempFile: File) {
         //val file = FilesHandler.getDownloadFile(book, response)
         var extensionSet = false
         // try to get file name with extension
-        val filenameHeader = response.getLastHeader("Content-Disposition")
+        val filenameHeader = response.headers!!["Content-Disposition"]
         if (filenameHeader != null) {
-            val value = filenameHeader.value
-            if (value != null) {
-                val extension = Grammar.getExtension(value.replace("\"", ""))
-                // setup extension
-                book.format = MimeTypes.getFullMime(extension)!!
-                book.name = Grammar.changeExtension(book.name, extension)
-                extensionSet = true
-            }
+            val extension = Grammar.getExtension(filenameHeader.replace("\"", ""))
+            // setup extension
+            book.format = MimeTypes.getFullMime(extension)!!
+            book.name = Grammar.changeExtension(book.name, extension)
+            extensionSet = true
         }
         if (!extensionSet) {
-            val receivedContentType = response.getLastHeader("Content-Type")
-            val trueFormat = receivedContentType.value
-            val trueFormatExtension = MimeTypes.getTrueFormatExtension(trueFormat)
+            val receivedContentType = response.headers["Content-Type"]!!
+            val trueFormatExtension = MimeTypes.getTrueFormatExtension(receivedContentType)
             if (trueFormatExtension != null) {
-                book.format = trueFormat
+                book.format = receivedContentType
                 book.name = Grammar.changeExtension(book.name, trueFormatExtension)
             }
         }

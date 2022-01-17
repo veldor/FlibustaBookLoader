@@ -221,6 +221,13 @@
         app:barrierDirection="bottom"
         app:constraint_referenced_ids="showAuthorsListButton, showGenresListButton, showSequencesListButton,showAllSwitcher,connectionType,mirrorUsed"
         tools:layout_editor_absoluteY="64dp" />
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/snackbar_barrier"
+        android:layout_width="wrap_content"
+        app:barrierDirection="bottom"
+        android:padding="50dp"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="resultsList" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/resultsList"
@@ -228,6 +235,8 @@
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/firstBarrier" />
+
+
 
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/floatingMenu"

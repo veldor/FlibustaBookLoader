@@ -58,31 +58,32 @@ class PicHandler {
         }
     }
 
-    fun downloadPic(
+    private fun downloadPic(
         foundedEntity: FoundedEntity
     ) {
         if (foundedEntity.cover != null) {
             return
         }
         GlobalScope.launch(Dispatchers.IO) {
-            val response = UniversalWebClient().picRequest(foundedEntity.coverUrl!!)
-            if (response != null) {
-                val status = response.statusLine.statusCode
+            try {
+                val response = UniversalWebClient().picRequest(foundedEntity.coverUrl!!)
+                val status = response.statusCode
                 if (status < 400) {
                     var tempFile: File? = null
-                    val contentTypeHeader = response.getLastHeader("Content-Type")
-                    when (contentTypeHeader.value) {
+                    when (val contentTypeHeader = response.headers!!["Content-Type"]) {
                         "image/jpeg" -> {
                             tempFile = File.createTempFile(Grammar.longRandom.toString(), "jpg")
                             tempFile.deleteOnExit()
                             val out: OutputStream = FileOutputStream(tempFile)
                             var read: Int
                             val buffer = ByteArray(1024)
-                            while (response.entity.content.read(buffer).also { read = it } > 0) {
+                            while (response.inputStream!!.read(buffer)
+                                    .also { read = it } > 0
+                            ) {
                                 out.write(buffer, 0, read)
                             }
                             out.close()
-                            response.entity.content.close()
+                            response.inputStream.close()
                         }
                         "image/png" -> {
                             tempFile = File.createTempFile(Grammar.longRandom.toString(), "png")
@@ -90,20 +91,22 @@ class PicHandler {
                             val out: OutputStream = FileOutputStream(tempFile)
                             var read: Int
                             val buffer = ByteArray(1024)
-                            while (response.entity.content.read(buffer).also { read = it } > 0) {
+                            while (response.inputStream!!.read(buffer)
+                                    .also { read = it } > 0
+                            ) {
                                 out.write(buffer, 0, read)
                             }
                             out.close()
-                            response.entity.content.close()
+                            response.inputStream.close()
                         }
                         else -> {
                             Log.d(
                                 "surprise",
-                                "loadPic: pic ${foundedEntity.coverUrl} is ${contentTypeHeader.value}"
+                                "loadPic: pic ${foundedEntity.coverUrl} is $contentTypeHeader"
                             )
                         }
                     }
-                    if (tempFile != null && tempFile.isFile && tempFile.length() > 0) {
+                    if (tempFile != null && tempFile.isFile && tempFile.exists() && tempFile.canRead() && tempFile.length() > 0) {
                         val compressedImageFile = Compressor.compress(App.instance, tempFile) {
                             resolution(100, 143)
                             quality(80)
@@ -113,6 +116,52 @@ class PicHandler {
                         tempFile.delete()
                     }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.d("surprise", "PicHandler.kt 127 downloadPic error load pic")
+            }
+        }
+    }
+
+    fun downloadFullPic(item: FoundedEntity) {
+        val response = UniversalWebClient().picRequest(item.coverUrl!!)
+        val status = response.statusCode
+        if (status < 400) {
+            var tempFile: File? = null
+            when (val contentTypeHeader = response.headers!!["Content-Type"]) {
+                "image/jpeg" -> {
+                    tempFile = File.createTempFile(Grammar.longRandom.toString(), "jpg")
+                    tempFile.deleteOnExit()
+                    val out: OutputStream = FileOutputStream(tempFile)
+                    var read: Int
+                    val buffer = ByteArray(1024)
+                    while (response.inputStream!!.read(buffer).also { read = it } > 0) {
+                        out.write(buffer, 0, read)
+                    }
+                    out.close()
+                    response.inputStream.close()
+                }
+                "image/png" -> {
+                    tempFile = File.createTempFile(Grammar.longRandom.toString(), "png")
+                    tempFile.deleteOnExit()
+                    val out: OutputStream = FileOutputStream(tempFile)
+                    var read: Int
+                    val buffer = ByteArray(1024)
+                    while (response.inputStream!!.read(buffer).also { read = it } > 0) {
+                        out.write(buffer, 0, read)
+                    }
+                    out.close()
+                    response.inputStream.close()
+                }
+                else -> {
+                    Log.d(
+                        "surprise",
+                        "loadPic: pic ${item.coverUrl} is ${contentTypeHeader}"
+                    )
+                }
+            }
+            if (tempFile != null && tempFile.isFile && tempFile.length() > 0) {
+                item.cover = tempFile
             }
         }
     }

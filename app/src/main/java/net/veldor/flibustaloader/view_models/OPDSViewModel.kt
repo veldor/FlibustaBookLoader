@@ -42,6 +42,7 @@ import java.util.*
 open class OPDSViewModel(application: Application) : GlobalViewModel(application),
     MyViewModelInterface {
 
+    private var lastRequest: String = ""
     private var currentWork: Job? = null
 
     private var currentPageUrl: String? = null
@@ -162,7 +163,7 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                                         counter++
                                         linkFound = true
                                     } else {
-                                        Log.d("surprise", "downloadAll: skip downloaded")
+                                        linkFound = true
                                     }
                                 } else {
                                     if (userSequenceName != null) {
@@ -191,12 +192,12 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
                         )
                     }
                 }
+                Log.d("surprise", "OPDSViewModel.kt 194 downloadAll add $counter")
                 if (counter > 0) {
                     App.instance.requestDownloadBooksStart()
                 }
                 delegate.booksAdded(counter)
-            }
-            else{
+            } else {
                 delegate.booksAdded(0)
             }
         }
@@ -266,36 +267,36 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
     }
 
     private fun makeRequest(s: String, append: Boolean, lastClicked: Long): SearchResult? {
+        _isLoadError.postValue(false)
         try {
             val response = UniversalWebClient().rawRequest(s)
             currentRequestState.postValue("Получен ответ")
-            if (response != null) {
-                val answer = UniversalWebClient().responseToString(response)
-                if (answer != null) {
-                    // попробую с помощью нового парсера разобрать ответ
-                    val parser = TestParser(answer)
-                    val results = parser.parse()
-                    currentRequestState.postValue("Ответ обработан")
-                    val searchResult = SearchResult()
-                    searchResult.appended = append
-                    searchResult.size = results.size
-                    if (results.isNotEmpty()) {
-                        searchResult.type = results[0].type
-                    }
-                    searchResult.results = results
-                    searchResult.filteredList = parser.filteredList
-                    searchResult.nextPageLink = parser.nextPageLink
-                    searchResult.filtered = parser.filtered
-                    if (lastClicked >= 0) {
-                        searchResult.clickedElementIndex = lastClicked
-                        searchResult.isBackSearch = true
-                    }
-                    currentRequestState.postValue("Отображаю данные")
-                    return searchResult
+            val answer = UniversalWebClient().responseToString(response.inputStream)
+            if (answer != null && answer.startsWith("<?xml version=\"1.0\" encoding=\"utf-8\"?>")) {
+                // попробую с помощью нового парсера разобрать ответ
+                val parser = TestParser(answer)
+                val results = parser.parse()
+                currentRequestState.postValue("Ответ обработан")
+                val searchResult = SearchResult()
+                searchResult.appended = append
+                searchResult.size = results.size
+                if (results.isNotEmpty()) {
+                    searchResult.type = results[0].type
                 }
+                searchResult.results = results
+                searchResult.filteredList = parser.filteredList
+                searchResult.nextPageLink = parser.nextPageLink
+                searchResult.filtered = parser.filtered
+                if (lastClicked >= 0) {
+                    searchResult.clickedElementIndex = lastClicked
+                    searchResult.isBackSearch = true
+                }
+                currentRequestState.postValue("Отображаю данные")
+                return searchResult
             }
         } catch (_: Exception) {
         }
+        lastRequest = s
         _isLoadError.postValue(true)
         return null
     }
@@ -304,12 +305,15 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
         if (imageContainer != null) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    PicHandler().downloadPic(item)
+                    Log.d("surprise", "OPDSViewModel.kt 310 loadImage start load cover")
+                    PicHandler().downloadFullPic(item)
                     if (item.cover != null && item.cover!!.isFile && item.cover!!.exists() && item.cover!!.canRead()) {
                         imageContainer.setImageBitmap(BitmapFactory.decodeFile(item.cover!!.path))
+                        Log.d("surprise", "OPDSViewModel.kt 314 loadImage cover loaded")
                     }
                 } catch (_: Exception) {
                 }
+                Log.d("surprise", "OPDSViewModel.kt 318 loadImage finish loading cover")
             }
         }
     }
@@ -356,6 +360,10 @@ open class OPDSViewModel(application: Application) : GlobalViewModel(application
 
     fun getScrolledPosition(): Int {
         return lastScrolled
+    }
+
+    fun getLastLink(): String {
+        return lastRequest
     }
 
     val height: Int

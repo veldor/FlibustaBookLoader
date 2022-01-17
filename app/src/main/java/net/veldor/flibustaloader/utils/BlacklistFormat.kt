@@ -2,7 +2,7 @@ package net.veldor.flibustaloader.utils
 
 class BlacklistFormat private constructor() : BlacklistType(){
 
-    override val blacklistName = "genre"
+    override val blacklistName = "format"
 
     companion object {
         @JvmStatic

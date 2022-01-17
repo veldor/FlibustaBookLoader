@@ -2,6 +2,7 @@ package net.veldor.flibustaloader.workers
 
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.work.ForegroundInfo
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -27,8 +28,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import net.veldor.flibustaloader.R
+import net.veldor.flibustaloader.http.UniversalWebClient
 
-class DownloadBooksWorker(
+
+open class DownloadBooksWorker(
     context: Context,
     workerParams: WorkerParameters
 ) :
@@ -68,7 +74,10 @@ class DownloadBooksWorker(
                         }
                         BaseActivity.sLiveDownloadScheduleCountChanged.postValue(true)
                     }
-                    NotificationHandler.instance.showBooksLoadedNotification(downloadErrors, successLoaded)
+                    NotificationHandler.instance.showBooksLoadedNotification(
+                        downloadErrors,
+                        successLoaded
+                    )
                     return Result.success()
                 }
                 var downloadCounter = 1
@@ -173,6 +182,16 @@ class DownloadBooksWorker(
                         e.printStackTrace()
                         // ошибка загрузки книг, выведу сообщение об ошибке
                         App.instance.liveBookJustError.postValue(queuedElement)
+                        runBlocking(Dispatchers.Main) {
+                            // any Main thread needs
+                            Toast.makeText(
+                                App.instance, String.format(
+                                    Locale.ENGLISH, App.instance.getString(
+                                        R.string.book_not_loaded_pattern
+                                    ), queuedElement.name
+                                ), Toast.LENGTH_LONG
+                            ).show()
+                        }
                         NotificationHandler.instance.sendBookNotFoundInCurrentFormatNotification(
                             queuedElement
                         )
@@ -209,95 +228,91 @@ class DownloadBooksWorker(
         TorNotLoadedException::class,
         DownloadsDirNotFoundException::class
     )
-    private fun downloadBook(book: BooksDownloadSchedule): Boolean {
-        val base = URLHelper.getBaseUrl()
-        var link = book.link
-        if (base.endsWith("/") && link.startsWith("/")) {
-            link = link.substring(1)
-        }
+    protected fun downloadBook(book: BooksDownloadSchedule): Boolean {
         val startTime = System.currentTimeMillis()
-        val bookUrl = base + link
-        Log.d("surprise", "downloadBook: load $bookUrl")
         // получу response доступным способом
-        val response =
-            if (PreferencesHandler.instance.isExternalVpn) ExternalVpnVewClient.rawRequest(bookUrl) else TorWebClient().rawRequest(
-                bookUrl
-            )
-        if (response != null) {
-            // проверю, что запрос успешен
-            if (response.statusLine.statusCode in 200..310) {
-                if (book.name.isEmpty()) {
-                    // try to get file name with extension
-                    val filenameHeader = response.getLastHeader("Content-Disposition")
-                    if (filenameHeader != null) {
-                        book.name = Grammar.removeExtension(
-                            filenameHeader.value.replace(
-                                "attachment; filename=",
-                                ""
-                            )
+        val response = UniversalWebClient().rawRequest(book.link)
+        if (response.statusCode in 200..310) {
+            if (book.name.isEmpty()) {
+                // try to get file name with extension
+                val filenameHeader = response.headers!!["Content-Disposition"]
+                if (filenameHeader != null) {
+                    book.name = Grammar.removeExtension(
+                        filenameHeader.replace(
+                            "attachment; filename=",
+                            ""
+                        )
+                    )
+                }
+            }
+            // ответ сервера получен
+            // загружу временный файл
+            val contentLength = response.contentLength
+            if (response.inputStream != null && response.contentLength > 0) {
+                val tempFile = File.createTempFile(RandomString().nextString(), null)
+                tempFile.deleteOnExit()
+                val out: OutputStream = FileOutputStream(tempFile)
+                var read: Int
+                val buffer = ByteArray(1024)
+                while (response.inputStream.read(buffer).also { read = it } > 0) {
+                    if (isStopped) {
+                        NotificationHandler.instance.cancelBookLoadingProgressNotification()
+                        // немедленно прекращаю работу
+                        NotificationHandler.instance.cancelBookLoadNotification()
+                        App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
+                        return false
+                    }
+                    out.write(buffer, 0, read)
+
+
+                    val progress = CurrentBookDownloadProgress()
+                    progress.fullSize = response.contentLength.toLong()
+                    progress.loadedSize = tempFile.length()
+                    DownloadScheduleViewModel.liveCurrentBookDownloadProgress.postValue(progress)
+                    if (PreferencesHandler.instance.showDownloadProgress) {
+                        NotificationHandler.instance.createBookLoadingProgressNotification(
+                            contentLength.toInt(),
+                            tempFile.length().toInt(),
+                            book.name,
+                            startTime
                         )
                     }
                 }
-                // ответ сервера получен
-                // загружу временный файл
-                val content = response.entity.content
-                val contentLength = response.entity.contentLength
-                if (content != null && response.entity.contentLength > 0) {
-                    val tempFile = File.createTempFile(RandomString().nextString(), null)
-                    tempFile.deleteOnExit()
-                    val out: OutputStream = FileOutputStream(tempFile)
-                    var read: Int
-                    val buffer = ByteArray(1024)
-                    while (content.read(buffer).also { read = it } > 0) {
-                        if (isStopped) {
-                            NotificationHandler.instance.cancelBookLoadingProgressNotification()
-                            // немедленно прекращаю работу
-                            NotificationHandler.instance.cancelBookLoadNotification()
-                            App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
-                            return false
-                        }
-                        out.write(buffer, 0, read)
-
-
-                        val progress = CurrentBookDownloadProgress()
-                        progress.fullSize = contentLength
-                        progress.loadedSize = tempFile.length()
-                        DownloadScheduleViewModel.liveCurrentBookDownloadProgress.postValue(progress)
-                        if (PreferencesHandler.instance.showDownloadProgress) {
-                            NotificationHandler.instance.createBookLoadingProgressNotification(
-                                contentLength.toInt(),
-                                tempFile.length().toInt(),
-                                book.name,
-                                startTime
-                            )
-                        }
+                out.close()
+                response.inputStream.close()
+                NotificationHandler.instance.cancelBookLoadingProgressNotification()
+                if (tempFile.length() > 1000) {
+                    Log.d(
+                        "surprise",
+                        "downloadBook: loaded something with content length ${tempFile.length()} and status ${response.statusCode}"
+                    )
+                    // книга загружена, помещу её в нужную папку и правильно назову
+                    if (isStopped) {
+                        // немедленно прекращаю работу
+                        NotificationHandler.instance.cancelBookLoadNotification()
+                        App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
+                        return false
                     }
-                    out.close()
-                    content.close()
-                    NotificationHandler.instance.cancelBookLoadingProgressNotification()
-                    if (tempFile.length() > 1000) {
-                        Log.d(
-                            "surprise",
-                            "downloadBook: loaded something with content length ${tempFile.length()} and status ${response.statusLine.statusCode}"
-                        )
-                        // книга загружена, помещу её в нужную папку и правильно назову
-                        if (isStopped) {
-                            // немедленно прекращаю работу
-                            NotificationHandler.instance.cancelBookLoadNotification()
-                            App.instance.liveDownloadState.postValue(DOWNLOAD_FINISHED)
-                            return false
-                        }
-                        LoadedBookHandler().saveBook(book, response, tempFile)
-                        book.loaded = true
-                        return true
+                    LoadedBookHandler().saveBook(book, response, tempFile)
+                    runBlocking(Dispatchers.Main) {
+                        // any Main thread needs
+                        Toast.makeText(
+                            App.instance, String.format(
+                                Locale.ENGLISH, App.instance.getString(
+                                    R.string.book_loaded_pattern
+                                ), book.name
+                            ), Toast.LENGTH_LONG
+                        ).show()
                     }
+                    book.loaded = true
+                    return true
                 }
             }
         }
         return false
     }
 
-    private fun createForegroundInfo(): ForegroundInfo {
+    protected fun createForegroundInfo(): ForegroundInfo {
         // Build a notification
         val notification = NotificationHandler.instance.createMassBookLoadNotification()
         return ForegroundInfo(NotificationHandler.DOWNLOAD_PROGRESS_NOTIFICATION, notification)

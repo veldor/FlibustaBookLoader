@@ -15,33 +15,52 @@ import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.URLHelper
 import java.io.IOException
+import java.io.InputStream
+import java.net.HttpURLConnection
 import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.URL
 
 object ExternalVpnVewClient {
     @JvmStatic
-    fun rawRequest(url: String?): HttpResponse? {
-        val port = 9050
-        val socksaddr = InetSocketAddress("127.0.0.1", port)
-        val context = HttpClientContext.create()
-        context.setAttribute("socks.address", socksaddr)
-        val httpclient = HttpClients.createSystem()
-        val httpget = HttpGet(url)
-        try {
-            val authCookie = PreferencesHandler.instance.authCookie
-            if (authCookie != null) {
-                httpget.setHeader("Cookie", authCookie)
-            }
-            return httpclient.execute(httpget, context)
-        } catch (e: IOException) {
-            e.printStackTrace()
+    fun rawRequest(url: String?): HttpURLConnection? {
+        val host = URL(url)
+        val connection = host.openConnection() as HttpURLConnection
+        connection.apply {
+            requestMethod = REQUEST_METHOD_GET
+            connectTimeout = CONNECT_TIMEOUT_SEC * 1000
+            readTimeout = READ_TIMEOUT_SEC * 1000
+            setRequestProperty(USER_AGENT_PROPERTY, TOR_BROWSER_USER_AGENT)
+            connect()
+        }
+        val code = connection.responseCode
+        if (code < 400) {
+            // success connection, return input stream
+            return connection
         }
         return null
+//        val port = 9050
+//        val socksaddr = InetSocketAddress("127.0.0.1", port)
+//        val context = HttpClientContext.create()
+//        context.setAttribute("socks.address", socksaddr)
+//        val httpclient = HttpClients.createSystem()
+//        val httpget = HttpGet(url)
+//        try {
+//            val authCookie = PreferencesHandler.instance.authCookie
+//            if (authCookie != null) {
+//                httpget.setHeader("Cookie", authCookie)
+//            }
+//            return httpclient.execute(httpget, context).
+//        } catch (e: IOException) {
+//            e.printStackTrace()
+//        }
+//        return null
     }
 
     fun loginRequest(request: String, login: String, password: String): Boolean {
 
         // request main page
-        val mainPage = rawRequest(request)
+        val mainPage = rawRequest(request)!!.inputStream
         val text = UniversalWebClient().responseToString(mainPage)
         // get form id
         val startIndex = text!!.indexOf("form_build_id") + 19
@@ -50,14 +69,17 @@ object ExternalVpnVewClient {
 
         val response: HttpResponse?
         val r = Uri.parse(request)
-        val params: UrlEncodedFormEntity? = TorWebClient.get2post(r, login, password, formId.toString())
+        val params: UrlEncodedFormEntity? =
+            TorWebClient.get2post(r, login, password, formId.toString())
         try {
             response =
-                executeRequest("http://flibusta.is/node?destination=node",
+                executeRequest(
+                    "http://flibusta.is/node?destination=node",
                     hashMapOf(
 
                     ),
-                    params)
+                    params
+                )
             App.instance.requestStatus.postValue(
                 App.instance.getString(R.string.response_received_message)
             )

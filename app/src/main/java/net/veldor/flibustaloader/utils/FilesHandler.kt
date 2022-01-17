@@ -11,13 +11,11 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
+import com.msopentech.thali.toronionproxy.OnionProxyContext
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.handlers.Filter
-import java.io.BufferedReader
-import java.io.File
-import java.io.IOException
-import java.io.InputStreamReader
+import java.io.*
 import java.nio.file.Files
 
 object FilesHandler {
@@ -192,6 +190,33 @@ object FilesHandler {
             } else if (item.isDirectory && item.name == "compressor") {
                 clearCache(item)
             }
+        }
+    }
+
+    fun saveBridges(data: Map<String, Any>) {
+        if (data.isNotEmpty()) {
+            data.forEach {
+                Log.d("surprise", "FilesHandler.kt 201 saveBridges saving ${it.value}")
+                val bridgesFile = File(App.instance.filesDir, "bridges")
+                // append bridges, if it exists, to current file
+                //todo append it
+                val fileOutputStream = FileOutputStream(bridgesFile, false)
+                fileOutputStream.write(
+                    (it.value as String).replace("obfs4", "\nobfs4").toByteArray()
+                )
+                fileOutputStream.close()
+            }
+        }
+    }
+
+    fun saveBridges(data: String?) {
+        if (data != null) {
+            val bridgesFile = File(App.instance.filesDir, "bridges")
+            // append bridges, if it exists, to current file
+            //todo append it
+            val fileOutputStream = FileOutputStream(bridgesFile, false)
+            fileOutputStream.write(data.replace("obfs4", "\nobfs4").toByteArray())
+            fileOutputStream.close()
         }
     }
 

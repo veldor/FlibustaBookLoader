@@ -423,6 +423,18 @@ class NotificationHandler private constructor(private var context: Context) {
                     .setOngoing(true)
             return notificationBuilder.build()
         }
+    val startTorNotification: Notification
+        get() {
+            val notificationBuilder =
+                NotificationCompat.Builder(context, SUBSCRIBE_CHECK_SERVICE_CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_book_black_24dp)
+                    .setContentTitle(
+                        App.instance.getString(R.string.start_tor_message)
+                    )
+                    .setProgress(0, 0, true)
+                    .setOngoing(true)
+            return notificationBuilder.build()
+        }
 
     fun updateDownloadProgress(mBooksCount: Int, currentDownload: Int, beginningTime: Long) {
         val left = System.currentTimeMillis() - beginningTime
@@ -720,6 +732,7 @@ class NotificationHandler private constructor(private var context: Context) {
         private const val BOOKS_SUCCESS_NOTIFICATION = 8
         private const val MASS_DOWNLOAD_PAUSED_NOTIFICATION = 9
         const val CHECK_SUBSCRIBES_WORKER_NOTIFICATION = 10
+        const val START_TOR_WORKER_NOTIFICATION = 19
         const val FLIBUSTA_IS_BACK_NOTIFICATION = 12
         private const val RESTART_TOR_CODE = 11
         private const val MISC_CODE = 11

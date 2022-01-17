@@ -4,9 +4,23 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_opds.xml" value="0.16869300911854104" />
+        <entry key="..\:/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/sequence_name_dialog.xml" value="0.20878623188405798" />
         <entry key="..\:/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/menu/blacklist_menu.xml" value="0.346875" />
         <entry key="..\:/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/menu/loaded_books_menu.xml" value="0.346875" />
         <entry key="..\:/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/menu/odps_menu.xml" value="0.346875" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout-land-v23/activity_main.xml" value="0.1626984126984127" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout-land/activity_main.xml" value="0.1626984126984127" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout-v23/activity_main.xml" value="0.2857142857142857" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_browser.xml" value="0.20108695652173914" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_flibusta_not_available.xml" value="0.2617753623188406" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/activity_main.xml" value="0.2617753623188406" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/dialog_tor_add_bridges.xml" value="0.346875" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/dialog_tor_problems.xml" value="0.346875" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/download_schedule_book_item.xml" value="0.346875" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/fragment_opds.xml" value="0.2617753623188406" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/gifdialog.xml" value="0.346875" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/layout/sequence_name_dialog.xml" value="0.2658514492753623" />
+        <entry key="..\:/sync/dev/android/FlibustaBookLoaderKotlin/app/src/main/res/xml/preferences_connection.xml" value="0.346875" />
       </map>
     </option>
   </component>

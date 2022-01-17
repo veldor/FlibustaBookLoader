@@ -273,7 +273,7 @@ class FoundedItemAdapter(
                     binding.availableLinkFormats.setOnClickListener {
                         Toast.makeText(
                             App.instance,
-                            "Это список доступных форматов. Скачать книгу можно нажав на кнопку нниже",
+                            "Это список доступных форматов. Скачать книгу можно нажав на кнопку ниже",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -914,8 +914,8 @@ class FoundedItemAdapter(
                     }
                     ++appended
                 }
+            } catch (e: Exception) {
             }
-            catch (e: Exception){}
         }
         result[0] = appended
         result[1] = filtered
@@ -990,6 +990,13 @@ class FoundedItemAdapter(
             showCheckboxes = false
             notifyItemRangeChanged(0, values.size)
         }
+    }
+
+    fun getSequence(): String? {
+        if (values.isNotEmpty()) {
+            return values[0].sequencesComplex;
+        }
+        return null
     }
 
     var isScrolledToLast = false

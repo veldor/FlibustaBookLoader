@@ -1,43 +1,28 @@
 package net.veldor.flibustaloader.workers
 
 import android.content.Context
-import android.util.Log
 import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import net.veldor.flibustaloader.App
-import net.veldor.flibustaloader.ecxeptions.ConnectionLostException
-import net.veldor.flibustaloader.http.TorStarter
-import net.veldor.flibustaloader.http.TorWebClient
+import net.veldor.flibustaloader.http.UniversalWebClient
 import net.veldor.flibustaloader.notificatons.NotificationHandler
-import net.veldor.flibustaloader.utils.PreferencesHandler
-import net.veldor.flibustaloader.utils.URLHelper
 
 class PeriodicCheckFlibustaAvailabilityWorker(context: Context, workerParams: WorkerParameters) :
     Worker(context, workerParams) {
     override fun doWork(): Result {
-        if (PreferencesHandler.instance.isCheckAvailability() && !PreferencesHandler.instance.isExternalVpn) {
-            Log.d(
-                "surprise",
-                "PeriodicCheckFlibustaAvailabilityWorker doWork 32: START CHECK AVAIL"
-            )
-            // помечу рабочего важным
-            // Mark the Worker as important
-            setForegroundAsync(createForegroundInfo())
-            // готово, проверю доступность
+        setForegroundAsync(createForegroundInfo())
+        // готово, проверю доступность
 
-            val webClient = TorWebClient()
-            val url = URLHelper.getFlibustaUrl()
-            val answer = webClient.directRequest(url)
-            if (answer != null && answer.isNotEmpty()) {
+        val response = UniversalWebClient().rawRequest("/opds")
+        if (response.statusCode == 200) {
+            val answer = UniversalWebClient().responseToString(response.inputStream)
+            if (answer.isNullOrEmpty() || !answer.startsWith("<?xml version=\"1.0\" encoding=\"utf-8\"?>")) {
                 NotificationHandler.instance.notifyFlibustaIsBack()
                 WorkManager.getInstance(App.instance).cancelAllWorkByTag(ACTION)
                 WorkManager.getInstance(App.instance).cancelUniqueWork(ACTION)
             }
-        } else {
-            WorkManager.getInstance(App.instance).cancelAllWorkByTag(ACTION)
-            WorkManager.getInstance(App.instance).cancelUniqueWork(ACTION)
         }
         return Result.success()
     }

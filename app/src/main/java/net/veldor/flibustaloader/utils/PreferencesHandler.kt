@@ -23,6 +23,11 @@ class PreferencesHandler private constructor() {
         set(state) {
             preferences.edit().putBoolean(PREF_TOGGLE_PANELS, state).apply()
         }
+    var isTorBlockedErrorShowed: Boolean
+        get() = preferences.getBoolean(PREF_TOR_ERROR_SHOWED, false)
+        set(state) {
+            preferences.edit().putBoolean(PREF_TOR_ERROR_SHOWED, state).apply()
+        }
 
 
     var isAuthorInBookName: Boolean
@@ -40,8 +45,25 @@ class PreferencesHandler private constructor() {
     fun isStrictDownloadFormat(): Boolean {
         return preferences.getBoolean("strict download format", false)
     }
-    fun setStrictDownloadFormat(value: Boolean){
+
+    fun setStrictDownloadFormat(value: Boolean) {
         preferences.edit().putBoolean("strict download format", value).apply()
+    }
+
+
+    fun getCustomBridges(): String? {
+        return preferences.getString("custom bridges", "")
+    }
+
+    fun setCustomBridges(bridges: String) {
+        preferences.edit().putString("custom bridges", bridges).apply()
+    }
+
+    fun isUseCustomBridges(): Boolean {
+        return preferences.getBoolean(
+            App.instance.getString(R.string.pref_use_custom_bridges),
+            false
+        )
     }
 
     fun isHideButtons(): Boolean {
@@ -460,6 +482,8 @@ class PreferencesHandler private constructor() {
 
 
     companion object {
+        const val TOR_URL = "http://flibustaongezhld6dibs2dps6vm4nvqg2kp7vgowbu76tzopgnhazqd.onion"
+        const val TOR_COMPAT_URL = "http://flibustahezeous3.onion"
         private const val PREF_HIDE_BUTTONS = "no item buttons"
         private const val PREF_DIFFERENT_DIRS = "create additional folders"
         private const val PREF_SEQUENCES_IN_AUTHOR_DIRS = "load series to author dir"
@@ -502,6 +526,8 @@ class PreferencesHandler private constructor() {
         private const val PREF_SKIP_MAIN_SCREEN = "skip load screen"
         private const val PREF_SHOW_LOAD_MORE_BTN = "show more btn"
         private const val PREF_HIDE_PICS = "clear view"
+        private const val PREF_TOR_ERROR_SHOWED = "tor error showed"
+        private const val PREF_CUSTOM_BRIDGES = "custom bridges"
 
         const val BASE_URL = "http://flibusta.is"
         const val BASE_PIC_URL = "http://flibusta.is"

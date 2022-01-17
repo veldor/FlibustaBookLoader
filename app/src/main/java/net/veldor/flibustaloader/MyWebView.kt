@@ -3,6 +3,7 @@ package net.veldor.flibustaloader
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import net.veldor.flibustaloader.ui.BrowserActivity
@@ -27,6 +28,7 @@ class MyWebView(context: Context?, attrs: AttributeSet?) : WebView(context, attr
 
     override fun loadUrl(url: String) {
         super.loadUrl(URLHelper.getBaseUrl() + url)
+        Log.d("surprise", "MyWebView.kt 30 loadUrl webView load $url")
         initProgressBar()
     }
 

@@ -1,11 +1,15 @@
 package net.veldor.flibustaloader
 
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.MutableLiveData
 import androidx.multidex.MultiDexApplication
 import androidx.room.Room
 import androidx.work.*
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.msopentech.thali.android.toronionproxy.AndroidOnionProxyManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -19,24 +23,23 @@ import net.veldor.flibustaloader.utils.LogHandler
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import net.veldor.flibustaloader.view_models.OPDSViewModel
-import net.veldor.flibustaloader.workers.DownloadBooksWorker
-import net.veldor.flibustaloader.workers.PeriodicCheckFlibustaAvailabilityWorker
-import net.veldor.flibustaloader.workers.ShareLastReleaseWorker
-import net.veldor.flibustaloader.workers.StartTorWorker
 import java.io.File
 import java.util.concurrent.TimeUnit
+import com.google.gson.Gson
+import net.veldor.flibustaloader.workers.*
 
 
 class App : MultiDexApplication() {
+    var isCustomBridgesSet: Boolean = false
     var migrationError: Boolean = false
     val liveBookDownloadInProgress: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
     val liveBookJustLoaded: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
     val liveBookJustRemovedFromQueue: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
     val liveBookJustError: MutableLiveData<BooksDownloadSchedule> = MutableLiveData()
+    val liveLowMemory: MutableLiveData<Boolean> = MutableLiveData()
 
     // хранилище статуса HTTP запроса
     val requestStatus = MutableLiveData<String>()
-
     var useMirror = false
     var downloadedApkFile: File? = null
     var updateDownloadUri: Uri? = null
@@ -47,6 +50,7 @@ class App : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d("surprise", "App.kt 51 onCreate test is $isTestVersion")
         // got instance
         instance = this
         // clear previously loaded images
@@ -68,20 +72,18 @@ class App : MultiDexApplication() {
                 )
                 .allowMainThreadQueries()
                 .build()
-                // попробую найти ошибку при миграции. Если она есть- не стану грузить приложение и попрошу сбросить настройки
+            // попробую найти ошибку при миграции. Если она есть- не стану грузить приложение и попрошу сбросить настройки
             mDatabase.booksDownloadScheduleDao().queueSize
-        }
-        catch (e: Exception){
+        } catch (e: Exception) {
             // ошибка при миграции, судя по всему
             migrationError = true
         }
         // определю ночной режим
-        if(PreferencesHandler.instance.isEInk){
+        if (PreferencesHandler.instance.isEInk) {
             AppCompatDelegate.setDefaultNightMode(
                 AppCompatDelegate.MODE_NIGHT_NO
             )
-        }
-        else{
+        } else {
             if (PreferencesHandler.instance.nightMode) {
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_YES
@@ -94,7 +96,9 @@ class App : MultiDexApplication() {
         }
         // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
         handleMassDownload()
+        startTorInit()
     }
+
 
     fun startTorInit() {
         runBlocking {
@@ -103,6 +107,7 @@ class App : MultiDexApplication() {
                 if (isTestVersion) {
                     LogHandler.getInstance()!!.initLog()
                     NotificationHandler.instance.showTestVersionNotification()
+                    Log.d("surprise", "App.kt 108 startTorInit test notification showed")
                 }
             }
         }
@@ -142,11 +147,46 @@ class App : MultiDexApplication() {
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build()
                 // запускаю tor
+                // getting bridges
                 val startTorWork = OneTimeWorkRequest.Builder(StartTorWorker::class.java).addTag(
                     START_TOR
                 ).setConstraints(constraints).build()
-                WorkManager.getInstance(this)
-                    .enqueueUniqueWork(START_TOR, ExistingWorkPolicy.REPLACE, startTorWork)
+                // if use custom bridges- save it
+                if (PreferencesHandler.instance.isUseCustomBridges()) {
+                    FilesHandler.saveBridges(PreferencesHandler.instance.getCustomBridges())
+                    WorkManager.getInstance(this)
+                        .enqueueUniqueWork(
+                            START_TOR,
+                            ExistingWorkPolicy.REPLACE,
+                            startTorWork
+                        )
+                } else {
+                    val db = Firebase.firestore
+                    db.collection("bridges")
+                        .get()
+                        .addOnSuccessListener { result ->
+                            for (document in result) {
+                                Log.d("surprise", "${document.id} => ${document.data}")
+                                // save document data
+                                FilesHandler.saveBridges(document.data)
+                            }
+                            WorkManager.getInstance(this)
+                                .enqueueUniqueWork(
+                                    START_TOR,
+                                    ExistingWorkPolicy.REPLACE,
+                                    startTorWork
+                                )
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.w("surprise", "Error getting documents.", exception)
+                            WorkManager.getInstance(this)
+                                .enqueueUniqueWork(
+                                    START_TOR,
+                                    ExistingWorkPolicy.REPLACE,
+                                    startTorWork
+                                )
+                        }
+                }
             }
         }
     }
@@ -248,6 +288,31 @@ class App : MultiDexApplication() {
         super.onTerminate()
         // clear previously loaded images
         FilesHandler.clearCache(cacheDir)
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        Toast.makeText(this, getString(R.string.no_more_ram_message), Toast.LENGTH_LONG).show()
+        liveLowMemory.postValue(true)
+    }
+
+    fun downloadBook(scheduleItem: BooksDownloadSchedule) {
+        val gson = Gson()
+        val j = gson.toJson(scheduleItem)
+
+        // запущу рабочего, который загрузит все книги
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val data = Data.Builder()
+        data.putString("item", j)
+        val downloadWorker = OneTimeWorkRequest.Builder(
+            DownloadBookWorker::class.java
+        ).setInputData(data.build())
+            .setConstraints(constraints).build()
+        WorkManager.getInstance(instance).enqueue(
+            downloadWorker
+        )
     }
 
     companion object {

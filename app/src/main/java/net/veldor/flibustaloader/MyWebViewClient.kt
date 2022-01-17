@@ -94,6 +94,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
     class FakeDnsResolver : DnsResolver {
         @Throws(UnknownHostException::class)
         override fun resolve(host: String): Array<InetAddress> {
+            Log.d("surprise", "MyWebViewClient.kt 97 resolve resolving $host")
             return arrayOf(InetAddress.getByAddress(byteArrayOf(1, 1, 1, 1)))
         }
     }
@@ -127,19 +128,20 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                     }
                 }
             }
-            val httpResponse = UniversalWebClient().rawRequest(incomingUrl.replace(URLHelper.getBaseUrl(), "")) ?: return connectionError
-            var input = httpResponse.entity.content
+            val httpResponse = UniversalWebClient().rawRequest(incomingUrl.replace(URLHelper.getBaseUrl(), ""))
+            if(httpResponse.statusCode >= 400){
+                return connectionError
+            }
             var encoding = ENCODING_UTF_8
-            var mime = httpResponse.entity.contentType.value
-
+            var mime = httpResponse.contentType!!
             if (mime == "application/octet-stream") {
                 // придётся ориентироваться по имени файла и определять, что это книга
                 // костыль, конечно, но что делать
 
                 // покажу хедеры
-                val headers = httpResponse.allHeaders
+                val headers = httpResponse.headers!!
                 for (h in headers) {
-                    if (h.name == "Content-Disposition") {
+                    if (h.key == "Content-Disposition") {
                         // похоже на книгу
                         // Тут пока что грязный хак, скажу, что это epub
                         mime = "application/epub"
@@ -154,23 +156,23 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                 // пока что- сэмулирую загрузку по типу OPDS
                 val newBook = BooksDownloadSchedule()
                 // покажу хедеры
-                val headers = httpResponse.allHeaders
+                val headers = httpResponse.headers!!
                 for (h in headers) {
-                    if (h.value.startsWith("attachment; filename=\"")) {
-                        newBook.name = h.value.substring(22)
-                        Log.d(
-                            "surprise",
-                            "MyWebViewClient handleRequest 276: name is " + newBook.name
-                        )
-                        break
-                    } else if (h.value.startsWith("attachment;")) {
-                        newBook.name = h.value.substring(21)
-                        Log.d(
-                            "surprise",
-                            "MyWebViewClient handleRequest 276: name is " + newBook.name
-                        )
-                        break
-                    }
+                        if (h.value.startsWith("attachment; filename=\"")) {
+                            newBook.name = h.value.substring(22)
+                            Log.d(
+                                "surprise",
+                                "MyWebViewClient handleRequest 276: name is " + newBook.name
+                            )
+                            break
+                        } else if (h.value.startsWith("attachment;")) {
+                            newBook.name = h.value.substring(21)
+                            Log.d(
+                                "surprise",
+                                "MyWebViewClient handleRequest 276: name is " + newBook.name
+                            )
+                            break
+                        }
                 }
                 // создам файл
                 val database: AppDatabase = App.instance.mDatabase
@@ -211,20 +213,20 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                     // And please, unlike me, do something about the Exceptions :D
                     val buffer = ByteArray(1024)
                     var len: Int
-                    while (input.read(buffer).also { len = it } > -1) {
+                    while (httpResponse.inputStream!!.read(buffer).also { len = it } > -1) {
                         baos.write(buffer, 0, len)
                     }
                     baos.flush()
                     // Open new InputStreams using the recorded bytes
                     // Can be repeated as many times as you wish
                     val my: InputStream = ByteArrayInputStream(baos.toByteArray())
-                    input = ByteArrayInputStream(baos.toByteArray())
                     //обработаю текст страницы и найду что-то полезное
                     WebViewViewModel.pageText.postValue(my)
+                    return WebResourceResponse("text/html", "UTF-8", ByteArrayInputStream(baos.toByteArray()))
                 }
             }
             if (mime == CSS_FORMAT) {
-                val `is` = httpResponse.entity.content
+                val `is` = httpResponse.inputStream!!
                 // подключу нужные CSS простым объединением строк
                 val origin = inputStreamToString(`is`)
                 val injectionText = injectMyCss(origin)
@@ -250,7 +252,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                 }
                 return WebResourceResponse(mime, ENCODING_UTF_8, null)
             } else if (mime == JS_FORMAT) {
-                val `is` = httpResponse.entity.content
+                val `is` = httpResponse.inputStream!!
                 val origin = inputStreamToString(`is`)
                 val injectionText = injectMyJs(origin)
                 val inputStream = ByteArrayInputStream(
@@ -266,8 +268,8 @@ class MyWebViewClient internal constructor() : WebViewClient() {
             }
             if (mime == FB2_FORMAT || mime == PDF_FORMAT) {
                 val activityContext = view.context
-                val header = httpResponse.getFirstHeader(HEADER_CONTENT_DISPOSITION)
-                var name = header.value.split(FILENAME_DELIMITER).toTypedArray()[1]
+                val header = httpResponse.headers!![HEADER_CONTENT_DISPOSITION]
+                var name = header!!.split(FILENAME_DELIMITER).toTypedArray()[1]
                 name = name.replace("\"", "")
                 val extensionSource = name.split("\\.").toTypedArray()
                 val extension = extensionSource[extensionSource.size - 1]
@@ -294,7 +296,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                             existentFile?.delete()
                             val newFile = downloadsDir.createFile(mime, name)
                             if (newFile != null) {
-                                val `is` = httpResponse.entity.content
+                                val `is` = httpResponse.inputStream!!
                                 val out: OutputStream =
                                     App.instance.contentResolver
                                         .openOutputStream(newFile.uri)!!
@@ -309,20 +311,17 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                             val file = PreferencesHandler.instance.getCompatDownloadDir()
                             if (file != null) {
                                 val newFile = File(file, name)
-                                val status = httpResponse.statusLine.statusCode
+                                val status = httpResponse.statusCode
                                 if (status == 200) {
-                                    val entity = httpResponse.entity
+                                    val entity = httpResponse.inputStream
                                     if (entity != null) {
-                                        val content = entity.content
-                                        if (content != null) {
-                                            val out: OutputStream = FileOutputStream(newFile)
-                                            var read: Int
-                                            val buffer = ByteArray(1024)
-                                            while (content.read(buffer).also { read = it } > 0) {
-                                                out.write(buffer, 0, read)
-                                            }
-                                            out.close()
+                                        val out: OutputStream = FileOutputStream(newFile)
+                                        var read: Int
+                                        val buffer = ByteArray(1024)
+                                        while (httpResponse.inputStream.read(buffer).also { read = it } > 0) {
+                                            out.write(buffer, 0, read)
                                         }
+                                        out.close()
                                     }
                                 }
                             }
@@ -352,7 +351,7 @@ class MyWebViewClient internal constructor() : WebViewClient() {
                     }
                 }
             }
-            WebResourceResponse(mime, encoding, input)
+            WebResourceResponse(mime, encoding, httpResponse.inputStream)
         } catch (e: Exception) {
             e.printStackTrace()
             connectionError

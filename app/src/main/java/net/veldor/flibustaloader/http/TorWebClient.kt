@@ -3,7 +3,6 @@ package net.veldor.flibustaloader.http
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
-import cz.msebera.android.httpclient.HttpHeaders
 import cz.msebera.android.httpclient.HttpResponse
 import cz.msebera.android.httpclient.NameValuePair
 import cz.msebera.android.httpclient.client.HttpClient
@@ -106,6 +105,7 @@ class TorWebClient {
 
     private val newHttpClient: HttpClient
         get() {
+            // check connection
             val reg = RegistryBuilder.create<ConnectionSocketFactory>()
                 .register("http", MyConnectionSocketFactory())
                 .register("https", MySSLConnectionSocketFactory(SSLContexts.createSystemDefault()))
@@ -134,7 +134,7 @@ class TorWebClient {
     @Throws(Exception::class)
     fun login(uri: Uri, login: String, password: String): Boolean {
         // request main page
-        val mainPage = rawRequest(URLHelper.getFlibustaUrl())
+        val mainPage = rawRequest("")
         val text = UniversalWebClient().responseToString(mainPage)
         // get form id
         val startIndex = text!!.indexOf("form_build_id") + 19

@@ -200,6 +200,12 @@ class DownloadScheduleAdapter(private var links: ArrayList<BooksDownloadSchedule
                     Toast.LENGTH_LONG
                 ).show()
             }
+            // добавлю действие при клике на кнопку скачивания
+            mBinding.downloadThisBookBtn.setOnClickListener {
+                // найду в очереди данную книгу и удалю её из очереди
+                App.instance.downloadBook(scheduleItem)
+                it.isEnabled = false
+            }
         }
     }
 }

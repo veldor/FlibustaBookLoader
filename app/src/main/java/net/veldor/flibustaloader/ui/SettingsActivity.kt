@@ -2,7 +2,6 @@ package net.veldor.flibustaloader.ui
 
 import android.app.Activity
 import android.content.DialogInterface
-import android.content.DialogInterface.OnMultiChoiceClickListener
 import android.content.Intent
 import android.net.Uri
 import android.os.Build

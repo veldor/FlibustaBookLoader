@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.utils
 
+import android.os.Build
 import android.util.Log
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
@@ -38,6 +39,12 @@ object URLHelper {
     fun getFlibustaUrl(): String {
         if (PreferencesHandler.instance.isCustomMirror) {
             return PreferencesHandler.instance.customMirror.toString()
+        }
+        if(!PreferencesHandler.instance.isExternalVpn){
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O) {
+                return PreferencesHandler.TOR_COMPAT_URL
+            }
+            return PreferencesHandler.TOR_URL
         }
         return PreferencesHandler.BASE_URL
     }

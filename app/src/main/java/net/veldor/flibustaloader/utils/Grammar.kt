@@ -109,7 +109,7 @@ object Grammar {
     }
 
     fun isValidUrl(newValue: String): Boolean {
-        return "^https?://\\w+.\\w+\$".toRegex().matches(newValue)
+        return "^https?://.+\$".toRegex().matches(newValue)
     }
 
     fun getAvailableDownloadFormats(item: FoundedEntity, view: TextView) {
@@ -180,6 +180,11 @@ object Grammar {
         }
         value *= java.lang.Long.signum(bytes).toLong()
         return java.lang.String.format(Locale.ENGLISH, "%.1f %cб", value / 1024.0, ci.current())
+    }
+
+    fun getRequest(link: String?): String {
+        if(link == null) return ""
+        return link.split("/").last()
     }
 }
 

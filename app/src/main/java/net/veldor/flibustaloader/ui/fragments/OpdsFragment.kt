@@ -68,11 +68,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     View.OnCreateContextMenuListener,
     ResultsReceivedDelegate {
 
+    private var networkErrorSnackbar: Snackbar? = null
     private var showDownloadSelectedMenu: Boolean = false
     private var downloadSelectedSnackbar: Snackbar? = null
     private var filteredItems: ArrayList<FoundedEntity>? = arrayListOf()
     private lateinit var binding: FragmentOpdsBinding
     lateinit var viewModel: OPDSViewModel
+    private var customSequenceName: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -93,7 +95,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         val intent = requireActivity().intent
         val link = intent.getStringExtra(TARGET_LINK)
         if (link != null) {
-            load("received link", link, append = false, addToHistory = true, -1)
+            load(link, append = false, addToHistory = true, clickedElementIndex = -1)
         }
         /*else if (viewModel.getCurrentPage() != null) {
             load(
@@ -127,6 +129,14 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
     private fun setupObservers() {
 
+        App.instance.liveLowMemory.observe(viewLifecycleOwner, {
+            // отменю загрузку
+            viewModel.cancelLoad()
+            binding.fab.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
+            binding.statusWrapper.visibility = View.GONE
+        })
+
         App.instance.liveDownloadState.observe(viewLifecycleOwner, {
             if (it == DownloadBooksWorker.DOWNLOAD_FINISHED) {
                 binding.downloadInProgressIndicator.visibility = View.GONE
@@ -142,7 +152,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         // получена прямая ссылка для поиска
         sLiveSearchLink.observe(viewLifecycleOwner, { s: String? ->
             if (s != null && s.isNotEmpty()) {
-                load("1", s, append = false, addToHistory = true, -1)
+                load(s, append = false, addToHistory = true, clickedElementIndex = -1)
             }
         })
 
@@ -151,19 +161,30 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 binding.progressBar.visibility = View.INVISIBLE
                 binding.statusWrapper.visibility = View.GONE
                 binding.fab.visibility = View.GONE
-                // покажу окошко и сообщу, что загрузка не удалась
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.error_load_page_message),
-                    Toast.LENGTH_LONG
-                )
-                    .show()
+                // оповещу о неудачной загрузке
+                showLoadErrorSnackbar()
             }
         })
 
         App.instance.liveBookJustLoaded.observe(viewLifecycleOwner, {
             (binding.resultsList.adapter as FoundedItemAdapter).bookLoaded(it)
         })
+    }
+
+    private fun showLoadErrorSnackbar() {
+        networkErrorSnackbar =
+            Snackbar.make(binding.rootView, "Ошибка соединения", Snackbar.LENGTH_INDEFINITE)
+        networkErrorSnackbar?.duration = 10000
+        networkErrorSnackbar?.anchorView = binding.snackbarBarrier
+        networkErrorSnackbar?.setAction("Повторить запрос") {
+            load(
+                viewModel.getLastLink(),
+                append = false,
+                addToHistory = false,
+                clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
+            )
+        }
+        networkErrorSnackbar?.show()
     }
 
 
@@ -176,7 +197,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                     requireContext(),
                     String.format(
                         Locale.ENGLISH,
-                        "Book load in progress.\nLoaded %d from %d, failed %d",
+                        getString(R.string.book_load_progress_pattern),
                         state.loaded, state.total, state.failed
                     ),
                     Toast.LENGTH_SHORT
@@ -214,7 +235,12 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         // обработаю клик на кнопку отображения списка авторов
 
         binding.showAuthorsListButton.setOnClickListener {
-            load("5", "/opds/authorsindex", append = false, addToHistory = true, -1)
+            load(
+                "/opds/authorsindex",
+                append = false,
+                addToHistory = true,
+                clickedElementIndex = -1
+            )
             showLoadWaiter()
         }
 
@@ -270,13 +296,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         binding.showGenresListButton.setOnClickListener {
             mSearchView?.isIconified = true
             (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
-            load("2", "/opds/genres", false, addToHistory = true, -1)
+            load("/opds/genres", false, addToHistory = true, clickedElementIndex = -1)
             showLoadWaiter()
         }
         binding.showSequencesListButton.setOnClickListener {
             mSearchView?.isIconified = true
             (binding.resultsList.adapter as FoundedItemAdapter).setHasNext(false)
-            load("3", "/opds/sequencesindex", false, addToHistory = true, -1)
+            load("/opds/sequencesindex", false, addToHistory = true, clickedElementIndex = -1)
             showLoadWaiter()
         }
         val a = FoundedItemAdapter(arrayListOf(), this)
@@ -315,7 +341,12 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                                     PreferencesHandler.instance.opdsPagedResultsLoad && sNextPage != null
                                     && (binding.resultsList.adapter as FoundedItemAdapter).hasBooks()
                                 ) {
-                                    load("4", sNextPage!!, append = true, addToHistory = false, -1)
+                                    load(
+                                        sNextPage!!,
+                                        append = true,
+                                        addToHistory = false,
+                                        clickedElementIndex = -1
+                                    )
                                 }
                                 lastScrolled = position
                             }
@@ -468,6 +499,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         val viewInflated: View = LayoutInflater.from(context)
             .inflate(R.layout.sequence_name_dialog, view as ViewGroup?, false)
         val input = viewInflated.findViewById(R.id.input) as EditText
+        input.setText(customSequenceName)
         builder.setView(viewInflated)
 
 // Set up the buttons
@@ -994,38 +1026,34 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 when (which) {
                     0 -> {
                         load(
-                            "7",
                             "/opds/new/0/new",
                             append = false,
                             addToHistory = true,
-                            -1
+                            clickedElementIndex = -1
                         )
                     }
                     1 -> {
                         load(
-                            "8",
                             "/opds/newgenres",
                             append = false,
                             addToHistory = true,
-                            -1
+                            clickedElementIndex = -1
                         )
                     }
                     2 -> {
                         load(
-                            "9",
                             "/opds/newauthors",
                             append = false,
                             addToHistory = true,
-                            -1
+                            clickedElementIndex = -1
                         )
                     }
                     3 -> {
                         load(
-                            "10",
                             "/opds/newsequences",
                             append = false,
                             addToHistory = true,
-                            -1
+                            clickedElementIndex = -1
                         )
                     }
                 }
@@ -1044,12 +1072,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             scrollToTop()
             val searchString = URLEncoder.encode(s, "utf-8").replace("+", "%20")
             load(
-                "13",
                 URLHelper.getSearchRequest(
                     binding.searchType.checkedRadioButtonId,
                     searchString
-                ), false, addToHistory = true, -1
+                ),
+                false, addToHistory = true, clickedElementIndex = -1
             )
+            customSequenceName = s
             showLoadWaiter()
         }
         return true
@@ -1117,9 +1146,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         }
         // покажу список выбора автора
         dialogBuilder.setItems(list.toTypedArray()) { _: DialogInterface?, i: Int ->
-            Log.d("surprise", "showSelectSequenceFromList: load selected author")
+            customSequenceName = Grammar.getRequest(sequences[i].name)
             load(
-                "14",
                 sequences[i].link!!,
                 append = false,
                 addToHistory = true,
@@ -1153,10 +1181,9 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         }
         if (url != null) {
             scrollToTop()
-            Log.d("surprise", "loadAuthor: load some of author")
+            customSequenceName = Grammar.getRequest(author.name)
             load(
-                "15", url,
-                append = false,
+                url, append = false,
                 addToHistory = true,
                 clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
             )
@@ -1303,13 +1330,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 showAuthorViewSelect(item)
             }
             else -> {
+                customSequenceName = Grammar.getRequest(item.name)
                 // перейду по ссылке
                 load(
-                    "17",
                     item.link!!,
                     append = false,
                     addToHistory = true,
-                    (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
+                    clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
                 )
                 showLoadWaiter()
             }
@@ -1324,9 +1351,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             @SuppressLint("InflateParams") val dialogLayout =
                 inflater.inflate(R.layout.book_cover, null)
             val imageContainer = dialogLayout.findViewById<ImageView>(R.id.cover_view)
-            if (item.cover != null) {
-                imageContainer.setImageBitmap(BitmapFactory.decodeFile(item.cover!!.path))
-            } else {
+            if (item.cover == null) {
                 imageContainer.setImageDrawable(
                     ResourcesCompat.getDrawable(
                         App.instance.resources,
@@ -1334,8 +1359,10 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                         null
                     )
                 )
-                viewModel.loadImage(imageContainer, item)
+            } else {
+                imageContainer.setImageBitmap(BitmapFactory.decodeFile(item.cover!!.path))
             }
+            viewModel.loadImage(imageContainer, item)
             dialogBuilder
                 .setView(dialogLayout)
                 .setCancelable(true)
@@ -1405,14 +1432,13 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 showAuthorViewSelect(item)
             }
             else -> {
-                Log.d("surprise", "itemPressed: load on ite pressed")
+                customSequenceName = Grammar.getRequest(item.name)
                 // перейду по ссылке
                 load(
-                    "16",
                     item.link!!,
                     append = false,
                     addToHistory = true,
-                    (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
+                    clickedElementIndex = (binding.resultsList.adapter as FoundedItemAdapter).getClickedItemId()
                 )
                 showLoadWaiter()
             }
@@ -1439,8 +1465,7 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
     override fun loadMoreBtnClicked() {
         if (sNextPage != null) {
-            Log.d("surprise", "loadMoreBtnClicked: load on more button clicked")
-            load("21", sNextPage!!, append = true, addToHistory = false, -1)
+            load(sNextPage!!, append = true, addToHistory = false, clickedElementIndex = -1)
         }
     }
 
@@ -1455,9 +1480,8 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     override fun sequenceClicked(item: FoundedEntity) {
         Log.d("surprise", "sequenceClicked: sequences len is ${item.sequences.size}")
         if (item.sequences.size == 1) {
-            Log.d("surprise", "sequenceClicked: load on sequence clicked")
+            customSequenceName = Grammar.getRequest(item.sequences[0].name)
             load(
-                "18",
                 item.sequences[0].link!!,
                 append = false,
                 addToHistory = true,
@@ -1502,7 +1526,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     fun load(
-        reason: String,
         link: String,
         append: Boolean,
         addToHistory: Boolean,
@@ -1657,6 +1680,10 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
     }
 
     fun loadFromHistory(lastPage: HistoryItem) {
+        viewModel.cancelLoad()
+        binding.progressBar.visibility = View.INVISIBLE
+        binding.statusWrapper.visibility = View.GONE
+        binding.fab.visibility = View.GONE
         if (showDownloadSelectedMenu) {
             (binding.resultsList.adapter as FoundedItemAdapter).cancelDownloadSelection()
             downloadSelectedSnackbar?.dismiss()

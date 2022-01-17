@@ -5,9 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import net.veldor.flibustaloader.http.UniversalWebClient
 import net.veldor.flibustaloader.parsers.TestParser
 import net.veldor.flibustaloader.selections.FoundedEntity
-import net.veldor.flibustaloader.selections.SubscriptionItem
 import net.veldor.flibustaloader.view_models.SubscriptionsViewModel
-import kotlin.collections.ArrayList
 
 object SubscribesHandler {
 
@@ -28,78 +26,74 @@ object SubscribesHandler {
         while (nextPageLink != null) {
             Log.d("surprise", "checkSubscribes: check next page")
             val response = UniversalWebClient().rawRequest(nextPageLink)
-            if (response != null) {
-                val answer = UniversalWebClient().responseToString(response)
-                if (answer != null) {
-                    val parser = TestParser(answer)
-                    val results = parser.parse()
-                    nextPageLink = parser.nextPageLink
-                    results.forEach { book ->
-                        if(lastBookFound){
-                            return@forEach
-                        }
-                        if(lastBookId == null) {
-                            lastBookId = book.id!!
-                        }
-                        textValue = book.name!!.lowercase()
-                        bookSubscribes.forEach {
-                            if(textValue.contains(it.name)){
-                                book.description = "Подписка по названию книги: ${it.name}"
-                                Log.d("surprise", "checkSubscribes:book find $textValue in ${it.name}")
-                                subscribeResults.add(book)
-                                foundedEntitiesContainer?.postValue(book)
-                                previousValue = resultListContainer.value!!
-                                previousValue.add(book)
-                                resultListContainer.postValue(previousValue)
-                            }
-                        }
-                        textValue = book.author!!.lowercase()
-                        authorSubscribes.forEach {
-                            if(textValue.contains(it.name)){
-                                book.description = "Подписка по автору: ${it.name}"
-                                Log.d("surprise", "checkSubscribes:author find $textValue in ${it.name}")
-                                subscribeResults.add(book)
-                                foundedEntitiesContainer?.postValue(book)
-                                previousValue = resultListContainer.value!!
-                                previousValue.add(book)
-                                resultListContainer.postValue(previousValue)
-                            }
-                        }
-                        textValue = book.sequencesComplex.lowercase()
-                        sequenceSubscribes.forEach {
-                            if(textValue.contains(it.name)){
-                                book.description = "Подписка по серии: ${it.name}"
-                                Log.d("surprise", "checkSubscribes:sequence find $textValue in ${it.name}")
-                                subscribeResults.add(book)
-                                foundedEntitiesContainer?.postValue(book)
-                                previousValue = resultListContainer.value!!
-                                previousValue.add(book)
-                                resultListContainer.postValue(previousValue)
-                            }
-                        }
-                        textValue = book.genreComplex!!.lowercase()
-                        genreSubscribes.forEach {
-                            if(textValue.contains(it.name)){
-                                book.description = "Подписка по жанру: ${it.name}"
-                                Log.d("surprise", "checkSubscribes:genre find $textValue in ${it.name}")
-                                subscribeResults.add(book)
-                                foundedEntitiesContainer?.postValue(book)
-                                previousValue = resultListContainer.value!!
-                                previousValue.add(book)
-                                resultListContainer.postValue(previousValue)
-                            }
-                        }
-                        if(isIncremental && lastCheckedBookId == book.id){
-                            Log.d("surprise", "checkSubscribes: scanned for last book")
-                            // дальше сканировать не надо
-                            nextPageLink = null
-                            lastBookFound = true
-                            return@forEach
-
+            val answer = UniversalWebClient().responseToString(response.inputStream)
+            if (answer != null) {
+                val parser = TestParser(answer)
+                val results = parser.parse()
+                nextPageLink = parser.nextPageLink
+                results.forEach { book ->
+                    if(lastBookFound){
+                        return@forEach
+                    }
+                    if(lastBookId == null) {
+                        lastBookId = book.id!!
+                    }
+                    textValue = book.name!!.lowercase()
+                    bookSubscribes.forEach {
+                        if(textValue.contains(it.name)){
+                            book.description = "Подписка по названию книги: ${it.name}"
+                            Log.d("surprise", "checkSubscribes:book find $textValue in ${it.name}")
+                            subscribeResults.add(book)
+                            foundedEntitiesContainer?.postValue(book)
+                            previousValue = resultListContainer.value!!
+                            previousValue.add(book)
+                            resultListContainer.postValue(previousValue)
                         }
                     }
-                } else {
-                    break
+                    textValue = book.author!!.lowercase()
+                    authorSubscribes.forEach {
+                        if(textValue.contains(it.name)){
+                            book.description = "Подписка по автору: ${it.name}"
+                            Log.d("surprise", "checkSubscribes:author find $textValue in ${it.name}")
+                            subscribeResults.add(book)
+                            foundedEntitiesContainer?.postValue(book)
+                            previousValue = resultListContainer.value!!
+                            previousValue.add(book)
+                            resultListContainer.postValue(previousValue)
+                        }
+                    }
+                    textValue = book.sequencesComplex.lowercase()
+                    sequenceSubscribes.forEach {
+                        if(textValue.contains(it.name)){
+                            book.description = "Подписка по серии: ${it.name}"
+                            Log.d("surprise", "checkSubscribes:sequence find $textValue in ${it.name}")
+                            subscribeResults.add(book)
+                            foundedEntitiesContainer?.postValue(book)
+                            previousValue = resultListContainer.value!!
+                            previousValue.add(book)
+                            resultListContainer.postValue(previousValue)
+                        }
+                    }
+                    textValue = book.genreComplex!!.lowercase()
+                    genreSubscribes.forEach {
+                        if(textValue.contains(it.name)){
+                            book.description = "Подписка по жанру: ${it.name}"
+                            Log.d("surprise", "checkSubscribes:genre find $textValue in ${it.name}")
+                            subscribeResults.add(book)
+                            foundedEntitiesContainer?.postValue(book)
+                            previousValue = resultListContainer.value!!
+                            previousValue.add(book)
+                            resultListContainer.postValue(previousValue)
+                        }
+                    }
+                    if(isIncremental && lastCheckedBookId == book.id){
+                        Log.d("surprise", "checkSubscribes: scanned for last book")
+                        // дальше сканировать не надо
+                        nextPageLink = null
+                        lastBookFound = true
+                        return@forEach
+
+                    }
                 }
             } else {
                 break

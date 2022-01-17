@@ -7,7 +7,7 @@
     tools:context=".ui.FlibustaNotAvailableActivity">
 
     <TextView
-        android:id="@+id/textView4"
+        android:id="@+id/not_available_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -21,11 +21,26 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/err_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
         android:text="@string/flibusta_not_available_body"
-        app:layout_constraintTop_toBottomOf="@+id/textView4" />
+        app:layout_constraintTop_toBottomOf="@+id/not_available_title" />
+
+    <TextView
+        android:id="@+id/vpn_warning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:drawablePadding="10dp"
+        android:visibility="gone"
+        android:textColor="@color/book_name_color"
+        android:text="@string/vpn_enabled_but_not_work_warning"
+        app:layout_constraintTop_toBottomOf="@+id/err_message"
+        app:drawableStartCompat="@drawable/ic_baseline_vpn_key_black_24"
+        app:drawableLeftCompat="@drawable/ic_baseline_vpn_key_black_24" />
+
     <Button
         android:id="@+id/switchToVpnBtn"
         android:layout_width="match_parent"
@@ -35,6 +50,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
+    <Button
+        android:id="@+id/getVpn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/get_vpn_message"
+        app:layout_constraintBottom_toTopOf="@+id/switchToVpnBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <Button
         android:id="@+id/disableInspectionButton"
         android:layout_width="match_parent"
