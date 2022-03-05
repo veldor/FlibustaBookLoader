@@ -5,7 +5,9 @@ import cz.msebera.android.httpclient.client.methods.HttpGet
 import cz.msebera.android.httpclient.impl.client.CloseableHttpClient
 import cz.msebera.android.httpclient.impl.client.HttpClients
 import cz.msebera.android.httpclient.util.EntityUtils
+import net.veldor.flibustaloader.App
 import org.json.JSONObject
+import java.lang.Exception
 
 class FlibustaChecker {
 
@@ -81,6 +83,74 @@ class FlibustaChecker {
                     Log.d("surprise", "FlibustaChecker.kt 31 isAlive wrong request")
                 }
             }
+        }
+        return STATE_PASSED
+    }
+
+    fun isAlive(url: String): Int {
+        val httpclient: CloseableHttpClient = HttpClients.createDefault()
+        var httpget = HttpGet("https://check-host.net/check-http?host=$url&max_nodes=3")
+        httpget.addHeader("Accept", "application/json")
+        try {
+            var response = httpclient.execute(httpget)
+            if (response.statusLine.statusCode == 200) {
+                // parse json response
+                var body: String = EntityUtils.toString(response.entity)
+                var info = JSONObject(body)
+                if (info.has("ok")) {
+                    val result = info.getInt("ok")
+                    if (result == 1) {
+                        if (info.has("request_id")) {
+                            val requestId = info.getString("request_id")
+                            if (requestId.isNotEmpty()) {
+                                while (true) {
+                                    Thread.sleep(500)
+                                    // запрошу результаты
+                                    httpget = HttpGet(apiResultRequest.plus(requestId))
+                                    httpget.addHeader("Accept", "application/json")
+                                    response = httpclient.execute(httpget)
+                                    if (response.statusLine.statusCode == 200) {
+                                        body = EntityUtils.toString(response.entity)
+                                        info = JSONObject(body)
+                                        val keys = info.keys()
+                                        var failed = 0
+                                        keys.forEach {
+                                            if (!info.isNull(it)) {
+                                                val answerItem = info.getJSONArray(it)
+                                                if (answerItem != null) {
+                                                    val availability = answerItem.getJSONArray(0)
+                                                    if (availability != null) {
+                                                        val state = availability.getInt(0)
+                                                        if (state == 1) {
+                                                            return STATE_AVAILABLE
+                                                        } else if (state == 0) {
+                                                            Log.d(
+                                                                "surprise",
+                                                                "FlibustaChecker.kt 55 isAlive looks like it's dead"
+                                                            )
+                                                            failed++
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (failed > 0) {
+                                            return STATE_UNAVAILABLE
+                                        }
+                                    } else {
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Log.d("surprise", "FlibustaChecker.kt 31 isAlive wrong request")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            App.instance.torException = e
+            e.printStackTrace()
         }
         return STATE_PASSED
     }

@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import cz.msebera.android.httpclient.HttpResponse
+import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.utils.URLHelper
 import java.io.BufferedReader
@@ -11,8 +12,14 @@ import java.io.InputStream
 
 class UniversalWebClient {
     fun rawRequest(request: String): WebResponse {
+        Log.d("surprise", "UniversalWebClient.kt 14 rawRequest base url is ${URLHelper.getBaseUrl()}")
+        return rawRequest(URLHelper.getBaseUrl(), request)
+    }
+
+    fun rawRequest(mirror: String, request: String): WebResponse {
+        Log.d("surprise", "UniversalWebClient.kt 18 rawRequest mirror is $mirror")
         try {
-            val requestString = URLHelper.getBaseUrl() + request
+            val requestString = mirror + request
             Log.d("surprise", "make universal request: $requestString")
             if (PreferencesHandler.instance.isExternalVpn) {
                 val response = ExternalVpnVewClient.rawRequest(requestString)
@@ -20,12 +27,14 @@ class UniversalWebClient {
                     val headers = response.headerFields
                     val resultHeaders = HashMap<String, String>()
                     headers.forEach {
-                        val value = if (it.value.isNotEmpty()) {
-                            it.value[0]
-                        } else {
-                            ""
+                        if(it.key != null){
+                            val value = if (it.value.isNotEmpty()) {
+                                it.value[0]
+                            } else {
+                                ""
+                            }
+                            resultHeaders[it.key] = value
                         }
-                        resultHeaders[it.key] = value
                     }
                     WebResponse(
                         response.responseCode,
@@ -58,6 +67,7 @@ class UniversalWebClient {
             }
             val response = NewTorClient.rawRequest(requestString)
             return if (response != null) {
+                Log.d("surprise", "UniversalWebClient.kt 61 rawRequest $response.")
                 val headers = response.headerFields
                 val resultHeaders = HashMap<String, String>()
                 headers.forEach {
@@ -82,7 +92,7 @@ class UniversalWebClient {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.d("surprise", "UniversalWebClient.kt 88 rawRequest error when request")
+            App.instance.torException = e
             return WebResponse(999, null, null, null)
         }
     }
@@ -97,12 +107,14 @@ class UniversalWebClient {
                     val headers = response.headerFields
                     val resultHeaders = HashMap<String, String>()
                     headers.forEach {
-                        val value = if (it.value.isNotEmpty()) {
-                            it.value[0]
-                        } else {
-                            ""
+                        if(it.key != null){
+                            val value = if (it.value.isNotEmpty()) {
+                                it.value[0]
+                            } else {
+                                ""
+                            }
+                            resultHeaders[it.key] = value
                         }
-                        resultHeaders[it.key] = value
                     }
                     WebResponse(
                         response.responseCode,
@@ -181,7 +193,7 @@ class UniversalWebClient {
             )
         }
         val request = Uri.parse("/node?destination=node")
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O){
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O) {
             return TorWebClient().login(request, login, password)
         }
         return NewTorClient.login("/node?destination=node", login, password)

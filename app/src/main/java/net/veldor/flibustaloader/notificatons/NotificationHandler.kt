@@ -113,7 +113,13 @@ class NotificationHandler private constructor(private var context: Context) {
         mNotificationManager.notify(-101, mBuilder.build())
         val notificationBuilder = NotificationCompat.Builder(context, BOOKS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_warning_red_24dp)
-            .setContentTitle(String.format(Locale.ENGLISH, context.getString(R.string.error_load_message), book.name))
+            .setContentTitle(
+                String.format(
+                    Locale.ENGLISH,
+                    context.getString(R.string.error_load_message),
+                    book.name
+                )
+            )
             .setStyle(
                 NotificationCompat.BigTextStyle().bigText(
                     String.format(
@@ -250,10 +256,16 @@ class NotificationHandler private constructor(private var context: Context) {
                 resumeIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
-            downloadCompleteBuilder.addAction(R.drawable.ic_close_grayscale_24dp, context.getString(
-                            R.string.drop_queue_action), cancelMassDownloadPendingIntent)
-            downloadCompleteBuilder.addAction(R.drawable.ic_baseline_restore_black_24, context.getString(
-                            R.string.requme_download_action), resumeMassDownloadPendingIntent)
+            downloadCompleteBuilder.addAction(
+                R.drawable.ic_close_grayscale_24dp, context.getString(
+                    R.string.drop_queue_action
+                ), cancelMassDownloadPendingIntent
+            )
+            downloadCompleteBuilder.addAction(
+                R.drawable.ic_baseline_restore_black_24, context.getString(
+                    R.string.requme_download_action
+                ), resumeMassDownloadPendingIntent
+            )
         }
         mNotificationManager.notify(BOOKS_SUCCESS_NOTIFICATION, downloadCompleteBuilder.build())
     }
@@ -515,7 +527,7 @@ class NotificationHandler private constructor(private var context: Context) {
             BookLoadedReceiver.EXTRA_ACTION_TYPE,
             BookLoadedReceiver.ACTION_TYPE_OPEN
         )
-        pendingRequestId = this.pendingRequestId++;
+        pendingRequestId = this.pendingRequestId++
         openIntent.putExtra(BookLoadedReceiver.EXTRA_BOOK_NAME, bookName)
         openIntent.putExtra(BookActionReceiver.EXTRA_NOTIFICATION_ID, bookLoadedId)
         val openPendingIntent = PendingIntent.getBroadcast(
@@ -527,7 +539,12 @@ class NotificationHandler private constructor(private var context: Context) {
 
         val notificationBuilder = NotificationCompat.Builder(context, BOOKS_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_book_black_24dp)
-            .setContentTitle(String.format(context.getString(R.string.loaded_books_title), bookName))
+            .setContentTitle(
+                String.format(
+                    context.getString(R.string.loaded_books_title),
+                    bookName
+                )
+            )
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText("$bookName :успешно загружено")
@@ -707,6 +724,19 @@ class NotificationHandler private constructor(private var context: Context) {
                 sendLogsToMailPendingIntent
             )
         mNotificationManager.notify(IS_TEST_VERSION_NOTIFICATION, notificationBuilder.build())
+    }
+
+    fun updateTorStarter(lastLog: String) {
+        val notificationBuilder =
+            NotificationCompat.Builder(context, SUBSCRIBE_CHECK_SERVICE_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_book_black_24dp)
+                .setContentTitle(
+                    App.instance.getString(R.string.start_tor_message)
+                )
+                .setProgress(0, 0, true)
+                .setContentTitle(lastLog)
+                .setOngoing(true)
+        mNotificationManager.notify(START_TOR_WORKER_NOTIFICATION, notificationBuilder.build())
     }
 
 

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/first_use_navigation"
+    app:startDestination="@+id/first_use_introduction_guide">
+
+    <fragment
+        android:id="@+id/first_use_introduction_guide"
+        android:name="net.veldor.flibustaloader.ui.first_use_fragments.FirstUseIntroductionFragment"
+        android:label="@string/introduction_fragment"
+        tools:layout="@layout/fragment_first_use_introduction">
+        <action
+            android:id="@+id/go_to_permissions_action"
+            app:destination="@id/first_use_permissions_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right"
+            />
+    </fragment>
+    <fragment
+        android:id="@+id/first_use_permissions_guide"
+        android:name="net.veldor.flibustaloader.ui.first_use_fragments.FirstUseGrantPermissionsFragment"
+        android:label="@string/permissions_fragment"
+        tools:layout="@layout/fragment_first_use_permissions">
+        <action
+            android:id="@+id/go_to_select_dir_action"
+            app:destination="@id/first_use_select_dir_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/first_use_select_dir_guide"
+        android:name="net.veldor.flibustaloader.ui.first_use_fragments.FirstUseSelectDirFragment"
+        android:label="@string/select_dir_fragment"
+        tools:layout="@layout/fragment_first_use_select_dir">
+        <action
+            android:id="@+id/go_to_view_settings_guide"
+            app:destination="@id/view_modifications_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/view_modifications_guide"
+        android:name="net.veldor.flibustaloader.ui.first_use_fragments.FirstUseViewModificationsGuideFragment"
+        android:label="@string/first_use_view_modifications_fragment"
+        tools:layout="@layout/fragment_first_use_view_guide">
+        <action
+            android:id="@+id/go_to_finish_first_setup_action"
+            app:destination="@id/first_use_finish_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/first_use_finish_guide"
+        android:name="net.veldor.flibustaloader.ui.first_use_fragments.FirstUseFinishGuideFragment"
+        android:label="@string/first_use_finish_fragment"
+        tools:layout="@layout/fragment_first_use_finish_guide">
+
+    </fragment>
+</navigation>

@@ -227,24 +227,24 @@ class SettingsActivity : BaseActivity(),
                                         checkedOptions
                                     )
                                     (requireActivity() as SettingsActivity).viewModel.liveBackupData.observe(
-                                        viewLifecycleOwner,
-                                        {
-                                            if (it != null) {
-                                                // send file
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                                    FilesHandler.shareFile(it, "Share settings")
-                                                }
-                                                (requireActivity() as SettingsActivity).viewModel.liveBackupData.removeObservers(
-                                                    viewLifecycleOwner
-                                                )
-                                            } else {
-                                                Toast.makeText(
-                                                    requireContext(),
-                                                    "Can't create backup file, try again!",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
+                                        viewLifecycleOwner
+                                    ) {
+                                        if (it != null) {
+                                            // send file
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                                FilesHandler.shareFile(it, "Share settings")
                                             }
-                                        })
+                                            (requireActivity() as SettingsActivity).viewModel.liveBackupData.removeObservers(
+                                                viewLifecycleOwner
+                                            )
+                                        } else {
+                                            Toast.makeText(
+                                                requireContext(),
+                                                "Can't create backup file, try again!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
                                 }
                                 builder.show()
                             }
@@ -314,27 +314,27 @@ class SettingsActivity : BaseActivity(),
                                         options = checkedOptions
                                     )
                                     (requireActivity() as SettingsActivity).viewModel.liveCompatBackupData.observe(
-                                        viewLifecycleOwner,
-                                        {
-                                            if (it != null) {
-                                                // send file
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                                    FilesHandler.shareFile(
-                                                        it,
-                                                        getString(R.string.share_settings_message)
-                                                    )
-                                                }
-                                                (requireActivity() as SettingsActivity).viewModel.liveCompatBackupData.removeObservers(
-                                                    viewLifecycleOwner
+                                        viewLifecycleOwner
+                                    ) {
+                                        if (it != null) {
+                                            // send file
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                                FilesHandler.shareFile(
+                                                    it,
+                                                    getString(R.string.share_settings_message)
                                                 )
-                                            } else {
-                                                Toast.makeText(
-                                                    requireContext(),
-                                                    "Can't create backup file, try again!",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
                                             }
-                                        })
+                                            (requireActivity() as SettingsActivity).viewModel.liveCompatBackupData.removeObservers(
+                                                viewLifecycleOwner
+                                            )
+                                        } else {
+                                            Toast.makeText(
+                                                requireContext(),
+                                                "Can't create backup file, try again!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
                                 }
                                 builder.show()
                             } else {
@@ -395,17 +395,17 @@ class SettingsActivity : BaseActivity(),
                                                 dl, checkResults
                                             )
                                             (requireActivity() as SettingsActivity).viewModel.livePrefsRestored.observe(
-                                                viewLifecycleOwner,
-                                                {
-                                                    if (it) {
-                                                        Toast.makeText(
-                                                            requireContext(),
-                                                            "Preferences restored, reboot app",
-                                                            Toast.LENGTH_LONG
-                                                        ).show()
-                                                        Handler().postDelayed(ResetApp(), 3000)
-                                                    }
-                                                })
+                                                viewLifecycleOwner
+                                            ) {
+                                                if (it) {
+                                                    Toast.makeText(
+                                                        requireContext(),
+                                                        "Preferences restored, reboot app",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                    Handler().postDelayed(ResetApp(), 3000)
+                                                }
+                                            }
                                         }
                                         .show()
 
@@ -455,17 +455,17 @@ class SettingsActivity : BaseActivity(),
                                                 file, checkResults
                                             )
                                             (requireActivity() as SettingsActivity).viewModel.livePrefsRestored.observe(
-                                                viewLifecycleOwner,
-                                                {
-                                                    if (it) {
-                                                        Toast.makeText(
-                                                            requireContext(),
-                                                            "Preferences restored, reboot app",
-                                                            Toast.LENGTH_LONG
-                                                        ).show()
-                                                        Handler().postDelayed(ResetApp(), 3000)
-                                                    }
-                                                })
+                                                viewLifecycleOwner
+                                            ) {
+                                                if (it) {
+                                                    Toast.makeText(
+                                                        requireContext(),
+                                                        "Preferences restored, reboot app",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                    Handler().postDelayed(ResetApp(), 3000)
+                                                }
+                                            }
                                         }
                                         .show()
                                 }

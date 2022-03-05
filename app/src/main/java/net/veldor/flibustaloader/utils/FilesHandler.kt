@@ -1,5 +1,6 @@
 package net.veldor.flibustaloader.utils
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -11,12 +12,10 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
-import com.msopentech.thali.toronionproxy.OnionProxyContext
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
-import net.veldor.flibustaloader.handlers.Filter
+import net.veldor.flibustaloader.http.TorStarter
 import java.io.*
-import java.nio.file.Files
 
 object FilesHandler {
 
@@ -218,6 +217,14 @@ object FilesHandler {
             fileOutputStream.write(data.replace("obfs4", "\nobfs4").toByteArray())
             fileOutputStream.close()
         }
+    }
+
+    fun dropTorCache() {
+        val file = App.instance.getDir(TorStarter.TOR_FILES_LOCATION, Context.MODE_PRIVATE)
+        if(file.isDirectory){
+            file.deleteRecursively()
+        }
+        file.mkdir()
     }
 
 

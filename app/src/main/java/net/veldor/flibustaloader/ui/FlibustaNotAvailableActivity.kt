@@ -1,18 +1,17 @@
 package net.veldor.flibustaloader.ui
 
 import android.annotation.SuppressLint
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.*
-import android.widget.*
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.databinding.ActivityFlibustaNotAvailableBinding
 import net.veldor.flibustaloader.utils.PreferencesHandler
+import net.veldor.flibustaloader.utils.TransportUtils
 import kotlin.system.exitProcess
 
 class FlibustaNotAvailableActivity : AppCompatActivity() {
@@ -24,26 +23,7 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
         binding = ActivityFlibustaNotAvailableBinding.inflate(layoutInflater)
         setContentView(binding.root)
         if (PreferencesHandler.instance.isExternalVpn) {
-            binding.switchToVpnBtn.visibility = View.GONE
             binding.vpnWarning.visibility = View.VISIBLE
-        } else {
-            binding.switchToVpnBtn.setOnClickListener {
-                PreferencesHandler.instance.isExternalVpn =
-                    !PreferencesHandler.instance.isExternalVpn
-                val mStartActivity =
-                    Intent(this@FlibustaNotAvailableActivity, MainActivity::class.java)
-                val mPendingIntentId = 123456
-                val mPendingIntent = PendingIntent.getActivity(
-                    this@FlibustaNotAvailableActivity,
-                    mPendingIntentId,
-                    mStartActivity,
-                    PendingIntent.FLAG_CANCEL_CURRENT
-                )
-                val mgr =
-                    this@FlibustaNotAvailableActivity.getSystemService(ALARM_SERVICE) as AlarmManager
-                mgr[AlarmManager.RTC, System.currentTimeMillis() + 100] = mPendingIntent
-                exitProcess(0)
-            }
         }
         binding.closeAppButton.setOnClickListener { exitProcess(0) }
         binding.retryButton.setOnClickListener {
@@ -62,14 +42,11 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
             startMain.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(startMain)
         }
-        binding.disableInspectionButton.setOnClickListener {
-            PreferencesHandler.instance.setInspectionEnabled(false)
-            Toast.makeText(
-                this@FlibustaNotAvailableActivity,
-                getString(R.string.inspection_disabled_message),
-                Toast.LENGTH_LONG
-            ).show()
-            startActivity(Intent(this@FlibustaNotAvailableActivity, MainActivity::class.java))
+        binding.testConnection.setOnClickListener {
+            val targetActivityIntent = Intent(this, ConnectivityGuideActivity::class.java)
+            targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(targetActivityIntent)
+            App.instance.stopTorInit()
             finish()
         }
         binding.showMainWindowButton.setOnClickListener {
@@ -80,7 +57,12 @@ class FlibustaNotAvailableActivity : AppCompatActivity() {
         binding.getVpn.setOnClickListener {
             val goToMarket =
                 Intent(Intent.ACTION_VIEW).setData(Uri.parse("market://search?q=VPN"))
-            startActivity(goToMarket)
+            if (TransportUtils.intentCanBeHandled(goToMarket)) {
+                startActivity(goToMarket)
+            } else {
+                Toast.makeText(this, getString(R.string.no_playmarket_message), Toast.LENGTH_SHORT)
+                    .show()
+            }
         }
     }
 

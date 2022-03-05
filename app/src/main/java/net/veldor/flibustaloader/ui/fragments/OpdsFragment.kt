@@ -20,6 +20,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
@@ -48,10 +49,7 @@ import net.veldor.flibustaloader.selections.DownloadLink
 import net.veldor.flibustaloader.selections.FoundedEntity
 import net.veldor.flibustaloader.selections.HistoryItem
 import net.veldor.flibustaloader.selections.SearchResult
-import net.veldor.flibustaloader.ui.BaseActivity
-import net.veldor.flibustaloader.ui.BlacklistActivity
-import net.veldor.flibustaloader.ui.BrowserActivity
-import net.veldor.flibustaloader.ui.DownloadScheduleActivity
+import net.veldor.flibustaloader.ui.*
 import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.view_models.DownloadScheduleViewModel
 import net.veldor.flibustaloader.view_models.OPDSViewModel
@@ -63,10 +61,18 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
+@Suppress("DEPRECATION")
 class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActionDelegate,
     BooksAddedToQueueDelegate,
     View.OnCreateContextMenuListener,
     ResultsReceivedDelegate {
+
+    private var loginLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                requireActivity().invalidateOptionsMenu()
+            }
+        }
 
     private var networkErrorSnackbar: Snackbar? = null
     private var showDownloadSelectedMenu: Boolean = false
@@ -129,34 +135,34 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
 
     private fun setupObservers() {
 
-        App.instance.liveLowMemory.observe(viewLifecycleOwner, {
+        App.instance.liveLowMemory.observe(viewLifecycleOwner) {
             // отменю загрузку
             viewModel.cancelLoad()
             binding.fab.visibility = View.GONE
             binding.progressBar.visibility = View.GONE
             binding.statusWrapper.visibility = View.GONE
-        })
+        }
 
-        App.instance.liveDownloadState.observe(viewLifecycleOwner, {
+        App.instance.liveDownloadState.observe(viewLifecycleOwner) {
             if (it == DownloadBooksWorker.DOWNLOAD_FINISHED) {
                 binding.downloadInProgressIndicator.visibility = View.GONE
             } else if (it == DownloadBooksWorker.DOWNLOAD_IN_PROGRESS) {
                 binding.downloadInProgressIndicator.visibility = View.VISIBLE
             }
-        })
+        }
 
-        OPDSViewModel.currentRequestState.observe(viewLifecycleOwner, {
+        OPDSViewModel.currentRequestState.observe(viewLifecycleOwner) {
             binding.statusWrapper.setText(it)
-        })
+        }
 
         // получена прямая ссылка для поиска
-        sLiveSearchLink.observe(viewLifecycleOwner, { s: String? ->
+        sLiveSearchLink.observe(viewLifecycleOwner) { s: String? ->
             if (s != null && s.isNotEmpty()) {
                 load(s, append = false, addToHistory = true, clickedElementIndex = -1)
             }
-        })
+        }
 
-        viewModel.isLoadError.observe(viewLifecycleOwner, { hasError: Boolean ->
+        viewModel.isLoadError.observe(viewLifecycleOwner) { hasError: Boolean ->
             if (hasError) {
                 binding.progressBar.visibility = View.INVISIBLE
                 binding.statusWrapper.visibility = View.GONE
@@ -164,14 +170,18 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
                 // оповещу о неудачной загрузке
                 showLoadErrorSnackbar()
             }
-        })
+        }
 
-        App.instance.liveBookJustLoaded.observe(viewLifecycleOwner, {
+        App.instance.liveBookJustLoaded.observe(viewLifecycleOwner) {
             (binding.resultsList.adapter as FoundedItemAdapter).bookLoaded(it)
-        })
+        }
     }
 
     private fun showLoadErrorSnackbar() {
+        if (App.instance.torException != null) {
+            Toast.makeText(requireContext(), App.instance.torException?.message, Toast.LENGTH_LONG)
+                .show()
+        }
         networkErrorSnackbar =
             Snackbar.make(binding.rootView, "Ошибка соединения", Snackbar.LENGTH_INDEFINITE)
         networkErrorSnackbar?.duration = 10000
@@ -618,7 +628,6 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             requireActivity().menuInflater.inflate(R.menu.download_selected_menu, menu)
         } else {
             requireActivity().menuInflater.inflate(R.menu.odps_menu, menu)
-
             // добавлю обработку поиска
             val searchMenuItem = menu.findItem(R.id.action_search)
             mSearchView = searchMenuItem.actionView as SearchView
@@ -720,6 +729,10 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
             myItem.isChecked = PreferencesHandler.instance.isDifferentDirForAuthorAndSequence()
             myItem = menu.findItem(R.id.loadSequencesToAuthorDir)
             myItem.isChecked = PreferencesHandler.instance.isLoadSequencesInAuthorDir()
+            myItem = menu.findItem(R.id.login)
+            if (PreferencesHandler.instance.authCookie != null) {
+                myItem.isVisible = false
+            }
         }
     }
 
@@ -748,6 +761,10 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         }
     }
 
+    private fun showLoginDialog() {
+        loginLauncher.launch(Intent(requireContext(), LoginActivity::class.java))
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == R.id.action_new) {
@@ -761,6 +778,11 @@ class OpdsFragment : Fragment(), SearchView.OnQueryTextListener, FoundedItemActi
         if (id == R.id.menuUseDarkMode) {
             viewModel.switchNightMode()
             Handler().postDelayed(BaseActivity.ResetApp(), 100)
+            return true
+        }
+
+        if (id == R.id.login) {
+            showLoginDialog()
             return true
         }
 

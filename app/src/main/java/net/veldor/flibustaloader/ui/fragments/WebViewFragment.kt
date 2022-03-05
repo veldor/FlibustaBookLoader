@@ -91,10 +91,10 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
     }
 
     private fun setupObservers() {
-        WebViewViewModel.pageText.observe(viewLifecycleOwner, {
+        WebViewViewModel.pageText.observe(viewLifecycleOwner) {
             viewModel.parseText()
-        })
-        viewModel.pageParseResult.observe(viewLifecycleOwner, {
+        }
+        viewModel.pageParseResult.observe(viewLifecycleOwner) {
             if (it != null) {
                 if (it.linksList.size > 0) {
                     binding.floatingMenu.visibility = View.VISIBLE
@@ -102,11 +102,11 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
                     binding.floatingMenu.visibility = View.GONE
                 }
             }
-        })
+        }
 
         // буду отслеживать событие логина
         val cookieObserver: LiveData<Boolean> = App.sResetLoginCookie
-        cookieObserver.observe(viewLifecycleOwner, { aBoolean: Boolean ->
+        cookieObserver.observe(viewLifecycleOwner) { aBoolean: Boolean ->
             if (aBoolean) {
                 Toast.makeText(
                     requireContext(),
@@ -115,7 +115,7 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
                 ).show()
                 requireActivity().invalidateOptionsMenu()
             }
-        })
+        }
     }
 
     private fun showSelectBookDownloadTypeDialog() {
@@ -173,7 +173,7 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
 
         // буду отслеживать событие логина
         val cookieObserver: LiveData<Boolean> = App.sResetLoginCookie
-        cookieObserver.observe(viewLifecycleOwner, { aBoolean: Boolean ->
+        cookieObserver.observe(viewLifecycleOwner) { aBoolean: Boolean ->
             if (aBoolean) {
                 Toast.makeText(
                     requireContext(),
@@ -182,7 +182,7 @@ open class WebViewFragment : Fragment(), SearchView.OnQueryTextListener {
                 ).show()
                 requireActivity().invalidateOptionsMenu()
             }
-        })
+        }
     }
 
 

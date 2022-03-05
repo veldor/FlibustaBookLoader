@@ -9,7 +9,10 @@ object URLHelper {
     @kotlin.jvm.JvmStatic
     fun getBaseUrl(): String {
         if (PreferencesHandler.instance.isCustomMirror) {
-            return PreferencesHandler.instance.customMirror!!
+            val customMirror = PreferencesHandler.instance.customMirror!!
+            if(customMirror.isNotEmpty()){
+                return customMirror
+            }
         }
         if (App.instance.useMirror) {
             return getFlibustaMirrorUrl()

@@ -13,6 +13,11 @@
         android:title="@string/sort_list"
         yourapp:showAsAction="ifRoom" />
     <item
+        android:id="@+id/login"
+        android:icon="@drawable/ic_baseline_vpn_key_black_24"
+        android:title="@string/title_login"
+        yourapp:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/action_bookmark"
         android:icon="@drawable/ic_baseline_bookmark_24"
         android:title="@string/add_bookmark"

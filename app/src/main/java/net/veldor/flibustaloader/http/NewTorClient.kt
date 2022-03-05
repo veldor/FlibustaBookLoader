@@ -101,8 +101,8 @@ object NewTorClient {
             val code = connection.responseCode
             Log.d("surprise", "NewTorClient.kt 88 login $code")
             if (code < 400) {
-                var headers = connection.headerFields
-                var cookieHeader = headers.get("Set-Cookie")
+                val headers = connection.headerFields
+                val cookieHeader = headers.get("Set-Cookie")
                 if (!cookieHeader.isNullOrEmpty()) {
                     cookieHeader.forEach {
                         val cookieValue = StringBuilder()

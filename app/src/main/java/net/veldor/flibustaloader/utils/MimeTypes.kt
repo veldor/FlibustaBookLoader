@@ -20,6 +20,7 @@ object MimeTypes {
         "application/txt+zip" to "txt",
         "application/txt" to "txt",
         "application/rtf+zip" to "rtf",
+        " application/vnd.ms-htmlhelp" to "chm",
     )
 
     private val DOWNLOAD_MIMES: HashMap<String, String> = hashMapOf(
@@ -36,6 +37,7 @@ object MimeTypes {
         "application/txt+zip" to "txt.zip",
         "application/rtf+zip" to "rtf",
         "application/zip" to "zip",
+        " application/vnd.ms-htmlhelp" to "chm",
     )
 
     private val FULL_MIMES: HashMap<String, String> = hashMapOf(
@@ -49,7 +51,8 @@ object MimeTypes {
         "docx" to "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "txt" to "application/txt+zip",
         "rtf" to "application/rtf+zip",
-        "zip" to "application/zip"
+        "zip" to "application/zip",
+        "chm" to " application/vnd.ms-htmlhelp",
     )
 
 
@@ -85,6 +88,9 @@ object MimeTypes {
         }
         if (mime == "application/txt") {
             return "txt"
+        }
+        if (mime == " application/vnd.ms-htmlhelp") {
+            return "chm"
         }
         return if (DOWNLOAD_MIMES.containsKey(mime)) {
             DOWNLOAD_MIMES[mime]

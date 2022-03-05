@@ -28,10 +28,17 @@
         tools:replace="android:allowBackup"
         tools:targetApi="q">
         <activity
+            android:name=".ui.ConnectivityGuideActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.IntroductionGuideActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.BrowserActivity"
             android:exported="true"
             android:label="@string/title_activity_browser" />
-        <activity android:name=".ui.DirContentActivity"
+        <activity
+            android:name=".ui.DirContentActivity"
             android:label="@string/title_activity_dir_content" />
         <activity
             android:name=".ui.FlibustaNotAvailableActivity"
@@ -41,10 +48,10 @@
             android:label="@string/title_activity_login" />
         <activity
             android:name=".ui.BlacklistActivity"
-            android:label="@string/title_activity_blacklist"/>
+            android:label="@string/title_activity_blacklist" />
         <activity
             android:name=".ui.BookmarksActivity"
-            android:label="@string/title_activity_bookmarks"/>
+            android:label="@string/title_activity_bookmarks" />
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="keyboardHidden|orientation"
@@ -76,8 +83,7 @@
             android:label="@string/title_activity_settings" />
         <activity
             android:name=".ui.SubscriptionsActivity"
-            android:label="@string/title_activity_subscriptions"
-            />
+            android:label="@string/title_activity_subscriptions" />
 
         <receiver android:name=".receivers.BookLoadedReceiver" />
         <receiver android:name=".receivers.BookActionReceiver" />

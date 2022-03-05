@@ -390,4 +390,161 @@
     <string name="set_tor_custom_bridges">Set custom bridges</string>
     <string name="restart_tor_with_new_bridges_message">Try start TOR again</string>
     <string name="alternate_options_message">You can use VPN mode or set-up bridges in settings later</string>
+    <string name="no_playmarket_message">App market not found on your device</string>
+    <string name="title_activity_connection_guide">ConnectionGuideActivity</string>
+    <string name="large_text">
+        "Material is the metaphor.\n\n"
+
+        "A material metaphor is the unifying theory of a rationalized space and a system of motion."
+        "The material is grounded in tactile reality, inspired by the study of paper and ink, yet "
+        "technologically advanced and open to imagination and magic.\n"
+        "Surfaces and edges of the material provide visual cues that are grounded in reality. The "
+        "use of familiar tactile attributes helps users quickly understand affordances. Yet the "
+        "flexibility of the material creates new affordances that supercede those in the physical "
+        "world, without breaking the rules of physics.\n"
+        "The fundamentals of light, surface, and movement are key to conveying how objects move, "
+        "interact, and exist in space and in relation to each other. Realistic lighting shows "
+        "seams, divides space, and indicates moving parts.\n\n"
+
+        "Bold, graphic, intentional.\n\n"
+
+        "The foundational elements of print based design typography, grids, space, scale, color, "
+        "and use of imagery guide visual treatments. These elements do far more than please the "
+        "eye. They create hierarchy, meaning, and focus. Deliberate color choices, edge to edge "
+        "imagery, large scale typography, and intentional white space create a bold and graphic "
+        "interface that immerse the user in the experience.\n"
+        "An emphasis on user actions makes core functionality immediately apparent and provides "
+        "waypoints for the user.\n\n"
+
+        "Motion provides meaning.\n\n"
+
+        "Motion respects and reinforces the user as the prime mover. Primary user actions are "
+        "inflection points that initiate motion, transforming the whole design.\n"
+        "All action takes place in a single environment. Objects are presented to the user without "
+        "breaking the continuity of experience even as they transform and reorganize.\n"
+        "Motion is meaningful and appropriate, serving to focus attention and maintain continuity. "
+        "Feedback is subtle yet clear. Transitions are efﬁcient yet coherent.\n\n"
+
+        "3D world.\n\n"
+
+        "The material environment is a 3D space, which means all objects have x, y, and z "
+        "dimensions. The z-axis is perpendicularly aligned to the plane of the display, with the "
+        "positive z-axis extending towards the viewer. Every sheet of material occupies a single "
+        "position along the z-axis and has a standard 1dp thickness.\n"
+        "On the web, the z-axis is used for layering and not for perspective. The 3D world is "
+        "emulated by manipulating the y-axis.\n\n"
+
+        "Light and shadow.\n\n"
+
+        "Within the material environment, virtual lights illuminate the scene. Key lights create "
+        "directional shadows, while ambient light creates soft shadows from all angles.\n"
+        "Shadows in the material environment are cast by these two light sources. In Android "
+        "development, shadows occur when light sources are blocked by sheets of material at "
+        "various positions along the z-axis. On the web, shadows are depicted by manipulating the "
+        "y-axis only. The following example shows the card with a height of 6dp.\n\n"
+
+        "Resting elevation.\n\n"
+
+        "All material objects, regardless of size, have a resting elevation, or default elevation "
+        "that does not change. If an object changes elevation, it should return to its resting "
+        "elevation as soon as possible.\n\n"
+
+        "Component elevations.\n\n"
+
+        "The resting elevation for a component type is consistent across apps (e.g., FAB elevation "
+        "does not vary from 6dp in one app to 16dp in another app).\n"
+        "Components may have different resting elevations across platforms, depending on the depth "
+        "of the environment (e.g., TV has a greater depth than mobile or desktop).\n\n"
+
+        "Responsive elevation and dynamic elevation offsets.\n\n"
+
+        "Some component types have responsive elevation, meaning they change elevation in response "
+        "to user input (e.g., normal, focused, and pressed) or system events. These elevation "
+        "changes are consistently implemented using dynamic elevation offsets.\n"
+        "Dynamic elevation offsets are the goal elevation that a component moves towards, relative "
+        "to the component’s resting state. They ensure that elevation changes are consistent "
+        "across actions and component types. For example, all components that lift on press have "
+        "the same elevation change relative to their resting elevation.\n"
+        "Once the input event is completed or cancelled, the component will return to its resting "
+        "elevation.\n\n"
+
+        "Avoiding elevation interference.\n\n"
+
+        "Components with responsive elevations may encounter other components as they move between "
+        "their resting elevations and dynamic elevation offsets. Because material cannot pass "
+        "through other material, components avoid interfering with one another any number of ways, "
+        "whether on a per component basis or using the entire app layout.\n"
+        "On a component level, components can move or be removed before they cause interference. "
+        "For example, a floating action button (FAB) can disappear or move off screen before a "
+        "user picks up a card, or it can move if a snackbar appears.\n"
+        "On the layout level, design your app layout to minimize opportunities for interference. "
+        "For example, position the FAB to one side of stream of a cards so the FAB won’t interfere "
+        "when a user tries to pick up one of cards.\n\n"
+    </string>
+    <string name="action_settings">Settings</string>
+    <string name="test_internet_fragment">Test internet connection</string>
+    <string name="step_1_text">Step 1</string>
+    <string name="internet_connection_text">Test internet connection</string>
+    <string name="start_test_btn_text">Start test</string>
+    <string name="skip_test_btn_text">Skip</string>
+    <string name="check_passed">Passed</string>
+    <string name="check_failed">Failed</string>
+    <string name="next_test_btn_text">Next</string>
+    <string name="step_2_text">Step 2</string>
+    <string name="library_connection_text">Test library server connection</string>
+    <string name="test_flibusta_fragment">Test library connection</string>
+    <string name="library_url_hint">Library URL</string>
+    <string name="check_error">Error when check</string>
+    <string name="select_connection_type_fragment">Select connection type</string>
+    <string name="step_3_text">Step 3</string>
+    <string name="select_connection_type_text">Select connection type</string>
+    <string name="use_internal_tor_message">Use internal Tor client</string>
+    <string name="use_vpn_info">Using external VPN. Use this option if you know, what you do.
+You require VPN client for this option</string>
+    <string name="use_tor_info">Using internal TOR client for connection. Just run app for connect.
+If you have problems with connection, maybe you must use VPN mode</string>
+    <string name="test_vpn_connection_fragment">Test VPN connection</string>
+    <string name="step_4_text">Step 4</string>
+    <string name="library_access_text">Test connect to Flibusta</string>
+    <string name="test_finished_btn_text">Test finished</string>
+    <string name="start_connection_test_btn">Start connection test</string>
+    <string name="introduction_fragment">Introduction</string>
+    <string name="permissions_fragment">Permissions</string>
+    <string name="introduction_1_message">Wellcome to app.</string>
+    <string name="select_dir_fragment">Select dir</string>
+    <string name="first_use_finish_fragment">Finish first settings</string>
+    <string name="onion_i2p_check_notice">.onion/i2p addresses is not accepted</string>
+    <string name="launch_tor_btn_text">Launch TOR</string>
+    <string name="launch_message">Launch</string>
+    <string name="test_tor_connection_fragment">Test TOR connection</string>
+    <string name="in_progress_message">In progress, wait</string>
+    <string name="actions_message">Fix actions</string>
+    <string name="step_5_text">Step 5</string>
+    <string name="check_flibusta_via_tor_message">Test check flibusta via TOR</string>
+    <string name="test_flibusta_via_tor_fragment">Check library with tor</string>
+    <string name="success_message">Success!</string>
+    <string name="connection_success_message">Library successful connected. Press button lower, to start use app</string>
+    <string name="make_a_donage">Make a donate</string>
+    <string name="go_to_app_message">Start app</string>
+    <string name="test_finished_fragment">Test finished</string>
+    <string name="launched_message">launched</string>
+    <string name="update_tor_bridges_btn">Update tor bridges</string>
+    <string name="use_custom_tor_bridges_btn">Use custom TOR bridges</string>
+    <string name="drop_tor_cache_btn">Drop TOR cache</string>
+    <string name="tor_fix_options_title">TOR fix options</string>
+    <string name="tor_cache_dropped_message">TOR cache dropped, try to run it again!</string>
+    <string name="custom_bridges_saved_message">Custom bridges saved</string>
+    <string name="set_bridges_here_title">Set bridges here</string>
+    <string name="custom_bridges_helper">By one bridge in line</string>
+    <string name="start_load_bridges_title">Start load bridges</string>
+    <string name="new_bridges_loaded_message">New bridges loaded</string>
+    <string name="error_load_bridges_message">Error when load custom bridges</string>
+    <string name="use_custom_mirror_of_library_title">use custom mirror of library</string>
+    <string name="custom_mirror_helper_text">custom mirror url, looks like http://...</string>
+    <string name="wrong_url_message">Wrong URL, check it!</string>
+    <string name="first_use_view_modifications_fragment">View modifications</string>
+    <string name="view_settings_title">View settings setup here</string>
+    <string name="fail_tor_message">Failed. Reason:\n %s</string>
+    <string name="password_hint">Your Flibusta pass</string>
+    <string name="login_hint">Your Flibusta login</string>
 </resources>

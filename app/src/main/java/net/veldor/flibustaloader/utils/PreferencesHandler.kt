@@ -3,7 +3,6 @@ package net.veldor.flibustaloader.utils
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
-import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
@@ -18,11 +17,6 @@ class PreferencesHandler private constructor() {
         androidx.preference.PreferenceManager.getDefaultSharedPreferences(App.instance)
 
 
-    var isTogglePanels: Boolean
-        get() = preferences.getBoolean(PREF_TOGGLE_PANELS, true)
-        set(state) {
-            preferences.edit().putBoolean(PREF_TOGGLE_PANELS, state).apply()
-        }
     var isTorBlockedErrorShowed: Boolean
         get() = preferences.getBoolean(PREF_TOR_ERROR_SHOWED, false)
         set(state) {
@@ -57,6 +51,20 @@ class PreferencesHandler private constructor() {
 
     fun setCustomBridges(bridges: String) {
         preferences.edit().putString("custom bridges", bridges).apply()
+    }
+
+
+    fun setCustomBridges(data: Map<String, Any>) {
+        if (data.isNotEmpty()) {
+            data.forEach {
+                preferences.edit().putString("custom bridges", (it.value as String).replace("obfs4", "\nobfs4")).apply()
+            }
+        }
+    }
+
+    fun setUseCustomBridges(usage: Boolean) {
+        preferences.edit()
+            .putBoolean(App.instance.getString(R.string.pref_use_custom_bridges), usage).apply()
     }
 
     fun isUseCustomBridges(): Boolean {
@@ -143,6 +151,7 @@ class PreferencesHandler private constructor() {
         get() = preferences.getBoolean(PREF_NIGHT_MODE_ENABLED, false)
         set(state) {
             preferences.edit().putBoolean(PREF_NIGHT_MODE_ENABLED, state).apply()
+            App.instance.setNightMode()
         }
 
     val isEInk: Boolean
@@ -314,7 +323,8 @@ class PreferencesHandler private constructor() {
         if (file.isDirectory) {
             preferences.edit().putString(PREF_DOWNLOAD_LOCATION, folderLocation)
                 .apply()
-            return true
+            val f = getCompatDownloadDir()
+            return f != null && f.isDirectory && f.canWrite()
         }
         return false
     }
@@ -334,8 +344,13 @@ class PreferencesHandler private constructor() {
         return dl
     }
 
-    fun setDownloadDir(file: DocumentFile?) {
-        preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file?.uri.toString()).apply()
+    fun setDownloadDir(file: DocumentFile?): Boolean {
+        if (file != null && file.isDirectory && file.canWrite()) {
+            preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file.uri.toString()).apply()
+            val f = getDownloadDir()
+            return f != null && f.isDirectory && f.canWrite()
+        }
+        return false
     }
 
     fun getCompatDownloadDir(): File? {
@@ -345,10 +360,6 @@ class PreferencesHandler private constructor() {
             dd = File(downloadLocation)
         }
         return dd
-    }
-
-    fun setDownloadDir(file: File?) {
-        preferences.edit().putString(PREF_DOWNLOAD_LOCATION, file?.toUri().toString()).apply()
     }
 
     val downloadDirAssigned: Boolean
@@ -460,18 +471,6 @@ class PreferencesHandler private constructor() {
             .putBoolean(App.instance.getString(R.string.pref_is_eink), isChecked).apply()
     }
 
-    fun isCheckAvailability(): Boolean {
-        return preferences.getBoolean(PREF_CHECK_AVAILABILITY, true)
-    }
-
-    fun setInspectionEnabled(isEnabled: Boolean) {
-        preferences.edit().putBoolean(PREF_CHECK_AVAILABILITY, isEnabled).apply()
-    }
-
-    fun isSkipMainScreen(): Boolean {
-        return preferences.getBoolean(PREF_SKIP_MAIN_SCREEN, false)
-    }
-
     fun isShowLoadMoreBtn(): Boolean {
         return preferences.getBoolean(PREF_SHOW_LOAD_MORE_BTN, false)
     }
@@ -480,14 +479,22 @@ class PreferencesHandler private constructor() {
         return preferences.getBoolean(PREF_HIDE_PICS, false)
     }
 
+    fun isFirstUse(): Boolean {
+        return preferences.getBoolean(PREF_FIRST_USE, true)
+    }
+
+    fun setFirstUse(b: Boolean) {
+        preferences.edit()
+            .putBoolean(PREF_FIRST_USE, b).apply()
+    }
+
+
 
     companion object {
         const val TOR_URL = "http://flibustaongezhld6dibs2dps6vm4nvqg2kp7vgowbu76tzopgnhazqd.onion"
         const val TOR_COMPAT_URL = "http://flibustahezeous3.onion"
         private const val PREF_HIDE_BUTTONS = "no item buttons"
-        private const val PREF_DIFFERENT_DIRS = "create additional folders"
-        private const val PREF_SEQUENCES_IN_AUTHOR_DIRS = "load series to author dir"
-        private const val PREF_TOGGLE_PANELS = "toggle panels"
+        private const val PREF_FIRST_USE = "first use"
         private const val PREF_AUTHOR_IN_BOOK_NAME = "pref author in book name"
         private const val PREF_SEQUENCE_IN_BOOK_NAME = "pref sequence in book name"
         private const val PREF_LINEAR_LAYOUT = "linear layout"
@@ -512,7 +519,6 @@ class PreferencesHandler private constructor() {
         private const val LAST_CHANGELOG_VERSION_PREF = "last changelog version"
         private const val BOOKS_DOWNLOAD_AUTOSTART = "download auto start"
         private const val PREF_USE_FILTER = "use filter"
-        private const val PREF_CHECK_AVAILABILITY = "check availability"
         private const val PREF_ONLY_RUSSIAN = "only russian"
         private const val PREF_BOOK_NAME_STRICT_FILTER = "strict name in books"
         private const val PREF_BOOK_AUTHOR_STRICT_FILTER = "strict author in books"
@@ -523,11 +529,9 @@ class PreferencesHandler private constructor() {
         private const val PREF_AUTHOR_STRICT_FILTER = "strict author filter"
         private const val AUTH_COOKIE_VALUE = "auth cookie value"
         private const val PREF_BEG_DONATION = "beg donation"
-        private const val PREF_SKIP_MAIN_SCREEN = "skip load screen"
         private const val PREF_SHOW_LOAD_MORE_BTN = "show more btn"
         private const val PREF_HIDE_PICS = "clear view"
         private const val PREF_TOR_ERROR_SHOWED = "tor error showed"
-        private const val PREF_CUSTOM_BRIDGES = "custom bridges"
 
         const val BASE_URL = "http://flibusta.is"
         const val BASE_PIC_URL = "http://flibusta.is"

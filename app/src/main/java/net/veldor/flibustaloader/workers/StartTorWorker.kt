@@ -1,6 +1,9 @@
 package net.veldor.flibustaloader.workers
 
 import android.content.Context
+import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.work.ForegroundInfo
 import androidx.work.Worker
@@ -10,14 +13,37 @@ import net.veldor.flibustaloader.http.TorStarter
 import net.veldor.flibustaloader.notificatons.NotificationHandler
 import net.veldor.flibustaloader.utils.FireStorageHandler
 import net.veldor.flibustaloader.utils.PreferencesHandler
-import java.lang.Exception
+
 
 class StartTorWorker(context: Context, workerParams: WorkerParameters) :
     Worker(context, workerParams) {
+    private var lastLog: String? = null
+
     override fun doWork(): Result {
         // отмечу рабочего важным
         val info = createForegroundInfo()
         setForegroundAsync(info)
+
+        val h = Handler(App.instance.mainLooper)
+        var myTimer: CountDownTimer? = null
+        val myRunnable =  Runnable {
+            kotlin.run {
+                myTimer = object : CountDownTimer(60000, 100) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        if(App.instance.mLoadedTor.value?.lastLog != null && lastLog != App.instance.mLoadedTor.value?.lastLog){
+                            NotificationHandler.instance.updateTorStarter(App.instance.mLoadedTor.value?.lastLog!!)
+                            lastLog = App.instance.mLoadedTor.value?.lastLog
+                        }
+                    }
+
+                    override fun onFinish() {
+                        println("done")
+                    }
+                }
+                myTimer?.start()
+            }
+        }
+        h.post(myRunnable);
         try {
             Log.d("surprise", "StartTorWorker.kt 12 doWork running start tor worker")
             // получу список мостов для TOR из Firestore
@@ -35,6 +61,8 @@ class StartTorWorker(context: Context, workerParams: WorkerParameters) :
                         }
                     }
                     App.instance.isCustomBridgesSet = false
+                    myTimer?.onFinish()
+                    myTimer?.cancel()
                     return Result.success()
                 }
                 Log.d("surprise", "doWork: failed tor start try")
@@ -53,6 +81,8 @@ class StartTorWorker(context: Context, workerParams: WorkerParameters) :
             Log.d("surprise", "StartTorWorker.kt 43 doWork we have problem with TOR start")
             TorStarter.liveTorLaunchState.postValue(TorStarter.TOR_LAUNCH_FAILED)
         }
+        myTimer?.cancel()
+        myTimer?.onFinish()
         return Result.success()
     }
 

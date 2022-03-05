@@ -47,6 +47,7 @@ class App : MultiDexApplication() {
     val mLiveDownloadedBookId = MutableLiveData<String>()
     val liveDownloadState = MutableLiveData(DownloadBooksWorker.DOWNLOAD_FINISHED)
     lateinit var mDatabase: AppDatabase
+    var torException: java.lang.Exception? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -78,6 +79,14 @@ class App : MultiDexApplication() {
             // ошибка при миграции, судя по всему
             migrationError = true
         }
+        setNightMode()
+        // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
+        handleMassDownload()
+        startTorInit()
+    }
+
+    public fun setNightMode() {
+
         // определю ночной режим
         if (PreferencesHandler.instance.isEInk) {
             AppCompatDelegate.setDefaultNightMode(
@@ -85,18 +94,17 @@ class App : MultiDexApplication() {
             )
         } else {
             if (PreferencesHandler.instance.nightMode) {
+                Log.d("surprise", "App.kt 88 onCreate set night mode on")
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_YES
                 )
             } else {
+                Log.d("surprise", "App.kt 93 onCreate set night mode system")
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                 )
             }
         }
-        // тут буду отслеживать состояние массовой загрузки и выводить уведомление ожидания подключения
-        handleMassDownload()
-        startTorInit()
     }
 
 
@@ -315,9 +323,13 @@ class App : MultiDexApplication() {
         )
     }
 
+    fun stopTorInit() {
+        WorkManager.getInstance(instance).cancelAllWorkByTag(START_TOR)
+    }
+
     companion object {
         //todo switch to false on release
-        const val isTestVersion = false
+        const val isTestVersion = true
         val sResetLoginCookie = MutableLiveData<Boolean>()
         const val BACKUP_DIR_NAME = "FlibustaDownloaderBackup"
         const val BACKUP_FILE_NAME = "settings_backup.zip"

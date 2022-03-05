@@ -81,9 +81,11 @@
         <Button
             android:id="@+id/downloadThisBookBtn"
             android:layout_width="wrap_content"
+            android:layout_marginTop="10dp"
             android:layout_height="wrap_content"
             android:background="@drawable/transparent_bg_bordered_button"
             android:text="@string/download_message"
+            android:textColor="@color/textColor"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"

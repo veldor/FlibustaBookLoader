@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/guide_navigation"
+    app:startDestination="@+id/test_internet_connection_guide">
+
+    <fragment
+        android:id="@+id/test_internet_connection_guide"
+        android:name="net.veldor.flibustaloader.ui.connection_test_fragments.TestInternetConnectionGuideFragment"
+        android:label="@string/test_internet_fragment"
+        tools:layout="@layout/fragment_test_internet_connection">
+        <action
+            android:id="@+id/from_1_to_2_test_action"
+            app:destination="@id/test_flibusta_connection_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/test_flibusta_connection_guide"
+        android:name="net.veldor.flibustaloader.ui.connection_test_fragments.TestFlibustaConnectionGuideFragment"
+        android:label="@string/test_flibusta_fragment"
+        tools:layout="@layout/fragment_test_flibusta_connection">
+        <action
+            android:id="@+id/from_2_to_3_test_action"
+            app:destination="@id/test_flibusta_connection_type_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/test_flibusta_connection_type_guide"
+        android:name="net.veldor.flibustaloader.ui.connection_test_fragments.SelectConnectionGuideFragment"
+        android:label="@string/select_connection_type_fragment"
+        tools:layout="@layout/fragment_select_connection_type">
+        <action
+            android:id="@+id/test_vpn_connection_action"
+            app:destination="@id/test_vpn_connection_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+        <action
+            android:id="@+id/test_tor_connection_action"
+            app:destination="@id/test_tor_connection_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/test_vpn_connection_guide"
+        android:name="net.veldor.flibustaloader.ui.connection_test_fragments.TestVpnConnectionGuideFragment"
+        android:label="@string/test_vpn_connection_fragment"
+        tools:layout="@layout/fragment_test_vpn_connection">
+        <action
+            android:id="@+id/finish_test_action"
+            app:destination="@id/test_finish_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/test_tor_connection_guide"
+        android:name="net.veldor.flibustaloader.ui.connection_test_fragments.TestTorConnectionFragment"
+        android:label="@string/test_tor_connection_fragment"
+        tools:layout="@layout/fragment_test_tor_connection">
+        <action
+            android:id="@+id/check_flibusta_via_tor_action"
+            app:destination="@id/test_flibusta_via_tor_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/test_flibusta_via_tor_guide"
+        android:name="net.veldor.flibustaloader.ui.connection_test_fragments.TestFlibustaViaTorFragment"
+        android:label="@string/test_flibusta_via_tor_fragment"
+        tools:layout="@layout/fragment_connect_flibusta_via_tor">
+        <action
+            android:id="@+id/finish_test_action"
+            app:destination="@id/test_finish_guide"
+            app:enterAnim="@anim/fab_slide_in_from_right"
+            app:exitAnim="@anim/fab_slide_out_to_left"
+            app:popEnterAnim="@anim/fab_slide_in_from_left"
+            app:popExitAnim="@anim/fab_slide_out_to_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/test_finish_guide"
+        android:name="net.veldor.flibustaloader.ui.connection_test_fragments.TestFlibustaFinishedFragment"
+        android:label="@string/test_finished_fragment"
+        tools:layout="@layout/fragment_finish_connection_test" />
+
+</navigation>

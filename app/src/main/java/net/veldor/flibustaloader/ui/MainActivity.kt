@@ -29,11 +29,8 @@ import net.veldor.flibustaloader.App
 import net.veldor.flibustaloader.R
 import net.veldor.flibustaloader.databinding.ActivityMainBinding
 import net.veldor.flibustaloader.http.TorStarter
-import net.veldor.flibustaloader.utils.FilesHandler
-import net.veldor.flibustaloader.utils.FlibustaChecker
-import net.veldor.flibustaloader.utils.Grammar
+import net.veldor.flibustaloader.utils.*
 import net.veldor.flibustaloader.utils.Grammar.appVersion
-import net.veldor.flibustaloader.utils.PreferencesHandler
 import net.veldor.flibustaloader.view_models.StartViewModel
 import java.util.*
 import kotlin.system.exitProcess
@@ -51,74 +48,71 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(StartViewModel::class.java)
-        setupObservers()
-        if (App.instance.migrationError) {
-            // покажу диалог с ошибкой загрузки
-            val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
-            dialogBuilder
-                .setTitle(getString(R.string.db_migration_error_title))
-                .setMessage(getString(R.string.db_migration_error_message))
-                .setPositiveButton(getString(R.string.open_settings_message)) { _: DialogInterface?, _: Int ->
-                    startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
-                }
-                .setNegativeButton(getString(R.string.open_app_info_message)) { _: DialogInterface?, _: Int ->
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    intent.data = Uri.parse("package:$packageName")
-                    startActivity(intent)
-                }
-                .setNeutralButton(getString(R.string.clear_tables_message)) { _: DialogInterface?, _: Int ->
-                    App.instance.mDatabase.clearAllTables()
-                    Handler().postDelayed(ResetApp(), 100)
-                }
-                .setNegativeButton(getString(android.R.string.cancel)) { dialogInterface: DialogInterface, _: Int -> dialogInterface.dismiss() }
-            val dialog = dialogBuilder.create()
-            lifecycle.addObserver(DialogDismissLifecycleObserver(dialog))
-            dialog.show()
-            return
-        }
-        if (intent.data != null) {
-            Log.d("surprise", "onCreate: external link here")
-            link = intent.data
-        }
-        Log.d(
-            "surprise",
-            "MainActivity.kt 83 onCreate tor message ${PreferencesHandler.instance.isTorBlockedErrorShowed}"
-        )
-        if (PreferencesHandler.instance.isTorBlockedErrorShowed) {
-            // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
-            if (!viewModel.permissionGranted()) {
-                // показываю диалог с требованием предоставить разрешения
-                showPermissionDialog()
-            } else {
-                //viewModel.ping()
-                //App.instance.startTorInit()
-                // если не выбрана папка для загрузки
-                if (!PreferencesHandler.instance.downloadDirAssigned) {
-                    showSelectDownloadFolderDialog()
-                }
-            }
+        // если это первый запуск- перенаправлю в гайд по настройкам приложения
+        if (PreferencesHandler.instance.isFirstUse()) {
+            val targetActivityIntent = Intent(this, IntroductionGuideActivity::class.java)
+            targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(targetActivityIntent)
+            finish()
         } else {
-            showTorBlockedDialog()
-        }
-        setupUI()
-        // проверю на пропуск главного экрана
-//        if (PreferencesHandler.instance.isSkipMainScreen() || PreferencesHandler.instance.isExternalVpn) {
-//            launchView()
-//            finish()
-//            return
-//        }
+            viewModel = ViewModelProvider(this).get(StartViewModel::class.java)
+            setupObservers()
+            if (App.instance.migrationError) {
+                // покажу диалог с ошибкой загрузки
+                val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
+                dialogBuilder
+                    .setTitle(getString(R.string.db_migration_error_title))
+                    .setMessage(getString(R.string.db_migration_error_message))
+                    .setPositiveButton(getString(R.string.open_settings_message)) { _: DialogInterface?, _: Int ->
+                        startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                    }
+                    .setNegativeButton(getString(R.string.open_app_info_message)) { _: DialogInterface?, _: Int ->
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        intent.data = Uri.parse("package:$packageName")
+                        startActivity(intent)
+                    }
+                    .setNeutralButton(getString(R.string.clear_tables_message)) { _: DialogInterface?, _: Int ->
+                        App.instance.mDatabase.clearAllTables()
+                        Handler().postDelayed(ResetApp(), 100)
+                    }
+                    .setNegativeButton(getString(android.R.string.cancel)) { dialogInterface: DialogInterface, _: Int -> dialogInterface.dismiss() }
+                val dialog = dialogBuilder.create()
+                lifecycle.addObserver(DialogDismissLifecycleObserver(dialog))
+                dialog.show()
+                return
+            }
+            if (intent.data != null) {
+                link = intent.data
+            }
+            if (PreferencesHandler.instance.isTorBlockedErrorShowed) {
+                // если пользователь заходит в приложение впервые- предложу предоставить разрешение на доступ к файлам и выбрать вид
+                if (!viewModel.permissionGranted()) {
+                    // показываю диалог с требованием предоставить разрешения
+                    showPermissionDialog()
+                } else {
+                    //viewModel.ping()
+                    //App.instance.startTorInit()
+                    // если не выбрана папка для загрузки
+                    if (!PreferencesHandler.instance.downloadDirAssigned) {
+                        showSelectDownloadFolderDialog()
+                    }
+                }
+            } else {
+                showTorBlockedDialog()
+            }
+            setupUI()
 
-        if (PreferencesHandler.instance.isExternalVpn) {
-            binding.clientProgressText.text =
-                Grammar.getColoredString(
-                    getString(R.string.vpn_use),
-                    Color.parseColor("#5403ad")
-                )
-            binding.clientRunningProgress.visibility = View.INVISIBLE
-            binding.testFlibustaIsUpText.visibility = View.VISIBLE
-            binding.testFlibustaIsUpProgress.visibility = View.VISIBLE
-            viewModel.ping()
+            if (PreferencesHandler.instance.isExternalVpn) {
+                binding.clientProgressText.text =
+                    Grammar.getColoredString(
+                        getString(R.string.vpn_use),
+                        Color.parseColor("#5403ad")
+                    )
+                binding.clientRunningProgress.visibility = View.INVISIBLE
+                binding.testFlibustaIsUpText.visibility = View.VISIBLE
+                binding.testFlibustaIsUpProgress.visibility = View.VISIBLE
+                viewModel.ping()
+            }
         }
     }
 
@@ -162,7 +156,15 @@ class MainActivity : BaseActivity() {
                 }
                 val goToMarket =
                     Intent(Intent.ACTION_VIEW).setData(Uri.parse("market://search?q=VPN"))
-                startActivity(goToMarket)
+                if (TransportUtils.intentCanBeHandled(goToMarket)) {
+                    startActivity(goToMarket)
+                } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.no_playmarket_message),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 // Do what you want to do on "OK" action
                 return@OnClickListener
             })
@@ -180,6 +182,15 @@ class MainActivity : BaseActivity() {
         }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
+
+        binding.startConnectionTestBtn.setOnClickListener {
+            Log.d("surprise", "MainActivity.kt 202 setupUI start connection test")
+            val targetActivityIntent = Intent(this, ConnectivityGuideActivity::class.java)
+            targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(targetActivityIntent)
+            App.instance.stopTorInit()
+            finish()
+        }
         if (PreferencesHandler.instance.isEInk) {
             // prepare window for eInk
             checkWiFiEnabled()
@@ -316,14 +327,12 @@ class MainActivity : BaseActivity() {
     private fun showCheckTooLongDialog() {
         val dialogBuilder = AlertDialog.Builder(this, R.style.MyDialogStyle)
         dialogBuilder.setMessage(getString(R.string.check_too_long_message))
-        dialogBuilder.setPositiveButton(getString(R.string.disable_connectivity_check_message)) { _: DialogInterface?, _: Int ->
-            Toast.makeText(
-                this@MainActivity,
-                getString(R.string.option_re_enabled_message),
-                Toast.LENGTH_SHORT
-            ).show()
-            PreferencesHandler.instance.setInspectionEnabled(false)
-            launchView()
+        dialogBuilder.setPositiveButton(getString(R.string.test_connection)) { _: DialogInterface?, _: Int ->
+            val targetActivityIntent = Intent(this, ConnectivityGuideActivity::class.java)
+            targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(targetActivityIntent)
+            App.instance.stopTorInit()
+            finish()
         }
         dialogBuilder.setNegativeButton(getString(R.string.wait_more_item)) { dialogInterface: DialogInterface, _: Int -> dialogInterface.dismiss() }
         dialogBuilder.setNeutralButton(getString(R.string.skip_inspection_item)) { _: DialogInterface?, _: Int -> launchView() }
@@ -334,7 +343,7 @@ class MainActivity : BaseActivity() {
     }
 
     override fun setupObservers() {
-        viewModel.flibustaServerCheckState.observe(this, {
+        viewModel.flibustaServerCheckState.observe(this) {
             when (it) {
                 FlibustaChecker.STATE_PASSED -> {
                     binding.testFlibustaIsUpProgress.visibility = View.INVISIBLE
@@ -365,11 +374,11 @@ class MainActivity : BaseActivity() {
                     showFlibustaIsDownDialog()
                 }
             }
-        })
+        }
 
         val workInfoData =
             WorkManager.getInstance(this).getWorkInfosForUniqueWorkLiveData(App.START_TOR)
-        workInfoData.observe(this, { workInfos: List<WorkInfo>? ->
+        workInfoData.observe(this) { workInfos: List<WorkInfo>? ->
             if (workInfos != null && workInfos.isNotEmpty()) {
                 // переберу статусы
                 val data = workInfos[0]
@@ -400,43 +409,43 @@ class MainActivity : BaseActivity() {
                     )
                 }
             }
-        })
+        }
 
-        TorStarter.liveTorLaunchState.observe(this, {
+        TorStarter.liveTorLaunchState.observe(this) {
             if (it == TorStarter.TOR_LAUNCH_SUCCESS) {
                 torLoaded()
                 TorStarter.liveTorLaunchState.removeObservers(this)
             } else if (it == TorStarter.TOR_LAUNCH_FAILED) {
                 showTorNotWorkDialog()
             }
-        })
+        }
         // буду отслеживать проверку доступности флибусты
-        viewModel.connectionTestSuccess.observe(this, {
+        viewModel.connectionTestSuccess.observe(this) {
             if (it) {
                 launchView()
             }
-        })
-        viewModel.connectionTestFailed.observe(this, {
+        }
+        viewModel.connectionTestFailed.observe(this) {
             if (it) {
                 Log.d("surprise", "setupObservers: TOR START ERROR!!!")
                 availabilityTestFailed()
             }
-        })
-        viewModel.torStartFailed.observe(this, {
+        }
+        viewModel.torStartFailed.observe(this) {
             if (it) {
                 showTorNotWorkDialog()
             }
-        })
+        }
 
         if (!PreferencesHandler.instance.isExternalVpn) {
 
             // зарегистрирую отслеживание загружающегося TOR
             val loadedTor: LiveData<AndroidOnionProxyManager> = App.instance.mLoadedTor
-            loadedTor.observe(this, { tor: AndroidOnionProxyManager? ->
+            loadedTor.observe(this) { tor: AndroidOnionProxyManager? ->
                 if (tor != null) {
                     mTor = tor
                 }
-            })
+            }
         }
     }
 
@@ -635,8 +644,12 @@ class MainActivity : BaseActivity() {
                     Handler().postDelayed(ResetApp(), 100)
                 }
                 .setNegativeButton(getString(R.string.set_tor_custom_bridges)) { _: DialogInterface?, _: Int -> showSetCustomBridgesDialog() }
-                .setNeutralButton(getString(R.string.use_external_proxy_message)) { _: DialogInterface?, _: Int ->
-                    handleUseExternalVpn()
+                .setNeutralButton(getString(R.string.start_connection_test_btn)) { _: DialogInterface?, _: Int ->
+                    val targetActivityIntent = Intent(this, ConnectivityGuideActivity::class.java)
+                    targetActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(targetActivityIntent)
+                    App.instance.stopTorInit()
+                    finish()
                 }
 
             val dialog = dialogBuilder.create()
@@ -754,7 +767,9 @@ class MainActivity : BaseActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mCdt?.cancel()
-        viewModel.connectionTestSuccess.removeObservers(this)
+        if (this::viewModel.isInitialized) {
+            viewModel.connectionTestSuccess.removeObservers(this)
+        }
     }
 
     companion object {

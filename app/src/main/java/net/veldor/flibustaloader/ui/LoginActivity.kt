@@ -6,59 +6,48 @@ import android.os.Handler
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextSwitcher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import net.veldor.flibustaloader.R
+import net.veldor.flibustaloader.databinding.ActivityLoginBinding
 import net.veldor.flibustaloader.view_models.LoginViewModel
 
 class LoginActivity : AppCompatActivity() {
-    private lateinit var mLoginButton: Button
+    private lateinit var binding: ActivityLoginBinding
     private var mPasswordReady = false
     private var mLoginReady = false
     private lateinit var viewModel: LoginViewModel
-    private lateinit var mTextSwitcher: TextSwitcher
-    private lateinit var mLogin: EditText
-    private lateinit var mPassword: EditText
-    private lateinit var mProgressBar: View
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         viewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
         handleInput()
         setupObservers()
     }
 
     private fun setupObservers() {
-        viewModel.liveLoginResult.observe(this, {
-            if(it == LoginViewModel.LOGIN_SUCCESS){
+        viewModel.liveLoginResult.observe(this) {
+            if (it == LoginViewModel.LOGIN_SUCCESS) {
                 setStatusText(getString(R.string.done_message))
                 done()
-            }
-            else if(it == LoginViewModel.LOGIN_FAILED){
+            } else if (it == LoginViewModel.LOGIN_FAILED) {
                 setStatusText(getString(R.string.failed_message))
                 unlockElements()
             }
-        })
+        }
     }
 
     private fun handleInput() {
-        mLogin = findViewById(R.id.username)
-        mPassword = findViewById(R.id.password)
-        mLoginButton = findViewById(R.id.login)
-        mTextSwitcher = findViewById(R.id.statusWrapper)
-        mTextSwitcher.setInAnimation(this, android.R.anim.slide_in_left)
-        mTextSwitcher.setOutAnimation(this, android.R.anim.slide_out_right)
-        mProgressBar = findViewById(R.id.loading)
-        mLogin.addTextChangedListener(object : TextWatcher {
+        binding.statusWrapper.setInAnimation(this, android.R.anim.slide_in_left)
+        binding.statusWrapper.setOutAnimation(this, android.R.anim.slide_out_right)
+        binding.nameEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable) {
                 mLoginReady = if (s.isNotEmpty()) {
                     if (mPasswordReady) {
-                        mLoginButton.isEnabled = true
+                        binding.login.isEnabled = true
                     }
                     true
                 } else {
@@ -66,13 +55,13 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         })
-        mPassword.addTextChangedListener(object : TextWatcher {
+        binding.passEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable) {
                 mPasswordReady = if (s.isNotEmpty()) {
                     if (mLoginReady) {
-                        mLoginButton.isEnabled = true
+                        binding.login.isEnabled = true
                     }
                     true
                 } else {
@@ -80,10 +69,10 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         })
-        mLoginButton.setOnClickListener {
-            mProgressBar.visibility = View.VISIBLE
+        binding.login.setOnClickListener {
+            binding.loading.visibility = View.VISIBLE
             lockElements()
-                viewModel.logMeIn(mLogin.text.toString(), mPassword.text.toString())
+                viewModel.logMeIn(binding.nameEditText.text.toString(), binding.passEditText.text.toString())
         }
     }
 
@@ -98,19 +87,19 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun unlockElements() {
-        mLogin.isEnabled = true
-        mLoginButton.isEnabled = true
-        mPassword.isEnabled = true
-        mProgressBar.visibility = View.GONE
+        binding.nameEditText.isEnabled = true
+        binding.login.isEnabled = true
+        binding.passEditText.isEnabled = true
+        binding.loading.visibility = View.GONE
     }
 
     private fun lockElements() {
-        mLogin.isEnabled = false
-        mLoginButton.isEnabled = false
-        mPassword.isEnabled = false
+        binding.nameEditText.isEnabled = false
+        binding.login.isEnabled = false
+        binding.passEditText.isEnabled = false
     }
 
     private fun setStatusText(status: String) {
-        mTextSwitcher.setText(status)
+        binding.statusWrapper.setText(status)
     }
 }

@@ -6,66 +6,78 @@
     android:layout_height="match_parent"
     tools:context=".ui.FlibustaNotAvailableActivity">
 
-    <TextView
-        android:id="@+id/not_available_title"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/flibusta_not_available_message"
-        android:textColor="#ff0000"
-        android:textSize="20sp"
-        android:textStyle="bold"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/testConnection"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/err_message"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:text="@string/flibusta_not_available_body"
-        app:layout_constraintTop_toBottomOf="@+id/not_available_title" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/vpn_warning"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:drawablePadding="10dp"
-        android:visibility="gone"
-        android:textColor="@color/book_name_color"
-        android:text="@string/vpn_enabled_but_not_work_warning"
-        app:layout_constraintTop_toBottomOf="@+id/err_message"
-        app:drawableStartCompat="@drawable/ic_baseline_vpn_key_black_24"
-        app:drawableLeftCompat="@drawable/ic_baseline_vpn_key_black_24" />
+            <TextView
+                android:id="@+id/not_available_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:text="@string/flibusta_not_available_message"
+                android:textColor="#ff0000"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/switchToVpnBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/enable_vpn_message"
-        app:layout_constraintBottom_toTopOf="@+id/disableInspectionButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent" />
+            <TextView
+                android:id="@+id/err_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text="@string/flibusta_not_available_body"
+                app:layout_constraintTop_toBottomOf="@+id/not_available_title" />
+
+            <TextView
+                android:id="@+id/vpn_warning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawablePadding="10dp"
+                android:padding="10dp"
+                android:text="@string/vpn_enabled_but_not_work_warning"
+                android:textColor="@color/book_name_color"
+                android:visibility="gone"
+                app:drawableLeftCompat="@drawable/ic_baseline_vpn_key_black_24"
+                app:drawableStartCompat="@drawable/ic_baseline_vpn_key_black_24"
+                app:layout_constraintTop_toBottomOf="@+id/err_message" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+
     <Button
         android:id="@+id/getVpn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:foreground="?android:attr/selectableItemBackground"
         android:text="@string/get_vpn_message"
-        app:layout_constraintBottom_toTopOf="@+id/switchToVpnBtn"
+        app:layout_constraintBottom_toTopOf="@+id/showMainWindowButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/disableInspectionButton"
+        android:id="@+id/testConnection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/disable_inspection_message"
-        app:layout_constraintBottom_toTopOf="@+id/showMainWindowButton"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:text="@string/test_connection"
+        app:layout_constraintBottom_toTopOf="@+id/getVpn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
@@ -74,6 +86,8 @@
         android:id="@+id/showMainWindowButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:foreground="?android:attr/selectableItemBackground"
         android:text="@string/show_main_message"
         app:layout_constraintBottom_toTopOf="@+id/startCheckerBtn"
         app:layout_constraintEnd_toEndOf="parent"
@@ -84,6 +98,8 @@
         android:id="@+id/closeAppButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:foreground="?android:attr/selectableItemBackground"
         android:text="@string/close_app_message"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -94,6 +110,8 @@
         android:id="@+id/retryButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:foreground="?android:attr/selectableItemBackground"
         android:text="@string/try_connect_again_message"
         app:layout_constraintBottom_toTopOf="@+id/closeAppButton"
         app:layout_constraintEnd_toEndOf="parent"
@@ -104,6 +122,8 @@
         android:id="@+id/startCheckerBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:foreground="?android:attr/selectableItemBackground"
         android:text="@string/start_checker_message"
         app:layout_constraintBottom_toTopOf="@+id/retryButton"
         app:layout_constraintEnd_toEndOf="parent"

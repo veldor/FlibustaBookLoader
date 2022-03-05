@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/step_name_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/success_message"
+        android:textSize="50sp"
+        app:layout_constraintBottom_toTopOf="@+id/step_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/step_text"
+        android:layout_width="wrap_content"
+        android:paddingStart="30dp"
+        android:textAlignment="center"
+        android:paddingEnd="30dp"
+        android:layout_height="wrap_content"
+        android:text="@string/connection_success_message"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/next_test_btn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/step_name_text"
+        android:gravity="center_horizontal" />
+
+
+
+
+
+    <Button
+        android:id="@+id/next_test_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:layout_marginEnd="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:text="@string/go_to_app_message"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/donate_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:text="@string/make_a_donage"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginLeft="30dp" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

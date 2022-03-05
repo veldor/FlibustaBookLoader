@@ -19,8 +19,10 @@ class TorStarter {
                     TOTAL_TRIES_PER_TOR_STARTUP
                 )
             } catch (e: InterruptedException) {
+                App.instance.torException = e
                 e.printStackTrace()
             } catch (e: IOException) {
+                App.instance.torException = e
                 e.printStackTrace()
             }
         }

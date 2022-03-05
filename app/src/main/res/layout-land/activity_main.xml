@@ -82,7 +82,7 @@
         android:shadowRadius="3"
         android:text="@string/default_app_version"
         android:textColor="@color/white"
-        app:layout_constraintBottom_toTopOf="@+id/testStartApp"
+        app:layout_constraintBottom_toTopOf="@+id/startConnectionTestBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
@@ -100,19 +100,37 @@
         android:text="@string/force_start"
         android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/startConnectionTestBtn"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/startConnectionTestBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/transparent_bg_bordered_button"
+        android:padding="10dp"
+        android:shadowColor="#000000"
+        android:shadowDx="3"
+        android:shadowDy="3"
+        android:shadowRadius="3"
+        android:text="@string/start_connection_test_btn"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/testStartApp" />
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/useHardwareAccelerationSwitcher"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/use_hardware_acceleration_title"
-        android:textColor="@color/white"
+        android:textColor="@color/dark_gray"
         app:layout_constraintBottom_toTopOf="@+id/app_version"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5" />
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/isEbook"
